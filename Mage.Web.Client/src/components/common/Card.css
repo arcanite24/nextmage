@@ -1,0 +1,152 @@
+/* Card Component Styles */
+
+.mtg-card {
+    --card-scale: 1;
+    position: relative;
+    width: calc(var(--card-width) * var(--card-scale));
+    aspect-ratio: var(--card-aspect-ratio);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform var(--transition-spring), box-shadow var(--transition-base);
+    box-shadow: var(--shadow-glow-card);
+    flex-shrink: 0;
+}
+
+/* Size variants */
+.card-sm {
+    --card-scale: 0.7;
+}
+
+.card-md {
+    --card-scale: 1;
+}
+
+.card-lg {
+    --card-scale: 1.4;
+}
+
+.mtg-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* States */
+.mtg-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-xl), 0 0 30px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+.mtg-card.tapped {
+    transform: rotate(90deg);
+}
+
+.mtg-card.tapped:hover {
+    transform: rotate(90deg) translateX(-8px) scale(1.02);
+}
+
+.mtg-card.selected {
+    box-shadow: var(--shadow-glow-primary), var(--shadow-lg);
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 2px;
+}
+
+.mtg-card.playable {
+    outline: 2px solid var(--color-accent-success);
+    outline-offset: 2px;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.mtg-card.targeting {
+    animation: target-pulse 1s ease-in-out infinite;
+}
+
+.mtg-card.loading {
+    background: var(--color-bg-elevated);
+}
+
+.mtg-card.error img {
+    opacity: 0.5;
+}
+
+/* Loading overlay */
+.card-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-elevated);
+}
+
+/* Counters */
+.card-counters {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.counter-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: var(--radius-sm);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Damage indicator */
+.card-damage {
+    position: absolute;
+    bottom: var(--space-2);
+    right: var(--space-2);
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    background: var(--color-accent-danger);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+/* P/T overlay */
+.card-pt {
+    position: absolute;
+    bottom: var(--space-2);
+    left: var(--space-2);
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: var(--radius-sm);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Custom overlay */
+.card-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+}
+
+/* Summoning sickness */
+.summoning-sickness-indicator {
+    position: absolute;
+    inset: 0;
+    border: 2px dashed var(--color-text-muted);
+    border-radius: var(--radius-md);
+    pointer-events: none;
+    opacity: 0.5;
+}

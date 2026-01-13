@@ -1199,6 +1199,8 @@ public class MageServerImpl implements MageServer {
             } catch (Exception ex) {
                 handleException(ex);
             }
+        } else {
+             logger.warn("Invalid Session found for action " + actionName + " sessionId: " + sessionId);
         }
         return action.negativeResult();
     }
@@ -1307,11 +1309,13 @@ public class MageServerImpl implements MageServer {
         public TableView execute() throws MageException {
             Session session = managerFactory.sessionManager().getSession(sessionId).orElse(null);
             if (session == null) {
+                logger.error("CreateTable: Session not found " + sessionId);
                 return null;
             }
             UUID userId = session.getUserId();
             User user = managerFactory.userManager().getUser(userId).orElse(null);
             if (user == null) {
+                logger.error("CreateTable: User not found " + userId);
                 return null;
             }
 
@@ -1345,6 +1349,7 @@ public class MageServerImpl implements MageServer {
 
             GamesRoom room = managerFactory.gamesRoomManager().getRoom(roomId).orElse(null);
             if (room == null) {
+                logger.error("CreateTable: Room not found " + roomId + " (MainRoomId: " + managerFactory.gamesRoomManager().getMainRoomId() + ")");
                 return null;
             }
 

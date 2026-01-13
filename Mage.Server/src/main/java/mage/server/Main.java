@@ -198,9 +198,17 @@ public final class Main {
             logger.info("Done.");
         }
 
-        logger.info("Updating user stats DB...");
-        UserStatsRepository.instance.updateUserStats();
-        logger.info("Done.");
+        if (testMode) {
+             logger.info("Skipping user stats update in test mode");
+        } else {
+            try {
+                logger.info("Updating user stats DB...");
+                UserStatsRepository.instance.updateUserStats();
+                logger.info("Done.");
+            } catch (Exception e) {
+                logger.warn("Failed to update user stats: " + e.getMessage());
+            }
+        }
         deleteSavedGames();
 
         int gameTypes = 0;
@@ -291,15 +299,23 @@ public final class Main {
             // Parameter: serializationtype => jboss
             InvokerLocator serverLocator = new InvokerLocator(connection.getURI());
             if (!isAlreadyRunning(config, serverLocator)) {
+                MageServerImpl mageServerImpl = new MageServerImpl(managerFactory, adminPassword, testMode, detailsMode);
                 server = new MageTransporterServer(
                         managerFactory,
                         serverLocator,
-                        new MageServerImpl(managerFactory, adminPassword, testMode, detailsMode),
+                        mageServerImpl,
                         MageServer.class.getName(),
                         new MageServerInvocationHandler(managerFactory)
                 );
                 server.start();
                 logger.info("Started MAGE server - listening on " + connection.toString());
+
+                // WebSocket Server
+                int websocketPort = config.getWebsocketPort();
+                mage.server.websocket.WebSocketServerImpl webSocketServer = new mage.server.websocket.WebSocketServerImpl(new java.net.InetSocketAddress(websocketPort), mageServerImpl, managerFactory);
+                webSocketServer.start();
+                
+                logger.info("Started MAGE WebSocket server - listening on port " + websocketPort);
 
                 if (testMode) {
                     logger.info("MAGE server running in test mode");

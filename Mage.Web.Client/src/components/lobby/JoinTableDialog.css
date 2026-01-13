@@ -1,0 +1,126 @@
+/* Join Table Dialog Styles */
+
+.join-table-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+/* Table info summary */
+.table-info-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-md);
+}
+
+.info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.info-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.info-value {
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    font-weight: 500;
+}
+
+/* Error message */
+.join-error {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--color-accent-danger);
+    font-size: var(--text-sm);
+}
+
+/* Deck section */
+.deck-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.deck-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.deck-header h4 {
+    font-size: var(--text-lg);
+    font-weight: 600;
+}
+
+.deck-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+/* Deck textarea */
+.deck-textarea {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 200px;
+}
+
+.deck-textarea::placeholder {
+    font-family: inherit;
+    opacity: 0.5;
+}
+
+/* Deck count */
+.input-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.deck-count {
+    font-size: var(--text-xs);
+    font-weight: 400;
+    color: var(--color-text-muted);
+    margin-left: auto;
+}
+
+/* Format help */
+.deck-format-help {
+    padding: var(--space-3);
+    background: var(--color-bg-dark);
+    border-radius: var(--radius-md);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.deck-format-help strong {
+    color: var(--color-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .table-info-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .deck-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+    }
+}

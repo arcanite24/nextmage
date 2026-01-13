@@ -1,0 +1,78 @@
+/* Mana Symbols Styles */
+
+/* Size variants */
+.mana-sm {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+}
+
+.mana-md {
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+}
+
+.mana-lg {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+}
+
+/* Generic mana (colorless numbers) */
+.mana-generic {
+    background: linear-gradient(135deg, #beb9b2 0%, #9c9892 100%);
+    color: #333;
+}
+
+/* Mana pool */
+.mana-pool {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.mana-pool-empty {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-style: italic;
+}
+
+.mana-pool-interactive .mana-pip {
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.mana-pool-interactive .mana-pip:hover {
+    background: var(--color-bg-hover);
+    transform: scale(1.05);
+}
+
+.mana-pip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    background: var(--color-bg-dark);
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.mana-pip:disabled {
+    cursor: default;
+}
+
+.mana-count {
+    min-width: 14px;
+    text-align: center;
+}
+
+/* Mana cost display */
+.mana-cost {
+    display: inline-flex;
+    gap: 2px;
+    vertical-align: middle;
+}

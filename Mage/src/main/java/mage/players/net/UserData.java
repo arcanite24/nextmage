@@ -37,6 +37,14 @@ public class UserData implements Serializable {
     private int constructedRating;
     private int limitedRating;
 
+    public UserData() {
+        this.userSkipPrioritySteps = new UserSkipPrioritySteps();
+        this.requestedHandPlayersList = new HashMap<>();
+        this.matchHistory = "";
+        this.tourneyHistory = "";
+        this.flagName = getDefaultFlagName();
+    }
+
     public UserData(UserGroup userGroup,
                     int avatarId,
                     boolean allowRequestShowHandCards,

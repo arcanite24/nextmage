@@ -143,4 +143,11 @@ public class ConfigWrapper implements ConfigSettings {
         return config.getDeckTypes().getDeckType();
     }
 
+    public int getWebsocketPort() {
+        if (config.getServer().getWebsocketPort() != null) {
+            return config.getServer().getWebsocketPort().intValue();
+        }
+        return 17172; // default port
+    }
+
 }

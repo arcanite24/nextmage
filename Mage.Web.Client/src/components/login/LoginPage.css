@@ -1,0 +1,214 @@
+/* Login Page Styles */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated Background */
+.login-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.login-bg-gradient {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+        var(--color-bg-darkest);
+}
+
+.login-bg-pattern {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='0.03'%3E%3Cpath d='m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+}
+
+.login-bg-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    animation: glow-pulse 8s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+
+    0%,
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+/* Content */
+.login-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-8);
+    padding: var(--space-6);
+    max-width: 420px;
+    width: 100%;
+}
+
+/* Header */
+.login-header {
+    text-align: center;
+}
+
+.login-logo {
+    margin-bottom: var(--space-4);
+}
+
+.logo-icon {
+    width: 80px;
+    height: 80px;
+    animation: logo-rotate 20s linear infinite;
+}
+
+@keyframes logo-rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.login-title {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: var(--space-2);
+    letter-spacing: -0.02em;
+}
+
+.login-subtitle {
+    color: var(--color-text-secondary);
+    font-size: var(--text-lg);
+}
+
+/* Form Card */
+.login-card {
+    width: 100%;
+    padding: var(--space-8);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.login-form-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+/* Error message */
+.login-error {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--color-accent-danger);
+    font-size: var(--text-sm);
+}
+
+/* Divider */
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-glass-border);
+}
+
+/* Status indicator */
+.login-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-full);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+}
+
+.status-connected {
+    background: var(--color-accent-success);
+    box-shadow: 0 0 8px var(--color-accent-success);
+}
+
+.status-connecting {
+    background: var(--color-accent-warning);
+    animation: status-blink 1s ease-in-out infinite;
+}
+
+.status-disconnected {
+    background: var(--color-text-muted);
+}
+
+@keyframes status-blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.status-text {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .login-card {
+        padding: var(--space-6);
+    }
+
+    .login-title {
+        font-size: 2.5rem;
+    }
+}
