@@ -260,10 +260,22 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                     ]);
 
                     await get().fetchTables();
+
+                    // Optimistic update: ensure the created table is in the list immediately
+                    // This handles cases where fetchTables might be slightly delayed or the server index lags
+                    set((state) => {
+                        const exists = state.tables.find(t => t.tableId === table.tableId);
+                        if (!exists) {
+                            state.tables.push(table);
+                            // Re-apply filters
+                            state.filteredTables = applyFilters(state.tables, state.filters);
+                        }
+                    });
+
                     return table;
                 } catch (error) {
                     console.error('Failed to create table:', error);
-                    return null;
+                    throw error;
                 }
             },
 
@@ -296,7 +308,7 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                     return result;
                 } catch (error) {
                     console.error('Failed to join table:', error);
-                    return false;
+                    throw error;
                 } finally {
                     set((state) => { state.isJoining = false; });
                 }

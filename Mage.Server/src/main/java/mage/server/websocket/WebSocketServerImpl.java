@@ -25,10 +25,19 @@ import mage.game.match.MatchOptions;
 import mage.game.tournament.TournamentOptions;
 import mage.players.PlayerType;
 import mage.players.net.UserData;
+import mage.cards.repository.CardCriteria;
+import mage.cards.repository.CardInfo;
+import mage.cards.repository.CardRepository;
+import mage.view.CardView;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
@@ -40,6 +49,12 @@ public class WebSocketServerImpl extends WebSocketServer {
     private static final Logger logger = Logger.getLogger(WebSocketServerImpl.class);
     private final MageServer mageServer;
     private final ManagerFactory managerFactory;
+    private final Map<String, MessageHandler> handlers = new HashMap<>();
+
+    @FunctionalInterface
+    private interface MessageHandler {
+        Object handle(WebSocket conn, JsonArray params) throws Exception;
+    }
     
     // Custom Gson with UUID serialization as strings
     private final Gson gson = new GsonBuilder()
@@ -61,6 +76,7 @@ public class WebSocketServerImpl extends WebSocketServer {
         super(address);
         this.mageServer = mageServer;
         this.managerFactory = managerFactory;
+        registerHandlers();
     }
 
     @Override
@@ -81,492 +97,13 @@ public class WebSocketServerImpl extends WebSocketServer {
             JsonElement id = json.get("id");
             JsonArray params = json.has("params") ? json.get("params").getAsJsonArray() : new JsonArray();
 
-            Object result = null;
-
-            if ("ping".equals(method)) {
-                result = true;
-            } else if ("authRegister".equals(method)) {
-                // sessionId, userName, password, email
-                String sessionId = params.get(0).getAsString();
-                String userName = params.get(1).getAsString();
-                String password = params.get(2).getAsString();
-                String email = params.get(3).getAsString();
-                
-                // Ensure session exists
-                if (managerFactory.sessionManager().getSession(sessionId).isPresent()) {
-                    managerFactory.sessionManager().disconnect(sessionId, DisconnectReason.LostConnection, false);
-                }
-                managerFactory.sessionManager().createSession(sessionId, new WebSocketCallbackHandler(conn));
-                
-                result = mageServer.authRegister(sessionId, userName, password, email);
-                
-            } else if ("connectUser".equals(method)) {
-                 // userName, password, sessionId, restoreSessionId, version (obj), userIdStr
-                 // We accept simplified version args from JSON: versionMajor, versionMinor, ...?
-                 // Or just assume server version for now if passed "match"?
-                 
-                 String userName = params.get(0).getAsString();
-                 String password = params.get(1).getAsString();
-                 String sessionId = params.get(2).getAsString();
-                 String restoreSessionId = params.size() > 3 ? params.get(3).getAsString() : "";
-                 // skipping version construction for a moment, assuming we can reconstruct it
-                 // Or we cheat and use Main.getVersion() if client says "match"
-                 
-                 MageVersion version = new MageVersion(mage.server.Main.class); // Use server version effectively
-                 String userIdStr = params.size() > 5 ? params.get(5).getAsString() : "";
-                 
-                 // Register session handler if not exists
-                 if (managerFactory.sessionManager().getSession(sessionId).isPresent()) {
-                     managerFactory.sessionManager().disconnect(sessionId, DisconnectReason.LostConnection, false);
-                 }
-                 managerFactory.sessionManager().createSession(sessionId, new WebSocketCallbackHandler(conn));
-                 
-                 result = mageServer.connectUser(userName, password, sessionId, restoreSessionId, version, userIdStr);
+            MessageHandler handler = handlers.get(method);
+            if (handler == null) {
+                logger.warn("Unknown method: " + method);
+                return;
             }
 
-            else if ("roomGetUsers".equals(method)) {
-                UUID roomId = UUID.fromString(params.get(0).getAsString());
-                result = mageServer.roomGetUsers(roomId);
-
-            } else if ("roomGetAllTables".equals(method)) {
-                UUID roomId = UUID.fromString(params.get(0).getAsString());
-                result = mageServer.roomGetAllTables(roomId);
-
-            } else if ("roomCreateTable".equals(method)) {
-                String sessionId = params.get(0).getAsString();
-                UUID roomId = UUID.fromString(params.get(1).getAsString());
-                
-                logger.info("roomCreateTable called - sessionId: " + sessionId + ", roomId: " + roomId);
-                
-                // Manually construct MatchOptions since Gson can't handle the parameterized constructor
-                JsonObject optionsJson = params.get(2).getAsJsonObject();
-                logger.info("roomCreateTable options JSON: " + optionsJson.toString());
-                
-                String tableName = optionsJson.has("name") ? optionsJson.get("name").getAsString() : "Game";
-                String gameType = optionsJson.has("gameType") ? optionsJson.get("gameType").getAsString() : "Two Player Duel";
-                boolean multiPlayer = gameType.contains("Free For All") || gameType.contains("Commander");
-                
-                logger.info("roomCreateTable - tableName: " + tableName + ", gameType: " + gameType + ", multiPlayer: " + multiPlayer);
-                
-                MatchOptions matchOptions = new MatchOptions(tableName, gameType, multiPlayer);
-                
-                if (optionsJson.has("deckType")) {
-                    matchOptions.setDeckType(optionsJson.get("deckType").getAsString());
-                }
-                if (optionsJson.has("winsNeeded")) {
-                    matchOptions.setWinsNeeded(optionsJson.get("winsNeeded").getAsInt());
-                }
-                if (optionsJson.has("freeMulligans")) {
-                    matchOptions.setFreeMulligans(optionsJson.get("freeMulligans").getAsInt());
-                }
-                if (optionsJson.has("password") && !optionsJson.get("password").isJsonNull()) {
-                    matchOptions.setPassword(optionsJson.get("password").getAsString());
-                }
-                if (optionsJson.has("limited")) {
-                    matchOptions.setLimited(optionsJson.get("limited").getAsBoolean());
-                }
-                if (optionsJson.has("rated")) {
-                    matchOptions.setRated(optionsJson.get("rated").getAsBoolean());
-                }
-                if (optionsJson.has("rollbackTurnsAllowed")) {
-                    matchOptions.setRollbackTurnsAllowed(optionsJson.get("rollbackTurnsAllowed").getAsBoolean());
-                }
-                if (optionsJson.has("spectatorsAllowed")) {
-                    matchOptions.setSpectatorsAllowed(optionsJson.get("spectatorsAllowed").getAsBoolean());
-                }
-                if (optionsJson.has("matchTimeLimit")) {
-                    try {
-                        matchOptions.setMatchTimeLimit(MatchTimeLimit.valueOf(optionsJson.get("matchTimeLimit").getAsString()));
-                    } catch (IllegalArgumentException e) {
-                        logger.warn("Invalid matchTimeLimit: " + optionsJson.get("matchTimeLimit").getAsString());
-                    }
-                }
-                if (optionsJson.has("matchBufferTime")) {
-                    try {
-                        matchOptions.setMatchBufferTime(MatchBufferTime.valueOf(optionsJson.get("matchBufferTime").getAsString()));
-                    } catch (IllegalArgumentException e) {
-                        logger.warn("Invalid matchBufferTime: " + optionsJson.get("matchBufferTime").getAsString());
-                    }
-                }
-                if (optionsJson.has("skillLevel")) {
-                    try {
-                        matchOptions.setSkillLevel(SkillLevel.valueOf(optionsJson.get("skillLevel").getAsString()));
-                    } catch (IllegalArgumentException e) {
-                        logger.warn("Invalid skillLevel: " + optionsJson.get("skillLevel").getAsString());
-                    }
-                }
-                
-                // Add player type for the creator
-                matchOptions.getPlayerTypes().add(PlayerType.HUMAN);
-                // Add second player slot (will be filled when someone joins)
-                matchOptions.getPlayerTypes().add(PlayerType.HUMAN);
-                
-                logger.info("roomCreateTable - MatchOptions created: name=" + matchOptions.getName() + 
-                    ", gameType=" + matchOptions.getGameType() + 
-                    ", deckType=" + matchOptions.getDeckType() +
-                    ", winsNeeded=" + matchOptions.getWinsNeeded() +
-                    ", playerTypes=" + matchOptions.getPlayerTypes().size());
-                
-                try {
-                    result = mageServer.roomCreateTable(sessionId, roomId, matchOptions);
-                    logger.info("roomCreateTable - result: " + (result != null ? result.toString() : "null"));
-                } catch (Exception e) {
-                    logger.error("roomCreateTable - Exception: " + e.getMessage(), e);
-                    throw e;
-                }
-
-            } else if ("roomJoinTable".equals(method)) {
-                String sessionId = params.get(0).getAsString();
-                UUID roomId = UUID.fromString(params.get(1).getAsString());
-                UUID tableId = UUID.fromString(params.get(2).getAsString());
-                String name = params.get(3).getAsString();
-                PlayerType playerType = PlayerType.getByDescription(params.get(4).getAsString());
-                int skill = params.get(5).getAsInt();
-                DeckCardLists deckList = gson.fromJson(params.get(6), DeckCardLists.class);
-                String password = params.size() > 7 ? params.get(7).getAsString() : "";
-                result = mageServer.roomJoinTable(sessionId, roomId, tableId, name, playerType, skill, deckList, password);
-
-            } else if ("roomLeaveTableOrTournament".equals(method)) { // Unified leave
-                String sessionId = params.get(0).getAsString();
-                UUID roomId = UUID.fromString(params.get(1).getAsString());
-                UUID tableId = UUID.fromString(params.get(2).getAsString());
-                result = mageServer.roomLeaveTableOrTournament(sessionId, roomId, tableId);
-
-            } else if ("roomWatchTable".equals(method)) {
-                String sessionId = params.get(0).getAsString();
-                UUID roomId = UUID.fromString(params.get(1).getAsString());
-                UUID tableId = UUID.fromString(params.get(2).getAsString());
-                result = mageServer.roomWatchTable(sessionId, roomId, tableId);
-            
-            } else if ("roomWatchTournament".equals(method)) {
-                 String sessionId = params.get(0).getAsString();
-                 UUID tableId = UUID.fromString(params.get(1).getAsString());
-                 result = mageServer.roomWatchTournament(sessionId, tableId);
-
-            } else if ("chatJoin".equals(method)) {
-                UUID chatId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                String userName = params.get(2).getAsString();
-                mageServer.chatJoin(chatId, sessionId, userName);
-                result = true;
-
-            } else if ("chatSendMessage".equals(method)) {
-                UUID chatId = UUID.fromString(params.get(0).getAsString());
-                String userName = params.get(1).getAsString();
-                String msg = params.get(2).getAsString();
-                mageServer.chatSendMessage(chatId, userName, msg);
-                result = true;
-
-            } else if ("chatLeave".equals(method)) {
-                UUID chatId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.chatLeave(chatId, sessionId);
-                result = true;
-
-            } else if ("matchStart".equals(method)) {
-                String sessionId = params.get(0).getAsString();
-                UUID roomId = UUID.fromString(params.get(1).getAsString());
-                UUID tableId = UUID.fromString(params.get(2).getAsString());
-                result = mageServer.matchStart(sessionId, roomId, tableId);
-
-            } else if ("matchQuit".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.matchQuit(gameId, sessionId);
-                result = true;
-
-            } else if ("gameJoin".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.gameJoin(gameId, sessionId);
-                result = true;
-            
-            } else if ("gameWatchStart".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                result = mageServer.gameWatchStart(gameId, sessionId);
-            
-            } else if ("gameWatchStop".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.gameWatchStop(gameId, sessionId);
-                result = true;
-
-            } else if ("sendPlayerUUID".equals(method)) {
-                 UUID gameId = UUID.fromString(params.get(0).getAsString());
-                 String sessionId = params.get(1).getAsString();
-                 UUID data = UUID.fromString(params.get(2).getAsString());
-                 mageServer.sendPlayerUUID(gameId, sessionId, data);
-                 result = true;
-
-            } else if ("sendPlayerString".equals(method)) {
-                 UUID gameId = UUID.fromString(params.get(0).getAsString());
-                 String sessionId = params.get(1).getAsString();
-                 String data = params.get(2).getAsString();
-                 mageServer.sendPlayerString(gameId, sessionId, data);
-                 result = true;
-
-            } else if ("sendPlayerBoolean".equals(method)) {
-                 UUID gameId = UUID.fromString(params.get(0).getAsString());
-                 String sessionId = params.get(1).getAsString();
-                 Boolean data = params.get(2).getAsBoolean();
-                 mageServer.sendPlayerBoolean(gameId, sessionId, data);
-                 result = true;
-
-            } else if ("sendPlayerInteger".equals(method)) {
-                 UUID gameId = UUID.fromString(params.get(0).getAsString());
-                 String sessionId = params.get(1).getAsString();
-                 Integer data = params.get(2).getAsInt();
-                 mageServer.sendPlayerInteger(gameId, sessionId, data);
-                 result = true;
-
-            } else if ("sendPlayerManaType".equals(method)) {
-                 UUID gameId = UUID.fromString(params.get(0).getAsString());
-                 UUID playerId = UUID.fromString(params.get(1).getAsString());
-                 String sessionId = params.get(2).getAsString();
-                 ManaType data = ManaType.valueOf(params.get(3).getAsString());
-                 mageServer.sendPlayerManaType(gameId, playerId, sessionId, data);
-                 result = true;
-
-            } else if ("sendPlayerAction".equals(method)) {
-                 PlayerAction action = PlayerAction.valueOf(params.get(0).getAsString());
-                 UUID gameId = UUID.fromString(params.get(1).getAsString());
-                 String sessionId = params.get(2).getAsString();
-                 // data is optional or polymorphic
-                 Object data = null;
-                 if (params.size() > 3 && !params.get(3).isJsonNull()) {
-                     JsonElement dataElem = params.get(3);
-                     if (dataElem.isJsonPrimitive()) {
-                         if (dataElem.getAsJsonPrimitive().isString()) {
-                             String dataStr = dataElem.getAsString();
-                             try {
-                                 data = UUID.fromString(dataStr);
-                             } catch (IllegalArgumentException e) {
-                                 data = dataStr;
-                             }
-                         } else if (dataElem.getAsJsonPrimitive().isNumber()) {
-                             data = dataElem.getAsInt();
-                         } else if (dataElem.getAsJsonPrimitive().isBoolean()) {
-                             data = dataElem.getAsBoolean();
-                         }
-                     }
-                 }
-                 mageServer.sendPlayerAction(action, gameId, sessionId, data);
-                 result = true;
-             
-             } else if ("cheatShow".equals(method)) {
-                 UUID gameId = UUID.fromString(params.get(0).getAsString());
-                 String sessionId = params.get(1).getAsString();
-                 UUID playerId = UUID.fromString(params.get(2).getAsString());
-                 mageServer.cheatShow(gameId, sessionId, playerId);
-                 result = true;
-             }
-
-             else if ("roomCreateTournament".equals(method)) {
-                 String sessionId = params.get(0).getAsString();
-                 UUID roomId = UUID.fromString(params.get(1).getAsString());
-                 TournamentOptions tournamentOptions = gson.fromJson(params.get(2), TournamentOptions.class);
-                 result = mageServer.roomCreateTournament(sessionId, roomId, tournamentOptions);
-
-             } else if ("roomJoinTournament".equals(method)) {
-                 String sessionId = params.get(0).getAsString();
-                 UUID roomId = UUID.fromString(params.get(1).getAsString());
-                 UUID tableId = UUID.fromString(params.get(2).getAsString());
-                 String name = params.get(3).getAsString();
-                 PlayerType playerType = PlayerType.getByDescription(params.get(4).getAsString());
-                 int skill = params.get(5).getAsInt();
-                 DeckCardLists deckList = gson.fromJson(params.get(6), DeckCardLists.class);
-                 String password = params.size() > 7 ? params.get(7).getAsString() : "";
-                 result = mageServer.roomJoinTournament(sessionId, roomId, tableId, name, playerType, skill, deckList, password);
-
-             } else if ("tournamentStart".equals(method)) {
-                 String sessionId = params.get(0).getAsString();
-                 UUID roomId = UUID.fromString(params.get(1).getAsString());
-                 UUID tableId = UUID.fromString(params.get(2).getAsString());
-                 result = mageServer.tournamentStart(sessionId, roomId, tableId);
-
-             } else if ("tournamentJoin".equals(method)) {
-                 UUID draftId = UUID.fromString(params.get(0).getAsString());
-                 String sessionId = params.get(1).getAsString();
-                 mageServer.tournamentJoin(draftId, sessionId);
-                 result = true;
-
-             } else if ("tournamentQuit".equals(method)) {
-                 UUID tournamentId = UUID.fromString(params.get(0).getAsString());
-                 String sessionId = params.get(1).getAsString();
-                 mageServer.tournamentQuit(tournamentId, sessionId);
-                 result = true;
-
-            } else if ("draftJoin".equals(method)) {
-                UUID draftId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.draftJoin(draftId, sessionId);
-                result = true;
-                
-            } else if ("draftQuit".equals(method)) {
-                UUID draftId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.draftQuit(draftId, sessionId);
-                result = true;
-
-            } else if ("sendDraftCardPick".equals(method)) {
-               UUID draftId = UUID.fromString(params.get(0).getAsString());
-               String sessionId = params.get(1).getAsString();
-               UUID cardId = UUID.fromString(params.get(2).getAsString());
-               Set<UUID> hiddenCards = new HashSet<>();
-               if (params.size() > 3 && params.get(3).isJsonArray()) {
-                   for (JsonElement e : params.get(3).getAsJsonArray()) {
-                       hiddenCards.add(UUID.fromString(e.getAsString()));
-                   }
-               }
-               result = mageServer.sendDraftCardPick(draftId, sessionId, cardId, hiddenCards);
-
-            } else if ("sendDraftCardMark".equals(method)) {
-               UUID draftId = UUID.fromString(params.get(0).getAsString());
-               String sessionId = params.get(1).getAsString();
-               UUID cardId = UUID.fromString(params.get(2).getAsString());
-               mageServer.sendDraftCardMark(draftId, sessionId, cardId);
-               result = true;
-            }
-
-            else if ("deckSubmit".equals(method)) {
-                 String sessionId = params.get(0).getAsString();
-                 UUID tableId = UUID.fromString(params.get(1).getAsString());
-                 DeckCardLists deckList = gson.fromJson(params.get(2), DeckCardLists.class);
-                 result = mageServer.deckSubmit(sessionId, tableId, deckList);
-            
-            } else if ("serverGetMainRoomId".equals(method)) {
-                result = mageServer.serverGetMainRoomId();
-            
-            } else if ("connectSetUserData".equals(method)) {
-                String userName = params.get(0).getAsString();
-                String sessionId = params.get(1).getAsString();
-                UserData userData = gson.fromJson(params.get(2), UserData.class);
-                String clientVersion = params.get(3).getAsString();
-                String userIdStr = params.get(4).getAsString();
-                
-                result = mageServer.connectSetUserData(userName, sessionId, userData, clientVersion, userIdStr);
-            
-            // Additional utility methods
-            
-            } else if ("draftSetBoosterLoaded".equals(method)) {
-                UUID draftId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.draftSetBoosterLoaded(draftId, sessionId);
-                result = true;
-            
-            // Replay methods
-            } else if ("replayInit".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.replayInit(gameId, sessionId);
-                result = true;
-            
-            } else if ("replayStart".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.replayStart(gameId, sessionId);
-                result = true;
-            
-            } else if ("replayStop".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.replayStop(gameId, sessionId);
-                result = true;
-            
-            } else if ("replayNext".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.replayNext(gameId, sessionId);
-                result = true;
-            
-            } else if ("replayPrevious".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                mageServer.replayPrevious(gameId, sessionId);
-                result = true;
-            
-            } else if ("replaySkipForward".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                int moves = params.get(2).getAsInt();
-                mageServer.replaySkipForward(gameId, sessionId, moves);
-                result = true;
-            
-            // Chat utility methods
-            } else if ("chatFindByGame".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                result = mageServer.chatFindByGame(gameId);
-            
-            } else if ("chatFindByTable".equals(method)) {
-                UUID tableId = UUID.fromString(params.get(0).getAsString());
-                result = mageServer.chatFindByTable(tableId);
-            
-            } else if ("chatFindByTournament".equals(method)) {
-                UUID tournamentId = UUID.fromString(params.get(0).getAsString());
-                result = mageServer.chatFindByTournament(tournamentId);
-            
-            } else if ("chatFindByRoom".equals(method)) {
-                UUID roomId = UUID.fromString(params.get(0).getAsString());
-                result = mageServer.chatFindByRoom(roomId);
-            
-            // Table utility methods
-            } else if ("tableSwapSeats".equals(method)) {
-                String sessionId = params.get(0).getAsString();
-                UUID roomId = UUID.fromString(params.get(1).getAsString());
-                UUID tableId = UUID.fromString(params.get(2).getAsString());
-                int seatNum1 = params.get(3).getAsInt();
-                int seatNum2 = params.get(4).getAsInt();
-                mageServer.tableSwapSeats(sessionId, roomId, tableId, seatNum1, seatNum2);
-                result = true;
-            
-            } else if ("tableRemove".equals(method)) {
-                String sessionId = params.get(0).getAsString();
-                UUID roomId = UUID.fromString(params.get(1).getAsString());
-                UUID tableId = UUID.fromString(params.get(2).getAsString());
-                mageServer.tableRemove(sessionId, roomId, tableId);
-                result = true;
-            
-            } else if ("tableIsOwner".equals(method)) {
-                String sessionId = params.get(0).getAsString();
-                UUID roomId = UUID.fromString(params.get(1).getAsString());
-                UUID tableId = UUID.fromString(params.get(2).getAsString());
-                result = mageServer.tableIsOwner(sessionId, roomId, tableId);
-            
-            // Room utility methods
-            } else if ("roomGetFinishedMatches".equals(method)) {
-                UUID roomId = UUID.fromString(params.get(0).getAsString());
-                result = mageServer.roomGetFinishedMatches(roomId);
-            
-            } else if ("roomGetTableById".equals(method)) {
-                UUID roomId = UUID.fromString(params.get(0).getAsString());
-                UUID tableId = UUID.fromString(params.get(1).getAsString());
-                result = mageServer.roomGetTableById(roomId, tableId);
-            
-            // Tournament utility methods
-            } else if ("tournamentFindById".equals(method)) {
-                UUID tournamentId = UUID.fromString(params.get(0).getAsString());
-                result = mageServer.tournamentFindById(tournamentId);
-            
-            // Game utility methods
-            } else if ("gameGetView".equals(method)) {
-                UUID gameId = UUID.fromString(params.get(0).getAsString());
-                String sessionId = params.get(1).getAsString();
-                UUID playerId = UUID.fromString(params.get(2).getAsString());
-                result = mageServer.gameGetView(gameId, sessionId, playerId);
-            
-            // Server info
-            } else if ("getServerState".equals(method)) {
-                result = mageServer.getServerState();
-            
-            // Deck methods
-            } else if ("deckSave".equals(method)) {
-                String sessionId = params.get(0).getAsString();
-                UUID tableId = UUID.fromString(params.get(1).getAsString());
-                DeckCardLists deckList = gson.fromJson(params.get(2), DeckCardLists.class);
-                mageServer.deckSave(sessionId, tableId, deckList);
-                result = true;
-            }
+            Object result = handler.handle(conn, params);
 
             if (id != null) {
                 JsonObject response = new JsonObject();
@@ -577,12 +114,11 @@ public class WebSocketServerImpl extends WebSocketServer {
             }
 
         } catch (Exception e) {
-            logger.error("Error processing WebSocket message", e);
+            logger.error("Error processing WebSocket message: " + message, e);
             if (conn.isOpen()) {
                 JsonObject error = new JsonObject();
                 error.addProperty("jsonrpc", "2.0");
                 
-                // Try to include ID if we parsed it
                 try {
                     JsonObject json = JsonParser.parseString(message).getAsJsonObject();
                     if (json.has("id")) {
@@ -599,6 +135,231 @@ public class WebSocketServerImpl extends WebSocketServer {
     @Override
     public void onError(WebSocket conn, Exception ex) {
         logger.error("WebSocket error", ex);
+    }
+
+    private void registerHandlers() {
+        handlers.put("ping", (conn, params) -> true);
+        handlers.put("authRegister", this::handleAuthRegister);
+        handlers.put("connectUser", this::handleConnectUser);
+        
+        // Room
+        handlers.put("roomGetUsers", (conn, params) -> mageServer.roomGetUsers(getUUID(params, 0)));
+        handlers.put("roomGetAllTables", (conn, params) -> mageServer.roomGetAllTables(getUUID(params, 0)));
+        handlers.put("roomCreateTable", this::handleRoomCreateTable);
+        handlers.put("roomJoinTable", (conn, params) -> mageServer.roomJoinTable(getString(params, 0), getUUID(params, 1), getUUID(params, 2), getString(params, 3), PlayerType.getByDescription(getString(params, 4)), getInt(params, 5), getObject(params, 6, DeckCardLists.class), params.size() > 7 ? getString(params, 7) : ""));
+        handlers.put("roomLeaveTableOrTournament", (conn, params) -> mageServer.roomLeaveTableOrTournament(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
+        handlers.put("roomWatchTable", (conn, params) -> mageServer.roomWatchTable(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
+        handlers.put("roomWatchTournament", (conn, params) -> mageServer.roomWatchTournament(getString(params, 0), getUUID(params, 1)));
+        
+        // Chat
+        handlers.put("chatJoin", (conn, params) -> { mageServer.chatJoin(getUUID(params, 0), getString(params, 1), getString(params, 2)); return true; });
+        handlers.put("chatSendMessage", (conn, params) -> { mageServer.chatSendMessage(getUUID(params, 0), getString(params, 1), getString(params, 2)); return true; });
+        handlers.put("chatLeave", (conn, params) -> { mageServer.chatLeave(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("chatFindByGame", (conn, params) -> mageServer.chatFindByGame(getUUID(params, 0)));
+        handlers.put("chatFindByTable", (conn, params) -> mageServer.chatFindByTable(getUUID(params, 0)));
+        handlers.put("chatFindByTournament", (conn, params) -> mageServer.chatFindByTournament(getUUID(params, 0)));
+        handlers.put("chatFindByRoom", (conn, params) -> mageServer.chatFindByRoom(getUUID(params, 0)));
+
+        // Match
+        handlers.put("matchStart", (conn, params) -> mageServer.matchStart(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
+        handlers.put("matchQuit", (conn, params) -> { mageServer.matchQuit(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("gameJoin", (conn, params) -> { mageServer.gameJoin(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("gameWatchStart", (conn, params) -> mageServer.gameWatchStart(getUUID(params, 0), getString(params, 1)));
+        handlers.put("gameWatchStop", (conn, params) -> { mageServer.gameWatchStop(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("gameGetView", (conn, params) -> mageServer.gameGetView(getUUID(params, 0), getString(params, 1), getUUID(params, 2)));
+
+        // Player Data
+        handlers.put("sendPlayerUUID", (conn, params) -> { mageServer.sendPlayerUUID(getUUID(params, 0), getString(params, 1), getUUID(params, 2)); return true; });
+        handlers.put("sendPlayerString", (conn, params) -> { mageServer.sendPlayerString(getUUID(params, 0), getString(params, 1), getString(params, 2)); return true; });
+        handlers.put("sendPlayerBoolean", (conn, params) -> { mageServer.sendPlayerBoolean(getUUID(params, 0), getString(params, 1), getBoolean(params, 2)); return true; });
+        handlers.put("sendPlayerInteger", (conn, params) -> { mageServer.sendPlayerInteger(getUUID(params, 0), getString(params, 1), getInt(params, 2)); return true; });
+        handlers.put("sendPlayerManaType", (conn, params) -> { mageServer.sendPlayerManaType(getUUID(params, 0), getUUID(params, 1), getString(params, 2), ManaType.valueOf(getString(params, 3))); return true; });
+        handlers.put("sendPlayerAction", this::handleSendPlayerAction);
+        handlers.put("cheatShow", (conn, params) -> { mageServer.cheatShow(getUUID(params, 0), getString(params, 1), getUUID(params, 2)); return true; });
+        
+        // Tournaments & Drafts
+        handlers.put("roomCreateTournament", (conn, params) -> mageServer.roomCreateTournament(getString(params, 0), getUUID(params, 1), getObject(params, 2, TournamentOptions.class)));
+        handlers.put("roomJoinTournament", (conn, params) -> mageServer.roomJoinTournament(getString(params, 0), getUUID(params, 1), getUUID(params, 2), getString(params, 3), PlayerType.getByDescription(getString(params, 4)), getInt(params, 5), getObject(params, 6, DeckCardLists.class), params.size() > 7 ? getString(params, 7) : ""));
+        handlers.put("tournamentStart", (conn, params) -> mageServer.tournamentStart(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
+        handlers.put("tournamentJoin", (conn, params) -> { mageServer.tournamentJoin(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("tournamentQuit", (conn, params) -> { mageServer.tournamentQuit(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("tournamentFindById", (conn, params) -> mageServer.tournamentFindById(getUUID(params, 0)));
+        
+        handlers.put("draftJoin", (conn, params) -> { mageServer.draftJoin(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("draftQuit", (conn, params) -> { mageServer.draftQuit(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("sendDraftCardPick", this::handleSendDraftCardPick);
+        handlers.put("sendDraftCardMark", (conn, params) -> { mageServer.sendDraftCardMark(getUUID(params, 0), getString(params, 1), getUUID(params, 2)); return true; });
+        handlers.put("draftSetBoosterLoaded", (conn, params) -> { mageServer.draftSetBoosterLoaded(getUUID(params, 0), getString(params, 1)); return true; });
+
+        // Decks
+        handlers.put("deckSubmit", (conn, params) -> mageServer.deckSubmit(getString(params, 0), getUUID(params, 1), getObject(params, 2, DeckCardLists.class)));
+        handlers.put("deckSave", (conn, params) -> { mageServer.deckSave(getString(params, 0), getUUID(params, 1), getObject(params, 2, DeckCardLists.class)); return true; });
+
+        // User
+        handlers.put("connectSetUserData", this::handleConnectSetUserData);
+        
+        // Utils
+        handlers.put("serverGetMainRoomId", (conn, params) -> mageServer.serverGetMainRoomId());
+        handlers.put("getServerState", (conn, params) -> mageServer.getServerState());
+        handlers.put("searchCards", this::handleSearchCards);
+        
+        // Replay
+        handlers.put("replayInit", (conn, params) -> { mageServer.replayInit(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("replayStart", (conn, params) -> { mageServer.replayStart(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("replayStop", (conn, params) -> { mageServer.replayStop(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("replayNext", (conn, params) -> { mageServer.replayNext(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("replayPrevious", (conn, params) -> { mageServer.replayPrevious(getUUID(params, 0), getString(params, 1)); return true; });
+        handlers.put("replaySkipForward", (conn, params) -> { mageServer.replaySkipForward(getUUID(params, 0), getString(params, 1), getInt(params, 2)); return true; });
+
+        // Table Utils
+        handlers.put("tableSwapSeats", (conn, params) -> { mageServer.tableSwapSeats(getString(params, 0), getUUID(params, 1), getUUID(params, 2), getInt(params, 3), getInt(params, 4)); return true; });
+        handlers.put("tableRemove", (conn, params) -> { mageServer.tableRemove(getString(params, 0), getUUID(params, 1), getUUID(params, 2)); return true; });
+        handlers.put("tableIsOwner", (conn, params) -> mageServer.tableIsOwner(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
+        handlers.put("roomGetFinishedMatches", (conn, params) -> mageServer.roomGetFinishedMatches(getUUID(params, 0)));
+        handlers.put("roomGetTableById", (conn, params) -> mageServer.roomGetTableById(getUUID(params, 0), getUUID(params, 1)));
+    }
+
+    private Object handleAuthRegister(WebSocket conn, JsonArray params) throws Exception {
+        String sessionId = getString(params, 0);
+        String userName = getString(params, 1);
+        String password = getString(params, 2);
+        String email = getString(params, 3);
+        
+        if (managerFactory.sessionManager().getSession(sessionId).isPresent()) {
+            managerFactory.sessionManager().disconnect(sessionId, DisconnectReason.LostConnection, false);
+        }
+        managerFactory.sessionManager().createSession(sessionId, new WebSocketCallbackHandler(conn));
+        
+        return mageServer.authRegister(sessionId, userName, password, email);
+    }
+
+    private Object handleConnectUser(WebSocket conn, JsonArray params) throws Exception {
+         String userName = getString(params, 0);
+         String password = getString(params, 1);
+         String sessionId = getString(params, 2);
+         String restoreSessionId = params.size() > 3 ? getString(params, 3) : "";
+         MageVersion version = new MageVersion(mage.server.Main.class);
+         String userIdStr = params.size() > 5 ? getString(params, 5) : "";
+         
+         if (managerFactory.sessionManager().getSession(sessionId).isPresent()) {
+             managerFactory.sessionManager().disconnect(sessionId, DisconnectReason.LostConnection, false);
+         }
+         managerFactory.sessionManager().createSession(sessionId, new WebSocketCallbackHandler(conn));
+         
+         return mageServer.connectUser(userName, password, sessionId, restoreSessionId, version, userIdStr);
+    }
+
+    private Object handleRoomCreateTable(WebSocket conn, JsonArray params) throws Exception {
+        String sessionId = getString(params, 0);
+        UUID roomId = getUUID(params, 1);
+        JsonObject optionsJson = params.get(2).getAsJsonObject();
+        
+        String tableName = optionsJson.has("name") ? optionsJson.get("name").getAsString() : "Game";
+        String gameType = optionsJson.has("gameType") ? optionsJson.get("gameType").getAsString() : "Two Player Duel";
+        boolean multiPlayer = gameType.contains("Free For All") || gameType.contains("Commander");
+        
+        MatchOptions matchOptions = new MatchOptions(tableName, gameType, multiPlayer);
+        
+        if (optionsJson.has("deckType")) matchOptions.setDeckType(optionsJson.get("deckType").getAsString());
+        if (optionsJson.has("winsNeeded")) matchOptions.setWinsNeeded(optionsJson.get("winsNeeded").getAsInt());
+        if (optionsJson.has("freeMulligans")) matchOptions.setFreeMulligans(optionsJson.get("freeMulligans").getAsInt());
+        if (optionsJson.has("password") && !optionsJson.get("password").isJsonNull()) matchOptions.setPassword(optionsJson.get("password").getAsString());
+        if (optionsJson.has("limited")) matchOptions.setLimited(optionsJson.get("limited").getAsBoolean());
+        if (optionsJson.has("rated")) matchOptions.setRated(optionsJson.get("rated").getAsBoolean());
+        if (optionsJson.has("rollbackTurnsAllowed")) matchOptions.setRollbackTurnsAllowed(optionsJson.get("rollbackTurnsAllowed").getAsBoolean());
+        if (optionsJson.has("spectatorsAllowed")) matchOptions.setSpectatorsAllowed(optionsJson.get("spectatorsAllowed").getAsBoolean());
+        if (optionsJson.has("matchTimeLimit")) {
+            try { matchOptions.setMatchTimeLimit(MatchTimeLimit.valueOf(optionsJson.get("matchTimeLimit").getAsString())); } catch (Exception e) {}
+        }
+        if (optionsJson.has("matchBufferTime")) {
+            try { matchOptions.setMatchBufferTime(MatchBufferTime.valueOf(optionsJson.get("matchBufferTime").getAsString())); } catch (Exception e) {}
+        }
+        if (optionsJson.has("skillLevel")) {
+            try { matchOptions.setSkillLevel(SkillLevel.valueOf(optionsJson.get("skillLevel").getAsString())); } catch (Exception e) {}
+        }
+        
+        // Default quitRatio to 100 (allow everyone) if not specified, to avoid blocking users with >0% quit ratio from creating tables
+        matchOptions.setQuitRatio(optionsJson.has("quitRatio") ? optionsJson.get("quitRatio").getAsInt() : 100);
+        
+        if (optionsJson.has("minimumRating")) matchOptions.setMinimumRating(optionsJson.get("minimumRating").getAsInt());
+        if (optionsJson.has("edhPowerLevel")) matchOptions.setEdhPowerLevel(optionsJson.get("edhPowerLevel").getAsInt());
+        
+        matchOptions.getPlayerTypes().add(PlayerType.HUMAN);
+        matchOptions.getPlayerTypes().add(PlayerType.HUMAN);
+        
+        return mageServer.roomCreateTable(sessionId, roomId, matchOptions);
+    }
+
+    private Object handleSendPlayerAction(WebSocket conn, JsonArray params) throws Exception {
+         PlayerAction action = PlayerAction.valueOf(getString(params, 0));
+         UUID gameId = getUUID(params, 1);
+         String sessionId = getString(params, 2);
+         Object data = null;
+         
+         if (params.size() > 3 && !params.get(3).isJsonNull()) {
+             JsonElement dataElem = params.get(3);
+             if (dataElem.isJsonPrimitive()) {
+                 if (dataElem.getAsJsonPrimitive().isString()) {
+                     String dataStr = dataElem.getAsString();
+                     try { data = UUID.fromString(dataStr); } catch (Exception e) { data = dataStr; }
+                 } else if (dataElem.getAsJsonPrimitive().isNumber()) {
+                     data = dataElem.getAsInt();
+                 } else if (dataElem.getAsJsonPrimitive().isBoolean()) {
+                     data = dataElem.getAsBoolean();
+                 }
+             }
+         }
+         mageServer.sendPlayerAction(action, gameId, sessionId, data);
+         return true;
+    }
+
+    private Object handleSendDraftCardPick(WebSocket conn, JsonArray params) throws Exception {
+       UUID draftId = getUUID(params, 0);
+       String sessionId = getString(params, 1);
+       UUID cardId = getUUID(params, 2);
+       Set<UUID> hiddenCards = new HashSet<>();
+       if (params.size() > 3 && params.get(3).isJsonArray()) {
+           for (JsonElement e : params.get(3).getAsJsonArray()) {
+               hiddenCards.add(UUID.fromString(e.getAsString()));
+           }
+       }
+       return mageServer.sendDraftCardPick(draftId, sessionId, cardId, hiddenCards);
+    }
+
+    private Object handleConnectSetUserData(WebSocket conn, JsonArray params) throws Exception {
+        String userName = getString(params, 0);
+        String sessionId = getString(params, 1);
+        UserData userData = getObject(params, 2, UserData.class);
+        String clientVersion = getString(params, 3);
+        String userIdStr = getString(params, 4);
+        return mageServer.connectSetUserData(userName, sessionId, userData, clientVersion, userIdStr);
+    }
+
+    private Object handleSearchCards(WebSocket conn, JsonArray params) throws Exception {
+        CardCriteria criteria = getObject(params, 0, CardCriteria.class);
+        if (criteria.getCount() == null) criteria.count(100L); 
+        List<CardInfo> cards = CardRepository.instance.findCards(criteria);
+        return cards.stream().map(info -> new CardView(info.createMockCard())).collect(Collectors.toList());
+    }
+
+    private String getString(JsonArray params, int index) {
+        return params.get(index).getAsString();
+    }
+
+    private UUID getUUID(JsonArray params, int index) {
+        return UUID.fromString(params.get(index).getAsString());
+    }
+
+    private int getInt(JsonArray params, int index) {
+        return params.get(index).getAsInt();
+    }
+
+    private boolean getBoolean(JsonArray params, int index) {
+        return params.get(index).getAsBoolean();
+    }
+
+    private <T> T getObject(JsonArray params, int index, Class<T> classOfT) {
+        return gson.fromJson(params.get(index), classOfT);
     }
 
     @Override

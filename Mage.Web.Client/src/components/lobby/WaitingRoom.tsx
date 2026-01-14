@@ -6,9 +6,11 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useLobbyStore, useSessionStore } from '../../stores';
-import { Button } from '../common';
+import { useLobbyStore, useSessionStore, useGameStore } from '../../stores';
+import { Button, Modal } from '../common';
 import { TableState } from '../../types';
+import { DeckSerializer } from '../../services/DeckSerializer';
+import { DeckSelector } from './DeckSelector';
 import './WaitingRoom.css';
 
 export const WaitingRoom: React.FC = () => {
@@ -18,13 +20,38 @@ export const WaitingRoom: React.FC = () => {
     const [isStarting, setIsStarting] = useState(false);
     const [isAddingAI, setIsAddingAI] = useState(false);
 
-    // Poll for updates on this specific table to ensure seats are up to date
+    // AI Deck Selection State
+    const [aiDeckText, setAiDeckText] = useState('');
+    const [aiDeckName, setAiDeckName] = useState('Computer Deck');
+    const [aiError, setAiError] = useState<string | null>(null);
+
+    const { joinGame, gameId } = useGameStore();
+
+    // Poll for updates on this specific table
     useEffect(() => {
         const interval = setInterval(() => {
             refreshCurrentTable();
-        }, 1000); // 1 second polling for active waiting room
+        }, 1000);
         return () => clearInterval(interval);
     }, [refreshCurrentTable]);
+
+    // Auto-join game if table is starting/dueling and we have a game ID
+    // This recovers players who missed the 'startGame' callback (e.g. due to reconnect)
+    useEffect(() => {
+        if (!currentTable) return;
+
+        const isGameActive = currentTable.tableState === TableState.STARTING ||
+            currentTable.tableState === TableState.DUELING;
+
+        if (isGameActive && currentTable.games && currentTable.games.length > 0) {
+            const activeGameId = currentTable.games[0];
+            // Only join if we aren't already in this game
+            if (activeGameId !== gameId) {
+                console.log('WaitingRoom: Table is active, auto-joining game:', activeGameId);
+                joinGame(activeGameId);
+            }
+        }
+    }, [currentTable, gameId, joinGame]);
 
     const tableToRender = currentTable;
 
@@ -54,34 +81,45 @@ export const WaitingRoom: React.FC = () => {
     };
 
     const handleAddAIClick = () => {
+        // Initialize with sample or empty (or current user's deck if desired)
+        // For now, let's start empty or sample
         setShowDeckSelector(true);
+        setAiError(null);
     };
 
-    const handleAISelectedDeck = async (deck: any, name: string) => { // Using explicit types would be better but keeping it simple for now
+    const handleSubmitAI = async () => {
         if (!currentTable) return;
 
-        // Validation: Ensure deck has cards
-        if (!deck || !deck.cards || deck.cards.length === 0) {
-            alert("Please select a valid deck with cards for the AI.");
-            return;
-        }
+        setAiError(null);
+        try {
+            const deck = DeckSerializer.importDeck(aiDeckText);
+            deck.name = aiDeckName;
 
-        const aiName = window.prompt("Enter AI Name:", "Computer");
-        if (!aiName) {
-            setShowDeckSelector(false);
-            return;
-        }
+            // Basic validation
+            const totalCards = deck.cards.reduce((sum, c) => sum + c.amount, 0);
+            if (totalCards < 1) {
+                setAiError("Please provide a deck with cards.");
+                return;
+            }
 
-        setIsAddingAI(true);
-        // Ensure deck has correct structure if it came from editor
-        const deckList = deck.cards ? deck : { cards: [], sideboard: [], name: 'Unknown' };
+            const aiName = window.prompt("Enter AI Name:", "Computer");
+            if (!aiName) return;
 
-        const success = await addAI(currentTable.tableId, aiName, deckList, 5);
-        if (!success) {
-            alert("Failed to add AI player. Check if the deck is valid for this format.");
+            setIsAddingAI(true);
+
+            // Skill level 5 seems to be standard/default for now
+            const success = await addAI(currentTable.tableId, aiName, deck, 5);
+
+            if (success) {
+                setShowDeckSelector(false);
+            } else {
+                setAiError("Failed to add AI player. Check if the deck is valid for this format.");
+            }
+        } catch (err: any) {
+            setAiError(err.message || "Error processing deck");
+        } finally {
+            setIsAddingAI(false);
         }
-        setIsAddingAI(false);
-        setShowDeckSelector(false);
     };
 
     const handleRefresh = () => {
@@ -171,22 +209,40 @@ export const WaitingRoom: React.FC = () => {
             {/* Actually, let's inject a new simple modal for deck selection since we don't have DeckEditorModal */}
 
             {showDeckSelector && (
-                <div className="modal-overlay">
-                    <div className="modal-container" style={{ maxWidth: '500px' }}>
-                        <div className="modal-header">
-                            <h3>Select Deck for AI</h3>
-                            <button className="modal-close" onClick={() => setShowDeckSelector(false)}>×</button>
-                        </div>
-                        <div className="modal-content">
-                            <p>For now, the AI will use the same deck as you.</p>
-                            <p>TODO: Implement full deck selector.</p>
-                        </div>
-                        <div className="modal-footer">
-                            <Button onClick={() => setShowDeckSelector(false)}>Cancel</Button>
-                            <Button variant="primary" onClick={() => handleAISelectedDeck(myDeck, "AI Deck")}>Use My Deck</Button>
-                        </div>
+                <Modal
+                    isOpen={showDeckSelector}
+                    onClose={() => setShowDeckSelector(false)}
+                    title="Select Deck for AI"
+                    size="lg"
+                    footer={
+                        <>
+                            <Button variant="ghost" onClick={() => setShowDeckSelector(false)}>
+                                Cancel
+                            </Button>
+                            <Button variant="primary" onClick={handleSubmitAI} isLoading={isAddingAI}>
+                                Add AI Player
+                            </Button>
+                        </>
+                    }
+                >
+                    <div className="ai-deck-selector-container">
+                        {aiError && (
+                            <div className="error-message">
+                                {aiError}
+                            </div>
+                        )}
+                        <DeckSelector
+                            deckName={aiDeckName}
+                            onDeckNameChange={setAiDeckName}
+                            deckText={aiDeckText}
+                            onDeckTextChange={(text) => {
+                                setAiDeckText(text);
+                                setAiError(null);
+                            }}
+                            onError={setAiError}
+                        />
                     </div>
-                </div>
+                </Modal>
             )}
         </>
     );

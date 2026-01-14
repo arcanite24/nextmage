@@ -10,7 +10,7 @@
  * - Request timeout handling (default: 30 seconds)
  */
 
-import { ClientCallback, JsonRpcRequest, JsonRpcResponse } from '../types';
+import { ClientCallback, JsonRpcRequest, JsonRpcResponse, SearchCardView, CardSearchCriteria } from '../types';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
@@ -199,6 +199,16 @@ class WebSocketService {
             console.warn('[WebSocket] Ping failed:', error);
             return false;
         }
+    }
+
+    /**
+     * Search for cards
+     */
+    /**
+     * Search for cards
+     */
+    async searchCards(criteria: CardSearchCriteria): Promise<SearchCardView[]> {
+        return this.send<SearchCardView[]>('searchCards', [criteria]);
     }
 
     // === Private Methods ===

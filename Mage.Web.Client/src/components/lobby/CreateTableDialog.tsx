@@ -22,6 +22,7 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
     onTableCreated,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         name: '',
         gameType: 'Two Player Duel',
@@ -39,6 +40,7 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setError(null);
 
         // Helper to determine player types (seats)
         const getPlayerTypes = (gameType: string, aiOpponent: boolean): string[] => {
@@ -68,6 +70,7 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
             gameType: formData.gameType,
             deckType: formData.deckType,
             winsNeeded: formData.winsNeeded,
+            quitRatio: 100,
             freeMulligans: 0,
             matchTimeLimit: formData.timeLimit,
             matchBufferTime: 'SEC__03',
@@ -84,8 +87,11 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
             if (table) {
                 onTableCreated(table.tableId);
             }
-        } catch (error) {
-            console.error('Failed to create table:', error);
+        } catch (err: any) {
+            console.error('Failed to create table:', err);
+            // Display specific server error
+            const msg = err.message || String(err);
+            setError(msg.replace(/^Error:\s*/, ''));
         } finally {
             setIsLoading(false);
         }
@@ -96,6 +102,7 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
         value: typeof formData[K]
     ) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        setError(null);
     };
 
     return (
@@ -120,6 +127,11 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
             }
         >
             <form className="create-table-form" onSubmit={handleSubmit}>
+                {error && (
+                    <div className="error-message p-3 mb-4 bg-red-100 text-red-700 rounded border border-red-300">
+                        {error}
+                    </div>
+                )}
                 <div className="input-group">
                     <label htmlFor="tableName" className="input-label">
                         Table Name

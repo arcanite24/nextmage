@@ -118,9 +118,10 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
 
                 {/* Additional info */}
                 {table.additionalInfoFull && (
-                    <div className="additional-info">
-                        {table.additionalInfoFull}
-                    </div>
+                    <div
+                        className="additional-info"
+                        dangerouslySetInnerHTML={{ __html: table.additionalInfoFull }}
+                    />
                 )}
 
                 {/* Seats */}

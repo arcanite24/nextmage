@@ -11,7 +11,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 250;
+    /* Below variables.z-modal-backdrop (300) */
 }
 
 .waiting-room-panel {
@@ -139,84 +140,13 @@
     /* darker emerald */
 }
 
-/* Modal styles for injected deck selector */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.85);
-    /* Darker backdrop */
-    backdrop-filter: blur(2px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    /* Higher than waiting-room-overlay (1000) */
-}
-
-.modal-container {
-    background: var(--color-bg-elevated);
-    border: 1px solid var(--color-glass-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-xl);
-    width: 100%;
-    max-width: 500px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    animation: modalSlideIn 0.2s ease-out;
-}
-
-.modal-header {
-    padding: var(--space-4);
-    background: var(--color-bg-dark);
-    border-bottom: 1px solid var(--color-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h3 {
-    margin: 0;
-    font-size: var(--text-lg);
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    color: var(--color-text-muted);
-    font-size: 24px;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.modal-close:hover {
-    color: var(--color-text);
-}
-
-.modal-content {
-    padding: var(--space-6);
-}
-
-.modal-footer {
-    padding: var(--space-4);
-    background: var(--color-bg-dark);
-    border-top: 1px solid var(--color-border);
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--space-3);
-}
-
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Error message style for AI Deck Selector */
+.ai-deck-selector-container .error-message {
+    padding: var(--space-3);
+    margin-bottom: var(--space-3);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--color-accent-danger);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
 }

@@ -79,8 +79,8 @@ export interface RoomUsersView {
 
 export interface DeckCardInfo {
     cardName: string;
-    setCode?: string;
-    cardNumber?: string;
+    setCode?: string | null;
+    cardNumber?: string | null;
     amount: number;
 }
 

@@ -8,10 +8,11 @@ import React, { useEffect, useState } from 'react';
 import { LoginPage } from './components/login';
 import { LobbyPage } from './components/lobby';
 import { GamePage } from './components/game';
+import { DeckEditorPage } from './components/deck/DeckEditorPage';
 import { useSessionStore, useGameStore, initializeCallbackDispatcher } from './stores';
 import './App.css';
 
-type AppView = 'login' | 'lobby' | 'game';
+type AppView = 'login' | 'lobby' | 'game' | 'deck-editor';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('login');
@@ -84,6 +85,7 @@ function App() {
         <LobbyPage
           onEnterGame={handleEnterGame}
           onLogout={handleLogout}
+          onOpenDeckEditor={() => setCurrentView('deck-editor')}
         />
       )}
 
@@ -91,7 +93,12 @@ function App() {
         <GamePage gameId={gameId} onLeave={handleLeaveGame} />
       )}
 
+      {currentView === 'deck-editor' && (
+        <DeckEditorPage onExit={() => setCurrentView('lobby')} />
+      )}
+
       {/* Global Alert Dialog */}
+
       <GlobalAlert />
     </div>
   );

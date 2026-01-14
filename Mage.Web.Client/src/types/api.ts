@@ -246,3 +246,74 @@ export type PlayerAction =
   | "VIEW_LIMITED_DECK"
   | "VIEW_SIDEBOARD"
   | "TOGGLE_RECORD_MACRO";
+
+// === Constants (duplicated from Java) ===
+
+// Card Types
+export type CardType = "ARTIFACT" | "CREATURE" | "ENCHANTMENT" | "INSTANT" | "LAND" | "PLANESWALKER" | "SORCERY" | "TRIBAL" | "CONSPIRACY" | "DUNGEON" | "BATTLE";
+
+// Super Types
+export type SuperType = "BASIC" | "LEGENDARY" | "ONGOING" | "SNOW" | "WORLD";
+
+// Sub Types (Partial list, as there are hundreds)
+export type SubType = string;
+
+// === Deck Editor / Card Search ===
+
+export interface CardSearchCriteria {
+  // name?: string; // Exact match not supported via this interface correctly in all cases??
+  nameContains?: string;
+  rules?: string;
+  type?: string;
+  setCodes?: string[];
+  types?: CardType[];
+  notTypes?: CardType[];
+  supertypes?: SuperType[];
+  subtypes?: SubType[];
+  rarities?: Rarity[];
+  minCardNumber?: number;
+  maxCardNumber?: number;
+  manaValue?: number;
+  black?: boolean;
+  blue?: boolean;
+  green?: boolean;
+  red?: boolean;
+  white?: boolean;
+  colorless?: boolean;
+  start?: number;
+  count?: number;
+  sortBy?: "name" | "cardNumber" | "rarity" | "color" | "manaValue";
+}
+
+// Simplified definition of CardView as returned by searchCards
+export interface SearchSimpleCardView {
+  id: UUID;
+  name: string;
+  displayName: string;
+  rules: string[];
+  power: string;
+  toughness: string;
+  loyalty: string;
+  defense: string;
+  cardTypes: CardType[];
+  subTypes: SubType[];
+  superTypes: SuperType[];
+  expansionSetCode: string;
+  cardNumber: string;
+  imageFileName: string;
+  imageNumber: number;
+  color: ObjectColor;
+  frameColor: ObjectColor;
+  manaValue: number;
+  rarity: Rarity;
+  isSplitCard: boolean;
+  isDoubleFacedCard: boolean;
+  manaCostLeftStr?: string[];
+  manaCostRightStr?: string[];
+}
+
+export interface SearchCardView extends SearchSimpleCardView {
+  // Full CardView has more fields, but for deck editor search results, 
+  // the backend is sending a View created from a MockCard which has limited data.
+  // We can extend this as needed.
+}

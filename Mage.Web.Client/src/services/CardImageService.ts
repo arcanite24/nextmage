@@ -4,9 +4,7 @@
  * Handles loading and caching of card images from Scryfall CDN.
  */
 
-import { CardView, SimpleCardView } from '../types';
-
-
+import { CardView, SearchCardView, SearchSimpleCardView, SimpleCardView } from '../types';
 
 type ImageSize = 'small' | 'normal' | 'large' | 'png' | 'art_crop' | 'border_crop';
 
@@ -22,15 +20,12 @@ class CardImageService {
 
     /**
      * Get the Scryfall image URL for a card
-     */
-    /**
-     * Get the Scryfall image URL for a card
      * 
      * Since we only have setCode and cardNumber (not Scryfall UUID), we must use the 
      * Scryfall API to redirect us to the correct image.
      */
     getImageUrl(
-        card: CardView | SimpleCardView,
+        card: CardView | SearchCardView | SearchSimpleCardView | SimpleCardView,
         size: ImageSize = 'normal',
         face: 'front' | 'back' = 'front'
     ): string {
@@ -54,7 +49,7 @@ class CardImageService {
     /**
      * Preload an image and return a promise that resolves when loaded
      */
-    preload(card: CardView | SimpleCardView, size: ImageSize = 'normal'): Promise<string> {
+    preload(card: CardView | SearchCardView | SearchSimpleCardView | SimpleCardView, size: ImageSize = 'normal'): Promise<string> {
         const cacheKey = `${card.expansionSetCode}-${card.cardNumber}-${size}`;
 
         // Return cached result if available
@@ -96,7 +91,7 @@ class CardImageService {
     /**
      * Preload multiple cards
      */
-    preloadMany(cards: (CardView | SimpleCardView)[], size: ImageSize = 'normal'): Promise<string[]> {
+    preloadMany(cards: (CardView | SearchCardView | SearchSimpleCardView | SimpleCardView)[], size: ImageSize = 'normal'): Promise<string[]> {
         return Promise.all(
             cards.map(card => this.preload(card, size).catch(() => ''))
         );

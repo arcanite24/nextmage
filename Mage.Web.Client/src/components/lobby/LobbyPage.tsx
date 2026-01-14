@@ -20,9 +20,10 @@ import './LobbyPage.css';
 interface LobbyPageProps {
     onEnterGame: (gameId: string) => void;
     onLogout: () => void;
+    onOpenDeckEditor: () => void;
 }
 
-export const LobbyPage: React.FC<LobbyPageProps> = ({ onEnterGame, onLogout }) => {
+export const LobbyPage: React.FC<LobbyPageProps> = ({ onEnterGame, onLogout, onOpenDeckEditor }) => {
     const [showCreateTable, setShowCreateTable] = useState(false);
     const [showJoinTable, setShowJoinTable] = useState(false);
     const [selectedTable, setSelectedTable] = useState<TableView | null>(null);
@@ -120,7 +121,7 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({ onEnterGame, onLogout }) =
                 <div className="lobby-header-center">
                     <nav className="lobby-nav">
                         <button className="nav-item active">Lobby</button>
-                        <button className="nav-item">Decks</button>
+                        <button className="nav-item" onClick={onOpenDeckEditor}>Decks</button>
                         <button className="nav-item">Tournaments</button>
                         <button className="nav-item">History</button>
                     </nav>

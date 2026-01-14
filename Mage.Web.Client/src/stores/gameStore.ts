@@ -71,6 +71,7 @@ interface GameState {
 interface GameActions {
     // Game lifecycle
     initGame: (gameId: UUID, playerId: UUID | null) => void;
+    joinGame: (gameId: UUID) => Promise<void>;
     updateGameView: (gameView: GameView) => void;
     endGame: (gameEndView: GameEndView) => void;
     setEndGameInfo: (info: EndGameInfo) => void;
@@ -140,6 +141,26 @@ export const useGameStore = create<GameState & GameActions>()(
                     state.endGameInfo = null;
                     state.pendingAction = { type: 'none' };
                 });
+            },
+
+            joinGame: async (gameId: UUID) => {
+                const { sessionId } = useSessionStore.getState();
+                const { initGame } = get();
+
+                console.log('[GameStore] Manual joining game:', gameId);
+
+                // Initialize local state
+                // We might not know our playerId yet, but the server will tell us in gameInit
+                initGame(gameId, null);
+
+                useLobbyStore.getState().clearCurrentTable();
+
+                try {
+                    await wsService.send('gameJoin', [gameId, sessionId]);
+                } catch (error) {
+                    console.error('Failed to join game:', error);
+                    set((state) => { state.lastError = `Failed to join game: ${error}`; });
+                }
             },
 
             updateGameView: (gameView) => {
@@ -402,9 +423,9 @@ export const useGameStore = create<GameState & GameActions>()(
 
                             // Send join command to server
                             const sessionId = useSessionStore.getState().sessionId;
-                            // joinGame expects [gameId, sessionId]
-                            wsService.send('joinGame', [gameId, sessionId]).catch(err => {
-                                console.error('[GameStore] joinGame failed:', err);
+                            // gameJoin expects [gameId, sessionId]
+                            wsService.send('gameJoin', [gameId, sessionId]).catch(err => {
+                                console.error('[GameStore] gameJoin failed:', err);
                             });
                         } else {
                             console.error('[GameStore] Received startGame but could not parse gameId:', callback.data);
