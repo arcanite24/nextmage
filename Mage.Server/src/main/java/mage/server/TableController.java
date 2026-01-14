@@ -270,6 +270,12 @@ public class TableController {
 
         // table - no more free seats
         Seat seat = table.getNextAvailableSeat(playerType);
+        if (seat == null && playerType.isAI()) {
+            seat = table.getNextAvailableSeat(PlayerType.HUMAN);
+            if (seat != null) {
+                seat.setPlayerType(playerType);
+            }
+        }
         if (seat == null) {
             user.showUserMessage("Join Table", "No available seats.");
             return false;

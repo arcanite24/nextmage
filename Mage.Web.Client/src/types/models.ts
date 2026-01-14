@@ -79,9 +79,9 @@ export interface RoomUsersView {
 
 export interface DeckCardInfo {
     cardName: string;
-    setCode: string;
-    cardNumber: string;
-    quantity: number;
+    setCode?: string;
+    cardNumber?: string;
+    amount: number;
 }
 
 export interface DeckCardLayout {
@@ -116,6 +116,7 @@ export interface MatchOptions {
     rated: boolean;
     rollbackTurnsAllowed: boolean;
     spectatorsAllowed: boolean;
+    playerTypes?: string[];
     planesToUse?: string[];
     customStartLifeEnabled?: boolean;
     customStartLife?: number;

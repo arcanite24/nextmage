@@ -208,8 +208,21 @@ class WebSocketService {
             const message = JSON.parse(event.data);
 
             // Check if it's a JSON-RPC response (has id and jsonrpc)
-            if (message.id !== undefined && message.jsonrpc === '2.0') {
-                this.handleResponse(message as JsonRpcResponse);
+            // Check if it's a JSON-RPC response (has jsonrpc)
+            if (message.jsonrpc === '2.0') {
+                if (message.id !== undefined && message.id !== null) {
+                    this.handleResponse(message as JsonRpcResponse);
+                } else if (message.error) {
+                    // Global/Uncorrelated JSON-RPC error
+                    console.error('[WebSocket] Global error:', message.error);
+                    // Dispatch as user message so it shows in UI
+                    this.handleCallback({
+                        method: 'showUserMessage',
+                        data: ['Server Error', message.error],
+                        messageId: 0,
+                        objectId: null
+                    } as any);
+                }
             } else if (message.messageId !== undefined && message.method !== undefined) {
                 // It's a ClientCallback
                 this.handleCallback(message as ClientCallback);

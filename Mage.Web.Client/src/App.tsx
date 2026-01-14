@@ -7,7 +7,8 @@
 import React, { useEffect, useState } from 'react';
 import { LoginPage } from './components/login';
 import { LobbyPage } from './components/lobby';
-import { useSessionStore, initializeCallbackDispatcher } from './stores';
+import { GamePage } from './components/game';
+import { useSessionStore, useGameStore, initializeCallbackDispatcher } from './stores';
 import './App.css';
 
 type AppView = 'login' | 'lobby' | 'game';
@@ -24,9 +25,19 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Sync view with authentication state
   // Sync view with authentication state and handle restoration
   const { restoreSession } = useSessionStore();
+  const activeGameId = useGameStore(state => state.gameId);
+
+  useEffect(() => {
+    if (activeGameId) {
+      setGameId(activeGameId);
+      setCurrentView('game');
+    } else if (currentView === 'game' && !activeGameId) {
+      setGameId(null);
+      setCurrentView('lobby');
+    }
+  }, [activeGameId, currentView]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -77,20 +88,34 @@ function App() {
       )}
 
       {currentView === 'game' && gameId && (
-        <div className="game-placeholder">
-          <div className="game-placeholder-content glass-panel">
-            <h2>Game View</h2>
-            <p>Game ID: {gameId}</p>
-            <p>The game view is coming in Phase 3!</p>
-            <button
-              className="btn btn-secondary"
-              onClick={handleLeaveGame}
-            >
-              Return to Lobby
-            </button>
-          </div>
-        </div>
+        <GamePage gameId={gameId} onLeave={handleLeaveGame} />
       )}
+
+      {/* Global Alert Dialog */}
+      <GlobalAlert />
+    </div>
+  );
+}
+
+function GlobalAlert() {
+  const { alert, closeAlert } = useSessionStore();
+
+  if (!alert.isOpen) return null;
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 9999 }}>
+      <div className="modal-container">
+        <div className="modal-header">
+          <h3>{alert.title}</h3>
+          <button className="modal-close" onClick={closeAlert}>×</button>
+        </div>
+        <div className="modal-content">
+          <p>{alert.message}</p>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-primary" onClick={closeAlert}>OK</button>
+        </div>
+      </div>
     </div>
   );
 }

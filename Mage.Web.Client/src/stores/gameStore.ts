@@ -9,6 +9,7 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { wsService } from '../services';
 import { useSessionStore } from './sessionStore';
+import { useLobbyStore } from './lobbyStore';
 import {
     UUID,
     GameView,
@@ -17,6 +18,7 @@ import {
     PermanentView,
     AbilityPickerView,
     GameEndView,
+    EndGameInfo,
     ClientCallback,
     PlayerAction,
     ManaType,
@@ -50,6 +52,7 @@ interface GameState {
     // Game end
     gameEnded: boolean;
     gameEndView: GameEndView | null;
+    endGameInfo: EndGameInfo | null;
 
     // UI State
     selectedCardId: UUID | null;
@@ -70,6 +73,7 @@ interface GameActions {
     initGame: (gameId: UUID, playerId: UUID | null) => void;
     updateGameView: (gameView: GameView) => void;
     endGame: (gameEndView: GameEndView) => void;
+    setEndGameInfo: (info: EndGameInfo) => void;
     leaveGame: () => Promise<void>;
 
     // Player actions
@@ -116,6 +120,7 @@ export const useGameStore = create<GameState & GameActions>()(
             pendingAction: { type: 'none' },
             gameEnded: false,
             gameEndView: null,
+            endGameInfo: null,
             selectedCardId: null,
             hoveredCardId: null,
             showingZone: null,
@@ -132,6 +137,7 @@ export const useGameStore = create<GameState & GameActions>()(
                     state.isWatching = playerId === null;
                     state.gameEnded = false;
                     state.gameEndView = null;
+                    state.endGameInfo = null;
                     state.pendingAction = { type: 'none' };
                 });
             },
@@ -140,13 +146,52 @@ export const useGameStore = create<GameState & GameActions>()(
                 set((state) => {
                     state.gameView = gameView;
                     state.lastError = null;
+                    // Ensure we know who 'we' are if the view tells us
+                    if (gameView.myPlayerId) {
+                        state.playerId = gameView.myPlayerId;
+                    }
                 });
+            },
+
+            // ... (rest of the file)
+
+            // Helpers
+            getMyPlayer: () => {
+                const { gameView, playerId } = get();
+                if (!gameView || !gameView.players) return null;
+
+                // Prefer the ID from the view itself if available, otherwise store state
+                const targetId = gameView.myPlayerId || playerId;
+                if (!targetId) return null;
+
+                return gameView.players.find(p => p.playerId === targetId) || null;
+            },
+
+            getOpponents: () => {
+                const { gameView, playerId } = get();
+                if (!gameView || !gameView.players) return [];
+
+                const targetId = gameView.myPlayerId || playerId;
+                // If we don't know who we are, everyone is an 'opponent' (or we are spectator)
+                if (!targetId) return gameView.players;
+
+                return gameView.players.filter(p => p.playerId !== targetId);
             },
 
             endGame: (gameEndView) => {
                 set((state) => {
                     state.gameEnded = true;
+                    // Only update gameEndView if we don't have richer info yet? 
+                    // Or merge? For now, we trust the server sent valid GameEndView
                     state.gameEndView = gameEndView;
+                    state.pendingAction = { type: 'none' };
+                });
+            },
+
+            setEndGameInfo: (info) => {
+                set((state) => {
+                    state.gameEnded = true;
+                    state.endGameInfo = info;
                     state.pendingAction = { type: 'none' };
                 });
             },
@@ -174,6 +219,7 @@ export const useGameStore = create<GameState & GameActions>()(
                     state.pendingAction = { type: 'none' };
                     state.gameEnded = false;
                     state.gameEndView = null;
+                    state.endGameInfo = null;
                 });
             },
 
@@ -325,9 +371,44 @@ export const useGameStore = create<GameState & GameActions>()(
 
                 switch (callback.method) {
                     case 'startGame':
-                        // Game is starting, data contains gameId and playerId info
-                        const startData = callback.data as { gameId: UUID; playerId: UUID };
-                        initGame(startData.gameId, startData.playerId);
+                        // Server signals game start. We must join the game.
+                        // payload can be an object {gameId, playerId} or an array [gameId, playerId]
+                        console.log('[GameStore] startGame callback received:', callback.data);
+
+                        let gameId: UUID | null = null;
+                        let playerId: UUID | null = null; // Sometimes sent, but we might not need it for joinGame
+
+                        const data = callback.data as any;
+                        if (Array.isArray(data)) {
+                            gameId = data[0];
+                            playerId = data[1] || null;
+                        } else if (typeof data === 'object' && data !== null) {
+                            gameId = data.gameId || data.id;
+                            playerId = data.playerId;
+                        } else if (typeof data === 'string') {
+                            gameId = data;
+                        }
+
+                        if (gameId) {
+                            console.log('[GameStore] Joining game:', gameId);
+
+                            // Initialize local state to switch view
+                            initGame(gameId, playerId);
+
+                            // Clear any open waiting room/table in the lobby
+                            // This ensures that if/when the user returns to the lobby, the waiting room is gone
+                            // Note: We use the store getter directly to avoid circular dependency issues at module load
+                            useLobbyStore.getState().clearCurrentTable();
+
+                            // Send join command to server
+                            const sessionId = useSessionStore.getState().sessionId;
+                            // joinGame expects [gameId, sessionId]
+                            wsService.send('joinGame', [gameId, sessionId]).catch(err => {
+                                console.error('[GameStore] joinGame failed:', err);
+                            });
+                        } else {
+                            console.error('[GameStore] Received startGame but could not parse gameId:', callback.data);
+                        }
                         break;
 
                     case 'gameInit':
@@ -343,40 +424,53 @@ export const useGameStore = create<GameState & GameActions>()(
 
                     case 'gameAsk':
                         set((state) => {
-                            state.gameView = callback.data as GameView;
+                            const data = callback.data as any;
+                            state.gameView = data.gameView || data;
                             state.pendingAction = {
                                 type: 'ask',
-                                message: 'Respond?', // Would extract from gameView
-                                gameView: callback.data as GameView,
+                                message: data.message || 'Respond?',
+                                gameView: state.gameView!,
                             };
+                            if (state.gameView?.myPlayerId) {
+                                state.playerId = state.gameView.myPlayerId;
+                            }
                         });
                         break;
 
                     case 'gameTarget':
                         set((state) => {
-                            state.gameView = callback.data as GameView;
+                            const data = callback.data as any;
+                            state.gameView = data.gameView || data;
                             state.pendingAction = {
                                 type: 'target',
-                                message: 'Select target',
-                                validTargets: [], // Would extract from gameView
-                                gameView: callback.data as GameView,
+                                message: data.message || 'Select target',
+                                validTargets: data.targets || [],
+                                gameView: state.gameView!,
                             };
+                            if (state.gameView?.myPlayerId) {
+                                state.playerId = state.gameView.myPlayerId;
+                            }
                         });
                         break;
 
                     case 'gameSelect':
                         set((state) => {
-                            state.gameView = callback.data as GameView;
+                            const data = callback.data as any;
+                            state.gameView = data.gameView || data;
                             state.pendingAction = {
                                 type: 'select',
-                                message: 'Select',
-                                gameView: callback.data as GameView,
+                                message: data.message || 'Select',
+                                gameView: state.gameView!,
                             };
+                            if (state.gameView?.myPlayerId) {
+                                state.playerId = state.gameView.myPlayerId;
+                            }
                         });
                         break;
 
                     case 'gameChooseAbility':
                         set((state) => {
+                            // This might just be AbilityPickerView
                             state.pendingAction = {
                                 type: 'chooseAbility',
                                 abilities: callback.data as AbilityPickerView,
@@ -386,23 +480,31 @@ export const useGameStore = create<GameState & GameActions>()(
 
                     case 'gamePlayMana':
                         set((state) => {
-                            state.gameView = callback.data as GameView;
+                            const data = callback.data as any;
+                            state.gameView = data.gameView || data;
                             state.pendingAction = {
                                 type: 'mana',
-                                message: 'Pay mana',
-                                gameView: callback.data as GameView,
+                                message: data.message || 'Pay mana',
+                                gameView: state.gameView!,
                             };
+                            if (state.gameView?.myPlayerId) {
+                                state.playerId = state.gameView.myPlayerId;
+                            }
                         });
                         break;
 
                     case 'gamePlayXMana':
                         set((state) => {
-                            state.gameView = callback.data as GameView;
+                            const data = callback.data as any;
+                            state.gameView = data.gameView || data;
                             state.pendingAction = {
                                 type: 'xmana',
-                                message: 'Choose X value',
-                                gameView: callback.data as GameView,
+                                message: data.message || 'Choose X value',
+                                gameView: state.gameView!,
                             };
+                            if (state.gameView?.myPlayerId) {
+                                state.playerId = state.gameView.myPlayerId;
+                            }
                         });
                         break;
 
@@ -413,40 +515,40 @@ export const useGameStore = create<GameState & GameActions>()(
                         break;
 
                     case 'gameOver':
-                    case 'endGameInfo':
                         endGame(callback.data as GameEndView);
+                        break;
+
+                    case 'endGameInfo':
+                        // This provides richer info than gameOver
+                        // @ts-ignore
+                        get().setEndGameInfo(callback.data as EndGameInfo);
+                        break;
+
+                    case 'SIDEBOARD':
+                        console.log('Sideboard event received:', callback.data);
+                        // TODO: Implement sideboard logic
                         break;
                 }
             },
 
-            // Helpers
-            getMyPlayer: () => {
-                const { gameView, playerId } = get();
-                if (!gameView || !playerId) return null;
-                return gameView.players.find(p => p.playerId === playerId) || null;
-            },
-
-            getOpponents: () => {
-                const { gameView, playerId } = get();
-                if (!gameView) return [];
-                return gameView.players.filter(p => p.playerId !== playerId);
-            },
 
             getCardById: (cardId) => {
                 const { gameView } = get();
                 if (!gameView) return null;
 
                 // Check hand
-                if (gameView.myHand[cardId]) return gameView.myHand[cardId];
+                if (gameView.myHand && gameView.myHand[cardId]) return gameView.myHand[cardId];
 
                 // Check stack
-                if (gameView.stack[cardId]) return gameView.stack[cardId];
+                if (gameView.stack && gameView.stack[cardId]) return gameView.stack[cardId];
 
                 // Check all player zones
-                for (const player of gameView.players) {
-                    if (player.battlefield[cardId]) return player.battlefield[cardId];
-                    if (player.graveyard[cardId]) return player.graveyard[cardId];
-                    if (player.exile[cardId]) return player.exile[cardId];
+                if (gameView.players) {
+                    for (const player of gameView.players) {
+                        if (player.battlefield && player.battlefield[cardId]) return player.battlefield[cardId];
+                        if (player.graveyard && player.graveyard[cardId]) return player.graveyard[cardId];
+                        if (player.exile && player.exile[cardId]) return player.exile[cardId];
+                    }
                 }
 
                 return null;

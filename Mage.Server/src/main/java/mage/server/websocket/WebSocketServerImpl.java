@@ -581,6 +581,15 @@ public class WebSocketServerImpl extends WebSocketServer {
             if (conn.isOpen()) {
                 JsonObject error = new JsonObject();
                 error.addProperty("jsonrpc", "2.0");
+                
+                // Try to include ID if we parsed it
+                try {
+                    JsonObject json = JsonParser.parseString(message).getAsJsonObject();
+                    if (json.has("id")) {
+                        error.add("id", json.get("id"));
+                    }
+                } catch (Exception ignore) {}
+
                 error.addProperty("error", e.getMessage());
                 conn.send(gson.toJson(error));
             }

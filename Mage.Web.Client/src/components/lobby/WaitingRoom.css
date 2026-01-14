@@ -1,0 +1,222 @@
+/* Waiting Room CSS */
+
+.waiting-room-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.waiting-room-panel {
+    width: 500px;
+    max-width: 90%;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.waiting-header {
+    padding: var(--space-4);
+    background: var(--color-bg-dark);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.waiting-header h3 {
+    margin: 0;
+    font-size: var(--text-lg);
+}
+
+.waiting-status {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+.status-ready_to_start {
+    color: var(--color-accent-success);
+    font-weight: bold;
+}
+
+.waiting-content {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.waiting-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-item label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+}
+
+.info-item span {
+    font-size: var(--text-sm);
+    font-weight: 500;
+}
+
+.seats-list h4 {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-3);
+}
+
+.seat-row {
+    display: flex;
+    align-items: center;
+    padding: var(--space-3);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-2);
+}
+
+.seat-num {
+    width: 60px;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.seat-player {
+    flex: 1;
+    font-weight: 500;
+}
+
+.seat-player.empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.seat-type {
+    font-size: var(--text-xs);
+    padding: 2px 6px;
+    background: var(--color-bg-dark);
+    border-radius: 4px;
+}
+
+.waiting-actions {
+    padding: var(--space-4);
+    background: var(--color-bg-dark);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}
+
+.start-match-btn {
+    min-width: 120px;
+    background-color: var(--color-accent-success);
+}
+
+.start-match-btn:hover {
+    background-color: #059669;
+    /* darker emerald */
+}
+
+/* Modal styles for injected deck selector */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    /* Darker backdrop */
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    /* Higher than waiting-room-overlay (1000) */
+}
+
+.modal-container {
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: modalSlideIn 0.2s ease-out;
+}
+
+.modal-header {
+    padding: var(--space-4);
+    background: var(--color-bg-dark);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: var(--text-lg);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--color-text);
+}
+
+.modal-content {
+    padding: var(--space-6);
+}
+
+.modal-footer {
+    padding: var(--space-4);
+    background: var(--color-bg-dark);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -83,6 +83,7 @@ export enum ManaType {
 
 export enum TableState {
   WAITING = "WAITING",
+  READY_TO_START = "READY_TO_START",
   STARTING = "STARTING",
   DRAFTING = "DRAFTING",
   SIDEBOARDING = "SIDEBOARDING",
@@ -128,7 +129,7 @@ export type ClientCallbackMethod =
   | "tournamentOver"
   // Draft/Sideboard
   | "startDraft"
-  | "sideboard"
+  | "SIDEBOARD"
   | "construct"
   | "draftOver"
   | "draftInit"

@@ -51,6 +51,7 @@ interface LobbyState {
 
     // Current table (when joined)
     currentTable: TableView | null;
+    myDeck: DeckCardLists | null;
 
     // Polling
     pollingInterval: ReturnType<typeof setInterval> | null;
@@ -62,6 +63,7 @@ interface LobbyActions {
     fetchFinishedMatches: () => Promise<void>;
     fetchRoomUsers: () => Promise<void>;
     refreshAll: () => Promise<void>;
+    refreshCurrentTable: () => Promise<void>;
 
     // Polling
     startPolling: (intervalMs?: number) => void;
@@ -72,7 +74,9 @@ interface LobbyActions {
     joinTable: (tableId: UUID, playerName: string, deckList: DeckCardLists, password?: string) => Promise<boolean>;
     watchTable: (tableId: UUID) => Promise<boolean>;
     leaveTable: () => Promise<boolean>;
+    clearCurrentTable: () => void;
     startMatch: () => Promise<boolean>;
+    addAI: (tableId: UUID, aiName: string, deckList: DeckCardLists, skill?: number) => Promise<boolean>;
 
     // Selection
     selectTable: (tableId: UUID | null) => void;
@@ -144,6 +148,7 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
             isLoading: false,
             isJoining: false,
             currentTable: null,
+            myDeck: null,
             pollingInterval: null,
 
             // Fetching
@@ -201,6 +206,24 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                 set((state) => { state.isLoading = false; });
             },
 
+            refreshCurrentTable: async () => {
+                const { currentTable } = get();
+                const { mainRoomId } = useSessionStore.getState();
+                if (!mainRoomId || !currentTable) return;
+
+                try {
+                    const updated = await wsService.send<TableView>('roomGetTableById', [mainRoomId, currentTable.tableId]);
+                    if (updated) {
+                        set((state) => { state.currentTable = updated; });
+                    } else {
+                        // Table no longer exists
+                        set((state) => { state.currentTable = null; });
+                    }
+                } catch (error) {
+                    console.error('Failed to refresh current table:', error);
+                }
+            },
+
             // Polling
             startPolling: (intervalMs = 5000) => {
                 const { stopPolling, refreshAll } = get();
@@ -229,6 +252,7 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                 if (!mainRoomId) return null;
 
                 try {
+                    console.log('Creating table with options:', options);
                     const table = await wsService.send<TableView>('roomCreateTable', [
                         sessionId,
                         mainRoomId,
@@ -265,6 +289,7 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                         const table = await wsService.send<TableView>('roomGetTableById', [mainRoomId, tableId]);
                         set((state) => {
                             state.currentTable = table;
+                            state.myDeck = deckList;
                         });
                     }
 
@@ -274,6 +299,41 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                     return false;
                 } finally {
                     set((state) => { state.isJoining = false; });
+                }
+            },
+
+            addAI: async (tableId: UUID, aiName: string, deckList: DeckCardLists, skill = 5) => {
+                const { sessionId, mainRoomId } = useSessionStore.getState();
+                if (!mainRoomId) return false;
+
+                try {
+                    // Re-use roomJoinTable but with 'Computer'
+                    // Note: This relies on the server allowing the same Session/User to add a Computer player
+                    const result = await wsService.send<boolean>('roomJoinTable', [
+                        sessionId,
+                        mainRoomId,
+                        tableId,
+                        aiName,
+                        'Computer - mad',
+                        skill,
+                        deckList,
+                        '', // No password needed usually for adding AI by host
+                    ]);
+
+                    if (result) {
+                        // Refresh table to show new seat
+                        await get().fetchTables();
+                        // Also update current table if we are in it
+                        const { currentTable } = get();
+                        if (currentTable && currentTable.tableId === tableId) {
+                            const updated = await wsService.send<TableView>('roomGetTableById', [mainRoomId, tableId]);
+                            set((state) => { state.currentTable = updated; });
+                        }
+                    }
+                    return result;
+                } catch (error) {
+                    console.error('Failed to add AI:', error);
+                    return false;
                 }
             },
 
@@ -298,6 +358,12 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                 const { sessionId, mainRoomId } = useSessionStore.getState();
                 if (!mainRoomId || !currentTable) return false;
 
+                if (!currentTable.tableId) {
+                    console.error('Cannot leave table: tableId is missing', currentTable);
+                    set((state) => { state.currentTable = null; }); // Force clear
+                    return false;
+                }
+
                 try {
                     const result = await wsService.send<boolean>('roomLeaveTableOrTournament', [
                         sessionId,
@@ -314,6 +380,10 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                     console.error('Failed to leave table:', error);
                     return false;
                 }
+            },
+
+            clearCurrentTable: () => {
+                set((state) => { state.currentTable = null; });
             },
 
             startMatch: async () => {
@@ -357,9 +427,14 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
             handleCallback: (callback) => {
                 switch (callback.method) {
                     case 'joinedTable':
-                        set((state) => {
-                            state.currentTable = callback.data as TableView;
-                        });
+                        const newTable = callback.data as TableView;
+                        if (newTable && newTable.tableId) {
+                            set((state) => {
+                                state.currentTable = newTable;
+                            });
+                        } else {
+                            console.warn('joinedTable callback received without valid tableId:', callback.data);
+                        }
                         break;
                 }
             },

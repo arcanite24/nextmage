@@ -4,13 +4,24 @@
  * Filtering controls for the table list.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLobbyStore } from '../../stores';
 import { TableState } from '../../types';
 import './TableFilters.css';
 
 export const TableFilters: React.FC = () => {
     const { filters, setFilter, resetFilters, tables, filteredTables } = useLobbyStore();
+
+    // specific unique values from all tables (not just filtered ones) to populate dropdowns
+    const uniqueGameTypes = useMemo(() => {
+        const types = new Set(tables.map(t => t.gameType));
+        return Array.from(types).sort();
+    }, [tables]);
+
+    const uniqueDeckTypes = useMemo(() => {
+        const types = new Set(tables.map(t => t.deckType));
+        return Array.from(types).sort();
+    }, [tables]);
 
     return (
         <div className="table-filters">
@@ -61,6 +72,31 @@ export const TableFilters: React.FC = () => {
                         />
                         <span className="checkbox-badge state-finished">Finished</span>
                     </label>
+                </div>
+
+                {/* Type filters */}
+                <div className="filter-group filter-types">
+                    <select
+                        className="input filter-select"
+                        value={filters.gameType || ''}
+                        onChange={(e) => setFilter('gameType', e.target.value || null)}
+                    >
+                        <option value="">All Game Types</option>
+                        {uniqueGameTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        className="input filter-select"
+                        value={filters.deckType || ''}
+                        onChange={(e) => setFilter('deckType', e.target.value || null)}
+                    >
+                        <option value="">All Formats</option>
+                        {uniqueDeckTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                        ))}
+                    </select>
                 </div>
 
                 {/* Options */}

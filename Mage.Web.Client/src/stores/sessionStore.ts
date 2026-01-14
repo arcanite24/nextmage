@@ -8,7 +8,7 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { wsService, ConnectionStatus } from '../services';
-import { UUID, UserData, UserSkipPrioritySteps, SkipPrioritySteps } from '../types';
+import { UUID, UserData, UserSkipPrioritySteps, SkipPrioritySteps, ClientCallback } from '../types';
 
 // Default user skip priority steps (sensible defaults for new users)
 const defaultSkipSteps: SkipPrioritySteps = {
@@ -67,6 +67,13 @@ interface SessionState {
 
     // Error state
     lastError: string | null;
+
+    // UI Alert state
+    alert: {
+        title: string;
+        message: string;
+        isOpen: boolean;
+    };
 }
 
 interface SessionActions {
@@ -88,6 +95,10 @@ interface SessionActions {
     _setConnectionStatus: (status: ConnectionStatus) => void;
     _setError: (error: string | null) => void;
     _initializeCallbackHandler: () => void;
+
+    // Callbacks
+    handleCallback: (callback: ClientCallback) => void;
+    closeAlert: () => void;
 
     restoreSession: () => Promise<boolean>;
 }
@@ -113,6 +124,11 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                 isRestoring: false,
                 mainRoomId: null,
                 lastError: null,
+                alert: {
+                    title: '',
+                    message: '',
+                    isOpen: false,
+                },
 
                 // Connection
                 setServerUrl: (url) => {
@@ -336,7 +352,47 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                 _initializeCallbackHandler: () => {
                     // Subscribe to connection status changes
                     wsService.onStatusChange((status) => {
-                        get()._setConnectionStatus(status);
+                        const { isAuthenticated, restoreSession, _setConnectionStatus } = get();
+                        _setConnectionStatus(status);
+
+                        // If we reconnected and were previously logged in, try to restore the session
+                        if (status === 'connected' && isAuthenticated) {
+                            console.log('[SessionStore] Reconnected, attempting to restore session...');
+                            restoreSession().then(success => {
+                                if (success) {
+                                    console.log('[SessionStore] Session restored successfully');
+                                } else {
+                                    console.warn('[SessionStore] Session restore failed, user must login again');
+                                }
+                            });
+                        }
+                    });
+                },
+
+                handleCallback: (callback) => {
+                    const data = callback.data as any; // Usually [title, message]
+                    if (callback.method === 'showUserMessage') {
+                        set((state) => {
+                            if (Array.isArray(data) && data.length >= 2) {
+                                state.alert = {
+                                    title: data[0],
+                                    message: data[1],
+                                    isOpen: true,
+                                };
+                            } else {
+                                state.alert = {
+                                    title: 'Message',
+                                    message: String(data),
+                                    isOpen: true,
+                                };
+                            }
+                        });
+                    }
+                },
+
+                closeAlert: () => {
+                    set((state) => {
+                        state.alert.isOpen = false;
                     });
                 },
             })),

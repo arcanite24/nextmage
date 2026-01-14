@@ -6,7 +6,7 @@
 
 import { CardView, SimpleCardView } from '../types';
 
-const SCRYFALL_CDN = 'https://cards.scryfall.io';
+
 
 type ImageSize = 'small' | 'normal' | 'large' | 'png' | 'art_crop' | 'border_crop';
 
@@ -23,6 +23,12 @@ class CardImageService {
     /**
      * Get the Scryfall image URL for a card
      */
+    /**
+     * Get the Scryfall image URL for a card
+     * 
+     * Since we only have setCode and cardNumber (not Scryfall UUID), we must use the 
+     * Scryfall API to redirect us to the correct image.
+     */
     getImageUrl(
         card: CardView | SimpleCardView,
         size: ImageSize = 'normal',
@@ -31,14 +37,11 @@ class CardImageService {
         const setCode = card.expansionSetCode.toLowerCase();
         const number = card.cardNumber;
 
-        // Handle double-faced cards
-        const faceParam = face === 'back' ? '&face=back' : '';
-
-        return `${SCRYFALL_CDN}/${size}/${face}/${setCode}/${number}.jpg`;
+        return `https://api.scryfall.com/cards/${setCode}/${number}?format=image&version=${size}${face === 'back' ? '&face=back' : ''}`;
     }
 
     /**
-     * Get a simple Scryfall API URL (fallback)
+     * Get a simple Scryfall API URL
      */
     getApiImageUrl(
         setCode: string,
@@ -78,23 +81,9 @@ class CardImageService {
             };
 
             img.onerror = () => {
-                // Try API fallback
-                const fallbackUrl = this.getApiImageUrl(card.expansionSetCode, card.cardNumber, size);
-                const fallbackImg = new Image();
-
-                fallbackImg.onload = () => {
-                    this.cache.set(cacheKey, { url: fallbackUrl, loaded: true, error: false });
-                    this.loadingPromises.delete(cacheKey);
-                    resolve(fallbackUrl);
-                };
-
-                fallbackImg.onerror = () => {
-                    this.cache.set(cacheKey, { url, loaded: false, error: true });
-                    this.loadingPromises.delete(cacheKey);
-                    reject(new Error(`Failed to load image for ${card.expansionSetCode}/${card.cardNumber}`));
-                };
-
-                fallbackImg.src = fallbackUrl;
+                this.cache.set(cacheKey, { url, loaded: false, error: true });
+                this.loadingPromises.delete(cacheKey);
+                reject(new Error(`Failed to load image for ${card.expansionSetCode}/${card.cardNumber}`));
             };
 
             img.src = url;
@@ -117,14 +106,14 @@ class CardImageService {
      * Get a placeholder image URL for cards that fail to load
      */
     getPlaceholderUrl(): string {
-        return '/card-back.png';
+        return '/back.webp';
     }
 
     /**
      * Get card back image URL
      */
     getCardBackUrl(): string {
-        return '/card-back.png';
+        return '/back.webp';
     }
 
     /**

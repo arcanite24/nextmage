@@ -13,6 +13,7 @@ import { TableDetails } from './TableDetails';
 import { ChatPanel } from '../chat/ChatPanel';
 import { CreateTableDialog } from './CreateTableDialog';
 import { JoinTableDialog } from './JoinTableDialog';
+import { WaitingRoom } from './WaitingRoom';
 import { TableView } from '../../types';
 import './LobbyPage.css';
 
@@ -205,6 +206,11 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({ onEnterGame, onLogout }) =
                 table={selectedTable}
                 onJoined={handleTableJoined}
             />
+
+            {/* Waiting Room Overlay */}
+            {currentTable && !isLoading && (
+                <WaitingRoom />
+            )}
         </div>
     );
 };

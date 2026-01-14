@@ -124,3 +124,15 @@
         gap: var(--space-2);
     }
 }
+
+.upload-btn {
+    position: relative;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.upload-btn input {
+    display: none;
+}

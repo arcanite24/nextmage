@@ -31,6 +31,7 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
         password: '',
         spectatorsAllowed: true,
         rollbackTurnsAllowed: true,
+        aiOpponent: false,
     });
 
     const { createTable } = useLobbyStore();
@@ -38,6 +39,29 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+
+        // Helper to determine player types (seats)
+        const getPlayerTypes = (gameType: string, aiOpponent: boolean): string[] => {
+            let seatCount = 2;
+            if (gameType.includes('Free For All')) {
+                seatCount = 4;
+            }
+
+            const types: string[] = [];
+            if (aiOpponent) {
+                types.push('HUMAN'); // Seat 1: Host
+                // Remaining seats: AI
+                for (let i = 1; i < seatCount; i++) {
+                    types.push('COMPUTER_MAD');
+                }
+            } else {
+                // All seats Human
+                for (let i = 0; i < seatCount; i++) {
+                    types.push('HUMAN');
+                }
+            }
+            return types;
+        };
 
         const options: MatchOptions = {
             name: formData.name || `${formData.gameType} Game`,
@@ -52,6 +76,7 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
             rated: false,
             rollbackTurnsAllowed: formData.rollbackTurnsAllowed,
             spectatorsAllowed: formData.spectatorsAllowed,
+            playerTypes: getPlayerTypes(formData.gameType, formData.aiOpponent),
         };
 
         try {
@@ -215,6 +240,15 @@ export const CreateTableDialog: React.FC<CreateTableDialogProps> = ({
                             onChange={(e) => updateField('rollbackTurnsAllowed', e.target.checked)}
                         />
                         <span className="checkbox-text">Allow rollback</span>
+                    </label>
+
+                    <label className="checkbox-label">
+                        <input
+                            type="checkbox"
+                            checked={formData.aiOpponent}
+                            onChange={(e) => updateField('aiOpponent', e.target.checked)}
+                        />
+                        <span className="checkbox-text">Play against AI</span>
                     </label>
                 </div>
             </form>

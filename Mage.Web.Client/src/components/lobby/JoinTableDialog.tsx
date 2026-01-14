@@ -37,20 +37,67 @@ function parseDeckList(text: string): DeckCardLists {
             continue;
         }
 
-        // Parse card line: "4 Lightning Bolt" or "4x Lightning Bolt" or "4 Lightning Bolt (M21) 123"
-        const match = trimmed.match(/^(\d+)x?\s+(.+?)(?:\s+\(([A-Z0-9]+)\)\s*(\d+)?)?$/i);
+        // Parse card line: 
+        // 4 Lightning Bolt
+        // 4x Lightning Bolt
+        // 4 Lightning Bolt (M21) 123
+        // 4 Burst Lightning <199> [PRM] (F)
 
-        if (match) {
-            const quantity = parseInt(match[1], 10);
-            const cardName = match[2].trim();
-            const setCode = match[3] || '';
-            const cardNumber = match[4] || '';
+        // Strategy: 
+        // 1. Extract amount at start
+        // 2. Extract Set Code from [...] or (...) if present
+        // 3. Remove all extra junk (<...>, [...], (...), numbers at end) to get clean name
+
+        const amountMatch = trimmed.match(/^(\d+)x?\s+/);
+        if (amountMatch) {
+            const amount = parseInt(amountMatch[1], 10);
+            let rest = trimmed.substring(amountMatch[0].length).trim();
+
+            let setCode: string | undefined = undefined;
+            let cardNumber: string | undefined = undefined;
+
+            // Try to find set code in [SET] (MTGO style)
+            const setMatchBrackets = rest.match(/\s+\[([A-Za-z0-9_]+)\]/);
+            if (setMatchBrackets) {
+                setCode = setMatchBrackets[1];
+            } else {
+                // Try (SET) (Arena/Standard style)
+                const setMatchParens = rest.match(/\s+\(([A-Za-z0-9_]+)\)/);
+                if (setMatchParens) {
+                    setCode = setMatchParens[1];
+                }
+            }
+
+            // Try to find card number at the very end if it's a number
+            const numberMatch = rest.match(/\s+(\d+)$/);
+            if (numberMatch) {
+                cardNumber = numberMatch[1];
+            }
+
+            // Clean up name: remove tags like <...>, [...], (...), and card number
+            // Remove <...> (Collector number in brackets often found in exports)
+            rest = rest.replace(/\s+<[^>]+>/g, '');
+            // Remove [...]
+            rest = rest.replace(/\s+\[[^\]]+\]/g, '');
+            // Remove (...) (Foil markings etc, but optionally set code too if we extracted it)
+            rest = rest.replace(/\s+\([^)]+\)/g, '');
+            // Remove trailing numbers (collector info)
+            rest = rest.replace(/\s+\d+$/, '');
+
+            const cardName = rest.trim();
+
+            // IMPORTANT: The server's Deck.load uses findCard(setCode, cardNumber) which requires 
+            // BOTH to be present. If we only have setCode without cardNumber, the lookup fails.
+            // To align with Java client behavior: only send setCode+cardNumber if we have BOTH,
+            // otherwise send empty and let server resolve by name using findPreferredCoreExpansionCard.
+            const finalSetCode = (setCode && cardNumber) ? setCode : undefined;
+            const finalCardNumber = (setCode && cardNumber) ? cardNumber : undefined;
 
             const cardInfo: DeckCardInfo = {
                 cardName,
-                setCode,
-                cardNumber,
-                quantity,
+                setCode: finalSetCode,
+                cardNumber: finalCardNumber,
+                amount,
             };
 
             if (inSideboard) {
@@ -70,9 +117,9 @@ function formatDeckList(deck: DeckCardLists): string {
 
     for (const card of deck.cards) {
         if (card.setCode) {
-            text += `${card.quantity} ${card.cardName} (${card.setCode}) ${card.cardNumber}\n`;
+            text += `${card.amount} ${card.cardName} (${card.setCode}) ${card.cardNumber || ''}\n`;
         } else {
-            text += `${card.quantity} ${card.cardName}\n`;
+            text += `${card.amount} ${card.cardName}\n`;
         }
     }
 
@@ -80,9 +127,9 @@ function formatDeckList(deck: DeckCardLists): string {
         text += '\nSideboard\n';
         for (const card of deck.sideboard) {
             if (card.setCode) {
-                text += `${card.quantity} ${card.cardName} (${card.setCode}) ${card.cardNumber}\n`;
+                text += `${card.amount} ${card.cardName} (${card.setCode}) ${card.cardNumber || ''}\n`;
             } else {
-                text += `${card.quantity} ${card.cardName}\n`;
+                text += `${card.amount} ${card.cardName}\n`;
             }
         }
     }
@@ -94,12 +141,12 @@ function formatDeckList(deck: DeckCardLists): string {
 const SAMPLE_DECK: DeckCardLists = {
     name: 'Sample Deck',
     cards: [
-        { cardName: 'Mountain', setCode: 'M21', cardNumber: '269', quantity: 20 },
-        { cardName: 'Lightning Bolt', setCode: 'M21', cardNumber: '152', quantity: 4 },
-        { cardName: 'Shock', setCode: 'M21', cardNumber: '159', quantity: 4 },
-        { cardName: 'Goblin Guide', setCode: 'ZNE', cardNumber: '4', quantity: 4 },
-        { cardName: 'Monastery Swiftspear', setCode: 'KTK', cardNumber: '118', quantity: 4 },
-        { cardName: 'Eidolon of the Great Revel', setCode: 'JOU', cardNumber: '94', quantity: 4 },
+        { cardName: 'Mountain', setCode: 'M21', cardNumber: '269', amount: 20 },
+        { cardName: 'Lightning Bolt', setCode: 'M21', cardNumber: '152', amount: 4 },
+        { cardName: 'Shock', setCode: 'M21', cardNumber: '159', amount: 4 },
+        { cardName: 'Goblin Guide', setCode: 'ZNE', cardNumber: '4', amount: 4 },
+        { cardName: 'Monastery Swiftspear', setCode: 'KTK', cardNumber: '118', amount: 4 },
+        { cardName: 'Eidolon of the Great Revel', setCode: 'JOU', cardNumber: '94', amount: 4 },
     ],
     sideboard: [],
 };
@@ -131,7 +178,7 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
             deck.name = deckName;
 
             // Validate deck has at least some cards
-            const totalCards = deck.cards.reduce((sum, c) => sum + c.quantity, 0);
+            const totalCards = deck.cards.reduce((sum, c) => sum + c.amount, 0);
             if (totalCards < 40) {
                 setError(`Deck has only ${totalCards} cards. Most formats require at least 40-60 cards.`);
                 setIsLoading(false);
@@ -172,11 +219,31 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
         }
     };
 
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const text = event.target?.result;
+            if (typeof text === 'string') {
+                setDeckText(text);
+                // Try to derive name from filename
+                const name = file.name.replace(/\.(dck|txt)$/i, '');
+                setDeckName(name);
+            }
+        };
+        reader.onerror = () => {
+            setError('Failed to read file.');
+        };
+        reader.readAsText(file);
+    };
+
     if (!table) return null;
 
     const parsedDeck = parseDeckList(deckText);
-    const maindeckCount = parsedDeck.cards.reduce((sum, c) => sum + c.quantity, 0);
-    const sideboardCount = parsedDeck.sideboard.reduce((sum, c) => sum + c.quantity, 0);
+    const maindeckCount = parsedDeck.cards.reduce((sum, c) => sum + c.amount, 0);
+    const sideboardCount = parsedDeck.sideboard.reduce((sum, c) => sum + c.amount, 0);
 
     return (
         <Modal
@@ -252,6 +319,15 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
                     <div className="deck-header">
                         <h4>Your Deck</h4>
                         <div className="deck-actions">
+                            <label className="btn btn-ghost btn-sm upload-btn">
+                                📁 Upload
+                                <input
+                                    type="file"
+                                    accept=".dck,.txt"
+                                    onChange={handleFileUpload}
+                                    style={{ display: 'none' }}
+                                />
+                            </label>
                             <Button variant="ghost" size="sm" onClick={handlePaste}>
                                 📋 Paste
                             </Button>

@@ -264,6 +264,22 @@ export interface GameEndView {
     matchLosers?: string[];
 }
 
+export interface EndGameInfo {
+    additionalInfo: string;
+    clientPlayer: PlayerView;
+    endTime: string;
+    gameInfo: string;
+    loses: number;
+    matchInfo: string;
+    // matchView: MatchView; // avoiding circular dependency if possible, or just use any/object for now
+    matchView: any;
+    players: PlayerView[];
+    startTime: string;
+    wins: number;
+    winsNeeded: number;
+    won: boolean;
+}
+
 // === User Data ===
 
 export interface SkipPrioritySteps {

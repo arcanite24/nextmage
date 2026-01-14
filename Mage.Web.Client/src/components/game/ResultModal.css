@@ -1,0 +1,68 @@
+.result-modal {
+    max-width: 500px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.result-modal.winner {
+    border-color: #fbbf24;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(60, 50, 20, 1) 100%);
+}
+
+.result-modal.loser {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(60, 20, 20, 1) 100%);
+}
+
+.result-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.winner .result-title {
+    color: #fbbf24;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+}
+
+.loser .result-title {
+    color: #ef4444;
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+.result-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 1.1rem;
+    color: #e2e8f0;
+}
+
+.main-info {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.sub-info {
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+.match-score {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 1.2rem;
+    color: #f8fafc;
+}
+
+.match-winner {
+    margin-top: 10px;
+    color: #fbbf24;
+    font-weight: bold;
+}
