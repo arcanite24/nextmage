@@ -335,5 +335,5 @@ export interface UserData {
 
 export interface AbilityPickerView {
     message: string;
-    abilities: Record<UUID, string>;
+    choices: Record<UUID, string>;
 }

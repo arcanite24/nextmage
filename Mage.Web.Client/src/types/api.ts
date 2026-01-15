@@ -106,7 +106,58 @@ export interface ObjectColor {
   green: boolean;
 }
 
+// === Deck / Table Messages ===
+export enum DeckEditorMode {
+  SIDEBOARDING = "SIDEBOARDING",
+  LIMITED_BUILDING = "LIMITED_BUILDING",
+  LIMITED_SIDEBOARD_BUILDING = "LIMITED_SIDEBOARD_BUILDING",
+  VIEW_LIMITED_DECK = "VIEW_LIMITED_DECK"
+}
+
+export interface SimpleCardView {
+  id: UUID;
+  expansionSetCode: string; // e.g. "M21"
+  cardNumber: string; // e.g. "100"
+  cardTypes: CardType[];
+  subTypes: SubType[];
+  superTypes: SuperType[];
+  color: ObjectColor;
+  manaCostLeftStr?: string[];
+  manaCostRightStr?: string[];
+  manaValue: number;
+  power: string;
+  toughness: string;
+  loyalty: string;
+  defense: string;
+  rarity: Rarity;
+  isSplitCard: boolean;
+  isDoubleFacedCard: boolean;
+  name: string;
+  displayName: string;
+  rules: string[];
+}
+
+export interface SimpleCardsView extends Record<UUID, SimpleCardView> { }
+
+export interface DeckView {
+  name: string;
+  cards: SimpleCardsView;
+  sideboard: SimpleCardsView;
+}
+
+export interface TableClientMessage {
+  roomId?: UUID;
+  currentTableId: UUID;
+  parentTableId?: UUID;
+  gameId?: UUID;
+  playerId?: UUID;
+  deck?: DeckView;
+  time?: number;
+  flag?: boolean; // generic flag, usage depends on method
+}
+
 // === Server Callback ===
+
 
 export interface ClientCallback {
   messageId: number;
@@ -160,7 +211,9 @@ export type ClientCallbackMethod =
   | "gamePlayMana"
   | "gamePlayXMana"
   | "gameSelectAmount"
+  | "gameGetAmount"
   | "gameSelectMultiAmount"
+  | "gameGetMultiAmount"
   | "gameOver"
   | "endGameInfo"
   // Replay

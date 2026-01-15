@@ -18,7 +18,7 @@ export { useGameStore } from './gameStore';
 export { useChatStore } from './chatStore';
 
 // Re-export types
-export type { PendingAction } from './gameStore';
+export type { PendingAction, MultiAmountMessage } from './gameStore';
 export type { ChatMessage } from './chatStore';
 
 /**
@@ -36,6 +36,7 @@ export function initializeCallbackDispatcher(): () => void {
             'GAME_INIT': 'gameInit',
             'GAME_UPDATE': 'gameUpdate',
             'GAME_INFORM': 'gameInform',
+            'GAME_UPDATE_AND_INFORM': 'gameInform',
             'GAME_INFORM_PERSONAL': 'gameInformPersonal',
             'GAME_ASK': 'gameAsk',
             'GAME_TARGET': 'gameTarget',
@@ -45,17 +46,23 @@ export function initializeCallbackDispatcher(): () => void {
             'GAME_CHOOSE_CHOICE': 'gameChooseChoice',
             'GAME_PLAY_MANA': 'gamePlayMana',
             'GAME_PLAY_X_MANA': 'gamePlayXMana',
+            'GAME_PLAY_XMANA': 'gamePlayXMana',
+            'GAME_GET_AMOUNT': 'gameGetAmount',
+            'GAME_GET_MULTI_AMOUNT': 'gameGetMultiAmount',
             'GAME_ERROR': 'gameError',
             'GAME_OVER': 'gameOver',
             'END_GAME_INFO': 'endGameInfo',
 
             'CHAT_MESSAGE': 'chatMessage',
+            'CHATMESSAGE': 'chatMessage',
             'SERVER_MESSAGE': 'serverMessage',
             'SHOW_USER_MESSAGE': 'showUserMessage',
+            'SHOW_USERMESSAGE': 'showUserMessage',
 
             'JOINED_TABLE': 'joinedTable',
             'SHOW_TOURNAMENT': 'showTournament',
             'WATCH_GAME': 'watchGame',
+            'WATCHGAME': 'watchGame',
             'REPLAY_INIT': 'replayInit',
             'REPLAY_UPDATE': 'replayUpdate',
             'REPLAY_DONE': 'replayDone',

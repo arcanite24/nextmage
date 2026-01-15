@@ -5,3 +5,6 @@ export * from './PhaseIndicator';
 export * from './PlayerPanel';
 export * from './Stack';
 export * from './FeedbackPanel';
+export * from './dialogs/AbilityPickerDialog';
+export * from './ManaPaymentDialog';
+export * from './ChoiceDialog';

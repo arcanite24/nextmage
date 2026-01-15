@@ -1,0 +1,87 @@
+.card-selector-dialog .modal-content {
+    min-width: 800px;
+    max-width: 90vw;
+}
+
+.card-selector-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 400px;
+    max-height: 70vh;
+}
+
+.card-selector-message {
+    font-size: 1.1rem;
+    color: #e0e0e0;
+    margin-bottom: 8px;
+}
+
+.card-selector-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    overflow-y: auto;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    flex: 1;
+}
+
+.card-selector-item {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 8px;
+}
+
+.card-selector-item:hover {
+    transform: translateY(-4px);
+    z-index: 10;
+}
+
+.card-selector-item.selected {
+    outline: 3px solid #4a90e2;
+    box-shadow: 0 0 15px rgba(74, 144, 226, 0.5);
+}
+
+.card-selector-item img {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+}
+
+.card-selector-name {
+    margin-top: 4px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #ccc;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.card-selector-empty {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    color: #888;
+    font-style: italic;
+}
+
+.card-selector-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.selection-count {
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    color: #aaa;
+}

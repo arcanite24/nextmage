@@ -10,26 +10,28 @@ import { immer } from 'zustand/middleware/immer';
 import { wsService, ConnectionStatus } from '../services';
 import { UUID, UserData, UserSkipPrioritySteps, SkipPrioritySteps, ClientCallback } from '../types';
 
-// Default user skip priority steps (sensible defaults for new users)
+// Default user skip priority steps 
+// IMPORTANT: In Java's SkipPrioritySteps, TRUE means STOP (don't skip), FALSE means SKIP (pass through)
+// This is inverted from what you might expect
 const defaultSkipSteps: SkipPrioritySteps = {
-    upkeep: true,
-    draw: true,
-    main1: false,
-    beforeCombat: true,
-    endOfCombat: true,
-    main2: false,
-    endOfTurn: true,
+    upkeep: false,     // false = SKIP upkeep
+    draw: false,       // false = SKIP draw
+    main1: true,       // true = STOP on main1 (IMPORTANT: stops to let you play lands, sorceries)
+    beforeCombat: false,
+    endOfCombat: false,
+    main2: true,       // true = STOP on main2 (IMPORTANT: stops to let you play lands, sorceries)
+    endOfTurn: false,
 };
 
 const defaultUserSkipPrioritySteps: UserSkipPrioritySteps = {
     yourTurn: defaultSkipSteps,
-    opponentTurn: { ...defaultSkipSteps, main1: true, main2: true },
+    opponentTurn: { ...defaultSkipSteps, main1: false, main2: false }, // Skip opponent's main phases
     stopOnDeclareAttackers: true,
     stopOnDeclareBlockersWithZeroPermanents: false,
     stopOnDeclareBlockersWithAnyPermanents: true,
-    stopOnAllMainPhases: false,
-    stopOnAllEndPhases: false,
-    stopOnStackNewObjects: false,
+    stopOnAllMainPhases: true,   // true = STOP on all main phases when using F5
+    stopOnAllEndPhases: true,    // true = STOP on all end phases when using F4
+    stopOnStackNewObjects: true, // true = STOP when new objects added to stack during F7
 };
 
 const defaultUserData: UserData = {
@@ -398,6 +400,7 @@ export const useSessionStore = create<SessionState & SessionActions>()(
             })),
             {
                 name: 'xmage-session',
+                version: 2, // Increment to trigger migration
                 partialize: (state) => ({
                     serverUrl: state.serverUrl,
                     lastSessionId: state.lastSessionId,
@@ -406,6 +409,18 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                     isAuthenticated: state.isAuthenticated,
                     // Don't persist isRestoring
                 }),
+                migrate: (persistedState: any, version: number) => {
+                    if (version === 0 || version === 1) {
+                        // Fix SkipPrioritySteps from old convention to correct Java convention
+                        // Old: main1: false meant STOP, true meant SKIP
+                        // New (correct): main1: true means STOP, false means SKIP
+                        if (persistedState.userData?.userSkipPrioritySteps) {
+                            // Reset to correct defaults - don't try to migrate, just replace
+                            persistedState.userData.userSkipPrioritySteps = defaultUserSkipPrioritySteps;
+                        }
+                    }
+                    return persistedState;
+                },
             }
         ),
         { name: 'SessionStore' }

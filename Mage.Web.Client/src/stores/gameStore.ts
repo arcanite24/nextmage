@@ -22,22 +22,66 @@ import {
     ClientCallback,
     PlayerAction,
     ManaType,
+    DeckView,
+    TableClientMessage,
 } from '../types';
 
 // === Pending Action Types ===
 
+export interface SideboardAction {
+    type: 'sideboarding';
+    deck: DeckView;
+    tableId: UUID;
+    time: number;
+}
+
 export type PendingAction =
     | { type: 'none' }
     | { type: 'ask'; message: string; gameView: GameView }
-    | { type: 'target'; message: string; validTargets: UUID[]; gameView: GameView }
-    | { type: 'select'; message: string; gameView: GameView }
+    | { type: 'target'; message: string; validTargets: UUID[]; gameView: GameView; options?: Record<string, any>; cardsView?: Record<string, CardView>; required?: boolean; min?: number; max?: number }
+    | { type: 'select'; message: string; gameView: GameView; options?: Record<string, any>; cardsView?: Record<string, CardView>; required?: boolean; min?: number; max?: number }
     | { type: 'chooseAbility'; abilities: AbilityPickerView }
-    | { type: 'choosePile'; piles: unknown; message: string }
-    | { type: 'chooseChoice'; choices: string[]; message: string }
+    | {
+        type: 'choosePile';
+        message: string;
+        pile1: Record<string, CardView>;
+        pile2: Record<string, CardView>;
+        gameView: GameView;
+    }
+    | {
+        type: 'chooseChoice';
+        message: string;
+        choices: string[];
+        keyChoices: Record<string, string>;
+        hintData?: Record<string, string[]>;
+        hintType?: string;
+        required?: boolean;
+        specialEnabled?: boolean;
+        specialCanBeEmpty?: boolean;
+        specialText?: string;
+        specialHint?: string;
+        searchEnabled?: boolean;
+        manaColorChoice?: boolean;
+    }
     | { type: 'mana'; message: string; gameView: GameView }
     | { type: 'xmana'; message: string; gameView: GameView }
-    | { type: 'amount'; min: number; max: number; message: string }
-    | { type: 'multiAmount'; options: unknown; message: string };
+    | { type: 'amount'; min: number; max: number; message: string; gameView: GameView }
+    | {
+        type: 'multiAmount';
+        messages: MultiAmountMessage[];
+        min: number;
+        max: number;
+        gameView: GameView;
+    }
+    | SideboardAction;
+
+// Multi-amount message structure (for distributing damage/counters)
+export interface MultiAmountMessage {
+    message: string;
+    min: number;
+    max: number;
+    defaultValue: number;
+}
 
 interface GameState {
     // Core game state
@@ -57,8 +101,11 @@ interface GameState {
     // UI State
     selectedCardId: UUID | null;
     hoveredCardId: UUID | null;
-    showingZone: 'graveyard' | 'exile' | 'library' | null;
+    showingZone: 'graveyard' | 'exile' | 'library' | 'sideboard' | null;
     showingPlayerId: UUID | null;
+
+    // Skip actions
+    activeSkip: 'none' | 'F4' | 'F5' | 'F7' | 'F9';
 
     // Informational messages
     lastMessage: string | null;
@@ -99,7 +146,10 @@ interface GameActions {
     // UI
     selectCard: (cardId: UUID | null) => void;
     hoverCard: (cardId: UUID | null) => void;
-    showZone: (zone: 'graveyard' | 'exile' | 'library' | null, playerId?: UUID | null) => void;
+    showZone: (zone: 'graveyard' | 'exile' | 'library' | 'sideboard' | null, playerId?: UUID | null) => void;
+
+    // Deck
+    submitDeck: (tableId: UUID, deck: DeckView) => Promise<boolean>;
 
     // Callbacks
     handleCallback: (callback: ClientCallback) => void;
@@ -126,6 +176,7 @@ export const useGameStore = create<GameState & GameActions>()(
             hoveredCardId: null,
             showingZone: null,
             showingPlayerId: null,
+            activeSkip: 'none',
             lastMessage: null,
             lastError: null,
             isLoading: false,
@@ -163,6 +214,21 @@ export const useGameStore = create<GameState & GameActions>()(
                 }
             },
 
+            submitDeck: async (tableId: UUID, deck: DeckView) => {
+                const { sessionId } = useSessionStore.getState();
+                try {
+                    await wsService.send('submitDeck', [sessionId, tableId, deck]);
+                    set((state) => {
+                        state.pendingAction = { type: 'none' };
+                    });
+                    return true;
+                } catch (error) {
+                    console.error('Failed to submit deck:', error);
+                    set((state) => { state.lastError = `Failed to submit deck: ${error}`; });
+                    return false;
+                }
+            },
+
             updateGameView: (gameView) => {
                 set((state) => {
                     state.gameView = gameView;
@@ -170,6 +236,23 @@ export const useGameStore = create<GameState & GameActions>()(
                     // Ensure we know who 'we' are if the view tells us
                     if (gameView.myPlayerId) {
                         state.playerId = gameView.myPlayerId;
+                    }
+
+                    // Sync activeSkip state from server's player view
+                    const myPlayer = gameView.players?.find(p => p.playerId === gameView.myPlayerId);
+                    if (myPlayer) {
+                        // Determine active skip based on server state
+                        if (myPlayer.passedAllTurns || myPlayer.passedUntilEndStepBeforeMyTurn) {
+                            state.activeSkip = 'F9';
+                        } else if (myPlayer.passedUntilEndOfTurn) {
+                            state.activeSkip = 'F4';
+                        } else if (myPlayer.passedUntilNextMain) {
+                            state.activeSkip = 'F5';
+                        } else if (myPlayer.passedUntilStackResolved) {
+                            state.activeSkip = 'F7';
+                        } else {
+                            state.activeSkip = 'none';
+                        }
                     }
                 });
             },
@@ -246,22 +329,27 @@ export const useGameStore = create<GameState & GameActions>()(
 
             // Player actions (F-key equivalents)
             passPriority: async () => {
+                set((state) => { state.activeSkip = 'none'; });
                 await get().sendPlayerAction('PASS_PRIORITY_CANCEL_ALL_ACTIONS');
             },
 
             passPriorityUntilEndOfTurn: async () => {
+                set((state) => { state.activeSkip = 'F4'; });
                 await get().sendPlayerAction('PASS_PRIORITY_UNTIL_TURN_END_STEP');
             },
 
             passPriorityUntilNextMain: async () => {
+                set((state) => { state.activeSkip = 'F5'; });
                 await get().sendPlayerAction('PASS_PRIORITY_UNTIL_NEXT_MAIN_PHASE');
             },
 
             passPriorityUntilStackResolved: async () => {
+                set((state) => { state.activeSkip = 'F7'; });
                 await get().sendPlayerAction('PASS_PRIORITY_UNTIL_STACK_RESOLVED');
             },
 
             passPriorityUntilNextTurn: async () => {
+                set((state) => { state.activeSkip = 'F9'; });
                 await get().sendPlayerAction('PASS_PRIORITY_UNTIL_MY_NEXT_TURN');
             },
 
@@ -270,6 +358,7 @@ export const useGameStore = create<GameState & GameActions>()(
             },
 
             cancelPassActions: async () => {
+                set((state) => { state.activeSkip = 'none'; });
                 await get().sendPlayerAction('PASS_PRIORITY_CANCEL_ALL_ACTIONS');
             },
 
@@ -467,6 +556,11 @@ export const useGameStore = create<GameState & GameActions>()(
                                 message: data.message || 'Select target',
                                 validTargets: data.targets || [],
                                 gameView: state.gameView!,
+                                required: data.flag, // 'flag' indicates required in GameClientMessage
+                                options: data.options,
+                                cardsView: data.cardsView1,
+                                min: data.min,
+                                max: data.max,
                             };
                             if (state.gameView?.myPlayerId) {
                                 state.playerId = state.gameView.myPlayerId;
@@ -482,6 +576,10 @@ export const useGameStore = create<GameState & GameActions>()(
                                 type: 'select',
                                 message: data.message || 'Select',
                                 gameView: state.gameView!,
+                                options: data.options,
+                                cardsView: data.cardsView1,
+                                min: data.min,
+                                max: data.max,
                             };
                             if (state.gameView?.myPlayerId) {
                                 state.playerId = state.gameView.myPlayerId;
@@ -495,6 +593,38 @@ export const useGameStore = create<GameState & GameActions>()(
                             state.pendingAction = {
                                 type: 'chooseAbility',
                                 abilities: callback.data as AbilityPickerView,
+                            };
+                        });
+                        break;
+
+                    case 'gameChooseChoice':
+                        set((state) => {
+                            const data = callback.data as any;
+                            // The choice object is nested: data.choice contains the actual choice info
+                            const choice = data.choice || data;
+
+                            // Update game view if provided
+                            if (data.gameView) {
+                                state.gameView = data.gameView;
+                                if (state.gameView?.myPlayerId) {
+                                    state.playerId = state.gameView.myPlayerId;
+                                }
+                            }
+
+                            state.pendingAction = {
+                                type: 'chooseChoice',
+                                message: choice.message || 'Make a choice',
+                                choices: choice.choices || [],
+                                keyChoices: choice.keyChoices || {},
+                                hintData: choice.hintData,
+                                hintType: choice.hintType,
+                                required: choice.required,
+                                specialEnabled: choice.specialEnabled,
+                                specialCanBeEmpty: choice.specialCanBeEmpty,
+                                specialText: choice.specialText,
+                                specialHint: choice.specialHint,
+                                searchEnabled: choice.searchEnabled,
+                                manaColorChoice: choice.manaColorChoice,
                             };
                         });
                         break;
@@ -529,6 +659,69 @@ export const useGameStore = create<GameState & GameActions>()(
                         });
                         break;
 
+                    case 'gameGetAmount':
+                        set((state) => {
+                            const data = callback.data as any;
+                            state.gameView = data.gameView || state.gameView;
+                            state.pendingAction = {
+                                type: 'amount',
+                                message: data.message || 'Choose a number',
+                                min: data.min ?? 0,
+                                max: data.max ?? 999,
+                                gameView: state.gameView!,
+                            };
+                            if (state.gameView?.myPlayerId) {
+                                state.playerId = state.gameView.myPlayerId;
+                            }
+                        });
+                        break;
+
+                    case 'gameGetMultiAmount':
+                        set((state) => {
+                            const data = callback.data as any;
+                            state.gameView = data.gameView || state.gameView;
+                            state.pendingAction = {
+                                type: 'multiAmount',
+                                messages: data.messages || [],
+                                min: data.min ?? 0,
+                                max: data.max ?? 999,
+                                gameView: state.gameView!,
+                            };
+                            if (state.gameView?.myPlayerId) {
+                                state.playerId = state.gameView.myPlayerId;
+                            }
+                        });
+                        break;
+
+                    case 'gameChoosePile':
+                        set((state) => {
+                            const data = callback.data as any;
+                            state.gameView = data.gameView || state.gameView;
+                            state.pendingAction = {
+                                type: 'choosePile',
+                                message: data.message || 'Choose a pile',
+                                pile1: data.cardsView1 || data.pile1 || {},
+                                pile2: data.cardsView2 || data.pile2 || {},
+                                gameView: state.gameView!,
+                            };
+                            if (state.gameView?.myPlayerId) {
+                                state.playerId = state.gameView.myPlayerId;
+                            }
+                        });
+                        break;
+
+                    case 'gameInformPersonal':
+                        // Personal message to the player - show as a brief notification
+                        set((state) => {
+                            const data = callback.data as any;
+                            state.lastMessage = data.message || String(data);
+                            // Also update game view if provided
+                            if (data.gameView) {
+                                state.gameView = data.gameView;
+                            }
+                        });
+                        break;
+
                     case 'gameError':
                         set((state) => {
                             state.lastError = callback.data as string;
@@ -546,8 +739,17 @@ export const useGameStore = create<GameState & GameActions>()(
                         break;
 
                     case 'SIDEBOARD':
-                        console.log('Sideboard event received:', callback.data);
-                        // TODO: Implement sideboard logic
+                        set((state) => {
+                            const message = callback.data as TableClientMessage;
+                            if (message.deck) {
+                                state.pendingAction = {
+                                    type: 'sideboarding',
+                                    deck: message.deck,
+                                    tableId: message.currentTableId,
+                                    time: message.time || 0
+                                };
+                            }
+                        });
                         break;
                 }
             },

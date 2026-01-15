@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlayerView } from '../../types';
+import { cardImageService } from '../../services/CardImageService';
 import './GamePage.css';
 
 interface PlayerPanelProps {
@@ -7,9 +8,10 @@ interface PlayerPanelProps {
     isMe?: boolean;
     isOpponent?: boolean;
     onClick?: (playerId: string) => void;
+    onShowZone?: (zone: 'graveyard' | 'exile' | 'library' | 'sideboard', playerId: string) => void;
 }
 
-export const PlayerPanel: React.FC<PlayerPanelProps> = ({ player, isMe, isOpponent, onClick }) => {
+export const PlayerPanel: React.FC<PlayerPanelProps> = ({ player, isMe, isOpponent, onClick, onShowZone }) => {
     return (
         <div
             id={`player-${player.playerId}`}
@@ -51,7 +53,20 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({ player, isMe, isOppone
                     <span className="stat-life">❤️ {player.life}</span>
                     <span className="stat-hand">✋ {player.handCount}</span>
                     <span className="stat-library">📚 {player.libraryCount}</span>
-                    <span className="stat-graveyard">💀 {Object.keys(player.graveyard).length}</span>
+                    <span
+                        className="stat-graveyard clickable-stat"
+                        onClick={(e) => { e.stopPropagation(); onShowZone && onShowZone('graveyard', player.playerId); }}
+                        title="View Graveyard"
+                    >
+                        💀 {Object.keys(player.graveyard).length}
+                    </span>
+                    <span
+                        className="stat-exile clickable-stat"
+                        onClick={(e) => { e.stopPropagation(); onShowZone && onShowZone('exile', player.playerId); }}
+                        title="View Exile"
+                    >
+                        🌌 {Object.keys(player.exile).length}
+                    </span>
                 </div>
                 <div className="player-mana">
                     {player.manaPool.white > 0 && <span className="mana-w">{player.manaPool.white}</span>}
@@ -61,6 +76,16 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({ player, isMe, isOppone
                     {player.manaPool.green > 0 && <span className="mana-g">{player.manaPool.green}</span>}
                     {player.manaPool.colorless > 0 && <span className="mana-c">{player.manaPool.colorless}</span>}
                 </div>
+                {player.topCard && (
+                    <div className="player-top-card" style={{ marginTop: '8px' }}>
+                        <div style={{ fontSize: '0.8em', color: '#aaa' }}>Top Card:</div>
+                        <img
+                            src={cardImageService.getImageUrl(player.topCard)}
+                            alt="Top Card"
+                            style={{ height: '60px', borderRadius: '4px' }}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

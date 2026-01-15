@@ -1,0 +1,171 @@
+/* Choice Dialog */
+.choice-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.choice-message {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Search Input */
+.choice-search {
+    margin-bottom: var(--space-2);
+}
+
+.choice-search-input {
+    width: 100%;
+    padding: var(--space-3);
+    background: var(--color-bg-elevated);
+    border: 2px solid var(--color-glass-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.choice-search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.choice-search-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* Choice List */
+.choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.choice-option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--color-bg-elevated);
+    border: 2px solid var(--color-glass-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.choice-option:hover,
+.choice-option:focus {
+    background: var(--color-bg-hover);
+    border-color: var(--color-primary);
+    transform: translateX(4px);
+    outline: none;
+}
+
+.choice-number {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.choice-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.choice-text {
+    flex: 1;
+    color: var(--color-text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Hints for choices */
+.choice-hints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+}
+
+.choice-hint-item {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+/* Empty state */
+.choice-empty {
+    text-align: center;
+    padding: var(--space-4);
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* Special option checkbox */
+.choice-special {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background: rgba(139, 92, 246, 0.1);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.choice-special:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.5);
+}
+
+.choice-special input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.choice-special-text {
+    flex: 1;
+    color: var(--color-text-primary);
+    font-size: 13px;
+}
+
+.choice-special-hint {
+    font-size: 14px;
+    cursor: help;
+    opacity: 0.7;
+}
+
+.choice-special-hint:hover {
+    opacity: 1;
+}
+
+/* Shortcut hint */
+.choice-shortcut-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    padding: var(--space-2);
+    background: rgba(139, 92, 246, 0.1);
+    border-radius: var(--radius-sm);
+}

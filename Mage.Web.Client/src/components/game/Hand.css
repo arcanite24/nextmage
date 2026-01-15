@@ -1,0 +1,81 @@
+/* Hand Container - Sticks to bottom center */
+.hand-container {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    pointer-events: none;
+    perspective: 1000px;
+    z-index: 10;
+}
+
+/* 
+   The anchor point for cards.
+   Since cards are absolutely positioned relative to this, 
+   it stays centered.
+*/
+.hand-cards {
+    position: relative;
+    width: 0;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.hand-card {
+    position: absolute;
+    cursor: pointer;
+    pointer-events: auto;
+
+    /* Card styling */
+    border-radius: 4.5% / 3.5%;
+    box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.5);
+    background-color: #000;
+
+    /* Improve rendering quality */
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+    user-select: none;
+}
+
+.hand-card img {
+    width: 100%;
+    height: 100%;
+    border-radius: 4.5% / 3.5%;
+    display: block;
+    object-fit: cover;
+}
+
+/* Selection / Target Styles */
+.hand-card.valid-target {
+    /* Arena-style glow: layered shadows for intensity */
+    box-shadow:
+        0 0 4px 2px #4ade80,
+        0 0 12px 4px rgba(34, 197, 94, 0.6),
+        0 0 20px 8px rgba(34, 197, 94, 0.3);
+    border: 1px solid rgba(74, 222, 128, 0.5);
+}
+
+/* Arena-style large preview on the side */
+.hand-card-preview {
+    position: fixed;
+    aspect-ratio: 2.5/3.5;
+    pointer-events: none;
+    z-index: 2000;
+
+    border-radius: 4.5% / 3.5%;
+    box-shadow:
+        0 0 20px rgba(0, 0, 0, 0.8),
+        0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.hand-card-preview img {
+    width: 100%;
+    height: 100%;
+    border-radius: 4.5% / 3.5%;
+    display: block;
+    object-fit: cover;
+}
