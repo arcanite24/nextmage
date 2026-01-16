@@ -20,6 +20,7 @@ import { PileDialog } from './PileDialog';
 import { CardSelectorDialog } from "./dialogs/CardSelectorDialog";
 import { SideboardDialog } from './dialogs/SideboardDialog';
 import { SkipIndicator } from './SkipIndicator';
+import { ArenaPriorityControls } from './ArenaPriorityControls';
 import { cardImageService } from '../../services/CardImageService';
 import './GamePage.css';
 
@@ -51,7 +52,9 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
         showZone,
         submitDeck,
         showingPlayerId,
-        sendPlayerAction
+        sendPlayerAction,
+        toggleArenaSkip,
+        arenaSkipEnabled
     } = useGameStore();
 
     const [previewImageUrl, setPreviewImageUrl] = React.useState<string | null>(null);
@@ -324,6 +327,17 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                         </div>
                     )}
                 </div>
+
+                {/* Arena-style Priority Controls (bottom-right) */}
+                {myPlayer && (
+                    <ArenaPriorityControls
+                        hasPriority={myPlayer.hasPriority}
+                        isMyTurn={isMyTurn}
+                        currentPhase={gameView.step}
+                        skipEnabled={arenaSkipEnabled}
+                        onToggleSkip={toggleArenaSkip}
+                    />
+                )}
 
                 {/* Sidebar (Right) */}
                 <aside className="game-sidebar">

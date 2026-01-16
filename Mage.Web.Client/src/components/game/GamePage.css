@@ -25,10 +25,9 @@
 
 .game-feedback-overlay {
     position: fixed;
-    top: 20px;
-    left: 40%;
-    /* Offset from sidebar */
-    transform: translateX(-50%);
+    bottom: 140px;
+    /* Position above the Arena priority controls */
+    right: 20px;
     z-index: 1000;
     pointer-events: none;
     /* Let clicks through unless on panel */

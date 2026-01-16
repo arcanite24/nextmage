@@ -39,13 +39,15 @@ export const FeedbackPanel: React.FC = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [pendingAction, sendBoolean]);
 
-    if (pendingAction.type === 'none') return null;
+    // Only show FeedbackPanel for specific action types that need explicit UI
+    // target/select are now handled by the Arena "Next" button, so we hide the panel for those
+    const showableTypes = ['ask', 'mana'];
+    if (pendingAction.type === 'none' || !showableTypes.includes(pendingAction.type)) {
+        return null;
+    }
 
     const handleYes = () => sendBoolean(true);
     const handleNo = () => sendBoolean(false);
-
-    // For manual priority passing (usually handled by F-keys or sidebar, but good to have context here)
-    const handleOK = () => sendPlayerAction('PASS_PRIORITY_CANCEL_ALL_ACTIONS');
 
     // Specific rendering based on action type
     const renderActionContent = () => {
@@ -58,29 +60,10 @@ export const FeedbackPanel: React.FC = () => {
                     </div>
                 );
 
-            case 'target':
-            case 'select':
-                return (
-                    <div className="feedback-actions">
-                        {/* Done button usually needed if multiple targets allowed, implies we are finished selecting */}
-                        <Button variant="primary" onClick={() => sendBoolean(true)}>Done</Button>
-                        <Button variant="ghost" onClick={() => sendBoolean(false)}>Cancel</Button>
-                    </div>
-                );
-
             case 'mana':
                 return (
                     <div className="feedback-actions">
                         <Button variant="ghost" onClick={() => sendBoolean(false)}>Cancel</Button>
-                    </div>
-                );
-
-            case 'chooseChoice':
-                // Handled by distinct modal usually, but if simple choices:
-                return (
-                    <div className="feedback-actions">
-                        {/* Placeholder - usually rendering choices as buttons */}
-                        <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Select an option...</div>
                     </div>
                 );
 

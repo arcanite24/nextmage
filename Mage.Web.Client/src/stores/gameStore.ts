@@ -106,6 +106,7 @@ interface GameState {
 
     // Skip actions
     activeSkip: 'none' | 'F4' | 'F5' | 'F7' | 'F9';
+    arenaSkipEnabled: boolean;
 
     // Informational messages
     lastMessage: string | null;
@@ -132,6 +133,7 @@ interface GameActions {
     passPriorityUntilNextTurn: () => Promise<void>;
     holdPriority: () => Promise<void>;
     cancelPassActions: () => Promise<void>;
+    toggleArenaSkip: () => Promise<void>;
     concede: () => Promise<void>;
     undo: () => Promise<void>;
 
@@ -177,6 +179,7 @@ export const useGameStore = create<GameState & GameActions>()(
             showingZone: null,
             showingPlayerId: null,
             activeSkip: 'none',
+            arenaSkipEnabled: false,
             lastMessage: null,
             lastError: null,
             isLoading: false,
@@ -358,8 +361,26 @@ export const useGameStore = create<GameState & GameActions>()(
             },
 
             cancelPassActions: async () => {
-                set((state) => { state.activeSkip = 'none'; });
+                set((state) => {
+                    state.activeSkip = 'none';
+                    state.arenaSkipEnabled = false;
+                });
                 await get().sendPlayerAction('PASS_PRIORITY_CANCEL_ALL_ACTIONS');
+            },
+
+            toggleArenaSkip: async () => {
+                const { arenaSkipEnabled } = get();
+                if (arenaSkipEnabled) {
+                    // Turn off: cancel all pass actions
+                    await get().cancelPassActions();
+                } else {
+                    // Turn on: set skip to next main phase (Arena-like behavior)
+                    set((state) => {
+                        state.arenaSkipEnabled = true;
+                        state.activeSkip = 'F5';
+                    });
+                    await get().sendPlayerAction('PASS_PRIORITY_UNTIL_NEXT_MAIN_PHASE');
+                }
             },
 
             concede: async () => {
