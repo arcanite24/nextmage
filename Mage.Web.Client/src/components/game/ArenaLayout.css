@@ -1,0 +1,725 @@
+/* ===================================================================
+   ARENA-STYLE LAYOUT
+   Mimics Magic Arena's battlefield layout
+   =================================================================== */
+
+/* Main Arena Container */
+.arena-layout {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg,
+            #0d1117 0%,
+            #161b22 30%,
+            #1a1f28 70%,
+            #0d1117 100%);
+    overflow: hidden;
+}
+
+/* ===================================================================
+   BATTLEFIELDS (Opponent Top, Player Bottom)
+   =================================================================== */
+.arena-battlefield-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 0;
+}
+
+/* Opponent battlefield (top half) */
+.arena-opponent-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 100px 20px 20px 20px;
+    /* Extra top padding for opponent HUD */
+    overflow: hidden;
+}
+
+/* Additional opponent display */
+.arena-opponent-info {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 100;
+}
+
+.arena-opponent-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e2e8f0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.arena-opponent-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* Player battlefield (bottom half) */
+.arena-player-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
+    padding: 20px 20px 20px 20px;
+    overflow: hidden;
+}
+
+/* ===================================================================
+   PLAYER HUD (Bottom of screen)
+   =================================================================== */
+.arena-player-hud {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 180px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 50;
+}
+
+/* ===================================================================
+   PLAYER INFO (Bottom Left - Name, Graveyard, Deck)
+   =================================================================== */
+.arena-player-info-left {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: auto;
+    z-index: 60;
+}
+
+.arena-player-name-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.arena-player-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.arena-zone-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.arena-zone-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.arena-zone-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.arena-zone-icon {
+    width: 32px;
+    height: 44px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.arena-zone-icon.graveyard {
+    background: linear-gradient(135deg, #374151, #1f2937);
+    border: 1px solid #4b5563;
+}
+
+.arena-zone-icon.library {
+    background: linear-gradient(135deg, #1e3a5f, #0c1929);
+    border: 1px solid #2563eb;
+}
+
+.arena-zone-icon.exile {
+    background: linear-gradient(135deg, #4c1d95, #2e1065);
+    border: 1px solid #7c3aed;
+}
+
+.arena-zone-count {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: rgba(0, 0, 0, 0.9);
+    color: #e2e8f0;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ===================================================================
+   AVATAR & LIFE (Center, above hand)
+   =================================================================== */
+.arena-avatar-container {
+    position: fixed;
+    bottom: 170px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 80;
+    pointer-events: auto;
+}
+
+.arena-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid #1e293b;
+    box-shadow:
+        0 0 0 2px rgba(255, 215, 0, 0.3),
+        0 4px 12px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, #334155, #1e293b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.arena-avatar:hover {
+    transform: scale(1.05);
+    box-shadow:
+        0 0 0 3px rgba(255, 215, 0, 0.5),
+        0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.arena-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.arena-avatar svg {
+    width: 36px;
+    height: 36px;
+    color: #94a3b8;
+}
+
+.arena-avatar-fallback {
+    font-size: 24px;
+    font-weight: bold;
+    color: #94a3b8;
+}
+
+.arena-life-display {
+    margin-top: 4px;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.95));
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    min-width: 48px;
+    text-align: center;
+}
+
+.arena-life-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e2e8f0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.arena-life-value.low {
+    color: #ef4444;
+    animation: lifePulse 1s ease-in-out infinite;
+}
+
+.arena-life-value.high {
+    color: #22c55e;
+}
+
+@keyframes lifePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.arena-mana-display {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.arena-mana-pip {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.arena-mana-pip.w {
+    color: #fef3c7;
+    border-color: #fbbf24;
+}
+
+.arena-mana-pip.u {
+    color: #93c5fd;
+    border-color: #3b82f6;
+}
+
+.arena-mana-pip.b {
+    color: #a1a1aa;
+    border-color: #52525b;
+}
+
+.arena-mana-pip.r {
+    color: #fca5a5;
+    border-color: #ef4444;
+}
+
+.arena-mana-pip.g {
+    color: #86efac;
+    border-color: #22c55e;
+}
+
+.arena-mana-pip.c {
+    color: #d1d5db;
+    border-color: #6b7280;
+}
+
+/* ===================================================================
+   HAND (Bottom Center)
+   =================================================================== */
+.arena-hand-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 180px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    pointer-events: auto;
+    z-index: 70;
+}
+
+/* ===================================================================
+   STACK (Right side, fanned out like Arena)
+   =================================================================== */
+.arena-stack-container {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    z-index: 100;
+    pointer-events: auto;
+    max-height: 60vh;
+}
+
+.arena-stack-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    perspective: 1000px;
+}
+
+.arena-stack-cards {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+}
+
+.arena-stack-card {
+    width: 140px;
+    aspect-ratio: 2.5 / 3.5;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+/* Fan the stack cards - overlapping horizontally */
+.arena-stack-card:not(:first-child) {
+    margin-left: -100px;
+}
+
+.arena-stack-card:hover {
+    transform: translateY(-10px) scale(1.05);
+    z-index: 100 !important;
+}
+
+.arena-stack-card img {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    box-shadow:
+        -4px 4px 8px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(59, 130, 246, 0.3);
+    display: block;
+}
+
+.arena-stack-card::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5));
+    z-index: -1;
+    opacity: 0;
+    /* Hidden by default, shown for target */
+    transition: opacity 0.2s;
+}
+
+.arena-stack-card.valid-target::before {
+    opacity: 1;
+    animation: targetPulse 2s infinite;
+}
+
+@keyframes targetPulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.arena-stack-index {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fbbf24;
+    font-weight: bold;
+    font-size: 12px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(251, 191, 36, 0.5);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Ability indicator on stack cards */
+.arena-stack-card.is-ability::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    background: linear-gradient(180deg, transparent 50%, rgba(147, 51, 234, 0.6) 100%);
+    pointer-events: none;
+}
+
+.arena-stack-ability-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.95), rgba(79, 70, 229, 0.95));
+    color: #f8fafc;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.arena-stack-ability-text {
+    font-size: 9px;
+    font-weight: 400;
+    opacity: 0.9;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.arena-stack-label {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ===================================================================
+   OPPONENT AREA SPECIFICS (Top)
+   =================================================================== */
+.arena-opponent-hud {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 50;
+}
+
+.arena-opponent-avatar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.arena-opponent-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid #1e293b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, #334155, #1e293b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.arena-opponent-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.arena-opponent-life {
+    margin-top: 4px;
+    padding: 4px 12px;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #e2e8f0;
+}
+
+.arena-opponent-deck-info {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(80px);
+    display: flex;
+    gap: 8px;
+}
+
+.arena-opponent-zone-mini {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+/* Revealed cards for opponent */
+.arena-opponent-hand-indicator {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0;
+    z-index: 50;
+}
+
+.arena-hand-back-card {
+    width: 50px;
+    height: 70px;
+    position: relative;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s;
+}
+
+.arena-hand-back-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Overlapping card backs */
+.arena-hand-back-card:not(:first-child) {
+    margin-left: -25px;
+}
+
+.arena-hand-back-card:hover {
+    transform: translateY(-4px);
+    z-index: 10;
+}
+
+/* Extra cards indicator */
+.arena-hand-back-card.extra-cards {
+    position: relative;
+}
+
+.arena-hand-back-card .extra-count {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #f8fafc;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+/* ===================================================================
+   SIDEBAR (Minimal, optional - for phase indicator and log)
+   =================================================================== */
+.arena-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 260px;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.95);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    z-index: 200;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.arena-sidebar.open {
+    transform: translateX(0);
+}
+
+.arena-sidebar-toggle {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 60px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 14px;
+    z-index: 201;
+    transition: all 0.2s ease;
+}
+
+.arena-sidebar-toggle:hover {
+    background: rgba(30, 41, 59, 0.95);
+    color: #e2e8f0;
+}
+
+.arena-sidebar-toggle.open {
+    right: 260px;
+}
+
+/* ===================================================================
+   RESPONSIVE ADJUSTMENTS
+   =================================================================== */
+@media (max-width: 1200px) {
+    .arena-stack-card {
+        width: 120px;
+    }
+
+    .arena-stack-card:not(:first-child) {
+        margin-left: -85px;
+    }
+
+    .arena-avatar {
+        width: 56px;
+        height: 56px;
+    }
+
+    .arena-life-value {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 900px) {
+    .arena-stack-container {
+        bottom: 200px;
+        top: auto;
+        transform: none;
+    }
+
+    .arena-stack-card {
+        width: 100px;
+    }
+
+    .arena-stack-card:not(:first-child) {
+        margin-left: -70px;
+    }
+}

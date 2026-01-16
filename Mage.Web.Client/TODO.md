@@ -1,0 +1,3 @@
+- Don't re-render the whole battlefield on updates
+- A debug menu to serialize the current game state and past actions for better debugging
+- 

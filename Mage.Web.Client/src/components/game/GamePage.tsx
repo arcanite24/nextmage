@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGameStore, useSessionStore, useChatStore } from '../../stores';
 import { Button } from '../common';
 import { Battlefield } from './Battlefield';
 import { Hand } from './Hand';
-import { PlayerPanel } from './PlayerPanel';
-import { Stack } from './Stack';
+import { ArenaPlayerHUD } from './ArenaPlayerHUD';
+import { ArenaOpponentHUD } from './ArenaOpponentHUD';
+import { ArenaStack } from './ArenaStack';
 import { PhaseIndicator } from './PhaseIndicator';
 import { FeedbackPanel } from './FeedbackPanel';
 import { ChatPanel } from '../chat/ChatPanel';
@@ -23,6 +24,7 @@ import { SkipIndicator } from './SkipIndicator';
 import { ArenaPriorityControls } from './ArenaPriorityControls';
 import { cardImageService } from '../../services/CardImageService';
 import './GamePage.css';
+import './ArenaLayout.css';
 
 interface GamePageProps {
     gameId: string;
@@ -57,8 +59,9 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
         arenaSkipEnabled
     } = useGameStore();
 
-    const [previewImageUrl, setPreviewImageUrl] = React.useState<string | null>(null);
+    const [previewCard, setPreviewCard] = React.useState<any>(null);
     const [resultModalClosed, setResultModalClosed] = React.useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     // Global keyboard shortcuts
     useEffect(() => {
@@ -145,7 +148,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
         }
 
         if (card) {
-            setPreviewImageUrl(cardImageService.getImageUrl(card));
+            setPreviewCard(card);
         }
     };
 
@@ -174,13 +177,13 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
     const showResultModal = (gameEnded || hasLeft) && !resultModalClosed;
 
     return (
-        <div className="game-page">
+        <div className="game-page arena-layout">
             <CombatOverlay />
             <SkipIndicator activeSkip={activeSkip} onCancel={cancelPassActions} />
-            {previewImageUrl && (
+            {previewCard && (
                 <CardPreviewModal
-                    imageUrl={previewImageUrl}
-                    onClose={() => setPreviewImageUrl(null)}
+                    card={previewCard}
+                    onClose={() => setPreviewCard(null)}
                 />
             )}
 
@@ -243,33 +246,24 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             )}
 
             {/* Show Cards / Zone View Dialog */}
-            {(pendingAction.type === 'target' || pendingAction.type === 'select' || showingZone) && (
+            {showingZone && (
                 <CardSelectorDialog
                     isOpen={true}
                     pendingAction={pendingAction.type === 'target' || pendingAction.type === 'select' ? pendingAction : undefined}
                     showingZone={showingZone || undefined}
                     showingPlayerId={showingPlayerId || undefined}
                     onClose={() => {
-                        if (showingZone) {
-                            showZone(null);
-                        } else if (pendingAction.type === 'target' || pendingAction.type === 'select') {
-                            if (!pendingAction.required) {
-                                sendPlayerAction('PASS_PRIORITY_CANCEL_ALL_ACTIONS');
-                            }
-                        }
+                        showZone(null);
                     }}
                 />
             )}
 
-            {/* Sideboard Dialog */}
+            {/* Sideboard Dialog (unchanged) */}
             {pendingAction.type === 'sideboarding' && (
                 <SideboardDialog
                     isOpen={true}
                     deck={pendingAction.deck}
                     onClose={() => {
-                        // User can't really "cancel" sideboarding in a tournament without conceding or timeouts
-                        // But for UI capability, maybe minimize?
-                        // For now, no-op or confirm concede?
                         console.log('Closing sideboard dialog not fully supported yet');
                     }}
                     onSubmit={(deck) => {
@@ -281,114 +275,149 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             <div className="game-feedback-overlay">
                 <FeedbackPanel />
             </div>
-            <div className="game-layout">
-                {/* Main Battle Area */}
-                <div className="game-center">
-                    {/* Opponents (Top) */}
-                    <div className="opponents-container">
-                        {opponents.map(p => (
-                            <div key={p.playerId} className="opponent-wrapper">
-                                <PlayerPanel player={p} isOpponent onClick={handleCardClick} onShowZone={showZone} />
-                                <Battlefield
-                                    player={p}
-                                    onCardClick={handleCardClick}
-                                    onCardInspect={handleCardInspect}
-                                    isMe={false}
-                                />
-                            </div>
-                        ))}
+
+            {/* ===== ARENA LAYOUT ===== */}
+            <div className="arena-battlefield-area">
+                {/* Opponent Area (Top) */}
+                {opponents.map(p => (
+                    <div key={p.playerId} className="arena-opponent-area">
+                        <ArenaOpponentHUD
+                            player={p}
+                            onShowZone={showZone}
+                            onInteract={handleCardClick}
+                        />
+                        <Battlefield
+                            player={p}
+                            onCardClick={handleCardClick}
+                            onCardInspect={handleCardInspect}
+                            isMe={false}
+                        />
                     </div>
+                ))}
 
-                    {/* Middle (Stack / Combat) -> Could be overlaid or separate div */}
-                    <div className="midway-container">
-                        <Stack stack={gameView.stack} />
+                {/* Player Area (Bottom) */}
+                {myPlayer && (
+                    <div className="arena-player-area">
+                        <Battlefield
+                            player={myPlayer}
+                            isMe
+                            onCardClick={handleCardClick}
+                            onCardInspect={handleCardInspect}
+                        />
                     </div>
+                )}
+            </div>
 
-                    {/* Me (Bottom) */}
-                    {myPlayer && (
-                        <div className="me-container">
-                            <Battlefield
-                                player={myPlayer}
-                                isMe
-                                onCardClick={handleCardClick}
-                                onCardInspect={handleCardInspect}
-                            />
-                            <div className="my-controls-row">
-                                <PlayerPanel player={myPlayer} isMe onClick={handleCardClick} onShowZone={showZone} />
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Player HUD Overlay (fixed position) */}
+            {myPlayer && (
+                <ArenaPlayerHUD
+                    player={myPlayer}
+                    isMe
+                    onShowZone={showZone}
+                    onInteract={handleCardClick}
+                />
+            )}
 
-                                    <Hand
-                                        hand={gameView.myHand}
-                                        onCardClick={handleCardClick}
-                                        onCardInspect={handleCardInspect}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
+            {/* Hand (fixed position at bottom) */}
+            {myPlayer && (
+                <div className="arena-hand-area">
+                    <Hand
+                        hand={gameView.myHand}
+                        onCardClick={handleCardClick}
+                        onCardInspect={handleCardInspect}
+                    />
+                </div>
+            )}
+
+            {/* Stack (Right side, fanned out) */}
+            <ArenaStack
+                stack={gameView.stack}
+                onCardClick={handleCardClick}
+                onCardInspect={handleCardInspect}
+            />
+
+            {/* Arena-style Priority Controls (bottom-right) */}
+            {myPlayer && (
+                <ArenaPriorityControls
+                    hasPriority={myPlayer.hasPriority}
+                    isMyTurn={isMyTurn}
+                    currentPhase={gameView.step}
+                    skipEnabled={arenaSkipEnabled}
+                    onToggleSkip={toggleArenaSkip}
+                />
+            )}
+
+            {/* Phase Indicator (Top right corner) */}
+            <div style={{
+                position: 'fixed',
+                top: 10,
+                right: 20,
+                zIndex: 100
+            }}>
+                <PhaseIndicator turn={gameView.turn} step={gameView.step} />
+                <div className="turn-indicator" style={{
+                    marginTop: 8,
+                    padding: '4px 12px',
+                    background: 'rgba(0,0,0,0.7)',
+                    borderRadius: 6,
+                    fontSize: 12,
+                    color: isMyTurn ? '#22c55e' : '#94a3b8',
+                    textAlign: 'center'
+                }}>
+                    {isMyTurn ? "Your Turn" : `${gameView.activePlayerName || opponents.find(p => p.playerId === gameView.activePlayerId)?.name || 'Unknown'}'s Turn`}
+                </div>
+            </div>
+
+            {/* Sidebar Toggle */}
+            <button
+                className={`arena-sidebar-toggle ${sidebarOpen ? 'open' : ''}`}
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+                {sidebarOpen ? '▶' : '◀'}
+            </button>
+
+            {/* Collapsible Sidebar */}
+            <aside className={`arena-sidebar ${sidebarOpen ? 'open' : ''}`}>
+                <div style={{ padding: 12 }}>
+                    <h4 style={{ margin: 0, color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Game Info
+                    </h4>
                 </div>
 
-                {/* Arena-style Priority Controls (bottom-right) */}
-                {myPlayer && (
-                    <ArenaPriorityControls
-                        hasPriority={myPlayer.hasPriority}
-                        isMyTurn={isMyTurn}
-                        currentPhase={gameView.step}
-                        skipEnabled={arenaSkipEnabled}
-                        onToggleSkip={toggleArenaSkip}
-                    />
-                )}
-
-                {/* Sidebar (Right) */}
-                <aside className="game-sidebar">
-                    <div className="game-info">
-                        <PhaseIndicator turn={gameView.turn} step={gameView.step} />
-                        <div className="turn-indicator">
-                            {isMyTurn ? "Your Turn" : `${gameView.activePlayerName || opponents.find(p => p.playerId === gameView.activePlayerId)?.name || 'Unknown'}'s Turn`}
+                <div className="keyboard-shortcuts" style={{ margin: '0 12px' }}>
+                    <h4>Shortcuts</h4>
+                    <div className="shortcut-list">
+                        <div className="shortcut-item">
+                            <kbd>F2</kbd> <span>Pass Priority</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>F4</kbd> <span>Until End of Turn</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>F5</kbd> <span>Until Next Main</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>F7</kbd> <span>Until Stack Resolves</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>F9</kbd> <span>Until My Turn</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>ESC</kbd> <span>Cancel</span>
                         </div>
                     </div>
+                </div>
 
-                    <div className="game-log-panel">
-                        <h4>Game Log</h4>
-                        <div className="log-content">
-                            {/* Log would go here */}
-                            (Log implementation pending)
-                        </div>
-                    </div>
-
+                <div style={{ flex: 1, margin: '12px', overflow: 'hidden' }}>
                     <ChatPanel />
+                </div>
 
-                    <div className="keyboard-shortcuts">
-                        <h4>Shortcuts</h4>
-                        <div className="shortcut-list">
-                            <div className="shortcut-item">
-                                <kbd>F2</kbd> <span>Pass Priority</span>
-                            </div>
-                            <div className="shortcut-item">
-                                <kbd>F4</kbd> <span>Until End of Turn</span>
-                            </div>
-                            <div className="shortcut-item">
-                                <kbd>F5</kbd> <span>Until Next Main</span>
-                            </div>
-                            <div className="shortcut-item">
-                                <kbd>F7</kbd> <span>Until Stack Resolves</span>
-                            </div>
-                            <div className="shortcut-item">
-                                <kbd>F9</kbd> <span>Until My Turn</span>
-                            </div>
-                            <div className="shortcut-item">
-                                <kbd>ESC</kbd> <span>Cancel</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="game-actions">
-                        <Button onClick={handleLeave} variant="secondary" size="sm">
-                            Concede / Leave
-                        </Button>
-                    </div>
-                </aside>
-            </div>
+                <div style={{ padding: 12 }}>
+                    <Button onClick={handleLeave} variant="secondary" size="sm" style={{ width: '100%' }}>
+                        Concede / Leave
+                    </Button>
+                </div>
+            </aside>
 
             {/* Game Over Modal */}
             {showResultModal && (

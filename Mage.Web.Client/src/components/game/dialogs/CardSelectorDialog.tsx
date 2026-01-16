@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../../stores/gameStore';
-import { CardView } from '../../../types';
+import { CardView, PlayerView } from '../../../types';
 import { cardImageService } from '../../../services/CardImageService';
 import { Modal, Button } from '../../common'; // Adjust paths as needed
 import './CardSelectorDialog.css';
@@ -41,7 +41,9 @@ export const CardSelectorDialog: React.FC<CardSelectorDialogProps> = (props) => 
     let min = 0;
     let max = 0;
     let required = false;
+    let validTargets: string[] = [];
     let handleCardClick = (cardId: string) => { };
+    let handlePlayerClick = (playerId: string) => { };
     let handleCancel = () => { };
 
     if (isTarget || isSelect) {
@@ -51,9 +53,14 @@ export const CardSelectorDialog: React.FC<CardSelectorDialogProps> = (props) => 
         min = actionData.min || 1;
         max = actionData.max || 1;
         required = actionData.required;
+        validTargets = actionData.validTargets || [];
 
         handleCardClick = (cardId: string) => {
             sendUUID(cardId);
+        };
+
+        handlePlayerClick = (playerId: string) => {
+            sendUUID(playerId);
         };
 
         handleCancel = () => {
@@ -79,20 +86,29 @@ export const CardSelectorDialog: React.FC<CardSelectorDialogProps> = (props) => 
         }
     }
 
-    // If no cardsView is present, this dialog shouldn't be responsible for the UI
-    // (The main GamePage handles battlefield targeting)
-    // If no cardsView is present (or empty for target/select), this dialog shouldn't be responsible for the UI
+    const cards = cardsView ? Object.values(cardsView) : [];
+
+    // Check if this is a player selection scenario
+    // If message contains "player" and we have valid targets that match player IDs
+    const isPlayerSelection = (isTarget || isSelect) &&
+        validTargets.length > 0 &&
+        gameView?.players?.some(p => validTargets.includes(p.playerId));
+
+    // Get the players that are valid targets
+    const targetablePlayers: PlayerView[] = isPlayerSelection && gameView?.players
+        ? gameView.players.filter(p => validTargets.includes(p.playerId))
+        : [];
+
+    // If no cardsView and not player selection, don't show this dialog
     // (The main GamePage handles battlefield/hand targeting when no specific cardsView is provided)
-    if (!cardsView) {
+    if (!cardsView && !isPlayerSelection && !isViewing) {
         return null;
     }
 
-    const cards = Object.values(cardsView);
-
-    // For interactive modes (target/select), if the provided list is empty, 
+    // For interactive modes (target/select), if the provided list is empty and not player selection, 
     // it usually means we should be picking from the battlefield or hand.
     // If we are just viewing (e.g. graveyard), showing "No cards" is fine.
-    if ((isTarget || isSelect) && cards.length === 0) {
+    if ((isTarget || isSelect) && cards.length === 0 && !isPlayerSelection) {
         return null;
     }
 
@@ -100,34 +116,78 @@ export const CardSelectorDialog: React.FC<CardSelectorDialogProps> = (props) => 
         <Modal
             isOpen={props.isOpen ?? true}
             onClose={props.onClose || (required ? () => { } : handleCancel)}
-            title="Select Cards"
-            size="lg" // We might want a custom size for this
+            title="Select Target"
+            size="lg"
             closeOnBackdrop={!required}
             closeOnEscape={!required}
         >
             <div className="card-selector-container">
                 <div className="card-selector-message" dangerouslySetInnerHTML={{ __html: message }} />
 
-                <div className="card-selector-cards">
-                    {cards.map((card) => (
-                        <div
-                            key={card.id}
-                            className="card-selector-item"
-                            onClick={() => handleCardClick(card.id)}
-                        >
-                            <img
-                                src={cardImageService.getImageUrl(card)}
-                                alt={card.name}
-                                loading="lazy"
-                                onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
-                            />
-                            <div className="card-selector-name">{card.name}</div>
+                {/* Player Selection UI */}
+                {isPlayerSelection && targetablePlayers.length > 0 && (
+                    <div className="player-selector-section">
+                        <div className="player-selector-label">Select a Player:</div>
+                        <div className="player-selector-list">
+                            {targetablePlayers.map((player) => (
+                                <div
+                                    key={player.playerId}
+                                    className="player-selector-item"
+                                    onClick={() => handlePlayerClick(player.playerId)}
+                                >
+                                    <div className="player-selector-avatar">
+                                        {player.userData?.avatarId ? (
+                                            <img
+                                                src={`/assets/avatars/${player.userData.avatarId}.jpg`}
+                                                alt={player.name}
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none';
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="player-selector-avatar-fallback">
+                                                {player.name.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="player-selector-info">
+                                        <div className="player-selector-name">{player.name}</div>
+                                        <div className="player-selector-stats">
+                                            <span>❤️ {player.life}</span>
+                                            <span>✋ {player.handCount}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                    {cards.length === 0 && (
-                        <div className="card-selector-empty">No cards to display</div>
-                    )}
-                </div>
+                    </div>
+                )}
+
+                {/* Card Selection UI */}
+                {cards.length > 0 && (
+                    <div className="card-selector-cards">
+                        {cards.map((card) => (
+                            <div
+                                key={card.id}
+                                className="card-selector-item"
+                                onClick={() => handleCardClick(card.id)}
+                            >
+                                <img
+                                    src={cardImageService.getImageUrl(card)}
+                                    alt={card.name}
+                                    loading="lazy"
+                                    onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
+                                />
+                                <div className="card-selector-name">{card.name}</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Empty state for viewing zones */}
+                {cards.length === 0 && !isPlayerSelection && (
+                    <div className="card-selector-empty">No cards to display</div>
+                )}
 
                 <div className="card-selector-footer">
                     {/* If optional or min=0, show Cancel/Done */}
@@ -136,11 +196,6 @@ export const CardSelectorDialog: React.FC<CardSelectorDialogProps> = (props) => 
                             Cancel
                         </Button>
                     )}
-                    {/* 
-              TODO: Validating min/max selections if we move to multi-select:
-              <span className="selection-count">Selected: 0 / {max}</span>
-              <Button variant="primary" disabled>Confirm</Button> 
-           */}
                 </div>
             </div>
         </Modal>
