@@ -55,6 +55,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
     } = useGameStore();
 
     const [previewImageUrl, setPreviewImageUrl] = React.useState<string | null>(null);
+    const [resultModalClosed, setResultModalClosed] = React.useState(false);
 
     // Global keyboard shortcuts
     useEffect(() => {
@@ -160,6 +161,14 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
 
     // Determine Turn label - if it's my turn
     const isMyTurn = gameView.activePlayerId === myPlayer?.playerId;
+
+    // Determine if we should show result modal
+    const hasLeft = myPlayer?.hasLeft;
+    // We show the modal if:
+    // 1. Game officially ended (gameEnded is true)
+    // 2. OR we have left/lost the game (hasLeft is true)
+    // AND the user hasn't explicitly closed it to spectate.
+    const showResultModal = (gameEnded || hasLeft) && !resultModalClosed;
 
     return (
         <div className="game-page">
@@ -281,6 +290,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                                     player={p}
                                     onCardClick={handleCardClick}
                                     onCardInspect={handleCardInspect}
+                                    isMe={false}
                                 />
                             </div>
                         ))}
@@ -367,11 +377,13 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             </div>
 
             {/* Game Over Modal */}
-            {gameEnded && (
+            {showResultModal && (
                 <ResultModal
                     gameEndView={gameEndView}
                     endGameInfo={endGameInfo}
                     onLeave={handleLeave}
+                    onClose={() => setResultModalClosed(true)}
+                    hasLost={hasLeft}
                 />
             )}
         </div>

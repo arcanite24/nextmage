@@ -38,7 +38,7 @@ export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
     specialHint,
     searchEnabled = false,
 }) => {
-    const { sendInteger, sendString } = useGameStore();
+    const { sendString } = useGameStore();
     const [searchText, setSearchText] = useState('');
     const [specialChecked, setSpecialChecked] = useState(false);
 
@@ -79,15 +79,18 @@ export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
             // The server expects a string for key-based choices
             if (specialChecked && specialEnabled) {
                 // Send the key with special flag - server handles this via different mechanism
-                // Based on Java impl, special selection is handled by setting isSpecial on the choice
-                sendString(key);
+                // Based on Java impl, special selection is handled by prefixing with "#"
+                sendString('#' + key);
             } else {
                 sendString(key);
             }
         } else {
-            // For simple choices, send the index
+            // For simple choices (like mana color), send the actual choice string value
+            // The server expects the string value, not an index
+            // See HumanPlayer.choose(): choice.setChoice(val) expects the string
             const index = parseInt(key, 10);
-            sendInteger(index);
+            const choiceValue = choices[index];
+            sendString(choiceValue);
         }
     };
 

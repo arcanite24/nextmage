@@ -7,9 +7,21 @@ interface ResultModalProps {
     gameEndView: GameEndView | null;
     endGameInfo: EndGameInfo | null;
     onLeave: () => void;
+    onClose?: () => void;
+    hasLost?: boolean;
 }
 
-export const ResultModal: React.FC<ResultModalProps> = ({ gameEndView, endGameInfo, onLeave }) => {
+export const ResultModal: React.FC<ResultModalProps> = ({ gameEndView, endGameInfo, onLeave, onClose, hasLost }) => {
+
+    // Helper for footer buttons
+    const renderFooter = (showSpectate: boolean = false) => (
+        <div className="modal-footer">
+            {showSpectate && onClose && (
+                <Button variant="secondary" onClick={onClose}>Spectate</Button>
+            )}
+            <Button variant="primary" onClick={onLeave}>Return to Lobby</Button>
+        </div>
+    );
 
     // Prefer EndGameInfo if available as it is richer
     if (endGameInfo) {
@@ -35,9 +47,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({ gameEndView, endGameIn
                             )}
                         </div>
                     </div>
-                    <div className="modal-footer">
-                        <Button variant="primary" onClick={onLeave}>Return to Lobby</Button>
-                    </div>
+                    {renderFooter(true)}
                 </div>
             </div>
         );
@@ -60,9 +70,29 @@ export const ResultModal: React.FC<ResultModalProps> = ({ gameEndView, endGameIn
                             )}
                         </div>
                     </div>
-                    <div className="modal-footer">
-                        <Button variant="primary" onClick={onLeave}>Return to Lobby</Button>
+                    {renderFooter(true)}
+                </div>
+            </div>
+        );
+    }
+
+    // Fallback if we just know we lost/left
+    if (hasLost) {
+        return (
+            <div className="modal-overlay">
+                <div className="modal-container result-modal loser">
+                    <div className="modal-header">
+                        <h3>Game Result</h3>
                     </div>
+                    <div className="modal-content">
+                        <div className="result-title">
+                            Defeat
+                        </div>
+                        <div className="result-details">
+                            <p>You have been eliminated from the game.</p>
+                        </div>
+                    </div>
+                    {renderFooter(true)}
                 </div>
             </div>
         );

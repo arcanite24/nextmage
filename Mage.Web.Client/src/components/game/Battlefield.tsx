@@ -90,10 +90,11 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ player, isMe, onCardCl
     const groupStacks = (cards: PermanentView[]): StackedGroup[] => {
         const groups: Record<string, PermanentView[]> = {};
 
-        // Sorting to ensure consistent order (untapped first, then name)
+        // Sorting to ensure consistent order (Group by name mainly, keep tapped near untapped of same name)
         const sortedCards = [...cards].sort((a, b) => {
-            if (a.tapped !== b.tapped) return a.tapped ? 1 : -1;
-            return a.name.localeCompare(b.name);
+            const nameCompare = a.name.localeCompare(b.name);
+            if (nameCompare !== 0) return nameCompare;
+            return a.tapped === b.tapped ? 0 : a.tapped ? 1 : -1;
         });
 
         sortedCards.forEach(card => {
