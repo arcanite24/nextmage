@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { CardsView, CardView, StackAbilityView } from '../../types';
 import { cardImageService } from '../../services/CardImageService';
 import { useGameStore } from '../../stores';
@@ -15,9 +16,13 @@ const isStackAbility = (card: CardView): card is StackAbilityView => {
     return card.isAbility && 'sourceCard' in card && !!(card as StackAbilityView).sourceCard;
 };
 
-export const ArenaStack: React.FC<ArenaStackProps> = ({ stack, onCardClick, onCardInspect }) => {
-    const stackItems = stack ? Object.values(stack) : [];
-    const { pendingAction } = useGameStore();
+export const ArenaStack: React.FC<ArenaStackProps> = React.memo(({ stack, onCardClick, onCardInspect }) => {
+    const stackItems = useMemo(() => stack ? Object.values(stack) : [], [stack]);
+
+    const { validTargets, isTargetMode } = useGameStore(useShallow(state => ({
+        validTargets: state.pendingAction.type === 'target' ? state.pendingAction.validTargets : null,
+        isTargetMode: state.pendingAction.type === 'target' || state.pendingAction.type === 'select'
+    })));
 
     if (stackItems.length === 0) {
         return null;
@@ -25,10 +30,10 @@ export const ArenaStack: React.FC<ArenaStackProps> = ({ stack, onCardClick, onCa
 
     // Helper to check if card is a valid target
     const isValidTarget = (cardId: string): boolean => {
-        if (pendingAction.type === 'target' && pendingAction.validTargets) {
-            return pendingAction.validTargets.includes(cardId);
+        if (isTargetMode && validTargets) {
+            return validTargets.includes(cardId);
         }
-        return pendingAction.type === 'select';
+        return isTargetMode;
     };
 
     // Get the image URL for a stack item (uses source card for abilities)
@@ -75,37 +80,74 @@ export const ArenaStack: React.FC<ArenaStackProps> = ({ stack, onCardClick, onCa
                         const rotation = (index - (stackItems.length - 1) / 2) * 3;
 
                         return (
-                            <div
+                            <ArenaStackCard
                                 key={card.id}
-                                className={`arena-stack-card ${validTarget ? 'valid-target' : ''} ${isAbility ? 'is-ability' : ''}`}
-                                style={{
-                                    zIndex: stackItems.length - index,
-                                    transform: `rotate(${rotation}deg)`,
-                                }}
-                                title={`${name}\n${type}\n\n${rules}`}
-                                onClick={() => onCardClick?.(card.id)}
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    onCardInspect?.(card.id);
-                                }}
-                            >
-                                <img
-                                    src={getStackItemImage(card)}
-                                    alt={name}
-                                    onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
-                                />
-                                {/* Ability indicator overlay with text preview */}
-                                {isAbility && (
-                                    <div className="arena-stack-ability-badge">
-                                        <div className="arena-stack-ability-title">⚡ {type}</div>
-                                    </div>
-                                )}
-                                <div className="arena-stack-index">{stackItems.length - index}</div>
-                            </div>
+                                card={card}
+                                index={index}
+                                total={stackItems.length}
+                                rotation={rotation}
+                                validTarget={validTarget}
+                                isAbility={isAbility}
+                                name={name}
+                                type={type}
+                                rules={rules}
+                                onCardClick={onCardClick}
+                                onCardInspect={onCardInspect}
+                            />
                         );
                     })}
                 </div>
             </div>
         </div>
     );
-};
+});
+
+// === SUB-COMPONENTS ===
+
+interface ArenaStackCardProps {
+    card: CardView;
+    index: number;
+    total: number;
+    rotation: number;
+    validTarget: boolean;
+    isAbility: boolean;
+    name: string;
+    type: string;
+    rules: string;
+    onCardClick?: (cardId: string) => void;
+    onCardInspect?: (cardId: string) => void;
+}
+
+const ArenaStackCard: React.FC<ArenaStackCardProps> = React.memo(({
+    card, index, total, rotation, validTarget, isAbility, name, type, rules,
+    onCardClick, onCardInspect
+}) => {
+    return (
+        <div
+            className={`arena-stack-card ${validTarget ? 'valid-target' : ''} ${isAbility ? 'is-ability' : ''}`}
+            style={{
+                zIndex: total - index,
+                transform: `rotate(${rotation}deg)`,
+            } as React.CSSProperties}
+            title={`${name}\n${type}\n\n${rules}`}
+            onClick={() => onCardClick?.(card.id)}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                onCardInspect?.(card.id);
+            }}
+        >
+            <img
+                src={isAbility && 'sourceCard' in card ? cardImageService.getImageUrl((card as any).sourceCard) : cardImageService.getImageUrl(card)}
+                alt={name}
+                onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
+            />
+            {/* Ability indicator overlay with text preview */}
+            {isAbility && (
+                <div className="arena-stack-ability-badge">
+                    <div className="arena-stack-ability-title">⚡ {type}</div>
+                </div>
+            )}
+            <div className="arena-stack-index">{total - index}</div>
+        </div>
+    );
+});

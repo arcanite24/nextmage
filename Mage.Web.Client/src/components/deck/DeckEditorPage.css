@@ -6,16 +6,22 @@
     color: var(--color-text);
 }
 
-.deck-editor-header {
+.deck-editor-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: 0.75rem 1.5rem;
     background-color: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
 }
 
-.header-actions {
+.deck-editor-toolbar h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.toolbar-actions {
     display: flex;
     gap: 10px;
 }

@@ -1,15 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from '../../stores';
 import { Button } from '../common';
 import './FeedbackPanel.css';
 
-export const FeedbackPanel: React.FC = () => {
+export const FeedbackPanel: React.FC = React.memo(() => {
     const {
         pendingAction,
-        sendBoolean,
-        sendInteger,
-        sendPlayerAction
-    } = useGameStore();
+        sendBoolean
+    } = useGameStore(useShallow(state => ({
+        pendingAction: state.pendingAction,
+        sendBoolean: state.sendBoolean
+    })));
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -37,20 +39,22 @@ export const FeedbackPanel: React.FC = () => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [pendingAction, sendBoolean]);
+    }, [pendingAction.type, sendBoolean]);
+
+    // Handlers must be defined before any conditional returns (Rules of Hooks)
+    const handleYes = useCallback(() => sendBoolean(true), [sendBoolean]);
+    const handleNo = useCallback(() => sendBoolean(false), [sendBoolean]);
+    const handleCancel = useCallback(() => sendBoolean(false), [sendBoolean]);
 
     // Only show FeedbackPanel for specific action types that need explicit UI
     // target/select are now handled by the Arena "Next" button, so we hide the panel for those
-    const showableTypes = ['ask', 'mana'];
-    if (pendingAction.type === 'none' || !showableTypes.includes(pendingAction.type)) {
-        return null;
-    }
-
-    const handleYes = () => sendBoolean(true);
-    const handleNo = () => sendBoolean(false);
+    const shouldShow = useMemo(() => {
+        const showableTypes = ['ask', 'mana'];
+        return pendingAction.type !== 'none' && showableTypes.includes(pendingAction.type);
+    }, [pendingAction.type]);
 
     // Specific rendering based on action type
-    const renderActionContent = () => {
+    const renderActionContent = useMemo(() => {
         switch (pendingAction.type) {
             case 'ask':
                 return (
@@ -63,14 +67,19 @@ export const FeedbackPanel: React.FC = () => {
             case 'mana':
                 return (
                     <div className="feedback-actions">
-                        <Button variant="ghost" onClick={() => sendBoolean(false)}>Cancel</Button>
+                        <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
                     </div>
                 );
 
             default:
                 return null;
         }
-    };
+    }, [pendingAction.type, handleYes, handleNo, handleCancel]);
+
+    // Early return after all hooks have been called
+    if (!shouldShow) {
+        return null;
+    }
 
     return (
         <div className="feedback-panel">
@@ -82,7 +91,7 @@ export const FeedbackPanel: React.FC = () => {
                         .replace(/<font color=(.*?)>(.*?)<\/font>/g, '<span style="color:$1">$2</span>')
                 }}
             />
-            {renderActionContent()}
+            {renderActionContent}
         </div>
     );
-};
+});

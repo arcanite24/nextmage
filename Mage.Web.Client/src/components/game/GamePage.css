@@ -678,3 +678,16 @@
     z-index: 20;
     /* Above cards and panels */
 }
+
+.combat-line {
+    stroke-width: 3px;
+}
+
+.combat-line-attack {
+    stroke: rgba(220, 38, 38, 0.6);
+}
+
+.combat-line-block {
+    stroke: rgba(37, 99, 235, 0.6);
+    stroke-dasharray: 5, 5;
+}

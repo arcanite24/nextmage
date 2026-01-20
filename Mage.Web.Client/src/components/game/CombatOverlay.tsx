@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from '../../stores';
 import './GamePage.css';
 
@@ -14,29 +15,31 @@ interface CombatLine {
     type: 'attack' | 'block';
 }
 
-export const CombatOverlay: React.FC = () => {
-    const { gameView } = useGameStore();
+const getElementCenter = (id: string): Point | null => {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+    };
+};
+
+export const CombatOverlay: React.FC = React.memo(() => {
+    const { combat } = useGameStore(useShallow(state => ({
+        combat: state.gameView?.combat
+    })));
     const [lines, setLines] = useState<CombatLine[]>([]);
 
-    const getElementCenter = (id: string): Point | null => {
-        const el = document.getElementById(id);
-        if (!el) return null;
-        const rect = el.getBoundingClientRect();
-        return {
-            x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2
-        };
-    };
-
     const updateLines = useCallback(() => {
-        if (!gameView || !gameView.combat) {
+        if (!combat) {
             setLines([]);
             return;
         }
 
         const newLines: CombatLine[] = [];
 
-        gameView.combat.forEach((group, index) => {
+        combat.forEach((group, index) => {
             // 1. Attackers -> Defender
             // Defender can be a Player or a Permanent (Planeswalker/Battle)
             let defenderId = group.defenderId;
@@ -97,7 +100,7 @@ export const CombatOverlay: React.FC = () => {
         });
 
         setLines(newLines);
-    }, [gameView]);
+    }, [combat]);
 
     useEffect(() => {
         updateLines();
@@ -106,7 +109,7 @@ export const CombatOverlay: React.FC = () => {
         window.addEventListener('resize', updateLines);
 
         // Also a periodic check/animation frame in case of layout shifts?
-        // Let's rely on render cycles + resize for now. 
+        // Let's rely on render cycles + resize for now.
         // Maybe a small delay to allow DOM to settle after state updates?
         const timeout = setTimeout(updateLines, 100);
 
@@ -114,7 +117,7 @@ export const CombatOverlay: React.FC = () => {
             window.removeEventListener('resize', updateLines);
             clearTimeout(timeout);
         };
-    }, [updateLines, gameView?.combat]); // Re-run when combat data changes
+    }, [updateLines, combat]); // Re-run when combat data changes
 
     if (lines.length === 0) return null;
 
@@ -129,18 +132,30 @@ export const CombatOverlay: React.FC = () => {
                 </marker>
             </defs>
             {lines.map(line => (
-                <line
+                <CombatLineComponent
                     key={line.id}
-                    x1={line.start.x}
-                    y1={line.start.y}
-                    x2={line.end.x}
-                    y2={line.end.y}
-                    stroke={line.type === 'attack' ? "rgba(220, 38, 38, 0.6)" : "rgba(37, 99, 235, 0.6)"}
-                    strokeWidth="3"
-                    markerEnd={`url(#arrow-${line.type})`}
-                    strokeDasharray={line.type === 'block' ? "5,5" : "none"}
+                    line={line}
                 />
             ))}
         </svg>
     );
-};
+});
+
+// === SUB-COMPONENTS ===
+
+interface CombatLineComponentProps {
+    line: CombatLine;
+}
+
+const CombatLineComponent: React.FC<CombatLineComponentProps> = React.memo(({ line }) => {
+    return (
+        <line
+            x1={line.start.x}
+            y1={line.start.y}
+            x2={line.end.x}
+            y2={line.end.y}
+            className={`combat-line combat-line-${line.type}`}
+            markerEnd={`url(#arrow-${line.type})`}
+        />
+    );
+});

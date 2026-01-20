@@ -6,7 +6,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSessionStore, useLobbyStore, useChatStore } from '../../stores';
-import { Button } from '../common';
+import { Button, Navbar } from '../common';
 import { TableList } from './TableList';
 import { TableFilters } from './TableFilters';
 import { TableDetails } from './TableDetails';
@@ -96,49 +96,15 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({ onEnterGame, onLogout, onO
 
     return (
         <div className="lobby-page">
-            {/* Header */}
-            <header className="lobby-header">
-                <div className="lobby-header-left">
-                    <div className="lobby-logo">
-                        <svg viewBox="0 0 100 100" className="logo-icon-small">
-                            <defs>
-                                <linearGradient id="logoGradientSmall" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#6366f1" />
-                                    <stop offset="100%" stopColor="#8b5cf6" />
-                                </linearGradient>
-                            </defs>
-                            <circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradientSmall)" strokeWidth="3" />
-                            <path
-                                d="M50 15 L65 40 L90 50 L65 60 L50 85 L35 60 L10 50 L35 40 Z"
-                                fill="url(#logoGradientSmall)"
-                                opacity="0.9"
-                            />
-                        </svg>
-                        <span className="logo-text">XMage</span>
-                    </div>
-                </div>
-
-                <div className="lobby-header-center">
-                    <nav className="lobby-nav">
-                        <button className="nav-item active">Lobby</button>
-                        <button className="nav-item" onClick={onOpenDeckEditor}>Decks</button>
-                        <button className="nav-item">Tournaments</button>
-                        <button className="nav-item">History</button>
-                    </nav>
-                </div>
-
-                <div className="lobby-header-right">
-                    <div className="user-info">
-                        <span className="user-avatar">
-                            {userName?.charAt(0).toUpperCase()}
-                        </span>
-                        <span className="user-name">{userName}</span>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={handleLogout}>
-                        Logout
-                    </Button>
-                </div>
-            </header>
+            {/* Navbar */}
+            <Navbar
+                currentPage="lobby"
+                onNavigate={(page) => {
+                    if (page === 'decks') onOpenDeckEditor();
+                    // Add other navigation targets as needed
+                }}
+                onLogout={handleLogout}
+            />
 
             {/* Main content */}
             <main className="lobby-main">

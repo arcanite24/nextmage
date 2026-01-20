@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useShallow } from 'zustand/react/shallow';
 import { CardView, CardsView } from '../../types';
 import { cardImageService } from '../../services/CardImageService';
 import { useGameStore } from '../../stores';
@@ -20,87 +21,49 @@ interface HandProps {
     onCardInspect?: (cardId: string) => void;
 }
 
-export const Hand: React.FC<HandProps> = ({ hand, onCardClick, onCardInspect }) => {
-    const cards = hand ? Object.values(hand) : [];
-    const { pendingAction } = useGameStore();
-    const [hoveredCard, setHoveredCard] = React.useState<CardView | null>(null);
+export const Hand: React.FC<HandProps> = React.memo(({ hand, onCardClick, onCardInspect }) => {
+    const cards = useMemo(() => hand ? Object.values(hand) : [], [hand]);
+    // Stable check for pending target
+    const { validTargets, isTargetMode } = useGameStore(useShallow(state => ({
+        validTargets: state.pendingAction.type === 'target' ? state.pendingAction.validTargets : null,
+        isTargetMode: state.pendingAction.type === 'target' || state.pendingAction.type === 'select'
+    })));
 
-    // Helper to check if card is a valid target
-    const isValidTarget = (cardId: string): boolean => {
-        if (pendingAction.type === 'target' && pendingAction.validTargets) {
-            return pendingAction.validTargets.includes(cardId);
-        }
-        return pendingAction.type === 'select';
-    };
+    const [hoveredCardId, setHoveredCardId] = React.useState<string | null>(null);
+
+    const hoveredCard = useMemo(() => {
+        return hoveredCardId ? hand?.[hoveredCardId] ?? null : null;
+    }, [hoveredCardId, hand]);
 
     const count = cards.length;
+
+    const handleHover = useCallback((id: string | null) => {
+        setHoveredCardId(id);
+    }, []);
 
     return (
         <div className="hand-container">
             <div
                 className="hand-cards"
-                onMouseLeave={() => setHoveredCard(null)}
+                onMouseLeave={() => handleHover(null)}
             >
                 <AnimatePresence mode="popLayout">
                     {cards.map((card, index) => {
-                        const validTarget = isValidTarget(card.id);
-                        const isHovered = hoveredCard?.id === card.id;
-                        const position = calculateCardPosition(index, count);
+                        const isValid = isTargetMode && (validTargets ? validTargets.includes(card.id) : true);
+                        const isHovered = hoveredCardId === card.id;
 
                         return (
-                            <motion.div
+                            <HandCard
                                 key={card.id}
-                                className={`hand-card ${validTarget ? 'valid-target' : ''}`}
-                                // Layout animation for smooth repositioning when cards enter/exit
-                                layout
-                                layoutId={card.id}
-                                // Initial state (entering)
-                                initial={{
-                                    opacity: 0,
-                                    y: 50,
-                                    x: position.x,
-                                    rotate: position.rotation,
-                                }}
-                                // Animated state
-                                animate={{
-                                    opacity: 1,
-                                    x: isHovered ? position.hoverX : position.x,
-                                    y: isHovered ? -HAND_LAYOUT.HOVER_LIFT : position.y,
-                                    rotate: isHovered ? 0 : position.rotation,
-                                    zIndex: isHovered ? 100 : index,
-                                }}
-                                // Exit state
-                                exit={{
-                                    opacity: 0,
-                                    y: -30,
-                                    scale: 0.8,
-                                    transition: TWEENS.exit,
-                                }}
-                                // Transition configuration
-                                transition={isHovered ? SPRINGS.snappy : SPRINGS.gentle}
-                                // Hover shadow handled by CSS for performance
-                                whileHover={{ boxShadow: '0 8px 16px rgba(0, 0, 0, 0.8)' }}
-                                // Event handlers
-                                onClick={() => onCardClick?.(card.id)}
-                                onMouseEnter={() => setHoveredCard(card)}
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    onCardInspect?.(card.id);
-                                }}
-                                style={{
-                                    width: CARD.WIDTH,
-                                    aspectRatio: `${CARD.ASPECT_RATIO}`,
-                                    bottom: HAND_LAYOUT.BOTTOM_OFFSET,
-                                }}
-                            >
-                                <img
-                                    src={cardImageService.getImageUrl(card)}
-                                    alt={card.name}
-                                    loading="lazy"
-                                    draggable={false}
-                                    onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
-                                />
-                            </motion.div>
+                                card={card}
+                                index={index}
+                                count={count}
+                                isValidTarget={isValid}
+                                isHovered={isHovered}
+                                onCardClick={onCardClick}
+                                onCardInspect={onCardInspect}
+                                onHover={handleHover}
+                            />
                         );
                     })}
                 </AnimatePresence>
@@ -132,4 +95,87 @@ export const Hand: React.FC<HandProps> = ({ hand, onCardClick, onCardInspect }) 
             </AnimatePresence>
         </div>
     );
+});
+
+// === SUB COMPONENTS ===
+
+interface HandCardProps {
+    card: CardView;
+    index: number;
+    count: number;
+    isValidTarget: boolean;
+    isHovered: boolean;
+    onCardClick?: (id: string) => void;
+    onCardInspect?: (id: string) => void;
+    onHover: (id: string | null) => void;
+}
+
+const areHandCardPropsEqual = (prev: HandCardProps, next: HandCardProps) => {
+    if (prev.index !== next.index) return false;
+    if (prev.count !== next.count) return false;
+    if (prev.isValidTarget !== next.isValidTarget) return false;
+    if (prev.isHovered !== next.isHovered) return false;
+
+    // Stable card check
+    if (prev.card.id !== next.card.id) return false;
+    if (prev.card.name !== next.card.name) return false;
+    // Hand cards don't have tap state usually, but check just in case
+    // if (prev.card.playable !== next.card.playable) return false; // If 'playable' was a property
+
+    return true;
 };
+
+const HandCard: React.FC<HandCardProps> = React.memo(({
+    card, index, count, isValidTarget, isHovered,
+    onCardClick, onCardInspect, onHover
+}) => {
+    const position = useMemo(() => calculateCardPosition(index, count), [index, count]);
+
+    return (
+        <motion.div
+            layout
+            layoutId={card.id}
+            className={`hand-card ${isValidTarget ? 'valid-target' : ''}`}
+            initial={{
+                opacity: 0,
+                y: 50,
+                x: position.x,
+                rotate: position.rotation,
+            }}
+            animate={{
+                opacity: 1,
+                x: isHovered ? position.hoverX : position.x,
+                y: isHovered ? -HAND_LAYOUT.HOVER_LIFT : position.y,
+                rotate: isHovered ? 0 : position.rotation,
+                zIndex: isHovered ? 100 : index,
+            }}
+            exit={{
+                opacity: 0,
+                y: -30,
+                scale: 0.8,
+                transition: TWEENS.exit,
+            }}
+            transition={isHovered ? SPRINGS.snappy : SPRINGS.gentle}
+            whileHover={{ boxShadow: '0 8px 16px rgba(0, 0, 0, 0.8)' }}
+            onClick={() => onCardClick?.(card.id)}
+            onMouseEnter={() => onHover(card.id)}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                onCardInspect?.(card.id);
+            }}
+            style={{
+                width: CARD.WIDTH,
+                aspectRatio: `${CARD.ASPECT_RATIO}`,
+                bottom: HAND_LAYOUT.BOTTOM_OFFSET,
+            }}
+        >
+            <img
+                src={cardImageService.getImageUrl(card)}
+                alt={card.name}
+                loading="lazy"
+                draggable={false}
+                onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
+            />
+        </motion.div>
+    );
+}, areHandCardPropsEqual);

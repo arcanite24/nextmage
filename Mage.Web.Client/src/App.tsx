@@ -94,7 +94,13 @@ function App() {
       )}
 
       {currentView === 'deck-editor' && (
-        <DeckEditorPage onExit={() => setCurrentView('lobby')} />
+        <DeckEditorPage
+          onExit={() => setCurrentView('lobby')}
+          onNavigate={(page) => {
+            if (page === 'lobby') setCurrentView('lobby');
+            // Add other navigation targets as needed
+          }}
+        />
       )}
 
       {/* Global Alert Dialog */}

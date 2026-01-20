@@ -10,6 +10,7 @@ import { immer } from 'zustand/middleware/immer';
 import { wsService } from '../services';
 import { useSessionStore } from './sessionStore';
 import { useLobbyStore } from './lobbyStore';
+import { useDebugStore } from './debugStore';
 import {
     UUID,
     GameView,
@@ -195,6 +196,7 @@ export const useGameStore = create<GameState & GameActions>()(
                     state.endGameInfo = null;
                     state.pendingAction = { type: 'none' };
                 });
+                useDebugStore.getState().startNewMatch(gameId);
             },
 
             joinGame: async (gameId: UUID) => {
@@ -328,6 +330,7 @@ export const useGameStore = create<GameState & GameActions>()(
                     state.gameEndView = null;
                     state.endGameInfo = null;
                 });
+                useDebugStore.getState().endMatch();
             },
 
             // Player actions (F-key equivalents)
@@ -498,6 +501,7 @@ export const useGameStore = create<GameState & GameActions>()(
 
             // Callbacks
             handleCallback: (callback) => {
+                useDebugStore.getState().recordAction(callback);
                 const { gameId, updateGameView, endGame, initGame } = get();
 
                 switch (callback.method) {

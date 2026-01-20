@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PlayerView } from '../../types';
 import './ArenaLayout.css';
 
@@ -16,10 +16,10 @@ const DefaultAvatarSVG = () => (
     </svg>
 );
 
-export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = ({ player, onShowZone, onInteract }) => {
-    const graveyardCount = Object.keys(player.graveyard).length;
-    const exileCount = Object.keys(player.exile).length;
-    const lifeClass = player.life <= 5 ? 'low' : player.life >= 30 ? 'high' : '';
+export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ player, onShowZone, onInteract }) => {
+    const graveyardCount = useMemo(() => Object.keys(player.graveyard).length, [player.graveyard]);
+    const exileCount = useMemo(() => Object.keys(player.exile).length, [player.exile]);
+    const lifeClass = useMemo(() => player.life <= 5 ? 'low' : player.life >= 30 ? 'high' : '', [player.life]);
 
     return (
         <>
@@ -27,12 +27,12 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = ({ player, onSh
             <div className="arena-opponent-info">
                 <span className="arena-opponent-name">
                     {player.name}
-                    {player.hasPriority && <span style={{ color: '#fbbf24', marginLeft: 4 }}>⚡</span>}
+                    {player.hasPriority && <span className="priority-indicator-opponent">⚡</span>}
                 </span>
                 <div className="arena-opponent-stats">
                     <span
                         title="Graveyard"
-                        style={{ cursor: 'pointer' }}
+                        className="clickable-stat"
                         onClick={() => onShowZone?.('graveyard', player.playerId)}
                     >
                         💀 {graveyardCount}
@@ -40,7 +40,7 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = ({ player, onSh
                     {exileCount > 0 && (
                         <span
                             title="Exile"
-                            style={{ cursor: 'pointer' }}
+                            className="clickable-stat"
                             onClick={() => onShowZone?.('exile', player.playerId)}
                         >
                             🌌 {exileCount}
@@ -52,9 +52,8 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = ({ player, onSh
             {/* Opponent Avatar & Life (Top Center) */}
             <div className="arena-opponent-hud">
                 <div
-                    className="arena-opponent-avatar-container"
+                    className="arena-opponent-avatar-container clickable-stat"
                     onClick={() => onInteract?.(player.playerId)}
-                    style={{ cursor: 'pointer' }}
                     title="Click to target player"
                 >
                     <div className="arena-opponent-avatar">
@@ -105,4 +104,4 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = ({ player, onSh
             )}
         </>
     );
-};
+});

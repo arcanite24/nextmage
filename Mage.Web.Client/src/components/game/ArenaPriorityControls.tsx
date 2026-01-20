@@ -1,6 +1,7 @@
 import React from 'react';
 import { PhaseStep } from '../../types';
 import { useGameStore } from '../../stores';
+import { useShallow } from 'zustand/react/shallow';
 import './ArenaPriorityControls.css';
 
 interface ArenaPriorityControlsProps {
@@ -51,16 +52,19 @@ const getNextPhaseLabel = (currentPhase: PhaseStep, pendingType: string): string
     }
 };
 
-export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = ({
+export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = React.memo(({
     hasPriority,
     isMyTurn,
     currentPhase,
     skipEnabled,
     onToggleSkip,
 }) => {
-    const { pendingAction, sendBoolean, sendPlayerAction } = useGameStore();
+    const { pendingType, sendBoolean, sendPlayerAction } = useGameStore(useShallow(state => ({
+        pendingType: state.pendingAction.type,
+        sendBoolean: state.sendBoolean,
+        sendPlayerAction: state.sendPlayerAction
+    })));
 
-    const pendingType = pendingAction.type;
     const phaseLabel = getNextPhaseLabel(currentPhase, pendingType);
 
     // Handler for "Next" button - context-aware
@@ -108,4 +112,5 @@ export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = ({
             </button>
         </div>
     );
-};
+});
+

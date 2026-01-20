@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { CardSearchCriteria, DeckCardLists, DeckCardInfo, SearchCardView } from '../../types';
 import { wsService } from '../../services/WebSocketService';
 import { DeckSerializer } from '../../services/DeckSerializer';
+import { Navbar, NavPage } from '../common';
 import { CardSearch } from './CardSearch';
 import { DeckArea } from './DeckArea';
 import { CardView as CardViewComponent } from './CardView';
@@ -9,9 +10,10 @@ import './DeckEditorPage.css';
 
 interface DeckEditorPageProps {
     onExit: () => void;
+    onNavigate?: (page: NavPage) => void;
 }
 
-export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({ onExit }) => {
+export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({ onExit, onNavigate }) => {
     const [searchResults, setSearchResults] = useState<SearchCardView[]>([]);
     const [deck, setDeck] = useState<DeckCardLists>({
         cards: [],
@@ -116,14 +118,28 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({ onExit }) => {
         e.target.value = '';
     };
 
+    const handleNavigation = (page: NavPage) => {
+        if (page === 'decks') return; // Already on decks
+        if (onNavigate) {
+            onNavigate(page);
+        } else if (page === 'lobby') {
+            onExit();
+        }
+    };
+
     return (
         <div className="deck-editor-page">
-            <header className="deck-editor-header">
+            <Navbar
+                currentPage="decks"
+                onNavigate={handleNavigation}
+                onLogout={onExit}
+            />
+
+            <div className="deck-editor-toolbar">
                 <h2>Deck Editor</h2>
-                <div className="header-actions">
+                <div className="toolbar-actions">
                     <button className="btn btn-primary" onClick={handleSaveDeck}>Save</button>
                     <button className="btn btn-secondary" onClick={handleLoadDeck}>Load</button>
-                    <button className="btn btn-secondary" onClick={onExit}>Exit</button>
                 </div>
                 <input
                     type="file"
@@ -132,7 +148,8 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({ onExit }) => {
                     accept=".dck,.txt"
                     onChange={handleFileChange}
                 />
-            </header>
+            </div>
+
             <div className="deck-editor-content">
                 <div className="search-pane">
                     <h3>Card Search</h3>
@@ -160,3 +177,4 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({ onExit }) => {
         </div>
     );
 };
+

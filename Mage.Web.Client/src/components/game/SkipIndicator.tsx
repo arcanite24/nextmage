@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import './SkipIndicator.css';
 
 interface SkipIndicatorProps {
@@ -6,12 +6,12 @@ interface SkipIndicatorProps {
     onCancel: () => void;
 }
 
-export const SkipIndicator: React.FC<SkipIndicatorProps> = ({ activeSkip, onCancel }) => {
+export const SkipIndicator: React.FC<SkipIndicatorProps> = React.memo(({ activeSkip, onCancel }) => {
     if (activeSkip === 'none') {
         return null;
     }
 
-    const getSkipLabel = () => {
+    const skipLabel = useMemo(() => {
         switch (activeSkip) {
             case 'F4':
                 return 'Until End of Turn';
@@ -24,7 +24,11 @@ export const SkipIndicator: React.FC<SkipIndicatorProps> = ({ activeSkip, onCanc
             default:
                 return '';
         }
-    };
+    }, [activeSkip]);
+
+    const handleCancel = useCallback(() => {
+        onCancel();
+    }, [onCancel]);
 
     return (
         <div className="skip-indicator">
@@ -32,11 +36,11 @@ export const SkipIndicator: React.FC<SkipIndicatorProps> = ({ activeSkip, onCanc
                 <div className="skip-indicator-icon">⏩</div>
                 <div className="skip-indicator-text">
                     <div className="skip-indicator-key">{activeSkip}</div>
-                    <div className="skip-indicator-label">{getSkipLabel()}</div>
+                    <div className="skip-indicator-label">{skipLabel}</div>
                 </div>
                 <button
                     className="skip-indicator-cancel"
-                    onClick={onCancel}
+                    onClick={handleCancel}
                     title="Cancel (ESC)"
                 >
                     ✕
@@ -44,4 +48,4 @@ export const SkipIndicator: React.FC<SkipIndicatorProps> = ({ activeSkip, onCanc
             </div>
         </div>
     );
-};
+});

@@ -686,6 +686,58 @@
     right: 260px;
 }
 
+/* Sidebar internal layout */
+.sidebar-header {
+    padding: 12px;
+}
+
+.sidebar-title {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sidebar-content {
+    margin: 0 12px;
+}
+
+.sidebar-chat-panel {
+    flex: 1;
+    margin: 12px;
+    overflow: hidden;
+}
+
+.sidebar-footer {
+    padding: 12px;
+}
+
+.sidebar-leave-button {
+    width: 100%;
+}
+
+/* Reusable clickable styles */
+.clickable-stat {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.clickable-stat:hover {
+    color: #e2e8f0;
+}
+
+/* Priority indicator styles */
+.priority-indicator-hud {
+    color: #fbbf24;
+    font-size: 12px;
+}
+
+.priority-indicator-opponent {
+    color: #fbbf24;
+    margin-left: 4px;
+}
+
 /* ===================================================================
    RESPONSIVE ADJUSTMENTS
    =================================================================== */

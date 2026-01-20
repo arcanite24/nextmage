@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useGameStore, useSessionStore, useChatStore } from '../../stores';
+import { useShallow } from 'zustand/react/shallow';
+import { useGameStore, useSessionStore, useChatStore, useDebugStore } from '../../stores';
 import { Button } from '../common';
 import { Battlefield } from './Battlefield';
 import { Hand } from './Hand';
@@ -23,6 +24,7 @@ import { SideboardDialog } from './dialogs/SideboardDialog';
 import { SkipIndicator } from './SkipIndicator';
 import { ArenaPriorityControls } from './ArenaPriorityControls';
 import { cardImageService } from '../../services/CardImageService';
+import { DebugMode } from '../debug/DebugMode';
 import './GamePage.css';
 import './ArenaLayout.css';
 
@@ -32,36 +34,39 @@ interface GamePageProps {
 }
 
 export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
-    const {
-        gameView,
-        isLoading,
-        leaveGame,
-        getMyPlayer,
-        getOpponents,
-        sendUUID,
-        gameEnded,
-        gameEndView,
-        endGameInfo,
-        passPriority,
-        passPriorityUntilEndOfTurn,
-        passPriorityUntilNextMain,
-        passPriorityUntilStackResolved,
-        passPriorityUntilNextTurn,
-        cancelPassActions,
-        pendingAction,
-        activeSkip,
-        showingZone,
-        showZone,
-        submitDeck,
-        showingPlayerId,
-        sendPlayerAction,
-        toggleArenaSkip,
-        arenaSkipEnabled
-    } = useGameStore();
+    const gameStore = useGameStore(useShallow(state => ({
+        gameView: state.gameView,
+        isLoading: state.isLoading,
+        gameEnded: state.gameEnded,
+        gameEndView: state.gameEndView,
+        endGameInfo: state.endGameInfo,
+        pendingAction: state.pendingAction,
+        activeSkip: state.activeSkip,
+        showingZone: state.showingZone,
+        showingPlayerId: state.showingPlayerId,
+        arenaSkipEnabled: state.arenaSkipEnabled
+    })));
 
+    const actions = useGameStore(useShallow(state => ({
+        leaveGame: state.leaveGame,
+        sendUUID: state.sendUUID,
+        passPriority: state.passPriority,
+        passPriorityUntilEndOfTurn: state.passPriorityUntilEndOfTurn,
+        passPriorityUntilNextMain: state.passPriorityUntilNextMain,
+        passPriorityUntilStackResolved: state.passPriorityUntilStackResolved,
+        passPriorityUntilNextTurn: state.passPriorityUntilNextTurn,
+        cancelPassActions: state.cancelPassActions,
+        showZone: state.showZone,
+        submitDeck: state.submitDeck,
+        sendPlayerAction: state.sendPlayerAction,
+        toggleArenaSkip: state.toggleArenaSkip
+    })));
+
+    const { config, toggleDebugMode } = useDebugStore();
     const [previewCard, setPreviewCard] = React.useState<any>(null);
     const [resultModalClosed, setResultModalClosed] = React.useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [debugModeOpen, setDebugModeOpen] = useState(false);
 
     // Global keyboard shortcuts
     useEffect(() => {
@@ -74,49 +79,71 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             switch (e.key) {
                 case 'F2':
                     e.preventDefault();
-                    passPriority();
+                    actions.passPriority();
                     break;
                 case 'F4':
                     e.preventDefault();
-                    passPriorityUntilEndOfTurn();
+                    actions.passPriorityUntilEndOfTurn();
                     break;
                 case 'F5':
                     e.preventDefault();
-                    passPriorityUntilNextMain();
+                    actions.passPriorityUntilNextMain();
                     break;
                 case 'F7':
                     e.preventDefault();
-                    passPriorityUntilStackResolved();
+                    actions.passPriorityUntilStackResolved();
                     break;
                 case 'F9':
                     e.preventDefault();
-                    passPriorityUntilNextTurn();
+                    actions.passPriorityUntilNextTurn();
                     break;
                 case 'Escape':
                     e.preventDefault();
-                    cancelPassActions();
+                    if (debugModeOpen) {
+                        setDebugModeOpen(false);
+                    } else {
+                        actions.cancelPassActions();
+                    }
+                    break;
+                case 'd':
+                case 'D':
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        toggleDebugMode();
+                        setDebugModeOpen(!debugModeOpen);
+                    }
                     break;
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [passPriority, passPriorityUntilEndOfTurn, passPriorityUntilNextMain, passPriorityUntilStackResolved, passPriorityUntilNextTurn, cancelPassActions]);
+    }, [actions.passPriority, actions.passPriorityUntilEndOfTurn, actions.passPriorityUntilNextMain, actions.passPriorityUntilStackResolved, actions.passPriorityUntilNextTurn, actions.cancelPassActions]);
 
-    const handleLeave = async () => {
-        await leaveGame();
+    const handleLeave = React.useCallback(async () => {
+        await actions.leaveGame();
         onLeave();
-    };
+    }, [actions.leaveGame, onLeave]);
 
 
-    const handleCardClick = (cardId: string) => {
+    const handleCardClick = React.useCallback((cardId: string) => {
         console.log('Card clicked:', cardId);
         // By default, just sending UUID to server handles most interactions 
         // (casting, activating, targeting) if the server state expects it.
-        sendUUID(cardId);
-    };
+        actions.sendUUID(cardId);
+    }, [actions.sendUUID]);
 
-    const handleCardInspect = (cardId: string) => {
+    const handleCardInspect = React.useCallback((cardId: string) => {
+        // We need current gameView to inspect. 
+        // We can't put gameView in dependency array effectively if it changes too much.
+        // But preventing the function recreation helps Battlefield memo.
+        // To do this safely, we might need a ref to gameView OR just accept that if gameView changes, we re-create this.
+        // However, Battlefield re-renders on gameView props anyway?
+        // Actually, preventing 'handleCardClick' (which doesn't depend on gameView) from changing is a win.
+        // For 'handleCardInspect', we need gameView.
+        // Let's rely on useGameStore.getState() inside the callback to keep it stable!
+        const { gameView, getMyPlayer, getOpponents } = useGameStore.getState();
+
         if (!gameView) return;
 
         // Find card in hand
@@ -150,9 +177,10 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
         if (card) {
             setPreviewCard(card);
         }
-    };
+    }, [setPreviewCard]); // Dependency array is now super stable!
 
-    if (!gameView) {
+
+    if (!gameStore.gameView) {
         return (
             <div className="game-loading">
                 <div className="loading-spinner"></div>
@@ -162,11 +190,11 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
         );
     }
 
-    const myPlayer = getMyPlayer();
-    const opponents = getOpponents();
+    const myPlayer = useGameStore.getState().getMyPlayer();
+    const opponents = useGameStore.getState().getOpponents();
 
     // Determine Turn label - if it's my turn
-    const isMyTurn = gameView.activePlayerId === myPlayer?.playerId;
+    const isMyTurn = gameStore.gameView.activePlayerId === myPlayer?.playerId;
 
     // Determine if we should show result modal
     const hasLeft = myPlayer?.hasLeft;
@@ -174,12 +202,12 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
     // 1. Game officially ended (gameEnded is true)
     // 2. OR we have left/lost the game (hasLeft is true)
     // AND the user hasn't explicitly closed it to spectate.
-    const showResultModal = (gameEnded || hasLeft) && !resultModalClosed;
+    const showResultModal = (gameStore.gameEnded || hasLeft) && !resultModalClosed;
 
     return (
         <div className="game-page arena-layout">
             <CombatOverlay />
-            <SkipIndicator activeSkip={activeSkip} onCancel={cancelPassActions} />
+            <SkipIndicator activeSkip={gameStore.activeSkip} onCancel={actions.cancelPassActions} />
             {previewCard && (
                 <CardPreviewModal
                     card={previewCard}
@@ -188,86 +216,86 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             )}
 
             {/* Dialogs */}
-            {pendingAction.type === 'chooseAbility' && (
+            {gameStore.pendingAction.type === 'chooseAbility' && (
                 <AbilityPickerDialog
-                    data={pendingAction.abilities}
+                    data={gameStore.pendingAction.abilities}
                 />
             )}
 
-            {(pendingAction.type === 'mana' || pendingAction.type === 'xmana') && (
+            {(gameStore.pendingAction.type === 'mana' || gameStore.pendingAction.type === 'xmana') && (
                 <ManaPaymentDialog
                     isOpen={true}
-                    message={pendingAction.message}
+                    message={gameStore.pendingAction.message}
                 />
             )}
 
 
 
-            {pendingAction.type === 'chooseChoice' && (
+            {gameStore.pendingAction.type === 'chooseChoice' && (
                 <ChoiceDialog
                     isOpen={true}
-                    message={pendingAction.message}
-                    choices={pendingAction.choices}
-                    keyChoices={pendingAction.keyChoices}
-                    hintData={pendingAction.hintData}
-                    hintType={pendingAction.hintType}
-                    specialEnabled={pendingAction.specialEnabled}
-                    specialText={pendingAction.specialText}
-                    specialHint={pendingAction.specialHint}
-                    searchEnabled={pendingAction.searchEnabled}
+                    message={gameStore.pendingAction.message}
+                    choices={gameStore.pendingAction.choices}
+                    keyChoices={gameStore.pendingAction.keyChoices}
+                    hintData={gameStore.pendingAction.hintData}
+                    hintType={gameStore.pendingAction.hintType}
+                    specialEnabled={gameStore.pendingAction.specialEnabled}
+                    specialText={gameStore.pendingAction.specialText}
+                    specialHint={gameStore.pendingAction.specialHint}
+                    searchEnabled={gameStore.pendingAction.searchEnabled}
                 />
             )}
 
-            {pendingAction.type === 'amount' && (
+            {gameStore.pendingAction.type === 'amount' && (
                 <AmountDialog
                     isOpen={true}
-                    message={pendingAction.message}
-                    min={pendingAction.min}
-                    max={pendingAction.max}
+                    message={gameStore.pendingAction.message}
+                    min={gameStore.pendingAction.min}
+                    max={gameStore.pendingAction.max}
                 />
             )}
 
-            {pendingAction.type === 'multiAmount' && (
+            {gameStore.pendingAction.type === 'multiAmount' && (
                 <MultiAmountDialog
                     isOpen={true}
-                    messages={pendingAction.messages}
-                    min={pendingAction.min}
-                    max={pendingAction.max}
+                    messages={gameStore.pendingAction.messages}
+                    min={gameStore.pendingAction.min}
+                    max={gameStore.pendingAction.max}
                 />
             )}
 
-            {pendingAction.type === 'choosePile' && (
+            {gameStore.pendingAction.type === 'choosePile' && (
                 <PileDialog
                     isOpen={true}
-                    message={pendingAction.message}
-                    pile1={pendingAction.pile1}
-                    pile2={pendingAction.pile2}
+                    message={gameStore.pendingAction.message}
+                    pile1={gameStore.pendingAction.pile1}
+                    pile2={gameStore.pendingAction.pile2}
                 />
             )}
 
             {/* Show Cards / Zone View Dialog */}
-            {showingZone && (
+            {gameStore.showingZone && (
                 <CardSelectorDialog
                     isOpen={true}
-                    pendingAction={pendingAction.type === 'target' || pendingAction.type === 'select' ? pendingAction : undefined}
-                    showingZone={showingZone || undefined}
-                    showingPlayerId={showingPlayerId || undefined}
+                    pendingAction={gameStore.pendingAction.type === 'target' || gameStore.pendingAction.type === 'select' ? gameStore.pendingAction : undefined}
+                    showingZone={gameStore.showingZone || undefined}
+                    showingPlayerId={gameStore.showingPlayerId || undefined}
                     onClose={() => {
-                        showZone(null);
+                        actions.showZone(null);
                     }}
                 />
             )}
 
             {/* Sideboard Dialog (unchanged) */}
-            {pendingAction.type === 'sideboarding' && (
+            {gameStore.pendingAction.type === 'sideboarding' && (
                 <SideboardDialog
                     isOpen={true}
-                    deck={pendingAction.deck}
+                    deck={gameStore.pendingAction.deck}
                     onClose={() => {
                         console.log('Closing sideboard dialog not fully supported yet');
                     }}
                     onSubmit={(deck) => {
-                        submitDeck(pendingAction.tableId, deck);
+                        actions.submitDeck(gameStore.pendingAction.tableId, deck);
                     }}
                 />
             )}
@@ -283,7 +311,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     <div key={p.playerId} className="arena-opponent-area">
                         <ArenaOpponentHUD
                             player={p}
-                            onShowZone={showZone}
+                            onShowZone={actions.showZone}
                             onInteract={handleCardClick}
                         />
                         <Battlefield
@@ -313,7 +341,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                 <ArenaPlayerHUD
                     player={myPlayer}
                     isMe
-                    onShowZone={showZone}
+                    onShowZone={actions.showZone}
                     onInteract={handleCardClick}
                 />
             )}
@@ -322,7 +350,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             {myPlayer && (
                 <div className="arena-hand-area">
                     <Hand
-                        hand={gameView.myHand}
+                        hand={gameStore.gameView.myHand}
                         onCardClick={handleCardClick}
                         onCardInspect={handleCardInspect}
                     />
@@ -331,7 +359,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
 
             {/* Stack (Right side, fanned out) */}
             <ArenaStack
-                stack={gameView.stack}
+                stack={gameStore.gameView.stack}
                 onCardClick={handleCardClick}
                 onCardInspect={handleCardInspect}
             />
@@ -341,9 +369,9 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                 <ArenaPriorityControls
                     hasPriority={myPlayer.hasPriority}
                     isMyTurn={isMyTurn}
-                    currentPhase={gameView.step}
-                    skipEnabled={arenaSkipEnabled}
-                    onToggleSkip={toggleArenaSkip}
+                    currentPhase={gameStore.gameView.step}
+                    skipEnabled={gameStore.arenaSkipEnabled}
+                    onToggleSkip={actions.toggleArenaSkip}
                 />
             )}
 
@@ -354,7 +382,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                 right: 20,
                 zIndex: 100
             }}>
-                <PhaseIndicator turn={gameView.turn} step={gameView.step} />
+                <PhaseIndicator turn={gameStore.gameView.turn} step={gameStore.gameView.step} />
                 <div className="turn-indicator" style={{
                     marginTop: 8,
                     padding: '4px 12px',
@@ -364,7 +392,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     color: isMyTurn ? '#22c55e' : '#94a3b8',
                     textAlign: 'center'
                 }}>
-                    {isMyTurn ? "Your Turn" : `${gameView.activePlayerName || opponents.find(p => p.playerId === gameView.activePlayerId)?.name || 'Unknown'}'s Turn`}
+                    {isMyTurn ? "Your Turn" : `${gameStore.gameView.activePlayerName || opponents.find(p => p.playerId === gameStore.gameView.activePlayerId)?.name || 'Unknown'}'s Turn`}
                 </div>
             </div>
 
@@ -378,13 +406,13 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
 
             {/* Collapsible Sidebar */}
             <aside className={`arena-sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div style={{ padding: 12 }}>
-                    <h4 style={{ margin: 0, color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+                <div className="sidebar-header">
+                    <h4 className="sidebar-title">
                         Game Info
                     </h4>
                 </div>
 
-                <div className="keyboard-shortcuts" style={{ margin: '0 12px' }}>
+                <div className="sidebar-content keyboard-shortcuts">
                     <h4>Shortcuts</h4>
                     <div className="shortcut-list">
                         <div className="shortcut-item">
@@ -397,7 +425,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                             <kbd>F5</kbd> <span>Until Next Main</span>
                         </div>
                         <div className="shortcut-item">
-                            <kbd>F7</kbd> <span>Until Stack Resolves</span>
+                            <kbd>F7</kbd> <span>Until Stack Resolved</span>
                         </div>
                         <div className="shortcut-item">
                             <kbd>F9</kbd> <span>Until My Turn</span>
@@ -408,12 +436,12 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     </div>
                 </div>
 
-                <div style={{ flex: 1, margin: '12px', overflow: 'hidden' }}>
+                <div className="sidebar-chat-panel">
                     <ChatPanel />
                 </div>
 
-                <div style={{ padding: 12 }}>
-                    <Button onClick={handleLeave} variant="secondary" size="sm" style={{ width: '100%' }}>
+                <div className="sidebar-footer">
+                    <Button onClick={handleLeave} variant="secondary" size="sm" className="sidebar-leave-button">
                         Concede / Leave
                     </Button>
                 </div>
@@ -422,12 +450,17 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             {/* Game Over Modal */}
             {showResultModal && (
                 <ResultModal
-                    gameEndView={gameEndView}
-                    endGameInfo={endGameInfo}
+                    gameEndView={gameStore.gameEndView}
+                    endGameInfo={gameStore.endGameInfo}
                     onLeave={handleLeave}
                     onClose={() => setResultModalClosed(true)}
                     hasLost={hasLeft}
                 />
+            )}
+
+            {/* Debug Mode */}
+            {debugModeOpen && config.enabled && (
+                <DebugMode onClose={() => setDebugModeOpen(false)} />
             )}
         </div>
     );

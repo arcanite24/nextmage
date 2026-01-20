@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { PermanentView, PlayerView } from '../../types';
 import { useGameStore } from '../../stores';
 import { cardImageService } from '../../services/CardImageService';
@@ -10,6 +11,7 @@ interface BattlefieldProps {
     onCardClick?: (cardId: string) => void;
     onCardInspect?: (cardId: string) => void;
 }
+
 
 const ZONE_ORDER = {
     LANDS: 0,
@@ -27,210 +29,141 @@ interface StackedGroup {
     cards: PermanentView[];
 }
 
-export const Battlefield: React.FC<BattlefieldProps> = ({ player, isMe, onCardClick, onCardInspect }) => {
+export const Battlefield: React.FC<BattlefieldProps> = React.memo(({ player, isMe, onCardClick, onCardInspect }) => {
     const permanents = player.battlefield ? Object.values(player.battlefield) : [];
-    const { gameView, pendingAction } = useGameStore();
+
+    // Use shallow selectors to avoid unnecessary re-renders when other parts of store change
+    const { pendingAction, combat } = useGameStore(useShallow(state => ({
+        pendingAction: state.pendingAction,
+        combat: state.gameView?.combat
+    })));
+
     const [expandedStacks, setExpandedStacks] = useState<Record<string, boolean>>({});
 
-    const handleCardClick = (cardId: string) => {
+    const handleCardClick = useCallback((cardId: string) => {
         if (onCardClick) onCardClick(cardId);
-    };
+    }, [onCardClick]);
 
-    const toggleStack = (stackKey: string, e: React.MouseEvent) => {
+    const toggleStack = useCallback((stackKey: string, e: React.MouseEvent) => {
         e.stopPropagation();
         setExpandedStacks(prev => ({ ...prev, [stackKey]: !prev[stackKey] }));
-    };
+    }, []);
 
     // Helper to check if card is a valid target
-    const isValidTarget = (cardId: string): boolean => {
+    const getIsValidTarget = useCallback((cardId: string): boolean => {
         if (pendingAction.type === 'target' && pendingAction.validTargets) {
             return pendingAction.validTargets.includes(cardId);
         }
         return pendingAction.type === 'select';
-    };
+    }, [pendingAction]);
 
     // Helper to check combat state
-    const getCombatState = (cardId: string) => {
-        if (!gameView || !gameView.combat) return null;
+    const getCombatState = useCallback((cardId: string) => {
+        if (!combat) return null;
 
-        for (const group of gameView.combat) {
+        for (const group of combat) {
             if (group.attackers && group.attackers[cardId]) return 'attacking';
             if (group.blockers && group.blockers[cardId]) return 'blocking';
         }
         return null;
-    };
-
-    const getZoneForPermanent = (perm: PermanentView): 'CREATURES' | ZoneType => {
-        if (perm.cardTypes.includes('Creature')) return 'CREATURES';
-        if (perm.cardTypes.includes('Land')) return 'LANDS';
-        if (perm.cardTypes.includes('Planeswalker')) return 'PLANESWALKERS';
-        if (perm.cardTypes.includes('Battle')) return 'BATTLES';
-        if (perm.cardTypes.includes('Enchantment')) return 'ENCHANTMENTS';
-        if (perm.cardTypes.includes('Artifact')) return 'ARTIFACTS';
-        return 'OTHER';
-    };
+    }, [combat]);
 
     // Group cards by zone
-    const zones = {
-        CREATURES: [] as PermanentView[],
-        LANDS: [] as PermanentView[],
-        ARTIFACTS: [] as PermanentView[],
-        ENCHANTMENTS: [] as PermanentView[],
-        PLANESWALKERS: [] as PermanentView[],
-        BATTLES: [] as PermanentView[],
-        OTHER: [] as PermanentView[],
-    };
+    const zones = useMemo(() => {
+        const z = {
+            CREATURES: [] as PermanentView[],
+            LANDS: [] as PermanentView[],
+            ARTIFACTS: [] as PermanentView[],
+            ENCHANTMENTS: [] as PermanentView[],
+            PLANESWALKERS: [] as PermanentView[],
+            BATTLES: [] as PermanentView[],
+            OTHER: [] as PermanentView[],
+        };
 
-    permanents.forEach(p => {
-        const zone = getZoneForPermanent(p);
-        zones[zone].push(p);
-    });
+        const getZoneForPermanent = (perm: PermanentView): keyof typeof z => {
+            if (perm.cardTypes.includes('Creature')) return 'CREATURES';
+            if (perm.cardTypes.includes('Land')) return 'LANDS';
+            if (perm.cardTypes.includes('Planeswalker')) return 'PLANESWALKERS';
+            if (perm.cardTypes.includes('Battle')) return 'BATTLES';
+            if (perm.cardTypes.includes('Enchantment')) return 'ENCHANTMENTS';
+            if (perm.cardTypes.includes('Artifact')) return 'ARTIFACTS';
+            return 'OTHER';
+        };
 
-    // Helper to group stackable cards
-    const groupStacks = (cards: PermanentView[]): StackedGroup[] => {
-        const groups: Record<string, PermanentView[]> = {};
-
-        // Sorting to ensure consistent order (Group by name mainly, keep tapped near untapped of same name)
-        const sortedCards = [...cards].sort((a, b) => {
-            const nameCompare = a.name.localeCompare(b.name);
-            if (nameCompare !== 0) return nameCompare;
-            return a.tapped === b.tapped ? 0 : a.tapped ? 1 : -1;
+        permanents.forEach(p => {
+            const zone = getZoneForPermanent(p);
+            if (z[zone]) z[zone].push(p);
         });
+        return z;
+    }, [permanents]);
 
-        sortedCards.forEach(card => {
-            // Stack criteria: Name + Tapped + Attacking/Blocking/Sickness status + Counters
-            const combatState = getCombatState(card.id);
-            const countersKey = card.counters
-                ? [...card.counters].sort((a, b) => a.name.localeCompare(b.name))
-                    .map(c => `${c.name}:${c.count}`)
-                    .join('|')
-                : '';
+    // Group stackable cards
+    const zoneStacks = useMemo(() => {
+        const groupStacks = (cards: PermanentView[]): StackedGroup[] => {
+            const groups: Record<string, PermanentView[]> = {};
 
-            const key = `${card.name}-${card.tapped}-${combatState}-${card.summoningSickness}-${countersKey}`;
+            // Sorting
+            const sortedCards = [...cards].sort((a, b) => {
+                const nameCompare = a.name.localeCompare(b.name);
+                if (nameCompare !== 0) return nameCompare;
+                return a.tapped === b.tapped ? 0 : a.tapped ? 1 : -1;
+            });
 
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(card);
-        });
-
-        // Convert to array
-        return Object.entries(groups).map(([key, groupCards]) => ({
-            key,
-            cards: groupCards
-        }));
-    };
-
-    const renderCounters = (card: PermanentView) => {
-        if (!card.counters || card.counters.length === 0) return null;
-
-        // Prioritize +1/+1 and -1/-1 counters for main display
-        const p1p1 = card.counters.find(c => c.name === '+1/+1');
-        const m1m1 = card.counters.find(c => c.name === '-1/-1');
-        const loyalty = card.counters.find(c => c.name === 'loyalty');
-        const otherCounters = card.counters.filter(c => c.name !== '+1/+1' && c.name !== '-1/-1' && c.name !== 'loyalty');
-
-        return (
-            <div className="counters-container">
-                {p1p1 && (
-                    <div className="counter-badge plus-one" title="+1/+1 Counters">
-                        +{p1p1.count}/+{p1p1.count}
-                    </div>
-                )}
-                {m1m1 && (
-                    <div className="counter-badge minus-one" title="-1/-1 Counters">
-                        -{m1m1.count}/-{m1m1.count}
-                    </div>
-                )}
-                {loyalty && (
-                    <div className="counter-badge loyalty-counter" title="Loyalty Counters">
-                        {loyalty.count}
-                    </div>
-                )}
-                {otherCounters.map(c => (
-                    <div key={c.name} className="counter-badge generic-counter" title={`${c.count} ${c.name} counters`}>
-                        {c.count} {/* specialized icons could go here */}
-                    </div>
-                ))}
-            </div>
-        );
-    };
-
-    const renderCard = (card: PermanentView, index: number, total: number, isStacked: boolean, stackKey: string) => {
-        const isCreature = card.cardTypes.includes('Creature');
-        const isPlaneswalker = card.cardTypes.includes('Planeswalker');
-        const isBattle = card.cardTypes.includes('Battle');
-
-        const combatState = getCombatState(card.id);
-        const validTarget = isValidTarget(card.id);
-
-        const style: React.CSSProperties = isStacked ? {
-            marginTop: `${index * -110}px`, // Large negative margin for tight overlap
-            marginLeft: `${index * 0}px`,
-            zIndex: index,
-            position: 'relative' // relative flow but overlapped
-        } : {};
-
-        return (
-            <div
-                key={card.id}
-                id={`card-${card.id}`}
-                className={`permanent ${card.tapped ? 'tapped' : ''} ${card.isAbility ? 'ability' : ''} ${combatState ? combatState : ''} ${validTarget ? 'valid-target' : ''}`}
-                style={isStacked && index > 0 ? style : { zIndex: index }}
-                onClick={(e) => {
-                    if (isStacked && index < total - 1 && !expandedStacks[stackKey]) {
-                        toggleStack(stackKey, e);
-                    } else {
-                        handleCardClick(card.id);
+            sortedCards.forEach(card => {
+                let combatStateKey = '';
+                if (combat) {
+                    for (const group of combat) {
+                        if (group.attackers && group.attackers[card.id]) { combatStateKey = 'attacking'; break; }
+                        if (group.blockers && group.blockers[card.id]) { combatStateKey = 'blocking'; break; }
                     }
-                }}
-                onContextMenu={(e) => {
-                    e.preventDefault();
-                    if (onCardInspect) onCardInspect(card.id);
-                }}
-            >
-                <img
-                    src={cardImageService.getImageUrl(card)}
-                    alt={card.name}
-                    data-id={card.id}
-                    onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
-                />
+                }
 
-                <div className="card-status-overlay">
-                    {card.summoningSickness && (
-                        <div className="status-icon sickness" title="Summoning Sickness">💫</div>
-                    )}
-                    {combatState === 'attacking' && (
-                        <div className="status-icon attacking" title="Attacking">⚔️</div>
-                    )}
-                    {combatState === 'blocking' && (
-                        <div className="status-icon blocking" title="Blocking">🛡️</div>
-                    )}
-                </div>
+                const countersKey = card.counters
+                    ? [...card.counters].sort((a, b) => a.name.localeCompare(b.name))
+                        .map(c => `${c.name}:${c.count}`)
+                        .join('|')
+                    : '';
 
-                {renderCounters(card)}
+                const key = `${card.name}-${card.tapped}-${combatStateKey}-${card.summoningSickness}-${countersKey}`;
 
-                {/* Badges */}
-                {isCreature && card.power !== "" && card.toughness !== "" && (
-                    <div className="pt-badge">
-                        {card.power}/{card.toughness}
-                        {card.damage > 0 && <span className="damage-indicator" title={`${card.damage} damage marked`}>{`(-${card.damage})`}</span>}
-                    </div>
-                )}
-                {isPlaneswalker && card.loyalty !== "" && (
-                    <div className="loyalty-badge">{card.loyalty}</div>
-                )}
-                {isBattle && card.defense !== "" && (
-                    <div className="defense-badge">{card.defense}</div>
-                )}
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(card);
+            });
 
-                {/* Stack Count Badge (only on top (last) card of collapsed stack) */}
-                {isStacked && index === total - 1 && !expandedStacks[stackKey] && total > 1 && (
-                    <div className="stack-count" onClick={(e) => toggleStack(stackKey, e)}>
-                        {total}
-                    </div>
-                )}
-            </div>
+            return Object.entries(groups).map(([key, groupCards]) => ({
+                key,
+                cards: groupCards
+            }));
+        };
+
+        const res: Record<string, StackedGroup[]> = {};
+        (Object.keys(zones) as Array<keyof typeof zones>).forEach(key => {
+            res[key] = groupStacks(zones[key]);
+        });
+        return res;
+    }, [zones, combat]);
+
+    // Note: renderCounters moved effectively outside (or to bottom)
+
+
+    const renderCard = useCallback((card: PermanentView, index: number, total: number, isStacked: boolean, stackKey: string) => {
+        return (
+            <BattlefieldCard
+                key={card.id}
+                card={card}
+                index={index}
+                total={total}
+                isStacked={isStacked}
+                stackKey={stackKey}
+                isStackExpanded={!!expandedStacks[stackKey]}
+                combatState={getCombatState(card.id)}
+                isValidTarget={getIsValidTarget(card.id)}
+                onCardClick={handleCardClick}
+                onCardInspect={onCardInspect}
+                onToggleStack={toggleStack}
+            />
         );
-    };
+    }, [expandedStacks, getCombatState, getIsValidTarget, handleCardClick, onCardInspect, toggleStack]);
 
     const renderStack = (stack: StackedGroup) => {
         const isExpanded = expandedStacks[stack.key];
@@ -263,10 +196,9 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ player, isMe, onCardCl
         );
     };
 
-    const renderZone = (zoneKey: string, cards: PermanentView[]) => {
-        if (cards.length === 0) return null;
-
-        const stacks = groupStacks(cards);
+    const renderZone = (zoneKey: string) => {
+        const stacks = zoneStacks[zoneKey];
+        if (!stacks || stacks.length === 0) return null;
 
         return (
             <div className={`battlefield-zone zone-${zoneKey.toLowerCase()}`} key={zoneKey}>
@@ -276,13 +208,14 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ player, isMe, onCardCl
     };
 
     // Prepare rows
-    const frontRowContent = renderZone('CREATURES', zones.CREATURES);
+    // Prepare rows
+    const frontRowContent = renderZone('CREATURES');
 
     // Back row zones
     const backRowZones: ZoneType[] = ['LANDS', 'ARTIFACTS', 'ENCHANTMENTS', 'PLANESWALKERS', 'BATTLES', 'OTHER'];
     const backRowContent = (
         <div className="battlefield-row back-row">
-            {backRowZones.map(z => renderZone(z, zones[z]))}
+            {backRowZones.map(z => renderZone(z))}
         </div>
     );
 
@@ -307,4 +240,172 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ player, isMe, onCardCl
             )}
         </div>
     );
+});
+
+
+// === SUB-COMPONENTS ===
+
+interface BattlefieldCardProps {
+    card: PermanentView;
+    index: number;
+    total: number;
+    isStacked: boolean;
+    stackKey: string;
+    isStackExpanded: boolean;
+    combatState: string | null;
+    isValidTarget: boolean;
+    onCardClick: (id: string) => void;
+    onCardInspect?: (id: string) => void;
+    onToggleStack: (key: string, e: React.MouseEvent) => void;
+}
+
+const renderCounters = (card: PermanentView) => {
+    if (!card.counters || card.counters.length === 0) return null;
+
+    // Prioritize +1/+1 and -1/-1 counters for main display
+    const p1p1 = card.counters.find(c => c.name === '+1/+1');
+    const m1m1 = card.counters.find(c => c.name === '-1/-1');
+    const loyalty = card.counters.find(c => c.name === 'loyalty');
+    const otherCounters = card.counters.filter(c => c.name !== '+1/+1' && c.name !== '-1/-1' && c.name !== 'loyalty');
+
+    return (
+        <div className="counters-container">
+            {p1p1 && (
+                <div className="counter-badge plus-one" title="+1/+1 Counters">
+                    +{p1p1.count}/+{p1p1.count}
+                </div>
+            )}
+            {m1m1 && (
+                <div className="counter-badge minus-one" title="-1/-1 Counters">
+                    -{m1m1.count}/-{m1m1.count}
+                </div>
+            )}
+            {loyalty && (
+                <div className="counter-badge loyalty-counter" title="Loyalty Counters">
+                    {loyalty.count}
+                </div>
+            )}
+            {otherCounters.map(c => (
+                <div key={c.name} className="counter-badge generic-counter" title={`${c.count} ${c.name} counters`}>
+                    {c.count}
+                </div>
+            ))}
+        </div>
+    );
 };
+
+const arePropsEqual = (prev: BattlefieldCardProps, next: BattlefieldCardProps) => {
+    // Stable props check
+    if (prev.index !== next.index) return false;
+    if (prev.total !== next.total) return false;
+    if (prev.isStacked !== next.isStacked) return false;
+    if (prev.stackKey !== next.stackKey) return false;
+    if (prev.isStackExpanded !== next.isStackExpanded) return false;
+    if (prev.combatState !== next.combatState) return false;
+    if (prev.isValidTarget !== next.isValidTarget) return false;
+    // Callbacks should be stable ref check
+    if (prev.onCardClick !== next.onCardClick) return false;
+    if (prev.onToggleStack !== next.onToggleStack) return false;
+
+    // Deep check for Card object because server sends fresh references
+    const c1 = prev.card;
+    const c2 = next.card;
+    if (c1.id !== c2.id) return false;
+    if (c1.name !== c2.name) return false;
+    if (c1.tapped !== c2.tapped) return false;
+    if (c1.summoningSickness !== c2.summoningSickness) return false;
+    if (c1.power !== c2.power) return false;
+    if (c1.toughness !== c2.toughness) return false;
+    if (c1.loyalty !== c2.loyalty) return false;
+    if (c1.defense !== c2.defense) return false;
+    if (c1.damage !== c2.damage) return false;
+
+    // Counters check
+    if (c1.counters?.length !== c2.counters?.length) return false;
+    if (c1.counters && c2.counters) {
+        if (JSON.stringify(c1.counters) !== JSON.stringify(c2.counters)) return false;
+    }
+
+    return true;
+};
+
+const BattlefieldCard: React.FC<BattlefieldCardProps> = React.memo(({
+    card, index, total, isStacked, stackKey, isStackExpanded, combatState, isValidTarget,
+    onCardClick, onCardInspect, onToggleStack
+}) => {
+    const isCreature = card.cardTypes.includes('Creature');
+    const isPlaneswalker = card.cardTypes.includes('Planeswalker');
+    const isBattle = card.cardTypes.includes('Battle');
+
+    const style: React.CSSProperties = isStacked ? {
+        marginTop: `${index * -110}px`, // Large negative margin for tight overlap
+        marginLeft: `${index * 0}px`,
+        zIndex: index,
+        position: 'relative' // relative flow but overlapped
+    } : {};
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (isStacked && index < total - 1 && !isStackExpanded) {
+            onToggleStack(stackKey, e);
+        } else {
+            onCardClick(card.id);
+        }
+    };
+
+    const handleContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (onCardInspect) onCardInspect(card.id);
+    };
+
+    return (
+        <div
+            id={`card-${card.id}`}
+            className={`permanent ${card.tapped ? 'tapped' : ''} ${card.isAbility ? 'ability' : ''} ${combatState ? combatState : ''} ${isValidTarget ? 'valid-target' : ''}`}
+            style={isStacked && index > 0 ? style : { zIndex: index }}
+            onClick={handleClick}
+            onContextMenu={handleContextMenu}
+        >
+            <img
+                src={cardImageService.getImageUrl(card)}
+                alt={card.name}
+                data-id={card.id}
+                onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
+            />
+
+            <div className="card-status-overlay">
+                {card.summoningSickness && (
+                    <div className="status-icon sickness" title="Summoning Sickness">💫</div>
+                )}
+                {combatState === 'attacking' && (
+                    <div className="status-icon attacking" title="Attacking">⚔️</div>
+                )}
+                {combatState === 'blocking' && (
+                    <div className="status-icon blocking" title="Blocking">🛡️</div>
+                )}
+            </div>
+
+            {renderCounters(card)}
+
+            {/* Badges */}
+            {isCreature && card.power !== "" && card.toughness !== "" && (
+                <div className="pt-badge">
+                    {card.power}/{card.toughness}
+                    {card.damage > 0 && <span className="damage-indicator" title={`${card.damage} damage marked`}>{`(-${card.damage})`}</span>}
+                </div>
+            )}
+            {isPlaneswalker && card.loyalty !== "" && (
+                <div className="loyalty-badge">{card.loyalty}</div>
+            )}
+            {isBattle && card.defense !== "" && (
+                <div className="defense-badge">{card.defense}</div>
+            )}
+
+            {/* Stack Count Badge (only on top (last) card of collapsed stack) */}
+            {isStacked && index === total - 1 && !isStackExpanded && total > 1 && (
+                <div className="stack-count" onClick={(e) => onToggleStack(stackKey, e)}>
+                    {total}
+                </div>
+            )}
+        </div>
+    );
+}, arePropsEqual);

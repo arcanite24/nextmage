@@ -11,11 +11,13 @@ import { useLobbyStore } from './lobbyStore';
 import { useGameStore } from './gameStore';
 import { useChatStore } from './chatStore';
 import { useSessionStore } from './sessionStore';
+import { useDebugStore } from './debugStore';
 
 export { useSessionStore };
 export { useLobbyStore } from './lobbyStore';
 export { useGameStore } from './gameStore';
 export { useChatStore } from './chatStore';
+export { useDebugStore };
 
 // Re-export types
 export type { PendingAction, MultiAmountMessage } from './gameStore';

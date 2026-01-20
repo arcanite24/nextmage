@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PlayerView } from '../../types';
 import './ArenaLayout.css';
 
@@ -17,20 +17,20 @@ const DefaultAvatarSVG = () => (
     </svg>
 );
 
-export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = ({ player, isMe, onShowZone, onInteract }) => {
-    const lifeClass = player.life <= 5 ? 'low' : player.life >= 30 ? 'high' : '';
-    const graveyardCount = Object.keys(player.graveyard).length;
-    const exileCount = Object.keys(player.exile).length;
+export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ player, isMe, onShowZone, onInteract }) => {
+    const lifeClass = useMemo(() => player.life <= 5 ? 'low' : player.life >= 30 ? 'high' : '', [player.life]);
+    const graveyardCount = useMemo(() => Object.keys(player.graveyard).length, [player.graveyard]);
+    const exileCount = useMemo(() => Object.keys(player.exile).length, [player.exile]);
 
     // Check if player has any mana in pool
-    const hasMana = player.manaPool && (
+    const hasMana = useMemo(() => player.manaPool && (
         player.manaPool.white > 0 ||
         player.manaPool.blue > 0 ||
         player.manaPool.black > 0 ||
         player.manaPool.red > 0 ||
         player.manaPool.green > 0 ||
         player.manaPool.colorless > 0
-    );
+    ), [player.manaPool]);
 
     return (
         <>
@@ -39,11 +39,10 @@ export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = ({ player, isMe, on
                 <div
                     className="arena-player-name-box"
                     onClick={() => onInteract?.(player.playerId)}
-                    style={{ cursor: 'pointer' }}
                 >
                     <span className="arena-player-name">{player.name}</span>
                     {player.hasPriority && (
-                        <span style={{ color: '#fbbf24', fontSize: '12px' }}>⚡</span>
+                        <span className="priority-indicator-hud">⚡</span>
                     )}
                 </div>
 
@@ -148,4 +147,4 @@ export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = ({ player, isMe, on
             </div>
         </>
     );
-};
+});
