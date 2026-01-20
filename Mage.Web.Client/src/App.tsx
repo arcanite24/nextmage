@@ -9,14 +9,17 @@ import { LoginPage } from './components/login';
 import { LobbyPage } from './components/lobby';
 import { GamePage } from './components/game';
 import { DeckEditorPage } from './components/deck/DeckEditorPage';
+import { DeckManagerPage } from './components/deck/DeckManagerPage';
 import { useSessionStore, useGameStore, initializeCallbackDispatcher } from './stores';
+import { useDeckStore } from './stores/deckStore';
 import './App.css';
 
-type AppView = 'login' | 'lobby' | 'game' | 'deck-editor';
+type AppView = 'login' | 'lobby' | 'game' | 'deck-manager' | 'deck-editor';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('login');
   const [gameId, setGameId] = useState<string | null>(null);
+  const [editingDeckId, setEditingDeckId] = useState<string | undefined>(undefined);
 
   const { isAuthenticated, connectionStatus } = useSessionStore();
 
@@ -75,6 +78,31 @@ function App() {
     setCurrentView('lobby');
   };
 
+  const handleOpenDeckManager = () => {
+    setCurrentView('deck-manager');
+  };
+
+  const handleEditDeck = (deckId: string) => {
+    setEditingDeckId(deckId);
+    setCurrentView('deck-editor');
+  };
+
+  const handleCreateDeck = () => {
+    useDeckStore.getState().createNewDeck();
+    setEditingDeckId(undefined);
+    setCurrentView('deck-editor');
+  };
+
+  const handleDoneEditing = () => {
+    setEditingDeckId(undefined);
+    setCurrentView('deck-manager');
+  };
+
+  const handleNavigation = (page: string) => {
+    if (page === 'lobby') setCurrentView('lobby');
+    if (page === 'decks') setCurrentView('deck-manager');
+  };
+
   return (
     <div className="app-container">
       {currentView === 'login' && (
@@ -85,7 +113,7 @@ function App() {
         <LobbyPage
           onEnterGame={handleEnterGame}
           onLogout={handleLogout}
-          onOpenDeckEditor={() => setCurrentView('deck-editor')}
+          onOpenDeckEditor={handleOpenDeckManager}
         />
       )}
 
@@ -93,13 +121,21 @@ function App() {
         <GamePage gameId={gameId} onLeave={handleLeaveGame} />
       )}
 
+      {currentView === 'deck-manager' && (
+        <DeckManagerPage
+          onExit={() => setCurrentView('lobby')}
+          onNavigate={handleNavigation}
+          onEditDeck={handleEditDeck}
+          onCreateDeck={handleCreateDeck}
+        />
+      )}
+
       {currentView === 'deck-editor' && (
         <DeckEditorPage
+          deckId={editingDeckId}
           onExit={() => setCurrentView('lobby')}
-          onNavigate={(page) => {
-            if (page === 'lobby') setCurrentView('lobby');
-            // Add other navigation targets as needed
-          }}
+          onNavigate={handleNavigation}
+          onDone={handleDoneEditing}
         />
       )}
 
@@ -134,3 +170,4 @@ function GlobalAlert() {
 }
 
 export default App;
+

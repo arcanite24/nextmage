@@ -40,9 +40,9 @@ const CardComponent: React.FC<CardProps> = ({
     // Check if it's a permanent and tapped
     const isTapped = 'tapped' in card && card.tapped;
 
-    // Check if it's choosable/selected from server state
-    const serverSelected = card.isSelected;
-    const serverChoosable = card.isChoosable;
+    // Check if it's choosable/selected from server state (only on CardView/PermanentView)
+    const serverSelected = 'isSelected' in card ? card.isSelected : false;
+    const serverChoosable = 'isChoosable' in card ? card.isChoosable : false;
 
     const classes = [
         'mtg-card',

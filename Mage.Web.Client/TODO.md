@@ -1,3 +1,7 @@
 - Don't re-render the whole battlefield on updates
-- A debug menu to serialize the current game state and past actions for better debugging
-- 
+- Confirm available cards to play are correctly displayed (currently all have the available glow)
+- Glow on active player
+- Damage animation
+- Attack animation for each card
+- Configurable animation speed
+- Add card placeholder for loading the image so we don't update the layout when the image loads

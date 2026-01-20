@@ -1,0 +1,144 @@
+/**
+ * Card Filters Styles
+ */
+
+.card-filters {
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filter-row-main {
+    flex-wrap: nowrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.filter-search {
+    flex: 1;
+    min-width: 180px;
+    max-width: 280px;
+}
+
+.filter-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.filter-input:focus {
+    border-color: rgba(212, 175, 55, 0.5);
+}
+
+.filter-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.filter-input-small {
+    width: 60px;
+    padding: 8px;
+    text-align: center;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+.filter-select:focus {
+    border-color: rgba(212, 175, 55, 0.5);
+}
+
+.filter-select option {
+    background: #1a1a2e;
+    color: #ffffff;
+}
+
+/* Color Toggle Buttons */
+.filter-colors {
+    display: flex;
+    gap: 4px;
+}
+
+.color-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    opacity: 0.5;
+}
+
+.color-toggle:hover {
+    opacity: 0.8;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.color-toggle.active {
+    opacity: 1;
+    border-color: #d4af37;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+.color-toggle .mana-symbol {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+}
+
+/* Filter Actions */
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.btn-search {
+    padding: 8px 20px;
+    font-size: 13px;
+}
+
+.btn-reset {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* Mana Value Filter */
+.filter-mana-value input::-webkit-outer-spin-button,
+.filter-mana-value input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.filter-mana-value input[type=number] {
+    -moz-appearance: textfield;
+}

@@ -5,7 +5,22 @@ export interface DeckSummary {
     id: string;
     name: string;
     description?: string;
+    format?: string;
     updatedAt: number;
+    cardCount?: number;
+    sideboardCount?: number;
+    coverCard?: {
+        setCode: string;
+        cardNumber: string;
+        name?: string;
+    };
+    colors?: {
+        white: boolean;
+        blue: boolean;
+        black: boolean;
+        red: boolean;
+        green: boolean;
+    };
 }
 
 export interface IDeckStorage {
@@ -21,35 +36,55 @@ const META_KEY = "mage_decks_meta";
 interface DeckMeta {
     id: string;
     name: string;
+    format?: string;
     updatedAt: number;
+    cardCount?: number;
+    sideboardCount?: number;
+    coverCard?: {
+        setCode: string;
+        cardNumber: string;
+        name?: string;
+    };
+    colors?: {
+        white: boolean;
+        blue: boolean;
+        black: boolean;
+        red: boolean;
+        green: boolean;
+    };
 }
 
 export class LocalDeckStorage implements IDeckStorage {
     async saveDeck(deck: DeckCardLists): Promise<string> {
         const meta = this.getMeta();
 
-        // Check if we can identify this deck by name to update it?
-        // For simple local storage, if the name matches, we overwrite (or update). 
-        // But usually user might want multiple versions.
-        // Let's check if the deck object has an ID (we'd need to add it to DeckCardLists).
-        // Since we don't have ID in deck object yet, we can't reliably update unless we trust name is unique/key.
-        // Let's use name as a key for finding existing deck to overwrite.
-        // If user changes name, it's a new deck.
-        // This mimics file system name uniqueness.
-
-        let id: string = crypto.randomUUID();
-        const existing = meta.find(m => m.name === deck.name);
-        if (existing) {
-            id = existing.id;
+        // Use existing deck ID if available, otherwise generate new one or find by name
+        let id: string;
+        if (deck.id) {
+            id = deck.id;
+        } else {
+            const existing = meta.find(m => m.name === deck.name);
+            id = existing?.id || crypto.randomUUID();
         }
 
-        const deckString = DeckSerializer.exportDeck(deck);
-        localStorage.setItem(STORAGE_PREFIX + id, deckString);
+        // Store extended deck data as JSON (preserving metadata)
+        const deckData = {
+            ...deck,
+            id,
+            updatedAt: Date.now(),
+            createdAt: deck.createdAt || Date.now(),
+        };
+        localStorage.setItem(STORAGE_PREFIX + id, JSON.stringify(deckData));
 
         const newMetaItem: DeckMeta = {
             id,
             name: deck.name || "Untitled Deck",
-            updatedAt: Date.now()
+            format: deck.format,
+            updatedAt: Date.now(),
+            cardCount: deck.cards.reduce((sum, c) => sum + c.amount, 0),
+            sideboardCount: deck.sideboard.reduce((sum, c) => sum + c.amount, 0),
+            coverCard: deck.coverCard,
+            colors: deck.colors,
         };
 
         const newMeta = meta.filter(m => m.id !== id);
@@ -63,12 +98,27 @@ export class LocalDeckStorage implements IDeckStorage {
         const content = localStorage.getItem(STORAGE_PREFIX + id);
         if (!content) return null;
 
+        // Try parsing as JSON first (new format), fall back to .dck format
+        try {
+            const parsed = JSON.parse(content);
+            // Check if it looks like a deck object (has cards array)
+            if (parsed && Array.isArray(parsed.cards)) {
+                return parsed as DeckCardLists;
+            }
+        } catch {
+            // Not JSON, try legacy .dck format
+        }
+
+        // Legacy format: parse with DeckSerializer
         const deck = DeckSerializer.importDeck(content);
         const meta = this.getMeta();
         const m = meta.find(x => x.id === id);
         if (m) {
             deck.name = m.name;
+            deck.coverCard = m.coverCard;
+            deck.colors = m.colors;
         }
+        deck.id = id;
         return deck;
     }
 
@@ -77,7 +127,12 @@ export class LocalDeckStorage implements IDeckStorage {
         return meta.map(m => ({
             id: m.id,
             name: m.name,
+            format: m.format,
             updatedAt: m.updatedAt,
+            cardCount: m.cardCount,
+            sideboardCount: m.sideboardCount,
+            coverCard: m.coverCard,
+            colors: m.colors,
         })).sort((a, b) => b.updatedAt - a.updatedAt);
     }
 

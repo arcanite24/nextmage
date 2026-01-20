@@ -1,131 +1,88 @@
-import React, { useState, useRef } from 'react';
-import { CardSearchCriteria, DeckCardLists, DeckCardInfo, SearchCardView } from '../../types';
-import { wsService } from '../../services/WebSocketService';
-import { DeckSerializer } from '../../services/DeckSerializer';
+/**
+ * Deck Editor Page
+ * 
+ * Full deck editing experience with MTGA-style two-panel layout:
+ * - Left: Card collection browser with filters
+ * - Right: Deck panel with main deck and sideboard
+ */
+
+import React, { useEffect } from 'react';
+import { useDeckStore } from '../../stores/deckStore';
 import { Navbar, NavPage } from '../common';
-import { CardSearch } from './CardSearch';
-import { DeckArea } from './DeckArea';
-import { CardView as CardViewComponent } from './CardView';
+import { CardFilters } from './CardFilters';
+import { CollectionBrowser } from './CollectionBrowser';
+import { DeckPanel } from './DeckPanel';
 import './DeckEditorPage.css';
 
 interface DeckEditorPageProps {
+    deckId?: string;
     onExit: () => void;
     onNavigate?: (page: NavPage) => void;
+    onDone: () => void;
 }
 
-export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({ onExit, onNavigate }) => {
-    const [searchResults, setSearchResults] = useState<SearchCardView[]>([]);
-    const [deck, setDeck] = useState<DeckCardLists>({
-        cards: [],
-        sideboard: []
-    });
-    const fileInputRef = useRef<HTMLInputElement>(null);
+export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({
+    deckId,
+    onExit,
+    onNavigate,
+    onDone,
+}) => {
+    const {
+        currentDeck,
+        isEditing,
+        isDirty,
+        loadDeck,
+        createNewDeck,
+        saveDeck,
+        closeDeck,
+        addCard,
+        removeCard,
+        searchCards,
+    } = useDeckStore();
 
-    const handleSearch = async (criteria: CardSearchCriteria) => {
-        try {
-            const results = await wsService.searchCards(criteria);
-            setSearchResults(results);
-        } catch (error) {
-            console.error("Search failed:", error);
-            // TODO: Show error
+    // Load deck on mount
+    useEffect(() => {
+        if (deckId) {
+            loadDeck(deckId);
+        } else if (!isEditing) {
+            createNewDeck();
         }
-    };
 
-    const handleAddCard = (cardView: SearchCardView, zone: 'main' | 'side' = 'main') => {
-        const newCard: DeckCardInfo = {
-            cardName: cardView.name,
-            setCode: cardView.expansionSetCode,
-            cardNumber: cardView.cardNumber,
-            amount: 1
+        return () => {
+            // Cleanup when leaving editor
         };
-
-        setDeck(prev => {
-            const targetList = zone === 'main' ? [...prev.cards] : [...prev.sideboard];
-            // Check for existing card with same set code and card number
-            const existing = targetList.find(c => c.setCode === newCard.setCode && c.cardNumber === newCard.cardNumber);
-
-            if (existing) {
-                existing.amount++;
-            } else {
-                targetList.push(newCard);
-            }
-
-            return {
-                ...prev,
-                [zone === 'main' ? 'cards' : 'sideboard']: targetList
-            };
-        });
-    };
-
-    const handleRemoveCard = (cardInfo: DeckCardInfo, zone: 'main' | 'side') => {
-        setDeck(prev => {
-            // Clone the target list
-            const targetList = zone === 'main'
-                ? prev.cards.map(c => ({ ...c }))
-                : prev.sideboard.map(c => ({ ...c }));
-
-            const index = targetList.findIndex(c => c.setCode === cardInfo.setCode && c.cardNumber === cardInfo.cardNumber);
-
-            if (index !== -1) {
-                const item = targetList[index];
-                if (item.amount > 1) {
-                    item.amount--;
-                } else {
-                    targetList.splice(index, 1);
-                }
-            }
-
-            return {
-                ...prev,
-                [zone === 'main' ? 'cards' : 'sideboard']: targetList
-            };
-        });
-    };
-
-    const handleSaveDeck = () => {
-        const content = DeckSerializer.exportDeck(deck);
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = (deck.name || 'deck') + '.dck';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
-
-    const handleLoadDeck = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.click();
-        }
-    };
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const content = event.target?.result as string;
-            if (content) {
-                const loadedDeck = DeckSerializer.importDeck(content);
-                setDeck(loadedDeck);
-            }
-        };
-        reader.readAsText(file);
-        // Reset check to allow same file selection again if needed
-        e.target.value = '';
-    };
+    }, [deckId, loadDeck, createNewDeck, isEditing]);
 
     const handleNavigation = (page: NavPage) => {
-        if (page === 'decks') return; // Already on decks
+        if (page === 'decks') {
+            handleDone();
+            return;
+        }
         if (onNavigate) {
             onNavigate(page);
         } else if (page === 'lobby') {
+            handleDone();
             onExit();
         }
     };
+
+    const handleDone = async () => {
+        if (isDirty) {
+            await saveDeck();
+        }
+        closeDeck();
+        onDone();
+    };
+
+    const handleSearch = () => {
+        searchCards();
+    };
+
+    // Initial search on mount
+    useEffect(() => {
+        // Trigger initial search with default filters
+        searchCards();
+    }, []);
 
     return (
         <div className="deck-editor-page">
@@ -135,46 +92,28 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({ onExit, onNaviga
                 onLogout={onExit}
             />
 
-            <div className="deck-editor-toolbar">
-                <h2>Deck Editor</h2>
-                <div className="toolbar-actions">
-                    <button className="btn btn-primary" onClick={handleSaveDeck}>Save</button>
-                    <button className="btn btn-secondary" onClick={handleLoadDeck}>Load</button>
+            <div className="deck-editor-layout">
+                {/* Left Panel: Card Browser */}
+                <div className="deck-editor-left">
+                    <CardFilters onSearch={handleSearch} />
+                    <CollectionBrowser onAddCard={addCard} />
                 </div>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    style={{ display: 'none' }}
-                    accept=".dck,.txt"
-                    onChange={handleFileChange}
-                />
-            </div>
 
-            <div className="deck-editor-content">
-                <div className="search-pane">
-                    <h3>Card Search</h3>
-                    <CardSearch onSearch={handleSearch} />
-                    <div className="search-results">
-                        {searchResults.map((card, index) => (
-                            <div key={`${card.id}-${index}`} className="search-result-wrapper">
-                                <CardViewComponent
-                                    card={card}
-                                    size="small"
-                                    onClick={() => handleAddCard(card)}
-                                    onContextMenu={(e) => {
-                                        e.preventDefault();
-                                        handleAddCard(card, 'side');
-                                    }}
-                                />
-                            </div>
-                        ))}
+                {/* Right Panel: Deck */}
+                <div className="deck-editor-right">
+                    <DeckPanel onRemoveCard={removeCard} onAddCard={addCard} />
+                    <div className="deck-editor-actions">
+                        <button
+                            className="btn btn-primary btn-done"
+                            onClick={handleDone}
+                        >
+                            Done
+                        </button>
                     </div>
-                </div>
-                <div className="deck-pane">
-                    <DeckArea deck={deck} onRemoveCard={handleRemoveCard} />
                 </div>
             </div>
         </div>
     );
 };
 
+export default DeckEditorPage;

@@ -89,13 +89,31 @@ export interface DeckCardLayout {
     [key: string]: unknown;
 }
 
+export interface DeckCoverCard {
+    setCode: string;
+    cardNumber: string;
+    name?: string;
+}
+
 export interface DeckCardLists {
+    id?: string;
     name?: string;
     author?: string;
+    format?: string; // e.g. "Constructed - Standard", syncs with deckType
     cards: DeckCardInfo[];
     sideboard: DeckCardInfo[];
     cardLayout?: DeckCardLayout;
     sideboardLayout?: DeckCardLayout;
+    coverCard?: DeckCoverCard;
+    colors?: {
+        white: boolean;
+        blue: boolean;
+        black: boolean;
+        red: boolean;
+        green: boolean;
+    };
+    createdAt?: number;
+    updatedAt?: number;
 }
 
 // === Match Options ===
