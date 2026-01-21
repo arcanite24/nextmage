@@ -1,9 +1,13 @@
 import React, { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { PlayerView } from '../../types';
+import { useAnimationStore } from '../../stores';
 import './ArenaLayout.css';
+import './AttackAnimation.css';
 
 interface ArenaOpponentHUDProps {
     player: PlayerView;
+    isActivePlayer?: boolean;
     onShowZone?: (zone: 'graveyard' | 'exile' | 'library' | 'sideboard', playerId: string) => void;
     onInteract?: (uuid: string) => void;
 }
@@ -16,10 +20,28 @@ const DefaultAvatarSVG = () => (
     </svg>
 );
 
-export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ player, onShowZone, onInteract }) => {
+export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ player, isActivePlayer, onShowZone, onInteract }) => {
+    // Check for deferred life update (visual override)
+    const visualLifeTotals = useAnimationStore(useShallow(state => state.visualLifeTotals));
+    const displayedLife = visualLifeTotals?.[player.playerId] ?? player.life;
+
     const graveyardCount = useMemo(() => Object.keys(player.graveyard).length, [player.graveyard]);
     const exileCount = useMemo(() => Object.keys(player.exile).length, [player.exile]);
-    const lifeClass = useMemo(() => player.life <= 5 ? 'low' : player.life >= 30 ? 'high' : '', [player.life]);
+    const lifeClass = useMemo(() => displayedLife <= 5 ? 'low' : displayedLife >= 30 ? 'high' : '', [displayedLife]);
+
+    // Check if this player is currently taking damage
+    const isTakingDamage = useAnimationStore(
+        useShallow((state) => state.activeDamageEffects.some((d) => d.targetId === player.playerId))
+    );
+
+    // Build avatar container class names
+    const avatarContainerClasses = useMemo(() => {
+        const classes = ['arena-opponent-avatar-container', 'clickable-stat'];
+        if (isActivePlayer) classes.push('active-player');
+        if (player.hasPriority) classes.push('has-priority');
+        if (isTakingDamage) classes.push('taking-damage');
+        return classes.join(' ');
+    }, [isActivePlayer, player.hasPriority, isTakingDamage]);
 
     return (
         <>
@@ -52,7 +74,8 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
             {/* Opponent Avatar & Life (Top Center) */}
             <div className="arena-opponent-hud">
                 <div
-                    className="arena-opponent-avatar-container clickable-stat"
+                    id={`player-${player.playerId}`}
+                    className={avatarContainerClasses}
                     onClick={() => onInteract?.(player.playerId)}
                     title="Click to target player"
                 >
@@ -71,7 +94,7 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
                     </div>
 
                     <div className={`arena-opponent-life ${lifeClass}`}>
-                        {player.life}
+                        {displayedLife}
                     </div>
                 </div>
 

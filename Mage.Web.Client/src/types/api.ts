@@ -199,6 +199,7 @@ export type ClientCallbackMethod =
   | "startGame"
   | "gameInit"
   | "gameInform"
+  | "gameUpdateAndInform"
   | "gameInformPersonal"
   | "gameError"
   | "gameUpdate"

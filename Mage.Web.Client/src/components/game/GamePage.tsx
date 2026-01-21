@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { useGameStore, useSessionStore, useChatStore, useDebugStore } from '../../stores';
+import { useGameStore, useSessionStore, useChatStore, useDebugStore, useAnimationStore } from '../../stores';
 import { Button } from '../common';
 import { Battlefield } from './Battlefield';
 import { Hand } from './Hand';
@@ -11,6 +11,8 @@ import { PhaseIndicator } from './PhaseIndicator';
 import { FeedbackPanel } from './FeedbackPanel';
 import { ChatPanel } from '../chat/ChatPanel';
 import { CombatOverlay } from './CombatOverlay';
+import { AttackAnimation } from './AttackAnimation';
+import { DamageEffects } from './DamageEffects';
 import { CardPreviewModal } from './CardPreviewModal';
 import { ResultModal } from './ResultModal';
 import { AbilityPickerDialog } from './dialogs/AbilityPickerDialog';
@@ -25,6 +27,7 @@ import { SkipIndicator } from './SkipIndicator';
 import { ArenaPriorityControls } from './ArenaPriorityControls';
 import { cardImageService } from '../../services/CardImageService';
 import { DebugMode } from '../debug/DebugMode';
+import { UUID } from '../../types';
 import './GamePage.css';
 import './ArenaLayout.css';
 
@@ -67,6 +70,83 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
     const [resultModalClosed, setResultModalClosed] = React.useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [debugModeOpen, setDebugModeOpen] = useState(false);
+
+    // Animation store for life change detection and attack animations
+    const { updateLifeTotals, queueMultipleAttacks, clearAnimationQueue } = useAnimationStore();
+    const previousLifeRef = useRef<Record<UUID, number>>({});
+    const previousStepRef = useRef<string | null>(null);
+    const hasQueuedAttacksRef = useRef(false);
+
+    // Track life changes to trigger damage animations
+    useEffect(() => {
+        if (!gameStore.gameView?.players) return;
+
+        const currentLifeTotals: Record<UUID, number> = {};
+        gameStore.gameView.players.forEach((p) => {
+            currentLifeTotals[p.playerId] = p.life;
+        });
+
+        // Check for changes
+        const hasChange = Object.keys(currentLifeTotals).some(
+            (id) => previousLifeRef.current[id] !== currentLifeTotals[id]
+        );
+
+        if (hasChange && Object.keys(previousLifeRef.current).length > 0) {
+            // This is not the first load, trigger damage animations
+            const currentStep = gameStore.gameView.step;
+            const isCombatDamageStep = currentStep === 'COMBAT_DAMAGE' || currentStep === 'FIRST_COMBAT_DAMAGE';
+            updateLifeTotals(currentLifeTotals, isCombatDamageStep);
+        }
+
+        previousLifeRef.current = currentLifeTotals;
+    }, [gameStore.gameView?.players, gameStore.gameView?.step, updateLifeTotals]);
+
+    // Track combat phase changes to trigger attack animations
+    useEffect(() => {
+        const currentStep = gameStore.gameView?.step;
+        const combat = gameStore.gameView?.combat;
+
+        // Detect transition into combat damage phases
+        const isCombatDamageStep = currentStep === 'COMBAT_DAMAGE' || currentStep === 'FIRST_COMBAT_DAMAGE';
+
+        // Reset queue flag if we leave the damage step
+        if (!isCombatDamageStep && hasQueuedAttacksRef.current) {
+            hasQueuedAttacksRef.current = false;
+        }
+
+        // Logic to trigger animations:
+        // 1. Must be in a combat damage step
+        // 2. Must not have already queued animations for this specific step instance
+        // 3. Must have valid combat data
+        if (isCombatDamageStep && !hasQueuedAttacksRef.current && combat && combat.length > 0) {
+            const attacks: Array<{ attackerId: UUID; targetId: UUID }> = [];
+
+            combat.forEach((group) => {
+                const defenderId = group.defenderId;
+                if (group.attackers) {
+                    Object.values(group.attackers).forEach((attacker) => {
+                        attacks.push({
+                            attackerId: attacker.id,
+                            targetId: defenderId,
+                        });
+                    });
+                }
+            });
+
+            if (attacks.length > 0) {
+                queueMultipleAttacks(attacks);
+                hasQueuedAttacksRef.current = true;
+            }
+        }
+
+        // Clear animations when we leave combat entirely (cleanup)
+        if (previousStepRef.current && !isCombatDamageStep &&
+            (previousStepRef.current === 'COMBAT_DAMAGE' || previousStepRef.current === 'FIRST_COMBAT_DAMAGE')) {
+            clearAnimationQueue();
+        }
+
+        previousStepRef.current = currentStep || null;
+    }, [gameStore.gameView?.step, gameStore.gameView?.combat, queueMultipleAttacks, clearAnimationQueue]);
 
     // Global keyboard shortcuts
     useEffect(() => {
@@ -207,6 +287,8 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
     return (
         <div className="game-page arena-layout">
             <CombatOverlay />
+            <AttackAnimation />
+            <DamageEffects />
             <SkipIndicator activeSkip={gameStore.activeSkip} onCancel={actions.cancelPassActions} />
             {previewCard && (
                 <CardPreviewModal
@@ -286,6 +368,23 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                 />
             )}
 
+            {/* Show CardSelectorDialog for target/select with cardsView (e.g., discard from hand) */}
+            {!gameStore.showingZone &&
+                (gameStore.pendingAction.type === 'target' || gameStore.pendingAction.type === 'select') &&
+                (gameStore.pendingAction as any).cardsView &&
+                Object.keys((gameStore.pendingAction as any).cardsView).length > 0 && (
+                    <CardSelectorDialog
+                        isOpen={true}
+                        pendingAction={gameStore.pendingAction}
+                        onClose={() => {
+                            // Can't close a required selection
+                            if (!(gameStore.pendingAction as any).required) {
+                                actions.sendPlayerAction('PASS_PRIORITY_CANCEL_ALL_ACTIONS');
+                            }
+                        }}
+                    />
+                )}
+
             {/* Sideboard Dialog (unchanged) */}
             {gameStore.pendingAction.type === 'sideboarding' && (
                 <SideboardDialog
@@ -295,7 +394,9 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                         console.log('Closing sideboard dialog not fully supported yet');
                     }}
                     onSubmit={(deck) => {
-                        actions.submitDeck(gameStore.pendingAction.tableId, deck);
+                        if (gameStore.pendingAction.type === 'sideboarding') {
+                            actions.submitDeck(gameStore.pendingAction.tableId, deck);
+                        }
                     }}
                 />
             )}
@@ -311,6 +412,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     <div key={p.playerId} className="arena-opponent-area">
                         <ArenaOpponentHUD
                             player={p}
+                            isActivePlayer={gameStore.gameView?.activePlayerId === p.playerId}
                             onShowZone={actions.showZone}
                             onInteract={handleCardClick}
                         />
@@ -341,6 +443,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                 <ArenaPlayerHUD
                     player={myPlayer}
                     isMe
+                    isActivePlayer={isMyTurn}
                     onShowZone={actions.showZone}
                     onInteract={handleCardClick}
                 />
@@ -392,7 +495,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     color: isMyTurn ? '#22c55e' : '#94a3b8',
                     textAlign: 'center'
                 }}>
-                    {isMyTurn ? "Your Turn" : `${gameStore.gameView.activePlayerName || opponents.find(p => p.playerId === gameStore.gameView.activePlayerId)?.name || 'Unknown'}'s Turn`}
+                    {isMyTurn ? "Your Turn" : `${gameStore.gameView?.activePlayerName || opponents.find(p => p.playerId === gameStore.gameView?.activePlayerId)?.name || 'Unknown'}'s Turn`}
                 </div>
             </div>
 

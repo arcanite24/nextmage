@@ -557,6 +557,30 @@ export const useGameStore = create<GameState & GameActions>()(
                         // Could extract message from callback and display
                         break;
 
+                    case 'gameUpdateAndInform': {
+                        // GAME_UPDATE_AND_INFORM contains both a gameView AND a message
+                        // Structure: { gameView: GameView, message: string, flag: boolean, min: number, max: number }
+                        const data = callback.data as {
+                            gameView?: GameView;
+                            message?: string;
+                            flag?: boolean;
+                            min?: number;
+                            max?: number;
+                        };
+
+                        if (data.gameView) {
+                            updateGameView(data.gameView);
+                        }
+
+                        // Store the message for display in the UI
+                        if (data.message) {
+                            set((state) => {
+                                state.lastMessage = data.message || null;
+                            });
+                        }
+                        break;
+                    }
+
                     case 'gameAsk':
                         set((state) => {
                             const data = callback.data as any;

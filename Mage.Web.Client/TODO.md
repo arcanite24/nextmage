@@ -1,11 +1,22 @@
 - Don't re-render the whole battlefield on updates
 - Confirm available cards to play are correctly displayed (currently all have the available glow)
-- Glow on active player
-- Damage animation
-- Attack animation for each card
-- Configurable animation speed
+- [x] Glow on active player (added green/gold glow on active player's avatar)
+- [x] Damage animation (red vignette flash + floating damage numbers when taking damage)
+- [x] Attack animation for each card (Hearthstone-style projectile + impact effects)
+- Configurable animation speed (animation store supports speed multiplier)
 - Add card placeholder for loading the image so we don't update the layout when the image loads
 - Add client settings page
 - Add a setting to preload match images to cache
-- Show arrow from creature attacking to player
 - Add mana cost renderer
+- Add graveyard modal
+- Add exile modal
+- Render tokens
+- Rotate enemy hand and put it under the enemy avatar/life counter
+- Separate cards in "virutal zones", creatures, lands, etc
+- Auto-tap option for mana paying
+- Better rendering for double sided cards on hand/modal detail/battlefield
+- Render creature life totals on the battlefield before clean-up phase
+
+- Abstract keybinds into their own service
+- Handle animations with a library instead of manual CSS
+- Abstract configuration and cache service for future Electron support

@@ -675,19 +675,53 @@
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    z-index: 20;
-    /* Above cards and panels */
+    z-index: 50;
+    /* Above cards and panels but below dialogs */
 }
 
 .combat-line {
-    stroke-width: 3px;
+    stroke-width: 4px;
+    stroke-linecap: round;
 }
 
 .combat-line-attack {
-    stroke: rgba(220, 38, 38, 0.6);
+    stroke: #ef4444;
+    opacity: 0.9;
+}
+
+.combat-line-attack-glow {
+    stroke: #ef4444;
+    stroke-width: 12px;
+    opacity: 0.3;
+    stroke-linecap: round;
 }
 
 .combat-line-block {
-    stroke: rgba(37, 99, 235, 0.6);
-    stroke-dasharray: 5, 5;
+    stroke: #3b82f6;
+    stroke-dasharray: 8, 4;
+    opacity: 0.9;
+}
+
+.combat-line-block-glow {
+    stroke: #3b82f6;
+    stroke-width: 10px;
+    opacity: 0.25;
+    stroke-linecap: round;
+}
+
+/* Animate attack lines for emphasis */
+@keyframes combatPulse {
+
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+.combat-line-attack {
+    animation: combatPulse 1.5s ease-in-out infinite;
 }

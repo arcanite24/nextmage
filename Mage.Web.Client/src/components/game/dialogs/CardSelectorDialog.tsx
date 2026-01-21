@@ -166,21 +166,25 @@ export const CardSelectorDialog: React.FC<CardSelectorDialogProps> = (props) => 
                 {/* Card Selection UI */}
                 {cards.length > 0 && (
                     <div className="card-selector-cards">
-                        {cards.map((card) => (
-                            <div
-                                key={card.id}
-                                className="card-selector-item"
-                                onClick={() => handleCardClick(card.id)}
-                            >
-                                <img
-                                    src={cardImageService.getImageUrl(card)}
-                                    alt={card.name}
-                                    loading="lazy"
-                                    onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
-                                />
-                                <div className="card-selector-name">{card.name}</div>
-                            </div>
-                        ))}
+                        {cards.map((card) => {
+                            const isValidTarget = validTargets.length === 0 || validTargets.includes(card.id);
+                            return (
+                                <div
+                                    key={card.id}
+                                    className={`card-selector-item ${isValidTarget ? 'valid-target' : 'invalid-target'}`}
+                                    onClick={() => isValidTarget && handleCardClick(card.id)}
+                                    style={{ cursor: isValidTarget ? 'pointer' : 'not-allowed', opacity: isValidTarget ? 1 : 0.5 }}
+                                >
+                                    <img
+                                        src={cardImageService.getImageUrl(card)}
+                                        alt={card.name}
+                                        loading="lazy"
+                                        onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
+                                    />
+                                    <div className="card-selector-name">{card.name}</div>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
 

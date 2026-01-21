@@ -62,7 +62,7 @@ function getActionTypeCategory(method: string): string {
   if (method.includes('Ask') || method.includes('Target') || method.includes('Select') || method.includes('Choose')) {
     return 'interaction';
   }
-  if (['gameInit', 'gameUpdate', 'gameInform'].includes(method)) return 'state';
+  if (['gameInit', 'gameUpdate', 'gameInform', 'gameUpdateAndInform'].includes(method)) return 'state';
   return 'system';
 }
 
@@ -81,6 +81,8 @@ function generateActionSummary(callback: ClientCallback, gameView?: GameView): s
     case 'gameInform':
     case 'gameInformPersonal':
       return `Inform: ${data.message || 'Game info'}`;
+    case 'gameUpdateAndInform':
+      return `Update+Inform: ${data.message || 'Game update with info'}`;
     case 'gameAsk':
       return `Ask: ${data.message || 'Respond?'}`;
     case 'gameTarget':
@@ -158,7 +160,7 @@ export const useDebugStore = create<DebugState & DebugActions>()(
         if (typeof data === 'object' && data !== null) {
           if ((data as any).gameView) {
             gameView = (data as any).gameView;
-          } else if (['gameInit', 'gameUpdate', 'gameInform'].includes(callback.method)) {
+          } else if (['gameInit', 'gameUpdate', 'gameInform', 'gameUpdateAndInform'].includes(callback.method)) {
             gameView = data as GameView;
           }
         }

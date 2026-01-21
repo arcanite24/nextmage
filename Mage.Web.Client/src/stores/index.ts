@@ -18,6 +18,7 @@ export { useLobbyStore } from './lobbyStore';
 export { useGameStore } from './gameStore';
 export { useChatStore } from './chatStore';
 export { useDebugStore };
+export { useAnimationStore } from './animationStore';
 
 // Re-export types
 export type { PendingAction, MultiAmountMessage } from './gameStore';
@@ -38,7 +39,7 @@ export function initializeCallbackDispatcher(): () => void {
             'GAME_INIT': 'gameInit',
             'GAME_UPDATE': 'gameUpdate',
             'GAME_INFORM': 'gameInform',
-            'GAME_UPDATE_AND_INFORM': 'gameInform',
+            'GAME_UPDATE_AND_INFORM': 'gameUpdateAndInform',
             'GAME_INFORM_PERSONAL': 'gameInformPersonal',
             'GAME_ASK': 'gameAsk',
             'GAME_TARGET': 'gameTarget',

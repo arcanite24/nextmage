@@ -47,9 +47,8 @@ export const FeedbackPanel: React.FC = React.memo(() => {
     const handleCancel = useCallback(() => sendBoolean(false), [sendBoolean]);
 
     // Only show FeedbackPanel for specific action types that need explicit UI
-    // target/select are now handled by the Arena "Next" button, so we hide the panel for those
     const shouldShow = useMemo(() => {
-        const showableTypes = ['ask', 'mana'];
+        const showableTypes = ['ask', 'mana', 'target', 'select'];
         return pendingAction.type !== 'none' && showableTypes.includes(pendingAction.type);
     }, [pendingAction.type]);
 
@@ -71,10 +70,24 @@ export const FeedbackPanel: React.FC = React.memo(() => {
                     </div>
                 );
 
+            case 'target':
+            case 'select':
+                // For target/select, show Done/Cancel based on whether selection is required
+                const actionData = pendingAction as any;
+                const isRequired = actionData.required;
+                return (
+                    <div className="feedback-actions">
+                        <Button variant="primary" onClick={handleYes}>Done</Button>
+                        {!isRequired && (
+                            <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
+                        )}
+                    </div>
+                );
+
             default:
                 return null;
         }
-    }, [pendingAction.type, handleYes, handleNo, handleCancel]);
+    }, [pendingAction, handleYes, handleNo, handleCancel]);
 
     // Early return after all hooks have been called
     if (!shouldShow) {

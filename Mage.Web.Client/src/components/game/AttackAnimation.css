@@ -1,0 +1,302 @@
+/* ===================================================================
+   ATTACK ANIMATION STYLES
+   Hearthstone-style attack animations using Framer Motion
+   =================================================================== */
+
+.attack-animation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 500;
+    /* Above everything during animation */
+    overflow: hidden;
+}
+
+/* Attacking card styles */
+.attacking-card {
+    pointer-events: none;
+    will-change: transform;
+}
+
+.attacking-card img {
+    display: block;
+    object-fit: cover;
+}
+
+/* Attack glow when card is lunging */
+.attack-glow-overlay {
+    animation: glowPulseAttack 0.2s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulseAttack {
+    0% {
+        box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 30px 10px rgba(239, 68, 68, 0.6);
+    }
+}
+
+/* Impact container */
+.impact-container {
+    will-change: transform, opacity;
+}
+
+/* ===================================================================
+   DAMAGE EFFECT STYLES
+   Flash effects when players take damage
+   =================================================================== */
+
+/* Damage flash overlay for player HUDs */
+.arena-avatar-container.taking-damage,
+.arena-opponent-avatar-container.taking-damage {
+    animation: damageFlash 0.5s ease-out;
+}
+
+.arena-avatar-container.taking-damage .arena-avatar,
+.arena-opponent-avatar-container.taking-damage .arena-opponent-avatar {
+    animation: avatarShake 0.4s ease-out;
+}
+
+@keyframes damageFlash {
+    0% {
+        filter: brightness(1);
+    }
+
+    20% {
+        filter: brightness(2) saturate(2);
+    }
+
+    40% {
+        filter: brightness(1.5) hue-rotate(-10deg);
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+}
+
+@keyframes avatarShake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-3px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(3px);
+    }
+}
+
+/* Red vignette for player damage (shown at screen edges) */
+.damage-vignette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 600;
+    opacity: 0;
+    animation: vignetteFlash 0.5s ease-out forwards;
+}
+
+.damage-vignette.player {
+    background: radial-gradient(ellipse at center,
+            transparent 40%,
+            rgba(220, 38, 38, 0.1) 60%,
+            rgba(220, 38, 38, 0.4) 80%,
+            rgba(220, 38, 38, 0.6) 100%);
+}
+
+.damage-vignette.opponent {
+    background: radial-gradient(ellipse at center top,
+            rgba(37, 99, 235, 0.2) 0%,
+            transparent 40%);
+}
+
+@keyframes vignetteFlash {
+    0% {
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Damage number popup */
+.damage-number {
+    position: absolute;
+    font-size: 32px;
+    font-weight: 900;
+    color: #ef4444;
+    text-shadow:
+        0 0 10px rgba(239, 68, 68, 0.8),
+        0 2px 4px rgba(0, 0, 0, 0.8),
+        -1px -1px 0 #7f1d1d,
+        1px -1px 0 #7f1d1d,
+        -1px 1px 0 #7f1d1d,
+        1px 1px 0 #7f1d1d;
+    pointer-events: none;
+    z-index: 700;
+    animation: damageNumberFloat 1s ease-out forwards;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes damageNumberFloat {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.3);
+    }
+
+    40% {
+        transform: translate(-50%, -80%) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -120%) scale(0.8);
+    }
+}
+
+/* ===================================================================
+   ACTIVE PLAYER GLOW
+   Glow effect on the active player's avatar
+   =================================================================== */
+
+.arena-avatar-container.active-player {
+    --glow-color: rgba(34, 197, 94, 0.6);
+}
+
+.arena-avatar-container.active-player .arena-avatar {
+    box-shadow:
+        0 0 0 3px rgba(34, 197, 94, 0.4),
+        0 0 20px 8px var(--glow-color),
+        0 0 40px 16px rgba(34, 197, 94, 0.2);
+    animation: activePlayerPulse 2s ease-in-out infinite;
+}
+
+.arena-opponent-avatar-container.active-player {
+    --glow-color: rgba(251, 191, 36, 0.6);
+}
+
+.arena-opponent-avatar-container.active-player .arena-opponent-avatar {
+    box-shadow:
+        0 0 0 3px rgba(251, 191, 36, 0.4),
+        0 0 20px 8px var(--glow-color),
+        0 0 40px 16px rgba(251, 191, 36, 0.2);
+    animation: activePlayerPulseOpponent 2s ease-in-out infinite;
+}
+
+@keyframes activePlayerPulse {
+
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 3px rgba(34, 197, 94, 0.4),
+            0 0 20px 8px rgba(34, 197, 94, 0.6),
+            0 0 40px 16px rgba(34, 197, 94, 0.2);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 4px rgba(34, 197, 94, 0.6),
+            0 0 30px 12px rgba(34, 197, 94, 0.7),
+            0 0 50px 20px rgba(34, 197, 94, 0.3);
+    }
+}
+
+@keyframes activePlayerPulseOpponent {
+
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 3px rgba(251, 191, 36, 0.4),
+            0 0 20px 8px rgba(251, 191, 36, 0.6),
+            0 0 40px 16px rgba(251, 191, 36, 0.2);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 4px rgba(251, 191, 36, 0.6),
+            0 0 30px 12px rgba(251, 191, 36, 0.7),
+            0 0 50px 20px rgba(251, 191, 36, 0.3);
+    }
+}
+
+/* Priority indicator enhancement when active */
+.arena-avatar-container.has-priority .arena-life-display {
+    border-color: rgba(251, 191, 36, 0.6);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+.arena-opponent-avatar-container.has-priority .arena-opponent-life {
+    border-color: rgba(251, 191, 36, 0.6);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+/* ===================================================================
+   SCREEN SHAKE EFFECT
+   Subtle screen shake on impact
+   =================================================================== */
+
+.screen-shake {
+    animation: screenShake 0.3s ease-out;
+}
+
+@keyframes screenShake {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    10% {
+        transform: translate(-5px, 3px);
+    }
+
+    20% {
+        transform: translate(5px, -3px);
+    }
+
+    30% {
+        transform: translate(-3px, 2px);
+    }
+
+    40% {
+        transform: translate(3px, -2px);
+    }
+
+    50% {
+        transform: translate(-2px, 1px);
+    }
+
+    60% {
+        transform: translate(2px, -1px);
+    }
+}

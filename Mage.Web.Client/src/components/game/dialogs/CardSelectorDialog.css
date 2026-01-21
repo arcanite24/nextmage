@@ -45,6 +45,20 @@
     box-shadow: 0 0 15px rgba(74, 144, 226, 0.5);
 }
 
+.card-selector-item.valid-target {
+    outline: 2px solid rgba(34, 197, 94, 0.7);
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+}
+
+.card-selector-item.valid-target:hover {
+    outline: 3px solid #22c55e;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+}
+
+.card-selector-item.invalid-target {
+    filter: grayscale(50%);
+}
+
 .card-selector-item img {
     width: 100%;
     border-radius: 8px;
