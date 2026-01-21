@@ -5,3 +5,7 @@
 - Attack animation for each card
 - Configurable animation speed
 - Add card placeholder for loading the image so we don't update the layout when the image loads
+- Add client settings page
+- Add a setting to preload match images to cache
+- Show arrow from creature attacking to player
+- Add mana cost renderer

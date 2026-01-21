@@ -8,3 +8,4 @@ export { TableFilters } from './TableFilters';
 export { TableDetails } from './TableDetails';
 export { CreateTableDialog } from './CreateTableDialog';
 export { JoinTableDialog } from './JoinTableDialog';
+export { DeckPicker } from './DeckPicker';
