@@ -24,6 +24,7 @@ public final class TeenageMutantNinjaTurtles extends ExpansionSet {
         cards.add(new SetCardInfo("Bebop & Rocksteady", 140, Rarity.RARE, mage.cards.b.BebopAndRocksteady.class));
         cards.add(new SetCardInfo("Broadcast Takeover", 86, Rarity.MYTHIC, mage.cards.b.BroadcastTakeover.class));
         cards.add(new SetCardInfo("Casey Jones, Jury-Rig Justiciar", 87, Rarity.UNCOMMON, mage.cards.c.CaseyJonesJuryRigJusticiar.class));
+        cards.add(new SetCardInfo("Chrome Dome", 172, Rarity.RARE, mage.cards.c.ChromeDome.class));
         cards.add(new SetCardInfo("Cool but Rude", 89, Rarity.RARE, mage.cards.c.CoolButRude.class));
         cards.add(new SetCardInfo("Does Machines", 34, Rarity.RARE, mage.cards.d.DoesMachines.class));
         cards.add(new SetCardInfo("Donatello, Gadget Master", 35, Rarity.RARE, mage.cards.d.DonatelloGadgetMaster.class));
@@ -37,6 +38,7 @@ public final class TeenageMutantNinjaTurtles extends ExpansionSet {
         cards.add(new SetCardInfo("Leonardo, Sewer Samurai", 17, Rarity.MYTHIC, mage.cards.l.LeonardoSewerSamurai.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Leonardo, Sewer Samurai", 301, Rarity.MYTHIC, mage.cards.l.LeonardoSewerSamurai.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Krang, Utrom Warlord", 175, Rarity.MYTHIC, mage.cards.k.KrangUtromWarlord.class));
+        cards.add(new SetCardInfo("Michelangelo, Weirdness to 11", 121, Rarity.RARE, mage.cards.m.MichelangeloWeirdnessTo11.class));
         cards.add(new SetCardInfo("Mountain", 256, Rarity.LAND, mage.cards.basiclands.Mountain.class, FULL_ART_BFZ_VARIOUS));
         cards.add(new SetCardInfo("Mountain", 313, Rarity.LAND, mage.cards.basiclands.Mountain.class, FULL_ART_BFZ_VARIOUS));
         cards.add(new SetCardInfo("Mutagen Man, Living Ooze", 124, Rarity.RARE, mage.cards.m.MutagenManLivingOoze.class));
@@ -48,6 +50,7 @@ public final class TeenageMutantNinjaTurtles extends ExpansionSet {
         cards.add(new SetCardInfo("Raphael, the Nightwatcher", 103, Rarity.RARE, mage.cards.r.RaphaelTheNightwatcher.class));
         cards.add(new SetCardInfo("Sally Pride, Lioness Leader", 24, Rarity.RARE, mage.cards.s.SallyPrideLionessLeader.class));
         cards.add(new SetCardInfo("Shark Shredder, Killer Clone", 73, Rarity.RARE, mage.cards.s.SharkShredderKillerClone.class));
+        cards.add(new SetCardInfo("Slash, Reptile Rampager", 108, Rarity.RARE, mage.cards.s.SlashReptileRampager.class));
         cards.add(new SetCardInfo("Splinter, Radical Rat", 169, Rarity.RARE, mage.cards.s.SplinterRadicalRat.class));
         cards.add(new SetCardInfo("Splinter's Technique", 80, Rarity.RARE, mage.cards.s.SplintersTechnique.class));
         cards.add(new SetCardInfo("Super Shredder", 83, Rarity.MYTHIC, mage.cards.s.SuperShredder.class));

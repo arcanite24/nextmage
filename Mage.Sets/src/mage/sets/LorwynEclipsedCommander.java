@@ -64,11 +64,15 @@ public final class LorwynEclipsedCommander extends ExpansionSet {
         cards.add(new SetCardInfo("Elemental Spectacle", 15, Rarity.RARE, mage.cards.e.ElementalSpectacle.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Elemental Spectacle", 35, Rarity.RARE, mage.cards.e.ElementalSpectacle.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Endurance", 51, Rarity.MYTHIC, mage.cards.e.Endurance.class));
+        cards.add(new SetCardInfo("Eventide's Shadow", 28, Rarity.RARE, mage.cards.e.EventidesShadow.class, NON_FULL_USE_VARIOUS));
+        cards.add(new SetCardInfo("Eventide's Shadow", 8, Rarity.RARE, mage.cards.e.EventidesShadow.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Everlasting Torment", 121, Rarity.RARE, mage.cards.e.EverlastingTorment.class));
         cards.add(new SetCardInfo("Evolution Sage", 105, Rarity.UNCOMMON, mage.cards.e.EvolutionSage.class));
         cards.add(new SetCardInfo("Exotic Orchard", 148, Rarity.RARE, mage.cards.e.ExoticOrchard.class));
         cards.add(new SetCardInfo("Faeburrow Elder", 53, Rarity.RARE, mage.cards.f.FaeburrowElder.class));
         cards.add(new SetCardInfo("Fellwar Stone", 141, Rarity.UNCOMMON, mage.cards.f.FellwarStone.class));
+        cards.add(new SetCardInfo("Ferrafor, Young Yew", 16, Rarity.RARE, mage.cards.f.FerraforYoungYew.class, NON_FULL_USE_VARIOUS));
+        cards.add(new SetCardInfo("Ferrafor, Young Yew", 36, Rarity.RARE, mage.cards.f.FerraforYoungYew.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Fertile Ground", 106, Rarity.COMMON, mage.cards.f.FertileGround.class));
         cards.add(new SetCardInfo("Festering Thicket", 61, Rarity.RARE, mage.cards.f.FesteringThicket.class));
         cards.add(new SetCardInfo("Fire Covenant", 54, Rarity.UNCOMMON, mage.cards.f.FireCovenant.class));
@@ -130,6 +134,8 @@ public final class LorwynEclipsedCommander extends ExpansionSet {
         cards.add(new SetCardInfo("Path to Exile", 65, Rarity.UNCOMMON, mage.cards.p.PathToExile.class));
         cards.add(new SetCardInfo("Persist", 83, Rarity.RARE, mage.cards.p.Persist.class));
         cards.add(new SetCardInfo("Primal Beyond", 159, Rarity.RARE, mage.cards.p.PrimalBeyond.class));
+        cards.add(new SetCardInfo("Puca's Covenant", 18, Rarity.RARE, mage.cards.p.PucasCovenant.class, NON_FULL_USE_VARIOUS));
+        cards.add(new SetCardInfo("Puca's Covenant", 38, Rarity.RARE, mage.cards.p.PucasCovenant.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Puppeteer Clique", 84, Rarity.RARE, mage.cards.p.PuppeteerClique.class));
         cards.add(new SetCardInfo("Putrefy", 131, Rarity.UNCOMMON, mage.cards.p.Putrefy.class));
         cards.add(new SetCardInfo("Raging Ravine", 160, Rarity.RARE, mage.cards.r.RagingRavine.class));
