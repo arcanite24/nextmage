@@ -6,3 +6,4 @@ export { wsService, WebSocketService, type ConnectionStatus } from './WebSocketS
 export { cardImageService, CardImageService } from './CardImageService';
 export { imageCacheManager, ImageCacheManager } from './ImageCacheManager';
 export { DebugExportService } from './DebugExportService';
+export { cardResolverService, CardResolverService } from './CardResolverService';

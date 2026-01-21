@@ -10,6 +10,7 @@ import { useLobbyStore, useSessionStore, useGameStore } from '../../stores';
 import { Button, Modal } from '../common';
 import { TableState } from '../../types';
 import { DeckSerializer } from '../../services/DeckSerializer';
+import { cardResolverService } from '../../services';
 import { DeckSelector } from './DeckSelector';
 import './WaitingRoom.css';
 
@@ -92,7 +93,7 @@ export const WaitingRoom: React.FC = () => {
 
         setAiError(null);
         try {
-            const deck = DeckSerializer.importDeck(aiDeckText);
+            let deck = DeckSerializer.importDeck(aiDeckText);
             deck.name = aiDeckName;
 
             // Basic validation
@@ -106,6 +107,16 @@ export const WaitingRoom: React.FC = () => {
             if (!aiName) return;
 
             setIsAddingAI(true);
+
+            // Check if any cards need resolution (missing setCode or cardNumber)
+            const needsResolution = [...deck.cards, ...deck.sideboard].some(
+                card => !card.setCode || !card.cardNumber
+            );
+
+            if (needsResolution) {
+                console.log('[WaitingRoom] Resolving AI deck cards from server...');
+                deck = await cardResolverService.resolveDeck(deck);
+            }
 
             // Skill level 5 seems to be standard/default for now
             const success = await addAI(currentTable.tableId, aiName, deck, 5);

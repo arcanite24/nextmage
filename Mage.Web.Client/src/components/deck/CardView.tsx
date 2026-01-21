@@ -11,29 +11,22 @@ interface CardViewProps {
 }
 
 export const CardView: React.FC<CardViewProps> = ({ card, onClick, onContextMenu, size = 'normal' }) => {
-    const [imageUrl, setImageUrl] = useState<string>(cardImageService.getCardBackUrl());
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
     useEffect(() => {
         setLoading(true);
-        const url = cardImageService.getImageUrl(card, size);
+        setError(false);
+        setImageUrl(null);
 
-        // We can just use the URL directly, but preloading verifies availability
-        const img = new Image();
-        img.src = url;
-        img.onload = () => {
+        // Use the cache-aware preload method (always resolves, returns placeholder on error)
+        cardImageService.preload(card, size).then((url) => {
             setImageUrl(url);
+            // Check if we got a placeholder (indicates an error)
+            setError(url === cardImageService.getPlaceholderUrl());
             setLoading(false);
-        };
-        img.onerror = () => {
-            setImageUrl(cardImageService.getPlaceholderUrl());
-            setLoading(false);
-        };
-
-        return () => {
-            img.onload = null;
-            img.onerror = null;
-        };
+        });
     }, [card.expansionSetCode, card.cardNumber, size]);
 
     // Handle cards that might not have a name property (SimpleCardView)
@@ -41,18 +34,33 @@ export const CardView: React.FC<CardViewProps> = ({ card, onClick, onContextMenu
 
     return (
         <div
-            className={`card-view size-${size} ${loading ? 'loading' : ''}`}
+            className={`card-view size-${size} ${loading ? 'loading' : ''} ${error ? 'error' : ''}`}
             onClick={() => onClick && onClick(card)}
             onContextMenu={(e) => onContextMenu && onContextMenu(e, card)}
             title={cardName}
         >
-            <img
-                src={imageUrl}
-                alt={cardName}
-                className="card-image"
-                loading="lazy"
-            />
-            {/* Optional overlay for loading/text if image fails? */}
+            {/* Placeholder skeleton shown while loading */}
+            {loading && (
+                <div className="card-placeholder">
+                    <div className="card-placeholder-shimmer" />
+                </div>
+            )}
+
+            {/* Actual image - only rendered when URL is available */}
+            {imageUrl && (
+                <img
+                    src={imageUrl}
+                    alt={cardName}
+                    className={`card-image ${loading ? 'hidden' : ''}`}
+                />
+            )}
+
+            {/* Fallback text for when image fails to load (e.g. custom sets) */}
+            {error && !loading && (
+                <div className="card-error-overlay">
+                    <span className="card-error-name">{cardName}</span>
+                </div>
+            )}
         </div>
     );
 };

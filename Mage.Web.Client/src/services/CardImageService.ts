@@ -16,6 +16,9 @@ interface ImageCache {
   error: boolean;
 }
 
+// Set of known error cache keys to avoid repeated network requests
+const errorCache = new Set<string>();
+
 class CardImageService {
   private cache = new Map<string, ImageCache>();
   private loadingPromises = new Map<string, Promise<string>>();
@@ -32,7 +35,14 @@ class CardImageService {
     face: 'front' | 'back' = 'front'
   ): string {
     const setCode = card.expansionSetCode.toLowerCase();
-    const number = card.cardNumber;
+
+    // Sanitize card number: remove '*' suffix often used in XMage for variations
+    // which causes Scryfall 404s if sent literally or encoded
+    let number = card.cardNumber;
+    if (number.endsWith('*')) {
+      number = number.slice(0, -1);
+    }
+    number = encodeURIComponent(number);
 
     return `https://api.scryfall.com/cards/${setCode}/${number}?format=image&version=${size}${face === 'back' ? '&face=back' : ''}`;
   }
@@ -45,25 +55,32 @@ class CardImageService {
     cardNumber: string,
     size: ImageSize = 'normal'
   ): string {
-    return `https://api.scryfall.com/cards/${setCode.toLowerCase()}/${cardNumber}?format=image&version=${size}`;
+    return `https://api.scryfall.com/cards/${setCode.toLowerCase()}/${encodeURIComponent(cardNumber)}?format=image&version=${size}`;
   }
 
   /**
    * Preload an image and return a promise that resolves when loaded
    * 
    * Uses persistent IndexedDB cache first, then falls back to network.
+   * Returns placeholder URL for cards that fail to load (silently).
    */
   async preload(
     card: CardView | SearchCardView | SearchSimpleCardView | SimpleCardView,
     size: ImageSize = 'normal'
   ): Promise<string> {
     const cacheKey = `${card.expansionSetCode}-${card.cardNumber}-${size}`;
+
+    // Check if we've already seen this error - return placeholder immediately
+    if (errorCache.has(cacheKey)) {
+      return Promise.resolve(this.getPlaceholderUrl());
+    }
+
     const networkUrl = this.getImageUrl(card, size);
 
     // Check in-memory cache first
     const cached = this.cache.get(cacheKey);
     if (cached) {
-      return cached.error ? Promise.reject(new Error('Image failed to load')) : Promise.resolve(cached.url);
+      return cached.error ? Promise.resolve(this.getPlaceholderUrl()) : Promise.resolve(cached.url);
     }
 
     // Check existing loading promise
@@ -76,8 +93,6 @@ class CardImageService {
     try {
       const cachedBlob = await imageCacheManager.get(cacheKey);
       if (cachedBlob) {
-        console.log(`[CardImageService] Using cached blob for: ${cacheKey}`);
-
         // Create object URL from cached blob
         const objectUrl = URL.createObjectURL(cachedBlob);
 
@@ -87,28 +102,24 @@ class CardImageService {
         return Promise.resolve(objectUrl);
       }
     } catch (error) {
-      console.error('[CardImageService] Failed to read from cache:', error);
-      // Continue to load from network
+      // Silently continue to load from network
     }
 
     // Load from network
-    const promise = new Promise<string>((resolve, reject) => {
+    const promise = new Promise<string>((resolve) => {
       fetch(networkUrl)
         .then(response => {
           if (!response.ok) {
-            throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+            throw new Error(`HTTP ${response.status}`);
           }
           return response.blob();
         })
         .then(async (blob) => {
-          console.log(`[CardImageService] Downloaded ${blob.size} bytes from network`);
-
           // Cache the blob in IndexedDB
           try {
             await imageCacheManager.put(cacheKey, networkUrl, blob);
           } catch (cacheError) {
-            console.warn('[CardImageService] Failed to cache blob:', cacheError);
-            // Continue anyway, we have the blob
+            // Silently continue, we have the blob
           }
 
           // Create object URL from blob
@@ -120,20 +131,23 @@ class CardImageService {
 
           resolve(objectUrl);
         })
-        .catch((error) => {
-          console.error(`[CardImageService] Failed to load image for ${card.expansionSetCode}/${card.cardNumber}:`, error);
+        .catch(() => {
+          // Add to error cache to prevent retrying
+          errorCache.add(cacheKey);
 
-          // Cache the error
-          this.cache.set(cacheKey, { url: networkUrl, loaded: false, error: true });
+          // Cache the error in memory
+          this.cache.set(cacheKey, { url: this.getPlaceholderUrl(), loaded: false, error: true });
           this.loadingPromises.delete(cacheKey);
 
-          reject(error);
+          // Resolve with placeholder instead of rejecting
+          resolve(this.getPlaceholderUrl());
         });
     });
 
     this.loadingPromises.set(cacheKey, promise);
     return promise;
   }
+
 
   /**
    * Preload multiple cards in parallel

@@ -379,7 +379,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     },
 
     searchCards: async () => {
-        const { filters } = get();
+        const { filters, currentDeck } = get();
         set({ isSearching: true });
 
         try {
@@ -387,6 +387,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
                 nameContains: filters.nameContains || undefined,
                 count: 100,
                 sortBy: filters.sortBy,
+                format: currentDeck?.format,
             };
 
             // Add color filters if any are selected

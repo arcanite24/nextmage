@@ -26,6 +26,37 @@
     flex-shrink: 0;
 }
 
+.card-preview-image-wrapper {
+    position: relative;
+    background: linear-gradient(145deg, #2a2a3e 0%, #1a1a28 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-preview-image-wrapper.loading {
+    min-width: 300px;
+    min-height: 420px;
+}
+
+.card-preview-spinner {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #d4af37;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .card-preview-image {
     max-width: 400px;
     max-height: 85vh;

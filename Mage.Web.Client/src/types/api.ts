@@ -316,6 +316,7 @@ export type SubType = string;
 export interface CardSearchCriteria {
   // name?: string; // Exact match not supported via this interface correctly in all cases??
   nameContains?: string;
+  format?: string;
   rules?: string;
   type?: string;
   setCodes?: string[];

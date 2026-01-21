@@ -59,7 +59,7 @@ export const CollectionBrowser: React.FC<CollectionBrowserProps> = ({ onAddCard 
                         >
                             <CardView
                                 card={card}
-                                size="small"
+                                size="normal"
                                 onClick={() => handleCardClick(card)}
                                 onContextMenu={(e) => handleCardContextMenu(e, card)}
                             />

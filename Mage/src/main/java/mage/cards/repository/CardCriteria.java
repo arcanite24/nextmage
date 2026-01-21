@@ -46,6 +46,7 @@ public class CardCriteria {
     // compare numerical card numbers (123b -> 123)
     private int minCardNumber;
     private int maxCardNumber;
+    private String format;
 
     public CardCriteria() {
         this.setCodes = new ArrayList<>();
@@ -504,6 +505,15 @@ public class CardCriteria {
 
     public int getMaxCardNumber() {
         return maxCardNumber;
+    }
+
+    public CardCriteria format(String format) {
+        this.format = format;
+        return this;
+    }
+
+    public String getFormat() {
+        return format;
     }
 
 }

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CardView, PermanentView, StackAbilityView } from '../../types';
 import { cardImageService } from '../../services/CardImageService';
 import './CardPreviewModal.css';
@@ -67,6 +67,23 @@ const parseRulesText = (text: string): React.ReactNode => {
 };
 
 export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClose }) => {
+    const [imageUrl, setImageUrl] = useState<string>(cardImageService.getCardBackUrl());
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Check if this is an ability
+    const isAbility = isStackAbility(card);
+
+    // Use source card as the main card to display for abilities
+    const displayCard = isAbility ? card.sourceCard : card;
+
+    // Load image using cache-aware preload (always resolves, returns placeholder on error)
+    useEffect(() => {
+        setIsLoading(true);
+        cardImageService.preload(displayCard, 'large').then((url) => {
+            setImageUrl(url);
+            setIsLoading(false);
+        });
+    }, [displayCard.expansionSetCode, displayCard.cardNumber]);
 
     // Close on Escape key
     useEffect(() => {
@@ -86,13 +103,7 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
         }
     };
 
-    // Check if this is an ability
-    const isAbility = isStackAbility(card);
     const abilitySourceCard = isAbility ? card.sourceCard : null;
-
-    // Use source card as the main card to display for abilities
-    const displayCard = isAbility ? card.sourceCard : card;
-    const imageUrl = cardImageService.getImageUrl(displayCard);
 
     // Extract card info from the display card
     const isPermanent = 'tapped' in displayCard;
@@ -125,8 +136,11 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
         <div className="card-preview-overlay" onClick={handleOverlayClick} onContextMenu={(e) => e.preventDefault()}>
             <div className="card-preview-container">
                 <div className="card-preview-content">
-                    <img src={imageUrl} alt={getDisplayName()} className="card-preview-image" />
-                    <button className="card-preview-close" onClick={onClose}>×</button>
+                    <div className={`card-preview-image-wrapper ${isLoading ? 'loading' : ''}`}>
+                        {isLoading && <div className="card-preview-spinner" />}
+                        <img src={imageUrl} alt={getDisplayName()} className="card-preview-image" />
+                    </div>
+                    <button className="card-preview-close" onClick={onClose}>x</button>
                 </div>
 
                 <div className="card-info-panel">

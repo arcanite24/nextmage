@@ -18,6 +18,7 @@ interface JoinTableDialogProps {
 }
 
 import { DeckSerializer } from '../../services/DeckSerializer';
+import { cardResolverService } from '../../services';
 import { DeckSelector } from './DeckSelector';
 
 // Sample starter deck for default init
@@ -57,7 +58,7 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
 
         try {
             // Parse the deck
-            const deck = DeckSerializer.importDeck(deckText);
+            let deck = DeckSerializer.importDeck(deckText);
             deck.name = deckName;
 
             // Validate deck has at least some cards
@@ -66,6 +67,16 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
                 setError(`Deck has only ${totalCards} cards. Most formats require at least 40-60 cards.`);
                 setIsLoading(false);
                 return;
+            }
+
+            // Check if any cards need resolution (missing setCode or cardNumber)
+            const needsResolution = [...deck.cards, ...deck.sideboard].some(
+                card => !card.setCode || !card.cardNumber
+            );
+
+            if (needsResolution) {
+                console.log('[JoinTableDialog] Resolving cards from server...');
+                deck = await cardResolverService.resolveDeck(deck);
             }
 
             const success = await joinTable(

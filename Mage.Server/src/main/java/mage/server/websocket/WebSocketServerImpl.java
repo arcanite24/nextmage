@@ -337,7 +337,18 @@ public class WebSocketServerImpl extends WebSocketServer {
 
     private Object handleSearchCards(WebSocket conn, JsonArray params) throws Exception {
         CardCriteria criteria = getObject(params, 0, CardCriteria.class);
-        if (criteria.getCount() == null) criteria.count(100L); 
+        if (criteria.getCount() == null) criteria.count(100L);
+
+        if (criteria.getFormat() != null && !criteria.getFormat().isEmpty()) {
+            mage.cards.decks.DeckValidator validator = mage.cards.decks.DeckValidatorFactory.instance.createDeckValidator(criteria.getFormat());
+            if (validator instanceof mage.cards.decks.Constructed) {
+                mage.cards.decks.Constructed constructed = (mage.cards.decks.Constructed) validator;
+                if (constructed.getSetCodes() != null && !constructed.getSetCodes().isEmpty()) {
+                    criteria.setCodes(constructed.getSetCodes());
+                }
+            }
+        }
+
         List<CardInfo> cards = CardRepository.instance.findCards(criteria);
         return cards.stream().map(info -> new CardView(info.createMockCard())).collect(Collectors.toList());
     }

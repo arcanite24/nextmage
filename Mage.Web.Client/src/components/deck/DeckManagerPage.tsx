@@ -8,6 +8,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useDeckStore } from '../../stores/deckStore';
 import { DeckSerializer } from '../../services/DeckSerializer';
+import { cardResolverService } from '../../services';
 import { Navbar, NavPage } from '../common';
 import { DeckCard, CreateDeckCard } from './DeckCard';
 import './DeckManagerPage.css';
@@ -49,6 +50,7 @@ export const DeckManagerPage: React.FC<DeckManagerPageProps> = ({
     const [searchQuery, setSearchQuery] = useState('');
     const [formatFilter, setFormatFilter] = useState<string>('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+    const [isImporting, setIsImporting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Load decks on mount
@@ -107,13 +109,25 @@ export const DeckManagerPage: React.FC<DeckManagerPageProps> = ({
         const file = e.target.files?.[0];
         if (!file) return;
 
+        setIsImporting(true);
+
         const reader = new FileReader();
         reader.onload = async (event) => {
             const content = event.target?.result as string;
             if (content) {
                 try {
-                    const deck = DeckSerializer.importDeck(content);
+                    let deck = DeckSerializer.importDeck(content);
                     deck.name = file.name.replace(/\.(dck|txt)$/i, '');
+
+                    // Check if any cards need resolution (missing setCode or cardNumber)
+                    const needsResolution = [...deck.cards, ...deck.sideboard].some(
+                        card => !card.setCode || !card.cardNumber
+                    );
+
+                    if (needsResolution) {
+                        console.log('[DeckManager] Resolving cards from server...');
+                        deck = await cardResolverService.resolveDeck(deck);
+                    }
 
                     // Save the imported deck
                     const { saveDeck: save } = useDeckStore.getState();
@@ -124,6 +138,8 @@ export const DeckManagerPage: React.FC<DeckManagerPageProps> = ({
                     }
                 } catch (error) {
                     console.error('Failed to import deck:', error);
+                } finally {
+                    setIsImporting(false);
                 }
             }
         };
@@ -197,8 +213,10 @@ export const DeckManagerPage: React.FC<DeckManagerPageProps> = ({
             </div>
 
             <div className="deck-manager-content">
-                {isLoadingDecks ? (
-                    <div className="deck-manager-loading">Loading decks...</div>
+                {isLoadingDecks || isImporting ? (
+                    <div className="deck-manager-loading">
+                        {isImporting ? 'Resolving cards from server...' : 'Loading decks...'}
+                    </div>
                 ) : (
                     <div className="deck-grid">
                         <CreateDeckCard onClick={onCreateDeck} />

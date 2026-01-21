@@ -9,6 +9,7 @@
 import React, { useState } from 'react';
 import { useDeckStore } from '../../stores/deckStore';
 import { DeckCardInfo, SearchCardView } from '../../types';
+import { cardImageService } from '../../services/CardImageService';
 import { CardPreviewModal } from '../game/CardPreviewModal';
 import './DeckPanel.css';
 
@@ -107,7 +108,11 @@ export const DeckPanel: React.FC<DeckPanelProps> = ({ onRemoveCard, onAddCard })
 
     const getCardImageUrl = (card: DeckCardInfo): string => {
         if (card.setCode && card.cardNumber) {
-            return `https://api.scryfall.com/cards/${card.setCode.toLowerCase()}/${card.cardNumber}?format=image&version=art_crop`;
+            // Use service to handle special characters in card numbers
+            return cardImageService.getImageUrl(
+                { expansionSetCode: card.setCode, cardNumber: card.cardNumber } as any,
+                'art_crop'
+            );
         }
         return '/back.webp';
     };
