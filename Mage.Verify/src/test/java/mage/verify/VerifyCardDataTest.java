@@ -10,6 +10,7 @@ import mage.abilities.common.*;
 import mage.abilities.condition.Condition;
 import mage.abilities.costs.Cost;
 import mage.abilities.dynamicvalue.DynamicValue;
+import mage.abilities.dynamicvalue.common.ColorsOfManaSpentToCastCount;
 import mage.abilities.effects.Effect;
 import mage.abilities.effects.common.ExileUntilSourceLeavesEffect;
 import mage.abilities.effects.common.FightTargetsEffect;
@@ -86,7 +87,10 @@ public class VerifyCardDataTest {
 
     private static String FULL_ABILITIES_CHECK_SET_CODES = ""; // check ability text due mtgjson, can use multiple sets like MAT;CMD or * for all
     private static boolean CHECK_ONLY_ABILITIES_TEXT = false; // use when checking text locally, suppresses unnecessary checks and output messages
-    private static final boolean CHECK_COPYABLE_FIELDS = true; // disable for better verify test performance
+
+    // disable for better performance on verify checks
+    private static final boolean CHECK_COPYABLE_FIELDS = true;
+    private static final boolean CHECK_FILTER_FIELDS = true;
 
     // for automated local testing support
     static {
@@ -176,7 +180,7 @@ public class VerifyCardDataTest {
         skipListAddName(SKIP_LIST_SUBTYPE, "UGL", "Miss Demeanor"); // uses multiple types as a joke card: Lady, of, Proper, Etiquette
         skipListAddName(SKIP_LIST_SUBTYPE, "UGL", "Elvish Impersonators"); // subtype is "Elves" pun
         skipListAddName(SKIP_LIST_SUBTYPE, "UND", "Elvish Impersonators");
-        subtypesToIgnore.add("Sorcerer"); // temporary
+        subtypesToIgnore.add("Book"); // temporary
 
         // number
         // skipListAddName(SKIP_LIST_NUMBER, set, cardName);
@@ -184,7 +188,6 @@ public class VerifyCardDataTest {
         // rarity
         // skipListAddName(SKIP_LIST_RARITY, set, cardName);
         skipListAddName(SKIP_LIST_RARITY, "CMR", "The Prismatic Piper"); // Collation is not yet set up for CMR https://www.lethe.xyz/mtg/collation/cmr.html
-        skipListAddName(SKIP_LIST_RARITY, "TLE", "Teferi's Protection"); // temporary
 
         // missing abilities
         // skipListAddName(SKIP_LIST_MISSING_ABILITIES, set, cardName);
@@ -330,8 +333,12 @@ public class VerifyCardDataTest {
         checkWrongAbilitiesTextStart();
 
         int cardIndex = 0;
+        System.out.printf("verify cards loading...%n");
         List<Card> allCards = CardScanner.getAllCards();
         for (Card card : allCards) {
+            if (cardIndex % 10000 == 0) {
+                System.out.printf("verify cards checking: %d of %d%n", cardIndex, allCards.size());
+            }
             cardIndex++;
             if (card instanceof CardWithHalves) {
                 check(((CardWithHalves) card).getLeftHalfCard(), cardIndex);
@@ -343,6 +350,7 @@ public class VerifyCardDataTest {
                 check(card, cardIndex);
             }
         }
+        System.out.printf("verify cards done%n");
 
         checkWrongAbilitiesTextEnd();
 
@@ -400,6 +408,33 @@ public class VerifyCardDataTest {
 
         if (doubleErrors.size() > 0) {
             Assert.fail("DB has duplicated card numbers, found errors: " + doubleErrors.size());
+        }
+    }
+
+    @Test
+    public void test_findNonDidgitCardNumbers() {
+        // info only
+        // find all cards with bad non-didgit numbers, see #11157
+        // see parseCardNumberAsInt for supported formats
+        for (Map.Entry<String, MtgJsonSet> refEntry : MtgJsonService.sets().entrySet()) {
+            MtgJsonSet refSet = refEntry.getValue();
+            for (MtgJsonCard refCard : refSet.cards) {
+                String cleanNumber = refCard.number.replaceAll("[\\D]", "");
+                if (cleanNumber.isEmpty()) {
+                    System.out.println("Found non-digit card number: " 
+                        + refSet.code + " - " 
+                        + refCard.getNameAsASCII() + " - " 
+                        + refCard.number
+                    );
+                }
+                if (cleanNumber.equals("0")) {
+                    System.out.println("Found zero card number: " 
+                        + refSet.code + " - " 
+                        + refCard.getNameAsASCII() + " - " 
+                        + refCard.number
+                    );
+                }
+            }
         }
     }
 
@@ -976,10 +1011,16 @@ public class VerifyCardDataTest {
         ignoreBoosterSets.add("Unhinged");
         ignoreBoosterSets.add("Unstable");
         ignoreBoosterSets.add("Unfinity");
+        // spellbook boosters, not for draft
+        ignoreBoosterSets.add("Signature Spellbook: Jace");
+        ignoreBoosterSets.add("Signature Spellbook: Gideon");
+        ignoreBoosterSets.add("Signature Spellbook: Chandra");
         // other
         ignoreBoosterSets.add("Secret Lair Drop"); // cards shop
+        ignoreBoosterSets.add("Ugin's Fate"); // promo, not draftable
         ignoreBoosterSets.add("Zendikar Rising Expeditions"); // box toppers
         ignoreBoosterSets.add("March of the Machine: The Aftermath"); // epilogue boosters aren't for draft
+        ignoreBoosterSets.add("Mystery Booster"); // temporary
     }
 
     @Test
@@ -1148,10 +1189,10 @@ public class VerifyCardDataTest {
                 if (ignoreBoosterSets.contains(set.getName())) {
                     continue;
                 }
-                // error example: wrong booster settings (set MUST HAVE booster, but haven't) - 2020 - J22 - Jumpstart 2022 - boosters: [jumpstart]
-                errorsList.add(String.format("Error: wrong booster settings (set %s booster, but %s) - %s%s",
-                        (needBooster ? "MUST HAVE" : "MUST HAVEN'T"),
-                        (set.hasBoosters() ? "have" : "haven't"),
+                // error example: wrong booster settings (set must have boosters, but it does not) - 2020 - J22 - Jumpstart 2022 - boosters: [jumpstart]
+                errorsList.add(String.format("Error: wrong booster settings (set %s have boosters, but it %s) - %s%s",
+                    (needBooster ? "must" : "must not"),
+                    (set.hasBoosters() ? "does" : "does not"),
                         set.getReleaseYear() + " - " + set.getCode() + " - " + set.getName(),
                         (jsonSet.booster == null ? "" : " - boosters: " + jsonSet.booster.keySet())
                 ));
@@ -1890,6 +1931,9 @@ public class VerifyCardDataTest {
             checkRarityAndBasicLands(card, ref);
             checkMissingAbilities(card, ref);
             checkWrongSymbolsInRules(card);
+            if (CHECK_FILTER_FIELDS) {
+                //checkWrongCreatureFilter(card); // TODO: enable after all creature filter fixes, see #14302, #7008
+            }
             if (CHECK_COPYABLE_FIELDS) {
                 checkCardCanBeCopied(card);
             }
@@ -2196,7 +2240,7 @@ public class VerifyCardDataTest {
     // FIN added equip abilities with flavor words, allow for those. There are also cards that affect equip costs or equip abilities, exclude those
     // Technically Enchant should be in this list, but that's added to the SpellAbility in XMage
     // Earthbend is an action word and thus can be anywhere, the rest are keywords that are always first in the line
-    Pattern targetKeywordRegexPattern = Pattern.compile("earthbend |^((.*— )?equip(?! cost| abilit)|bestow|partner with|modular|backup)\\b", Pattern.MULTILINE);
+    Pattern targetKeywordRegexPattern = Pattern.compile("earthbend |^((<i>[a-z ]+<\\/i> &mdash; )?equip(?! cost| abilit)|bestow|partner with|modular|backup)\\b", Pattern.MULTILINE);
 
     // Checks for targeted reflexive or delayed triggered abilities, ones that only can trigger as a result of another ability
     // and thus have their "when" located after a previous statement (detected by a period or comma followed by a space) instead of the start.
@@ -2253,6 +2297,78 @@ public class VerifyCardDataTest {
         return modes.stream().flatMap(mode -> mode.getTargets().stream()).anyMatch(target -> !target.isNotTarget())
                 || ability.getTargetAdjuster() != null
                 || modes.stream().flatMap(mode -> mode.getEffects().stream()).anyMatch(effect -> recursiveTargetEffectCheck(effect, depth - 1));
+    }
+
+    boolean recursiveCreatureFilterCheck(Card card, Object obj, int depth) {
+        if (depth < 0 || obj == null) {
+            return false;
+        }
+
+        if (obj instanceof Collection) {
+            return ((Collection) obj).stream().anyMatch(x -> recursiveCreatureFilterCheck(card, x, depth - 1));
+        }
+
+        if (obj instanceof Map) {
+            return ((Map) obj).values().stream().anyMatch(x -> recursiveCreatureFilterCheck(card, x, depth - 1));
+        }
+
+        // check filters only
+        if (obj instanceof Filter) {
+            boolean isCreatureInRules = card.getRules().stream()
+                    .map(s -> s.toLowerCase(Locale.ENGLISH))
+                    .anyMatch(s -> s.contains("creature"));
+
+            List<Predicate> list = new ArrayList<>();
+            Predicates.collectAllComponents(((Filter) obj).getPredicates(), ((Filter) obj).getExtraPredicates(), list);
+            boolean isCreatureInFilter = list.stream().anyMatch(p -> p.equals(CardType.CREATURE.getPredicate()));
+
+            return isCreatureInFilter && !isCreatureInRules;
+        }
+
+        List<Class<?>> fullClasses = new ArrayList<>();
+        Class<?> current = obj.getClass();
+        while (current != null && current != Object.class) {
+            fullClasses.add(current);
+            current = current.getSuperclass();
+        }
+
+        return fullClasses.stream()
+                .flatMap(clazz -> Arrays.stream(clazz.getDeclaredFields()))
+                .filter(f -> isCheckableField(f, true))
+                .anyMatch(f -> {
+                    f.setAccessible(true);
+                    try {
+                        return recursiveCreatureFilterCheck(card, f.get(obj), depth - 1);
+                    } catch (IllegalAccessException ex) {
+                        throw new RuntimeException(ex); // Should never happen due to setAccessible
+                    }
+                });
+    }
+
+    private boolean isCheckableField(Field field, boolean ignoreStaticFields) {
+        // ignore static fields for better performance
+        // it's used anyway and will go to check (example: static filter added into effect)
+        if (ignoreStaticFields && Modifier.isStatic(field.getModifiers())) {
+            return false;
+        }
+
+        // keep collections
+        if (Collection.class.isAssignableFrom(field.getType()) || Map.class.isAssignableFrom(field.getType())) {
+            return true;
+        }
+
+        // ignore simple data
+        if (field.getType().isPrimitive()) {
+            return false;
+        }
+
+        // ignore default java types
+        if (field.getType().getPackage() != null && field.getType().getPackage().getName().startsWith("java.")) {
+            return false;
+        }
+
+        // all other fields can be checked by verify
+        return true;
     }
 
     private void checkMissingAbilities(Card card, MtgJsonCard ref) {
@@ -2314,13 +2430,6 @@ public class VerifyCardDataTest {
         // special check: legendary spells need to have legendary spell ability
         if (card.isLegendary() && !card.isPermanent() && !card.getAbilities().containsClass(LegendarySpellAbility.class)) {
             fail(card, "abilities", "legendary nonpermanent cards need to have LegendarySpellAbility");
-        }
-
-        // special check: mutate is not supported yet, so must be removed from sets
-        if (card.getAbilities().containsClass(MutateAbility.class)) {
-            // how-to fix: add that code at the end of the set
-            // cards.removeIf(card -> HIDE_MUTATE_CARDS && MUTATE_CARD_NAMES.contains(card.getName()));
-            fail(card, "abilities", "mutate cards aren't implemented and shouldn't be available");
         }
 
         // special check: some new creature's ETB must use When this creature enters instead When {this} enters
@@ -2490,6 +2599,7 @@ public class VerifyCardDataTest {
         cardHints.put(MonarchHint.class, "the monarch");
         cardHints.put(InitiativeHint.class, "the initiative");
         cardHints.put(CurrentDungeonHint.class, "venture into");
+        cardHints.put(ColorsOfManaSpentToCastCount.getHint().getClass(), "Converge —");
         for (Class hintClass : cardHints.keySet()) {
             String lookupText = cardHints.get(hintClass);
             boolean needHint = ref.text.contains(lookupText);
@@ -2541,6 +2651,13 @@ public class VerifyCardDataTest {
             return;
         }
 
+        // lands on back of NDFCs *may* have only one ability
+        if (card instanceof TransformingDoubleFacedCardHalf
+            && ((DoubleFacedCardHalf)card).isBackSide()
+            && card.isLand()) {
+            return;
+        }
+
         // additional cost go to 1 ability
         if (refLowerText.startsWith("as an additional cost to cast")) {
             return;
@@ -2570,6 +2687,17 @@ public class VerifyCardDataTest {
             if (rule.contains("&mdash ")) {
                 fail(card, "rules", "card's rules contains restricted test [&mdash ] instead [&mdash;]");
             }
+        }
+    }
+
+    /**
+     * Checking wrong usage of creature filter, see #14302, #7008
+     */
+    private void checkWrongCreatureFilter(Card card) {
+        // start with abilities, no need other card fields
+        // bigger depth - better results, but slower (~10 is good)
+        if (card.getAbilities().stream().anyMatch(ability -> recursiveCreatureFilterCheck(card, ability, 10))) {
+            fail(card, "filters", "wrong creature filter (must be permanent, not creature)");
         }
     }
 
