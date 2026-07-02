@@ -5,7 +5,33 @@
  */
 
 import { create } from 'zustand';
-import { DeckCardLists, DeckCardInfo, SearchCardView, CardSearchCriteria, Rarity } from '../types';
+import { DeckCardLists, DeckCardInfo, SearchCardView } from '../types';
+import {
+    appConfigService,
+    DEFAULT_DECK_EDITOR_MODE_CONFIG,
+    DEFAULT_DECK_SEARCH_SETTINGS,
+    type DeckCollectionSortKey,
+    type DeckEditorConfig,
+    type DeckEditorModeConfig,
+    type DeckEditorModeKey,
+    type DeckListSortKey,
+    type DeckSearchColors,
+    type DeckSearchSettings,
+    type DeckSortDirection,
+} from '../services/AppConfigService';
+import {
+    applyCardSearchFilters,
+    buildCardSearchCriteria,
+    sortSearchResults,
+} from '../services/DeckSearchFilterService';
+import {
+    addDeckCardCopies,
+    addSearchCardToDeck,
+    decrementDeckCard,
+    moveDeckCard as moveDeckCardBetweenZones,
+    setDeckCardAmount as setDeckCardCopies,
+} from '../services/DeckCardListService';
+import { appendDeckCardLists } from '../services/DeckImportWorkflowService';
 import { deckStorage, DeckSummary } from '../services/DeckStorageService';
 import { wsService } from '../services/WebSocketService';
 
@@ -17,16 +43,11 @@ export interface DeckColors {
     green: boolean;
 }
 
-export interface CardFilters {
-    nameContains: string;
-    colors: DeckColors;
-    colorMatch: 'any' | 'exact' | 'include';
-    types: string[];
-    manaValue: number | null;
-    manaValueOperator: 'eq' | 'lte' | 'gte';
-    rarities: string[];
-    sortBy: 'name' | 'manaValue' | 'color' | 'rarity';
-    sortDirection: 'asc' | 'desc';
+export type DeckFilterColors = DeckSearchColors;
+
+export interface CardFilters extends DeckSearchSettings {
+    sortBy: DeckCollectionSortKey;
+    sortDirection: DeckSortDirection;
 }
 
 export interface DeckState {
@@ -41,9 +62,12 @@ export interface DeckState {
     isDirty: boolean;
 
     // Card Search State
+    rawSearchResults: SearchCardView[];
     searchResults: SearchCardView[];
     isSearching: boolean;
     filters: CardFilters;
+    editorMode: DeckEditorModeKey;
+    editorConfig: DeckEditorConfig;
 
     // Actions - Deck Manager
     loadDecks: () => Promise<void>;
@@ -53,34 +77,79 @@ export interface DeckState {
     cloneDeck: (id: string) => Promise<string | null>;
 
     // Actions - Deck Editor
-    loadDeck: (id: string) => Promise<void>;
+    loadDeck: (id: string) => Promise<boolean>;
     saveDeck: () => Promise<string | null>;
+    saveDeckAs: (name: string) => Promise<string | null>;
     closeDeck: () => void;
+    replaceCurrentDeck: (deck: DeckCardLists) => void;
+    appendDeck: (deck: DeckCardLists) => void;
+    markCurrentDeckClean: () => void;
     setDeckName: (name: string) => void;
+    setDeckDescription: (description: string) => void;
     setDeckFormat: (format: string) => void;
 
     // Actions - Card Management
     addCard: (card: SearchCardView, zone: 'main' | 'side') => void;
+    addDeckCards: (cards: DeckCardInfo[], zone: 'main' | 'side') => void;
     removeCard: (card: DeckCardInfo, zone: 'main' | 'side') => void;
+    setCardAmount: (card: DeckCardInfo, zone: 'main' | 'side', amount: number) => void;
     moveCard: (card: DeckCardInfo, fromZone: 'main' | 'side', toZone: 'main' | 'side') => void;
 
     // Actions - Filters & Search
     setFilters: (filters: Partial<CardFilters>) => void;
     resetFilters: () => void;
     searchCards: () => Promise<void>;
+    setEditorMode: (mode: DeckEditorModeKey) => void;
+    updateEditorModeConfig: (patch: Partial<DeckEditorModeConfig>, mode?: DeckEditorModeKey) => void;
+    resetEditorModeConfig: (mode?: DeckEditorModeKey) => void;
+    resetEditorConfig: () => void;
 }
 
-const defaultFilters: CardFilters = {
-    nameContains: '',
-    colors: { white: false, blue: false, black: false, red: false, green: false },
-    colorMatch: 'any',
-    types: [],
-    manaValue: null,
-    manaValueOperator: 'eq',
-    rarities: [],
-    sortBy: 'name',
-    sortDirection: 'asc',
-};
+const initialEditorConfig = appConfigService.loadDeckEditorConfig();
+
+export function createDefaultFilters(modeConfig: DeckEditorModeConfig): CardFilters {
+    return {
+        ...cloneSearchSettings(modeConfig.search),
+        sortBy: modeConfig.collectionSortBy,
+        sortDirection: modeConfig.collectionSortDirection,
+    };
+}
+
+const defaultFilters: CardFilters = createDefaultFilters(initialEditorConfig.modes[initialEditorConfig.activeMode]);
+
+function applyAndSortSearchResults(results: SearchCardView[], filters: CardFilters): SearchCardView[] {
+    return sortSearchResults(applyCardSearchFilters(results, filters), filters);
+}
+
+function syncFiltersWithModeConfig(filters: CardFilters, modeConfig: DeckEditorModeConfig): CardFilters {
+    return {
+        ...cloneSearchSettings(modeConfig.search),
+        sortBy: modeConfig.collectionSortBy,
+        sortDirection: modeConfig.collectionSortDirection,
+    };
+}
+
+function cloneSearchSettings(settings: DeckSearchSettings): DeckSearchSettings {
+    return {
+        ...settings,
+        colors: { ...settings.colors },
+        excludedColors: { ...settings.excludedColors },
+        types: [...settings.types],
+        excludedTypes: [...settings.excludedTypes],
+        rarities: [...settings.rarities],
+        excludedRarities: [...settings.excludedRarities],
+        setCodes: [...settings.setCodes],
+    };
+}
+
+function filtersToSearchSettings(filters: CardFilters): DeckSearchSettings {
+    const {
+        sortBy: _sortBy,
+        sortDirection: _sortDirection,
+        ...searchSettings
+    } = filters;
+    return cloneSearchSettings(searchSettings);
+}
 
 /**
  * Calculate deck colors from card list
@@ -125,9 +194,12 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     isEditing: false,
     isDirty: false,
 
+    rawSearchResults: [],
     searchResults: [],
     isSearching: false,
     filters: { ...defaultFilters },
+    editorMode: initialEditorConfig.activeMode,
+    editorConfig: initialEditorConfig,
 
     // Deck Manager Actions
     loadDecks: async () => {
@@ -149,6 +221,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         const newDeck: DeckCardLists = {
             id: undefined,
             name: 'New Deck',
+            description: '',
             format: 'Constructed - Standard',
             cards: [],
             sideboard: [],
@@ -188,8 +261,9 @@ export const useDeckStore = create<DeckState>((set, get) => ({
                 updatedAt: Date.now(),
             };
 
-            const newId = await deckStorage.saveDeck(clonedDeck);
+            const newId = await deckStorage.saveDeck(clonedDeck, { forceNew: true });
             await get().loadDecks();
+            set({ selectedDeckId: newId });
             return newId;
         } catch (error) {
             console.error('[DeckStore] Failed to clone deck:', error);
@@ -207,11 +281,14 @@ export const useDeckStore = create<DeckState>((set, get) => ({
                     currentDeck: deck,
                     isEditing: true,
                     isDirty: false,
+                    selectedDeckId: id,
                 });
+                return true;
             }
         } catch (error) {
             console.error('[DeckStore] Failed to load deck:', error);
         }
+        return false;
     },
 
     saveDeck: async () => {
@@ -244,6 +321,39 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         }
     },
 
+    saveDeckAs: async (name) => {
+        const { currentDeck } = get();
+        const trimmedName = name.trim();
+        if (!currentDeck || !trimmedName) return null;
+
+        try {
+            const now = Date.now();
+            const deckToSave: DeckCardLists = {
+                ...currentDeck,
+                id: undefined,
+                name: trimmedName,
+                coverCard: getCoverCard(currentDeck.cards),
+                colors: calculateDeckColors(currentDeck.cards),
+                createdAt: now,
+                updatedAt: now,
+            };
+
+            const id = await deckStorage.saveDeck(deckToSave, { forceNew: true });
+
+            set({
+                currentDeck: { ...deckToSave, id },
+                selectedDeckId: id,
+                isDirty: false,
+            });
+
+            await get().loadDecks();
+            return id;
+        } catch (error) {
+            console.error('[DeckStore] Failed to save deck copy:', error);
+            return null;
+        }
+    },
+
     closeDeck: () => {
         set({
             currentDeck: null,
@@ -253,12 +363,61 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         });
     },
 
+    replaceCurrentDeck: (deck) => {
+        const currentDeck = get().currentDeck;
+        const now = Date.now();
+        set({
+            currentDeck: {
+                ...deck,
+                id: currentDeck?.id ?? deck.id,
+                description: deck.description ?? currentDeck?.description,
+                format: deck.format || currentDeck?.format || 'Constructed - Standard',
+                createdAt: currentDeck?.createdAt ?? deck.createdAt ?? now,
+                updatedAt: now,
+            },
+            isEditing: true,
+            isDirty: true,
+        });
+    },
+
+    appendDeck: (deck) => {
+        const currentDeck = get().currentDeck ?? {
+            name: 'New Deck',
+            description: '',
+            format: 'Constructed - Standard',
+            cards: [],
+            sideboard: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+        };
+
+        set({
+            currentDeck: appendDeckCardLists(currentDeck, deck),
+            isEditing: true,
+            isDirty: true,
+        });
+    },
+
+    markCurrentDeckClean: () => {
+        set({ isDirty: false });
+    },
+
     setDeckName: (name) => {
         const { currentDeck } = get();
         if (!currentDeck) return;
 
         set({
             currentDeck: { ...currentDeck, name },
+            isDirty: true,
+        });
+    },
+
+    setDeckDescription: (description) => {
+        const { currentDeck } = get();
+        if (!currentDeck) return;
+
+        set({
+            currentDeck: { ...currentDeck, description },
             isDirty: true,
         });
     },
@@ -278,29 +437,23 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         const { currentDeck } = get();
         if (!currentDeck) return;
 
-        const newCard: DeckCardInfo = {
-            cardName: card.name,
-            setCode: card.expansionSetCode,
-            cardNumber: card.cardNumber,
-            amount: 1,
-        };
+        set({
+            currentDeck: addSearchCardToDeck(currentDeck, card, zone),
+            isDirty: true,
+        });
+    },
 
-        const targetList = zone === 'main' ? [...currentDeck.cards] : [...currentDeck.sideboard];
-        const existing = targetList.find(
-            c => c.setCode === newCard.setCode && c.cardNumber === newCard.cardNumber
+    addDeckCards: (cards, zone) => {
+        const { currentDeck } = get();
+        if (!currentDeck || cards.length === 0) return;
+
+        const nextDeck = cards.reduce(
+            (deck, card) => addDeckCardCopies(deck, card, zone, card.amount),
+            currentDeck,
         );
 
-        if (existing) {
-            existing.amount++;
-        } else {
-            targetList.push(newCard);
-        }
-
         set({
-            currentDeck: {
-                ...currentDeck,
-                [zone === 'main' ? 'cards' : 'sideboard']: targetList,
-            },
+            currentDeck: nextDeck,
             isDirty: true,
         });
     },
@@ -309,73 +462,73 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         const { currentDeck } = get();
         if (!currentDeck) return;
 
-        const targetList = (zone === 'main' ? currentDeck.cards : currentDeck.sideboard)
-            .map(c => ({ ...c }));
+        set({
+            currentDeck: decrementDeckCard(currentDeck, card, zone),
+            isDirty: true,
+        });
+    },
 
-        const index = targetList.findIndex(
-            c => c.setCode === card.setCode && c.cardNumber === card.cardNumber
-        );
-
-        if (index !== -1) {
-            if (targetList[index].amount > 1) {
-                targetList[index].amount--;
-            } else {
-                targetList.splice(index, 1);
-            }
-        }
+    setCardAmount: (card, zone, amount) => {
+        const { currentDeck } = get();
+        if (!currentDeck) return;
 
         set({
-            currentDeck: {
-                ...currentDeck,
-                [zone === 'main' ? 'cards' : 'sideboard']: targetList,
-            },
+            currentDeck: setDeckCardCopies(currentDeck, card, zone, amount),
             isDirty: true,
         });
     },
 
     moveCard: (card, fromZone, toZone) => {
-        const { currentDeck, removeCard, addCard } = get();
+        const { currentDeck } = get();
         if (!currentDeck) return;
 
-        // Create a synthetic SearchCardView for addCard
-        const searchCard: SearchCardView = {
-            id: `${card.setCode}-${card.cardNumber}`,
-            name: card.cardName,
-            displayName: card.cardName,
-            rules: [],
-            power: '',
-            toughness: '',
-            loyalty: '',
-            defense: '',
-            cardTypes: [],
-            subTypes: [],
-            superTypes: [],
-            expansionSetCode: card.setCode || '',
-            cardNumber: card.cardNumber || '',
-            imageFileName: '',
-            imageNumber: 0,
-            color: { white: false, blue: false, black: false, red: false, green: false },
-            frameColor: { white: false, blue: false, black: false, red: false, green: false },
-            manaValue: 0,
-            rarity: Rarity.COMMON,
-            isSplitCard: false,
-            isDoubleFacedCard: false,
-        };
-
-        // Remove from source and add to destination
-        removeCard(card, fromZone);
-        addCard(searchCard, toZone);
+        set({
+            currentDeck: moveDeckCardBetweenZones(currentDeck, card, fromZone, toZone),
+            isDirty: true,
+        });
     },
 
     // Filters & Search Actions
     setFilters: (newFilters) => {
-        set({
-            filters: { ...get().filters, ...newFilters },
+        set((state) => {
+            const filters = { ...state.filters, ...newFilters };
+            const editorConfig = appConfigService.saveDeckEditorConfig({
+                ...state.editorConfig,
+                modes: {
+                    ...state.editorConfig.modes,
+                    [state.editorMode]: {
+                        ...state.editorConfig.modes[state.editorMode],
+                        search: filtersToSearchSettings(filters),
+                    },
+                },
+            });
+
+            return {
+                editorConfig,
+                filters,
+                searchResults: applyAndSortSearchResults(state.rawSearchResults, filters),
+            };
         });
     },
 
     resetFilters: () => {
-        set({ filters: { ...defaultFilters } });
+        const { editorConfig, editorMode } = get();
+        const nextEditorConfig = appConfigService.saveDeckEditorConfig({
+            ...editorConfig,
+            modes: {
+                ...editorConfig.modes,
+                [editorMode]: {
+                    ...editorConfig.modes[editorMode],
+                    search: DEFAULT_DECK_SEARCH_SETTINGS,
+                },
+            },
+        });
+        const filters = createDefaultFilters(nextEditorConfig.modes[editorMode]);
+        set({
+            editorConfig: nextEditorConfig,
+            filters,
+            searchResults: applyAndSortSearchResults(get().rawSearchResults, filters),
+        });
     },
 
     searchCards: async () => {
@@ -383,40 +536,95 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         set({ isSearching: true });
 
         try {
-            const criteria: CardSearchCriteria = {
-                nameContains: filters.nameContains || undefined,
-                count: 100,
+            const criteria = buildCardSearchCriteria(filters, {
+                count: 200,
                 sortBy: filters.sortBy,
-                format: currentDeck?.format,
-            };
-
-            // Add color filters if any are selected
-            if (filters.colors.white) criteria.white = true;
-            if (filters.colors.blue) criteria.blue = true;
-            if (filters.colors.black) criteria.black = true;
-            if (filters.colors.red) criteria.red = true;
-            if (filters.colors.green) criteria.green = true;
-
-            // Add type filters
-            if (filters.types.length > 0) {
-                criteria.types = filters.types as any;
-            }
-
-            // Add rarity filters
-            if (filters.rarities.length > 0) {
-                criteria.rarities = filters.rarities as any;
-            }
-
-            // Add mana value filter
-            if (filters.manaValue !== null) {
-                criteria.manaValue = filters.manaValue;
-            }
+                deckFormat: currentDeck?.format,
+            });
 
             const results = await wsService.searchCards(criteria);
-            set({ searchResults: results, isSearching: false });
+            set({ rawSearchResults: results, searchResults: applyAndSortSearchResults(results, filters), isSearching: false });
         } catch (error) {
             console.error('[DeckStore] Search failed:', error);
-            set({ searchResults: [], isSearching: false });
+            set({ rawSearchResults: [], searchResults: [], isSearching: false });
         }
     },
+
+    setEditorMode: (mode) => {
+        const current = get();
+        const editorConfig = appConfigService.saveDeckEditorConfig({
+            ...current.editorConfig,
+            activeMode: mode,
+        });
+        const filters = syncFiltersWithModeConfig(current.filters, editorConfig.modes[mode]);
+
+        set({
+            editorMode: editorConfig.activeMode,
+            editorConfig,
+            filters,
+            searchResults: applyAndSortSearchResults(current.rawSearchResults, filters),
+        });
+    },
+
+    updateEditorModeConfig: (patch, mode) => {
+        const current = get();
+        const targetMode = mode ?? current.editorMode;
+        const editorConfig = appConfigService.saveDeckEditorConfig({
+            ...current.editorConfig,
+            modes: {
+                ...current.editorConfig.modes,
+                [targetMode]: {
+                    ...current.editorConfig.modes[targetMode],
+                    ...patch,
+                },
+            },
+        });
+        const filters = targetMode === current.editorMode
+            ? syncFiltersWithModeConfig(current.filters, editorConfig.modes[current.editorMode])
+            : current.filters;
+
+        set({
+            editorConfig,
+            filters,
+            searchResults: applyAndSortSearchResults(current.rawSearchResults, filters),
+        });
+    },
+
+    resetEditorModeConfig: (mode) => {
+        const current = get();
+        const targetMode = mode ?? current.editorMode;
+        const editorConfig = appConfigService.saveDeckEditorConfig({
+            ...current.editorConfig,
+            modes: {
+                ...current.editorConfig.modes,
+                [targetMode]: {
+                    ...DEFAULT_DECK_EDITOR_MODE_CONFIG,
+                    search: current.editorConfig.modes[targetMode].search,
+                },
+            },
+        });
+        const filters = targetMode === current.editorMode
+            ? syncFiltersWithModeConfig(current.filters, editorConfig.modes[current.editorMode])
+            : current.filters;
+
+        set({
+            editorConfig,
+            filters,
+            searchResults: applyAndSortSearchResults(current.rawSearchResults, filters),
+        });
+    },
+
+    resetEditorConfig: () => {
+        const editorConfig = appConfigService.resetDeckEditorConfig();
+        const filters = createDefaultFilters(editorConfig.modes[editorConfig.activeMode]);
+
+        set({
+            editorMode: editorConfig.activeMode,
+            editorConfig,
+            filters,
+            searchResults: applyAndSortSearchResults(get().rawSearchResults, filters),
+        });
+    },
 }));
+
+export type { DeckListSortKey };

@@ -118,23 +118,30 @@ export interface SimpleCardView {
   id: UUID;
   expansionSetCode: string; // e.g. "M21"
   cardNumber: string; // e.g. "100"
-  cardTypes: CardType[];
-  subTypes: SubType[];
-  superTypes: SuperType[];
-  color: ObjectColor;
+  usesVariousArt: boolean;
+  gameObject: boolean;
+  isChoosable: boolean;
+  isSelected: boolean;
+  playableStats?: {
+    playableAmount: number;
+  };
+  cardTypes?: CardType[];
+  subTypes?: SubType[];
+  superTypes?: SuperType[];
+  color?: ObjectColor;
   manaCostLeftStr?: string[];
   manaCostRightStr?: string[];
-  manaValue: number;
-  power: string;
-  toughness: string;
-  loyalty: string;
-  defense: string;
-  rarity: Rarity;
-  isSplitCard: boolean;
-  isDoubleFacedCard: boolean;
-  name: string;
-  displayName: string;
-  rules: string[];
+  manaValue?: number;
+  power?: string;
+  toughness?: string;
+  loyalty?: string;
+  defense?: string;
+  rarity?: Rarity;
+  isSplitCard?: boolean;
+  isDoubleFacedCard?: boolean;
+  name?: string;
+  displayName?: string;
+  rules?: string[];
 }
 
 export interface SimpleCardsView extends Record<UUID, SimpleCardView> { }
@@ -154,6 +161,25 @@ export interface TableClientMessage {
   deck?: DeckView;
   time?: number;
   flag?: boolean; // generic flag, usage depends on method
+}
+
+export interface UserRequestMessage {
+  title: string;
+  message: string;
+  windowSizeRatio?: number;
+  relatedUserId?: UUID;
+  relatedUserName?: string;
+  matchId?: UUID;
+  tournamentId?: UUID;
+  gameId?: UUID;
+  roomId?: UUID;
+  tableId?: UUID;
+  button1Text?: string;
+  button1Action?: PlayerAction | null;
+  button2Text?: string;
+  button2Action?: PlayerAction | null;
+  button3Text?: string;
+  button3Action?: PlayerAction | null;
 }
 
 // === Server Callback ===
@@ -181,6 +207,7 @@ export type ClientCallbackMethod =
   // Draft/Sideboard
   | "startDraft"
   | "SIDEBOARD"
+  | "sideboard"
   | "construct"
   | "draftOver"
   | "draftInit"
@@ -269,6 +296,7 @@ export type PlayerAction =
   | "TRIGGER_AUTO_ORDER_NAME_FIRST"
   | "TRIGGER_AUTO_ORDER_NAME_LAST"
   | "TRIGGER_AUTO_ORDER_RESET_ALL"
+  | "RESET_AUTO_SELECT_REPLACEMENT_EFFECTS"
   // Permissions
   | "REQUEST_PERMISSION_TO_SEE_HAND_CARDS"
   | "ADD_PERMISSION_TO_SEE_HAND_CARDS"
@@ -285,6 +313,8 @@ export type PlayerAction =
   | "REQUEST_AUTO_ANSWER_TEXT_NO"
   | "REQUEST_AUTO_ANSWER_RESET_ALL"
   // Client Actions
+  | "CLIENT_DOWNLOAD_SYMBOLS"
+  | "CLIENT_DOWNLOAD_CARD_IMAGES"
   | "CLIENT_CONCEDE_GAME"
   | "CLIENT_CONCEDE_MATCH"
   | "CLIENT_QUIT_TOURNAMENT"
@@ -317,6 +347,11 @@ export type SubType = string;
 export interface CardSearchCriteria {
   // name?: string; // Exact match not supported via this interface correctly in all cases??
   nameContains?: string;
+  searchText?: string;
+  searchNames?: boolean;
+  searchTypes?: boolean;
+  searchRules?: boolean;
+  uniqueNames?: boolean;
   format?: string;
   rules?: string;
   type?: string;
@@ -326,9 +361,14 @@ export interface CardSearchCriteria {
   supertypes?: SuperType[];
   subtypes?: SubType[];
   rarities?: Rarity[];
+  excludedRarities?: Rarity[];
+  webColors?: string[];
+  webExcludedColors?: string[];
+  colorMatch?: "any" | "include" | "exact";
   minCardNumber?: number;
   maxCardNumber?: number;
   manaValue?: number;
+  manaValueOperator?: "eq" | "lte" | "gte";
   black?: boolean;
   blue?: boolean;
   green?: boolean;
@@ -371,4 +411,56 @@ export interface SearchCardView extends SearchSimpleCardView {
   // Full CardView has more fields, but for deck editor search results, 
   // the backend is sending a View created from a MockCard which has limited data.
   // We can extend this as needed.
+}
+
+export interface ExpansionSetInfo {
+  setCode: string;
+  name: string;
+  blockName?: string | null;
+  releaseDate: number;
+  type?: string | null;
+  hasBoosters?: boolean;
+  hasBasicLands: boolean;
+}
+
+export interface BasicLandSetInfo extends ExpansionSetInfo {
+  hasSnowBasics: boolean;
+}
+
+export type DeckValidationErrorType = 'PRIMARY' | 'DECK_SIZE' | 'BANNED' | 'WRONG_SET' | 'OTHER' | string;
+
+export interface DeckValidationErrorView {
+  type: DeckValidationErrorType;
+  group: string;
+  message: string;
+  cardName?: string | null;
+}
+
+export interface DeckValidationResultView {
+  deckType: string;
+  name: string;
+  shortName: string;
+  valid: boolean;
+  partlyValid: boolean;
+  errors: DeckValidationErrorView[];
+  edhPowerLevel?: number;
+  edhPowerCards?: string[];
+  edhPowerDetails?: string[];
+  commanderBrackets?: CommanderBracketView[];
+}
+
+export interface CommanderBracketGroupView {
+  name: string;
+  count: number;
+  max: number;
+  cards: string[];
+}
+
+export interface CommanderBracketView {
+  level: number;
+  name: string;
+  shortName: string;
+  valid: boolean;
+  badCards: string[];
+  groups: CommanderBracketGroupView[];
 }

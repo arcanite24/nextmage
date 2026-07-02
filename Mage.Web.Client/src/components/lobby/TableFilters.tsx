@@ -10,18 +10,35 @@ import { TableState } from '../../types';
 import './TableFilters.css';
 
 export const TableFilters: React.FC = () => {
-    const { filters, setFilter, resetFilters, tables, filteredTables } = useLobbyStore();
+    const {
+        filters,
+        setFilter,
+        resetFilters,
+        tables,
+        filteredTables,
+        finishedMatches,
+        filteredFinishedMatches,
+    } = useLobbyStore();
 
     // specific unique values from all tables (not just filtered ones) to populate dropdowns
     const uniqueGameTypes = useMemo(() => {
-        const types = new Set(tables.map(t => t.gameType));
+        const types = new Set([
+            ...tables.map(t => t.gameType),
+            ...finishedMatches.map(match => match.gameType),
+        ]);
         return Array.from(types).sort();
-    }, [tables]);
+    }, [finishedMatches, tables]);
 
     const uniqueDeckTypes = useMemo(() => {
-        const types = new Set(tables.map(t => t.deckType));
+        const types = new Set([
+            ...tables.map(t => t.deckType),
+            ...finishedMatches.map(match => match.deckType),
+        ]);
         return Array.from(types).sort();
-    }, [tables]);
+    }, [finishedMatches, tables]);
+
+    const visibleCount = filteredTables.length + filteredFinishedMatches.length;
+    const totalCount = tables.length + (filters.showFinished ? finishedMatches.length : 0);
 
     return (
         <div className="table-filters">
@@ -55,6 +72,14 @@ export const TableFilters: React.FC = () => {
                             onChange={(e) => setFilter('showWaiting', e.target.checked)}
                         />
                         <span className="checkbox-badge state-waiting">Waiting</span>
+                    </label>
+                    <label className="filter-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={filters.showStarting}
+                            onChange={(e) => setFilter('showStarting', e.target.checked)}
+                        />
+                        <span className="checkbox-badge state-starting">Starting</span>
                     </label>
                     <label className="filter-checkbox">
                         <input
@@ -118,7 +143,7 @@ export const TableFilters: React.FC = () => {
             </div>
 
             <div className="filter-summary">
-                Showing {filteredTables.length} of {tables.length} tables
+                Showing {visibleCount} of {totalCount} rows
             </div>
         </div>
     );

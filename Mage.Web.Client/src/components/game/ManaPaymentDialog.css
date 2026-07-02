@@ -191,6 +191,17 @@
     color: #e2e8f0;
 }
 
+.mana-action-btn.auto {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fde68a;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.mana-action-btn.auto:hover {
+    background: rgba(245, 158, 11, 0.28);
+    color: #fffbeb;
+}
+
 .mana-action-btn.done {
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     color: #fff;

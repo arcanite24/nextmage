@@ -5,7 +5,9 @@ import com.google.gson.GsonBuilder;
 import mage.MageObject;
 import mage.abilities.costs.Cost;
 import mage.cards.Card;
+import mage.constants.MultiplayerAttackOption;
 import mage.constants.PhaseStep;
+import mage.constants.RangeOfInfluence;
 import mage.constants.TurnPhase;
 import mage.constants.Zone;
 import mage.designations.Designation;
@@ -62,6 +64,8 @@ public class GameView implements Serializable {
     private final int turn;
     private boolean special = false;
     private final boolean rollbackTurnsAllowed;
+    private final MultiplayerAttackOption attackOption;
+    private final RangeOfInfluence rangeOfInfluence;
 
     // for debug only
     // TODO: implement and support in admin tools
@@ -213,6 +217,8 @@ public class GameView implements Serializable {
             this.special = false;
         }
         this.rollbackTurnsAllowed = game.getOptions().rollbackTurnsAllowed;
+        this.attackOption = game.getAttackOption();
+        this.rangeOfInfluence = game.getRangeOfInfluence();
         this.totalErrorsCount = game.getTotalErrorsCount();
         this.totalEffectsCount = game.getTotalEffectsCount();
         this.gameCycle = game.getState().getApplyEffectsCounter();
@@ -346,6 +352,14 @@ public class GameView implements Serializable {
 
     public boolean isRollbackTurnsAllowed() {
         return rollbackTurnsAllowed;
+    }
+
+    public MultiplayerAttackOption getAttackOption() {
+        return attackOption;
+    }
+
+    public RangeOfInfluence getRangeOfInfluence() {
+        return rangeOfInfluence;
     }
 
     public String toJson() {

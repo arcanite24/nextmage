@@ -5,6 +5,7 @@
  * - Red vignette flash when the player takes damage
  * - Blue/different effect when opponent takes damage
  * - Floating damage numbers
+ * - Floating life-gain numbers
  */
 
 import React, { useEffect, useState } from 'react';
@@ -17,6 +18,7 @@ interface DamageEffect {
     id: string;
     playerId: UUID;
     amount: number;
+    type: 'damage' | 'lifeGain';
     isMe: boolean;
     timestamp: number;
 }
@@ -38,6 +40,7 @@ export const DamageEffects: React.FC = React.memo(() => {
             id: d.id,
             playerId: d.targetId,
             amount: d.amount,
+            type: d.type,
             isMe: d.targetId === myPlayerId,
             timestamp: d.timestamp,
         }));
@@ -64,11 +67,11 @@ export const DamageEffects: React.FC = React.memo(() => {
             {effects.map((effect) => (
                 <div
                     key={`vignette-${effect.id}`}
-                    className={`damage-vignette ${effect.isMe ? 'player' : 'opponent'}`}
+                    className={`damage-vignette ${effect.type === 'lifeGain' ? 'life-gain' : effect.isMe ? 'player' : 'opponent'}`}
                 />
             ))}
 
-            {/* Floating damage numbers */}
+            {/* Floating life-change numbers */}
             {effects.map((effect) => {
                 const pos = getDamagePosition(effect.playerId);
                 if (!pos) return null;
@@ -76,13 +79,14 @@ export const DamageEffects: React.FC = React.memo(() => {
                 return (
                     <div
                         key={`number-${effect.id}`}
-                        className="damage-number"
+                        className={`damage-number ${effect.type === 'lifeGain' ? 'life-gain' : ''}`}
                         style={{
                             left: pos.x,
                             top: pos.y,
                         }}
+                        data-testid={effect.type === 'lifeGain' ? 'life-gain-number' : 'damage-number'}
                     >
-                        -{effect.amount}
+                        {effect.type === 'lifeGain' ? `+${effect.amount}` : `-${effect.amount}`}
                     </div>
                 );
             })}

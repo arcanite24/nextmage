@@ -2,11 +2,21 @@ package mage.server.websocket;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import mage.interfaces.callback.ClientCallback;
+import mage.cards.repository.CardInfo;
+import mage.cards.repository.CardRepository;
+import mage.view.SimpleCardView;
 import org.java_websocket.WebSocket;
 import org.jboss.remoting.callback.AsynchInvokerCallbackHandler;
 import org.jboss.remoting.callback.Callback;
 import org.jboss.remoting.callback.HandleCallbackException;
+
+import java.lang.reflect.Type;
 
 public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
 
@@ -24,6 +34,7 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
                     return json == null ? null : java.util.UUID.fromString(json.getAsString());
                 }
             })
+            .registerTypeAdapter(SimpleCardView.class, new SimpleCardViewSerializer())
             .create();
 
     public WebSocketCallbackHandler(WebSocket conn) {
@@ -60,5 +71,40 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
     @Override
     public void handleCallback(Callback callback, boolean asynch, boolean oneWay) throws HandleCallbackException {
         handleCallbackOneway(callback, asynch);
+    }
+
+    private static class SimpleCardViewSerializer implements JsonSerializer<SimpleCardView> {
+
+        @Override
+        public JsonElement serialize(SimpleCardView src, Type typeOfSrc, JsonSerializationContext context) {
+            JsonObject json = new JsonObject();
+            json.add("id", context.serialize(src.getId()));
+            json.addProperty("expansionSetCode", src.getExpansionSetCode());
+            json.addProperty("setCode", src.getExpansionSetCode());
+            json.addProperty("cardNumber", src.getCardNumber());
+            json.addProperty("usesVariousArt", src.getUsesVariousArt());
+            json.addProperty("gameObject", src.isGameObject());
+            json.addProperty("isChoosable", src.isChoosable());
+            json.addProperty("isSelected", src.isSelected());
+
+            String name = findCardName(src);
+            if (name != null) {
+                json.add("name", new JsonPrimitive(name));
+                json.add("displayName", new JsonPrimitive(name));
+            }
+
+            return json;
+        }
+
+        private static String findCardName(SimpleCardView card) {
+            String setCode = card.getExpansionSetCode();
+            String cardNumber = card.getCardNumber();
+            if (setCode == null || cardNumber == null) {
+                return null;
+            }
+
+            CardInfo cardInfo = CardRepository.instance.findCard(setCode, cardNumber);
+            return cardInfo == null ? null : cardInfo.getName();
+        }
     }
 }

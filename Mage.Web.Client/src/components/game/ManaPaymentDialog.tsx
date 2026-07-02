@@ -9,6 +9,7 @@
 import React from 'react';
 import { ManaType, ManaPoolView } from '../../types';
 import { useGameStore } from '../../stores';
+import { useSettingsStore } from '../../stores/settingsStore';
 import './ManaPaymentDialog.css';
 
 interface ManaPaymentDialogProps {
@@ -26,7 +27,12 @@ const MANA_CONFIG: Array<{ type: ManaType; color: string; symbol: string; bgColo
 ];
 
 export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, message }) => {
-    const { gameView, sendManaType, sendBoolean, getMyPlayer } = useGameStore();
+    const sendManaType = useGameStore(state => state.sendManaType);
+    const sendBoolean = useGameStore(state => state.sendBoolean);
+    const sendPlayerAction = useGameStore(state => state.sendPlayerAction);
+    const getMyPlayer = useGameStore(state => state.getMyPlayer);
+    const settings = useSettingsStore(state => state.settings);
+    const setSetting = useSettingsStore(state => state.setSetting);
 
     const myPlayer = getMyPlayer();
     const manaPool = myPlayer?.manaPool;
@@ -47,6 +53,12 @@ export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, me
         sendBoolean(true);
     };
 
+    const handleAutoPay = async () => {
+        setSetting('autoTapManaPayment', true);
+        await sendPlayerAction('MANA_AUTO_PAYMENT_ON');
+        await sendBoolean(true);
+    };
+
     const handleCancel = () => {
         // Cancel
         sendBoolean(false);
@@ -65,7 +77,7 @@ export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, me
 
             <div className="mana-payment-instructions">
                 <span className="instruction-icon">👆</span>
-                <span>Tap lands to add mana, then click mana below to pay</span>
+                <span>{settings.autoTapManaPayment ? 'Auto-pay is enabled for matching costs' : 'Tap lands to add mana, then click mana below to pay'}</span>
             </div>
 
             <div className="mana-pool-section">
@@ -101,6 +113,9 @@ export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, me
             <div className="mana-payment-actions">
                 <button className="mana-action-btn cancel" onClick={handleCancel}>
                     Cancel
+                </button>
+                <button className="mana-action-btn auto" onClick={handleAutoPay}>
+                    Auto
                 </button>
                 <button className="mana-action-btn done" onClick={handleDone}>
                     Done

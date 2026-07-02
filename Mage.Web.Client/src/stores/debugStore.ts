@@ -9,13 +9,15 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { UUID, ClientCallback, GameView } from '../types';
-import { DebugAction, DebugConfig, BoardStateSummary, PlayerStateSummary, StackItemSummary, DebugExportData } from '../types/debug';
+import { CallbackFixtureService } from '../services/CallbackFixtureService';
+import { DebugAction, DebugConfig, BoardStateSummary, PlayerStateSummary, StackItemSummary, DebugExportData, DebugCallbackFixture } from '../types/debug';
 
 const STORAGE_KEY = 'mage-debug-config';
 
 interface DebugState {
   config: DebugConfig;
   actions: DebugAction[];
+  callbackFixtures: DebugCallbackFixture[];
   currentGameView: GameView | null;
   lastUpdateTimestamp: number;
   matchId: UUID | null;
@@ -25,10 +27,13 @@ interface DebugActions {
   toggleDebugMode: () => void;
   setMaxHistorySize: (size: number) => void;
   setAutoTrack: (enabled: boolean) => void;
+  recordCallbackFixture: (callback: ClientCallback) => void;
   recordAction: (callback: ClientCallback) => void;
+  importCallbackFixtures: (fixtures: DebugCallbackFixture[]) => void;
   startNewMatch: (matchId: UUID) => void;
   endMatch: () => void;
   clearHistory: () => void;
+  getCallbackFixtures: (limit?: number) => DebugCallbackFixture[];
   getBoardStateSummary: () => BoardStateSummary | null;
   getActionHistory: (limit?: number) => DebugAction[];
   exportAsJson: () => Promise<void>;
@@ -121,6 +126,7 @@ export const useDebugStore = create<DebugState & DebugActions>()(
     immer((set, get) => ({
       config: loadConfigFromStorage(),
       actions: [],
+      callbackFixtures: [],
       currentGameView: null,
       lastUpdateTimestamp: 0,
       matchId: null,
@@ -139,6 +145,9 @@ export const useDebugStore = create<DebugState & DebugActions>()(
           if (state.actions.length > state.config.maxHistorySize) {
             state.actions = state.actions.slice(0, state.config.maxHistorySize);
           }
+          if (state.callbackFixtures.length > state.config.maxHistorySize) {
+            state.callbackFixtures = state.callbackFixtures.slice(0, state.config.maxHistorySize);
+          }
         });
       },
 
@@ -146,6 +155,15 @@ export const useDebugStore = create<DebugState & DebugActions>()(
         set((state) => {
           state.config.autoTrack = enabled;
           saveConfigToStorage(state.config);
+        });
+      },
+
+      recordCallbackFixture: (callback) => {
+        set((state) => {
+          state.callbackFixtures.unshift(CallbackFixtureService.toFixture(callback));
+          if (state.callbackFixtures.length > state.config.maxHistorySize) {
+            state.callbackFixtures = state.callbackFixtures.slice(0, state.config.maxHistorySize);
+          }
         });
       },
 
@@ -189,10 +207,17 @@ export const useDebugStore = create<DebugState & DebugActions>()(
         });
       },
 
+      importCallbackFixtures: (fixtures) => {
+        set((state) => {
+          state.callbackFixtures = fixtures.slice(0, state.config.maxHistorySize);
+        });
+      },
+
       startNewMatch: (matchId) => {
         set((state) => {
           if (state.matchId && state.matchId !== matchId) {
             state.actions = [];
+            state.callbackFixtures = [];
             state.currentGameView = null;
           }
           state.matchId = matchId;
@@ -208,9 +233,15 @@ export const useDebugStore = create<DebugState & DebugActions>()(
       clearHistory: () => {
         set((state) => {
           state.actions = [];
+          state.callbackFixtures = [];
           state.currentGameView = null;
           state.lastUpdateTimestamp = 0;
         });
+      },
+
+      getCallbackFixtures: (limit) => {
+        const { callbackFixtures } = get();
+        return limit ? callbackFixtures.slice(0, limit) : callbackFixtures;
       },
 
       getBoardStateSummary: () => {
@@ -261,6 +292,7 @@ export const useDebugStore = create<DebugState & DebugActions>()(
 
       getFullExportData: () => {
         const { config, currentGameView, actions, matchId, lastUpdateTimestamp } = get();
+        const callbackFixtures = get().getCallbackFixtures();
 
         return {
           timestamp: Date.now(),
@@ -271,8 +303,10 @@ export const useDebugStore = create<DebugState & DebugActions>()(
           currentGameView,
           boardStateSummary: get().getBoardStateSummary(),
           actionHistory: actions,
+          callbackFixtures,
           metadata: {
             totalActions: actions.length,
+            totalCallbackFixtures: callbackFixtures.length,
             matchId: matchId || null,
             lastUpdate: lastUpdateTimestamp,
           },

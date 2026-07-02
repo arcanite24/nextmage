@@ -51,6 +51,28 @@ export const DeckPicker: React.FC<DeckPickerProps> = ({
     const [deckText, setDeckText] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const getUnresolvedCards = (deck: DeckCardLists): DeckCardInfo[] => {
+        return [...deck.cards, ...deck.sideboard].filter(card => !card.setCode || !card.cardNumber);
+    };
+
+    const formatUnresolvedCardsError = (cards: DeckCardInfo[]): string => {
+        const names = [...new Set(cards.map(card => card.cardName))].slice(0, 8);
+        const suffix = cards.length > names.length ? ` and ${cards.length - names.length} more` : '';
+        return `Unresolved cards: ${names.join(', ')}${suffix}. Check the deck text and remove any title/header rows.`;
+    };
+
+    const resolveAndValidateDeck = async (deck: DeckCardLists): Promise<DeckCardLists> => {
+        const needsResolution = getUnresolvedCards(deck).length > 0;
+        const resolved = needsResolution ? await cardResolverService.resolveDeck(deck) : deck;
+        const unresolved = getUnresolvedCards(resolved);
+
+        if (unresolved.length > 0) {
+            throw new Error(formatUnresolvedCardsError(unresolved));
+        }
+
+        return resolved;
+    };
+
     // Load saved decks on mount and when format changes
     useEffect(() => {
         loadSavedDecks();
@@ -76,24 +98,15 @@ export const DeckPicker: React.FC<DeckPickerProps> = ({
         try {
             const deck = await deckStorage.loadDeck(summary.id);
             if (deck) {
-                // Resolve cards if needed
-                const needsResolution = [...deck.cards, ...deck.sideboard].some(
-                    card => !card.setCode || !card.cardNumber
-                );
-
-                if (needsResolution) {
-                    setIsResolving(true);
-                    const resolved = await cardResolverService.resolveDeck(deck);
-                    onDeckChange(resolved);
-                } else {
-                    onDeckChange(deck);
-                }
+                setIsResolving(true);
+                const resolved = await resolveAndValidateDeck(deck);
+                onDeckChange(resolved);
                 setShowDeckList(false);
                 onError?.(null);
             }
         } catch (err) {
             console.error('[DeckPicker] Failed to load deck:', err);
-            onError?.('Failed to load deck');
+            onError?.(err instanceof Error ? err.message : 'Failed to load deck');
         } finally {
             setIsResolving(false);
         }
@@ -110,14 +123,7 @@ export const DeckPicker: React.FC<DeckPickerProps> = ({
             let deck = DeckSerializer.importDeck(deckText);
             deck.name = 'Imported Deck';
 
-            // Resolve cards if needed
-            const needsResolution = [...deck.cards, ...deck.sideboard].some(
-                card => !card.setCode || !card.cardNumber
-            );
-
-            if (needsResolution) {
-                deck = await cardResolverService.resolveDeck(deck);
-            }
+            deck = await resolveAndValidateDeck(deck);
 
             onDeckChange(deck);
             setShowTextInput(false);
@@ -125,7 +131,7 @@ export const DeckPicker: React.FC<DeckPickerProps> = ({
             onError?.(null);
         } catch (err) {
             console.error('[DeckPicker] Failed to parse deck:', err);
-            onError?.('Failed to parse deck text');
+            onError?.(err instanceof Error ? err.message : 'Failed to parse deck text');
         } finally {
             setIsResolving(false);
         }
@@ -144,20 +150,13 @@ export const DeckPicker: React.FC<DeckPickerProps> = ({
                     let deck = DeckSerializer.importDeck(content);
                     deck.name = file.name.replace(/\.(dck|txt)$/i, '');
 
-                    // Resolve cards if needed
-                    const needsResolution = [...deck.cards, ...deck.sideboard].some(
-                        card => !card.setCode || !card.cardNumber
-                    );
-
-                    if (needsResolution) {
-                        deck = await cardResolverService.resolveDeck(deck);
-                    }
+                    deck = await resolveAndValidateDeck(deck);
 
                     onDeckChange(deck);
                     onError?.(null);
                 } catch (err) {
                     console.error('[DeckPicker] Failed to import deck:', err);
-                    onError?.('Failed to import deck file');
+                    onError?.(err instanceof Error ? err.message : 'Failed to import deck file');
                 } finally {
                     setIsResolving(false);
                 }
@@ -172,7 +171,7 @@ export const DeckPicker: React.FC<DeckPickerProps> = ({
             const text = await navigator.clipboard.readText();
             setDeckText(text);
             onError?.(null);
-        } catch (err) {
+        } catch {
             onError?.('Failed to read clipboard');
         }
     };

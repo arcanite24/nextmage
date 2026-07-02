@@ -1,14 +1,17 @@
 import React, { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { CardsView, CardView, StackAbilityView } from '../../types';
-import { cardImageService } from '../../services/CardImageService';
+import { cardImageService, type CardImageFallbackMode } from '../../services/CardImageService';
+import { createValidTargetLookup } from '../../services/BattlefieldPerformanceService';
 import { useGameStore } from '../../stores';
+import { useSettingsStore } from '../../stores/settingsStore';
 import './ArenaLayout.css';
 
 interface ArenaStackProps {
     stack: CardsView;
     onCardClick?: (cardId: string) => void;
     onCardInspect?: (cardId: string) => void;
+    onCardHover?: (cardId: string | null) => void;
 }
 
 // Type guard to check if a card is an ability with sourceCard
@@ -16,34 +19,19 @@ const isStackAbility = (card: CardView): card is StackAbilityView => {
     return card.isAbility && 'sourceCard' in card && !!(card as StackAbilityView).sourceCard;
 };
 
-export const ArenaStack: React.FC<ArenaStackProps> = React.memo(({ stack, onCardClick, onCardInspect }) => {
+export const ArenaStack: React.FC<ArenaStackProps> = React.memo(({ stack, onCardClick, onCardInspect, onCardHover }) => {
     const stackItems = useMemo(() => stack ? Object.values(stack) : [], [stack]);
 
-    const { validTargets, isTargetMode } = useGameStore(useShallow(state => ({
-        validTargets: state.pendingAction.type === 'target' ? state.pendingAction.validTargets : null,
+    const { pendingAction, isTargetMode } = useGameStore(useShallow(state => ({
+        pendingAction: state.pendingAction,
         isTargetMode: state.pendingAction.type === 'target' || state.pendingAction.type === 'select'
     })));
+    const cardImageFallbackMode = useSettingsStore(state => state.settings.cardImageFallbackMode);
+    const isValidTargetByCardId = useMemo(() => createValidTargetLookup(pendingAction), [pendingAction]);
 
     if (stackItems.length === 0) {
         return null;
     }
-
-    // Helper to check if card is a valid target
-    const isValidTarget = (cardId: string): boolean => {
-        if (isTargetMode && validTargets) {
-            return validTargets.includes(cardId);
-        }
-        return isTargetMode;
-    };
-
-    // Get the image URL for a stack item (uses source card for abilities)
-    const getStackItemImage = (card: CardView): string => {
-        // For abilities, use the source card's image
-        if (isStackAbility(card)) {
-            return cardImageService.getImageUrl(card.sourceCard);
-        }
-        return cardImageService.getImageUrl(card);
-    };
 
     // Get display name and text for a stack item
     const getStackItemInfo = (card: CardView) => {
@@ -72,8 +60,9 @@ export const ArenaStack: React.FC<ArenaStackProps> = React.memo(({ stack, onCard
             <div className="arena-stack-wrapper">
                 <div className="arena-stack-cards">
                     {stackItems.map((card, index) => {
-                        const validTarget = isValidTarget(card.id);
+                        const validTarget = isTargetMode && isValidTargetByCardId(card.id);
                         const isAbility = isStackAbility(card);
+                        const imageCard = isAbility ? card.sourceCard : card;
                         const { name, type, rules } = getStackItemInfo(card);
 
                         // Calculate rotation for fan effect - slight rotation for each card
@@ -91,8 +80,11 @@ export const ArenaStack: React.FC<ArenaStackProps> = React.memo(({ stack, onCard
                                 name={name}
                                 type={type}
                                 rules={rules}
+                                imageCard={imageCard}
+                                cardImageFallbackMode={cardImageFallbackMode}
                                 onCardClick={onCardClick}
                                 onCardInspect={onCardInspect}
+                                onCardHover={onCardHover}
                             />
                         );
                     })}
@@ -114,16 +106,20 @@ interface ArenaStackCardProps {
     name: string;
     type: string;
     rules: string;
+    imageCard: CardView;
+    cardImageFallbackMode: CardImageFallbackMode;
     onCardClick?: (cardId: string) => void;
     onCardInspect?: (cardId: string) => void;
+    onCardHover?: (cardId: string | null) => void;
 }
 
 const ArenaStackCard: React.FC<ArenaStackCardProps> = React.memo(({
     card, index, total, rotation, validTarget, isAbility, name, type, rules,
-    onCardClick, onCardInspect
+    imageCard, cardImageFallbackMode, onCardClick, onCardInspect, onCardHover
 }) => {
     return (
         <div
+            id={`card-${card.id}`}
             className={`arena-stack-card ${validTarget ? 'valid-target' : ''} ${isAbility ? 'is-ability' : ''}`}
             style={{
                 zIndex: total - index,
@@ -135,11 +131,13 @@ const ArenaStackCard: React.FC<ArenaStackCardProps> = React.memo(({
                 e.preventDefault();
                 onCardInspect?.(card.id);
             }}
+            onMouseEnter={() => onCardHover?.(card.id)}
+            onMouseLeave={() => onCardHover?.(null)}
         >
             <img
-                src={isAbility && 'sourceCard' in card ? cardImageService.getImageUrl((card as any).sourceCard) : cardImageService.getImageUrl(card)}
+                src={cardImageService.getImageUrl(imageCard)}
                 alt={name}
-                onError={(e) => e.currentTarget.src = cardImageService.getPlaceholderUrl()}
+                onError={(e) => e.currentTarget.src = cardImageService.getFallbackImageUrl(imageCard, cardImageFallbackMode)}
             />
             {/* Ability indicator overlay with text preview */}
             {isAbility && (

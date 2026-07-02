@@ -28,9 +28,16 @@
     bottom: 140px;
     /* Position above the Arena priority controls */
     right: 20px;
-    z-index: 1000;
+    z-index: 250;
     pointer-events: none;
     /* Let clicks through unless on panel */
+}
+
+.game-phase-region {
+    position: fixed;
+    top: 10px;
+    right: 20px;
+    z-index: 100;
 }
 
 
@@ -316,6 +323,22 @@
     gap: 6px;
     align-items: center;
     flex-wrap: nowrap;
+    position: relative;
+    min-height: 92px;
+    padding-top: 14px;
+}
+
+.battlefield-zone-label {
+    position: absolute;
+    top: 0;
+    left: 2px;
+    color: rgba(203, 213, 225, 0.72);
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    pointer-events: none;
 }
 
 .zone-lands {
@@ -324,6 +347,11 @@
 
 .zone-creatures {
     gap: 8px;
+}
+
+.zone-nonlands,
+.zone-other {
+    gap: 7px;
 }
 
 /* Card Stack */
@@ -382,9 +410,12 @@
 
 .permanent {
     width: 75px;
+    aspect-ratio: 2.5 / 3.5;
     transition: transform 0.2s, margin 0.2s;
     position: relative;
     flex-shrink: 0;
+    border-radius: 5px;
+    contain: layout paint style;
 }
 
 .permanent.tapped {
@@ -396,12 +427,60 @@
     border: 2px dashed gray;
 }
 
+.permanent.playable-permanent img {
+    box-shadow:
+        0 0 0 2px rgba(251, 191, 36, 0.78),
+        0 0 18px rgba(251, 191, 36, 0.35),
+        0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
 .permanent img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    aspect-ratio: 2.5 / 3.5;
+    object-fit: cover;
     border-radius: 5px;
     display: block;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.permanent-mana-cost {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    max-width: calc(100% - 8px);
+    justify-content: flex-end;
+    z-index: 12;
+    pointer-events: none;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9));
+}
+
+.token-card-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+    border-radius: 5px;
+    background:
+        linear-gradient(145deg, rgba(245, 158, 11, 0.88), rgba(76, 29, 149, 0.88)),
+        #111827;
+    color: #fff7ed;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}
+
+.token-card-face strong {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.5);
 }
 
 /* Badges */
@@ -428,6 +507,31 @@
 
 .defense-badge {
     background: linear-gradient(135deg, #6b21a8, #581c87);
+}
+
+.life-total-badge {
+    position: absolute;
+    left: -6px;
+    bottom: -5px;
+    min-width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #065f46, #022c22);
+    color: #dcfce7;
+    border: 1px solid rgba(134, 239, 172, 0.75);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
+    font-size: 11px;
+    font-weight: 800;
+    z-index: 21;
+}
+
+.life-total-badge.lethal {
+    background: linear-gradient(135deg, #991b1b, #450a0a);
+    color: #fee2e2;
+    border-color: rgba(252, 165, 165, 0.8);
 }
 
 
@@ -580,6 +684,83 @@
     border-color: #93c5fd;
 }
 
+.status-icon.token {
+    background: rgba(245, 158, 11, 0.92);
+    color: #1f1300;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.status-icon.double-faced {
+    background: rgba(14, 165, 233, 0.9);
+    color: #eff6ff;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.status-icon.copy {
+    background: rgba(168, 85, 247, 0.92);
+    color: #faf5ff;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.status-icon.playable {
+    background: rgba(251, 191, 36, 0.94);
+    color: #1f1300;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.status-icon.target {
+    background: rgba(34, 197, 94, 0.94);
+    color: #052e16;
+    border-color: rgba(187, 247, 208, 0.95);
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.status-icon.target.chosen {
+    background: rgba(251, 191, 36, 0.96);
+    color: #1f1300;
+    border-color: rgba(254, 240, 138, 0.95);
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.55), 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.permanent.chosen-target img {
+    outline: 3px solid #fbbf24;
+    outline-offset: 2px;
+    box-shadow: 0 0 18px rgba(251, 191, 36, 0.6);
+}
+
+.status-icon.can-attack {
+    background: rgba(239, 68, 68, 0.92);
+    color: #fff1f2;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.status-icon.can-block {
+    background: rgba(59, 130, 246, 0.92);
+    color: #eff6ff;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.status-icon.attachment {
+    background: rgba(20, 184, 166, 0.92);
+    color: #042f2e;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.status-icon.attached {
+    background: rgba(148, 163, 184, 0.92);
+    color: #0f172a;
+    font-size: 10px;
+    font-weight: 900;
+}
+
 /* Counters Overlay */
 .counters-container {
     position: absolute;
@@ -668,7 +849,7 @@
     }
 }
 
-.combat-overlay {
+.combat-overlay-root {
     position: fixed;
     top: 0;
     left: 0;
@@ -677,6 +858,13 @@
     pointer-events: none;
     z-index: 50;
     /* Above cards and panels but below dialogs */
+}
+
+.combat-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .combat-line {
@@ -709,6 +897,41 @@
     stroke-linecap: round;
 }
 
+.combat-line-target {
+    stroke: #fbbf24;
+    stroke-dasharray: 10, 5;
+    opacity: 0.92;
+}
+
+.combat-line-target-glow {
+    stroke: #fbbf24;
+    stroke-width: 10px;
+    opacity: 0.25;
+    stroke-linecap: round;
+}
+
+.combat-target-marker {
+    position: absolute;
+    transform: translate(-50%, calc(-100% - 10px));
+    padding: 3px 8px;
+    border: 1px solid rgba(251, 191, 36, 0.85);
+    border-radius: 999px;
+    background: rgba(24, 18, 8, 0.92);
+    color: #fde68a;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.32);
+}
+
+.combat-target-marker.chosen {
+    border-color: rgba(34, 197, 94, 0.9);
+    color: #bbf7d0;
+    box-shadow: 0 0 18px rgba(34, 197, 94, 0.34);
+}
+
 /* Animate attack lines for emphasis */
 @keyframes combatPulse {
 
@@ -723,5 +946,19 @@
 }
 
 .combat-line-attack {
-    animation: combatPulse 1.5s ease-in-out infinite;
+    animation: combatPulse var(--combat-pulse-duration, 1.5s) ease-in-out infinite;
+}
+
+.combat-overlay-root.reduced-motion .combat-line,
+.combat-overlay-root.reduced-motion .combat-line-attack,
+.combat-overlay-root.reduced-motion .combat-target-marker {
+    animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .combat-line,
+    .combat-line-attack,
+    .combat-target-marker {
+        animation: none;
+    }
 }

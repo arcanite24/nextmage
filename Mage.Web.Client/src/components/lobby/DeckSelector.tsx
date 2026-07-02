@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../common';
 import { Modal } from '../common/Modal';
+import { useSessionStore } from '../../stores';
 import { DeckCardLists, DeckCardInfo } from '../../types';
 import { DeckSerializer } from '../../services/DeckSerializer';
 import { deckStorage, DeckSummary } from '../../services/DeckStorageService';
@@ -38,6 +39,8 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({
     const [savedDecks, setSavedDecks] = useState<DeckSummary[]>([]);
     const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const showAlert = useSessionStore(state => state.showAlert);
+    const showLocalUserRequest = useSessionStore(state => state.showLocalUserRequest);
 
     const parsedDeck = DeckSerializer.importDeck(deckText);
     const maindeckCount = parsedDeck.cards.reduce((sum: number, c: DeckCardInfo) => sum + c.amount, 0);
@@ -108,8 +111,7 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({
             parsed.name = deckName;
             await deckStorage.saveDeck(parsed);
             if (onError) onError(null);
-            // Optionally show success toast/message
-            alert("Deck saved successfully!");
+            showAlert('Deck saved', 'Deck saved successfully.');
         } catch (e) {
             console.error(e);
             if (onError) onError("Failed to save deck.");
@@ -134,9 +136,18 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({
 
     const handleDeleteDeck = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        if (confirm("Are you sure you want to delete this deck?")) {
+        const confirmed = await showLocalUserRequest({
+            title: 'Delete deck?',
+            message: 'This removes the saved deck from this browser.',
+            button2Text: 'Cancel',
+            button2Action: null,
+            button1Text: 'Delete deck',
+            button1Action: null,
+        });
+
+        if (confirmed === 1) {
             await deckStorage.deleteDeck(id);
-            loadDeckList();
+            await loadDeckList();
         }
     };
 

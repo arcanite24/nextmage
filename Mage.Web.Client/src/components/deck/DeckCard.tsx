@@ -16,6 +16,7 @@ interface DeckCardProps {
     isSelected?: boolean;
     onClick?: () => void;
     onDoubleClick?: () => void;
+    onDelete?: () => void;
 }
 
 export const DeckCard: React.FC<DeckCardProps> = ({
@@ -23,6 +24,7 @@ export const DeckCard: React.FC<DeckCardProps> = ({
     isSelected = false,
     onClick,
     onDoubleClick,
+    onDelete,
 }) => {
     // Get cover card image URL
     const getCoverImageUrl = (): string => {
@@ -46,17 +48,50 @@ export const DeckCard: React.FC<DeckCardProps> = ({
 
     const colorSymbols = getColorSymbols();
     const cardCount = deck.cardCount || 0;
+    const deckName = deck.name || 'Untitled Deck';
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.currentTarget !== event.target) return;
+
+        if (event.key === 'Escape' && isSelected) {
+            event.preventDefault();
+            onClick?.();
+            return;
+        }
+
+        if ((event.key === 'Delete' || event.key === 'Backspace') && isSelected && onDelete) {
+            event.preventDefault();
+            onDelete();
+            return;
+        }
+
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+
+        event.preventDefault();
+        if (event.key === 'Enter' && isSelected && onDoubleClick) {
+            onDoubleClick();
+            return;
+        }
+        onClick?.();
+    };
 
     return (
         <div
             className={`deck-card ${isSelected ? 'selected' : ''}`}
+            role="button"
+            tabIndex={0}
+            aria-pressed={isSelected}
+            aria-label={`${deckName}. ${cardCount} cards. ${isSelected ? `Press Enter to edit${onDelete ? ' or Delete/Backspace to remove' : ''}.` : 'Press Enter or Space to select.'}`}
             onClick={onClick}
             onDoubleClick={onDoubleClick}
+            onKeyDown={handleKeyDown}
+            data-testid="deck-manager-deck-card"
+            data-deck-name={deckName}
         >
             <div className="deck-card-image-container">
                 <img
                     src={getCoverImageUrl()}
-                    alt={deck.name}
+                    alt={deckName}
                     className="deck-card-image"
                     loading="lazy"
                     onError={(e) => {
@@ -74,7 +109,10 @@ export const DeckCard: React.FC<DeckCardProps> = ({
                         ))}
                     </div>
                 )}
-                <div className="deck-card-name">{deck.name || 'Untitled Deck'}</div>
+                <div className="deck-card-name">{deckName}</div>
+                {deck.description && (
+                    <div className="deck-card-description">{deck.description}</div>
+                )}
             </div>
 
             <div className="deck-card-count">
@@ -89,8 +127,24 @@ interface CreateDeckCardProps {
 }
 
 export const CreateDeckCard: React.FC<CreateDeckCardProps> = ({ onClick }) => {
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.currentTarget !== event.target) return;
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+
+        event.preventDefault();
+        onClick();
+    };
+
     return (
-        <div className="deck-card create-deck-card" onClick={onClick}>
+        <div
+            className="deck-card create-deck-card"
+            role="button"
+            tabIndex={0}
+            aria-label="Create new deck"
+            onClick={onClick}
+            onKeyDown={handleKeyDown}
+            data-testid="deck-manager-new-deck-card"
+        >
             <div className="create-deck-icon">+</div>
             <div className="create-deck-text">New Deck</div>
         </div>

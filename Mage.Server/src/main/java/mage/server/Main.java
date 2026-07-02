@@ -313,8 +313,18 @@ public final class Main {
                 // WebSocket Server
                 int websocketPort = config.getWebsocketPort();
                 mage.server.websocket.WebSocketServerImpl webSocketServer = new mage.server.websocket.WebSocketServerImpl(new java.net.InetSocketAddress(websocketPort), mageServerImpl, managerFactory);
-                webSocketServer.start();
-                
+                try {
+                    webSocketServer.start();
+                    webSocketServer.awaitStartup(10, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (Exception ex) {
+                    try {
+                        server.stop();
+                    } catch (Exception stopEx) {
+                        logger.warn("Failed to stop MAGE remoting server after WebSocket startup failure", stopEx);
+                    }
+                    throw ex;
+                }
+
                 logger.info("Started MAGE WebSocket server - listening on port " + websocketPort);
 
                 if (testMode) {

@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { CardView, PermanentView, StackAbilityView } from '../../types';
 import { cardImageService } from '../../services/CardImageService';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { useGameStore } from '../../stores';
+import { ManaCost } from '../common/ManaSymbols';
 import './CardPreviewModal.css';
 
 interface CardPreviewModalProps {
@@ -14,7 +18,7 @@ const isStackAbility = (card: CardView): card is StackAbilityView => {
 };
 
 // Parse and render rich text with HTML tags (from server rules text)
-const parseRulesText = (text: string): React.ReactNode => {
+const parseRulesText = (text: string, showReminderText = true): React.ReactNode => {
     if (!text) return null;
 
     // Replace common HTML entities and tags
@@ -29,6 +33,10 @@ const parseRulesText = (text: string): React.ReactNode => {
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'");
+
+    if (!showReminderText) {
+        processed = stripReminderText(processed);
+    }
 
     // Split by <br> tags for line breaks
     const lines = processed.split(/<br\s*\/?>/gi);
@@ -66,34 +74,117 @@ const parseRulesText = (text: string): React.ReactNode => {
     });
 };
 
-export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClose }) => {
-    const [imageUrl, setImageUrl] = useState<string>(cardImageService.getCardBackUrl());
-    const [isLoading, setIsLoading] = useState(true);
+const stripReminderText = (text: string): string => {
+    return text
+        .replace(/\s*\([^)]*\)/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+};
 
+const formatHintValue = (value: unknown): string => {
+    if (value === null || value === undefined || value === '') return '';
+    if (Array.isArray(value)) return value.filter(Boolean).join(', ');
+    if (typeof value === 'object') return Object.values(value as Record<string, unknown>).filter(Boolean).join(', ');
+    return String(value);
+};
+
+const formatRarityLabel = (rarity: unknown): string => {
+    return String(rarity || '')
+        .toLowerCase()
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+};
+
+const getSetSymbolGlyph = (rarity: unknown): string => {
+    switch (String(rarity || '').toUpperCase()) {
+        case 'MYTHIC':
+            return '◆';
+        case 'RARE':
+            return '◆';
+        case 'UNCOMMON':
+            return '◇';
+        case 'SPECIAL':
+        case 'BONUS':
+            return '✦';
+        case 'LAND':
+            return '⬟';
+        case 'COMMON':
+        default:
+            return '●';
+    }
+};
+
+export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClose }) => {
+    const { showCardReminderText, showCardSetInfo, showCardHints, cardImageFallbackMode } = useSettingsStore(useShallow(state => ({
+        showCardReminderText: state.settings.showCardReminderText,
+        showCardSetInfo: state.settings.showCardSetInfo,
+        showCardHints: state.settings.showCardHints,
+        cardImageFallbackMode: state.settings.cardImageFallbackMode,
+    })));
+    const sendPlayerAction = useGameStore(state => state.sendPlayerAction);
     // Check if this is an ability
     const isAbility = isStackAbility(card);
 
     // Use source card as the main card to display for abilities
-    const displayCard = isAbility ? card.sourceCard : card;
+    const sourceDisplayCard = isAbility ? card.sourceCard : card;
+    const [imageUrl, setImageUrl] = useState<string>(cardImageService.getCardBackUrl());
+    const [imageFailed, setImageFailed] = useState(false);
+    const [selectedFace, setSelectedFace] = useState<'front' | 'back'>(
+        sourceDisplayCard.transformed ? 'back' : 'front'
+    );
+    const overlayRef = useRef<HTMLDivElement | null>(null);
+    const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+    const titleId = useId();
+    const hasBackFace = !!sourceDisplayCard.secondCardFace || sourceDisplayCard.isDoubleFacedCard;
+    const displayCard = selectedFace === 'back' && sourceDisplayCard.secondCardFace
+        ? sourceDisplayCard.secondCardFace
+        : sourceDisplayCard;
 
     // Load image using cache-aware preload (always resolves, returns placeholder on error)
     useEffect(() => {
-        setIsLoading(true);
-        cardImageService.preload(displayCard, 'large').then((url) => {
-            setImageUrl(url);
-            setIsLoading(false);
+        setImageFailed(false);
+        const face = selectedFace === 'back' ? 'back' : 'front';
+        const imageTarget = sourceDisplayCard;
+        const imagePromise = selectedFace === 'back'
+            ? Promise.resolve(cardImageService.getImageUrl(imageTarget, 'large', face))
+            : cardImageService.preload(imageTarget, 'large');
+        imagePromise.then((url) => {
+            if (url === cardImageService.getPlaceholderUrl()) {
+                setImageFailed(true);
+                setImageUrl(cardImageService.getFallbackImageUrl(displayCard, cardImageFallbackMode));
+            } else {
+                setImageUrl(url);
+            }
         });
-    }, [displayCard.expansionSetCode, displayCard.cardNumber]);
+    }, [cardImageFallbackMode, displayCard, sourceDisplayCard, selectedFace]);
+
+    useEffect(() => {
+        const previouslyFocused = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+
+        window.requestAnimationFrame(() => {
+            closeButtonRef.current?.focus();
+        });
+
+        return () => {
+            if (previouslyFocused?.isConnected) {
+                previouslyFocused.focus();
+            }
+        };
+    }, []);
 
     // Close on Escape key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
                 onClose();
             }
         };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        document.addEventListener('keydown', handleKeyDown, { capture: true });
+        return () => document.removeEventListener('keydown', handleKeyDown, { capture: true });
     }, [onClose]);
 
     // Close on click outside (overlay click)
@@ -103,21 +194,58 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
         }
     };
 
-    const abilitySourceCard = isAbility ? card.sourceCard : null;
+    const handlePreviewKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key !== 'Tab') return;
+
+        const focusableElements = getFocusableElements(overlayRef.current);
+        if (focusableElements.length === 0) {
+            event.preventDefault();
+            closeButtonRef.current?.focus();
+            return;
+        }
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey && document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+        } else if (!event.shiftKey && document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+        }
+    };
 
     // Extract card info from the display card
     const isPermanent = 'tapped' in displayCard;
     const permanentCard = isPermanent ? (displayCard as PermanentView) : null;
+    const originalCard = permanentCard?.original;
+    const hasSplitDetails = displayCard.isSplitCard && (
+        displayCard.leftSplitName ||
+        displayCard.leftSplitRules?.length ||
+        displayCard.rightSplitName ||
+        displayCard.rightSplitRules?.length
+    );
+    const cardIconCount = Array.isArray(displayCard.cardIcons) ? displayCard.cardIcons.length : 0;
+    const rarityClassName = String(displayCard.rarity || 'common').toLowerCase();
+    const setSymbolLabel = [
+        displayCard.expansionSetCode || 'Unknown set',
+        displayCard.rarity ? `${formatRarityLabel(displayCard.rarity)} rarity` : 'Unknown rarity',
+    ].join(', ');
+    const rulesText = displayCard.rules ?? [];
+    const visibleRulesText = showCardReminderText
+        ? rulesText
+        : rulesText.map(stripReminderText).filter(Boolean);
 
     // Get mana cost string
-    const getManaCost = (): string | null => {
+    const getManaCost = (): string[] | undefined => {
         if (displayCard.manaCostRightStr && displayCard.manaCostRightStr.length > 0) {
-            return displayCard.manaCostRightStr.join('');
+            return displayCard.manaCostRightStr;
         }
         if (displayCard.manaCostLeftStr && displayCard.manaCostLeftStr.length > 0) {
-            return displayCard.manaCostLeftStr.join('');
+            return displayCard.manaCostLeftStr;
         }
-        return null;
+        return undefined;
     };
 
     const manaCost = getManaCost();
@@ -132,24 +260,127 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
         return displayCard.cardTypes?.join(' ').toUpperCase() || 'UNKNOWN TYPE';
     };
 
+    const featureBadges = [
+        displayCard.isSplitCard ? 'Split' : null,
+        displayCard.isDoubleFacedCard ? 'Double-faced' : null,
+        displayCard.faceDown ? 'Face down' : null,
+        permanentCard?.morphed ? 'Morph' : null,
+        permanentCard?.manifested ? 'Manifest' : null,
+        permanentCard?.disguised ? 'Disguise' : null,
+        permanentCard?.cloaked ? 'Cloak' : null,
+        displayCard.isToken ? 'Token' : null,
+        displayCard.paid ? 'Paid' : null,
+        displayCard.isChoosable ? 'Choosable' : null,
+        displayCard.playableStats?.playableAmount > 0 ? 'Playable' : null,
+        permanentCard?.copy ? 'Copy' : null,
+        permanentCard?.tapped ? 'Tapped' : null,
+        permanentCard?.canAttack ? 'Can attack' : null,
+        permanentCard?.canBlock ? 'Can block' : null,
+        permanentCard?.summoningSickness ? 'Summoning sickness' : null,
+    ].filter((badge): badge is string => Boolean(badge));
+    const helperHints = [
+        { label: 'Zone', value: displayCard.zone },
+        { label: 'Mana value', value: displayCard.manaValue },
+        { label: 'Frame', value: displayCard.frameStyle || displayCard.frameColor },
+        { label: 'Color', value: displayCard.color },
+        { label: 'Target links', value: displayCard.targets?.length },
+        { label: 'Paired card', value: displayCard.pairedCard },
+        { label: 'Band members', value: displayCard.bandedCards?.length },
+        { label: 'Ability icons', value: cardIconCount > 0 ? cardIconCount : '' },
+        { label: 'Image file', value: displayCard.imageFileName },
+        { label: 'Art rect', value: displayCard.artRect },
+        { label: 'Original power', value: displayCard.originalPower },
+        { label: 'Original toughness', value: displayCard.originalToughness },
+    ]
+        .map((hint) => ({ ...hint, value: formatHintValue(hint.value) }))
+        .filter((hint) => hint.value);
+    const triggerObjectId = isAbility ? card.id : displayCard.id;
+    const triggerRuleText = ((isAbility ? card.rules?.[0] : displayCard.rules?.[0]) || '')
+        .replace(/\{this\}/g, displayCard.name)
+        .trim();
+    const sendTriggerOrder = React.useCallback(async (
+        action: 'TRIGGER_AUTO_ORDER_ABILITY_FIRST' | 'TRIGGER_AUTO_ORDER_ABILITY_LAST' | 'TRIGGER_AUTO_ORDER_NAME_FIRST' | 'TRIGGER_AUTO_ORDER_NAME_LAST',
+        payload: string,
+    ) => {
+        await sendPlayerAction(action, payload);
+    }, [sendPlayerAction]);
+
     return (
-        <div className="card-preview-overlay" onClick={handleOverlayClick} onContextMenu={(e) => e.preventDefault()}>
+        <div
+            ref={overlayRef}
+            className="card-preview-overlay"
+            onClick={handleOverlayClick}
+            onKeyDown={handlePreviewKeyDown}
+            onContextMenu={(e) => e.preventDefault()}
+            data-testid="card-preview-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+        >
             <div className="card-preview-container">
                 <div className="card-preview-content">
-                    <div className={`card-preview-image-wrapper ${isLoading ? 'loading' : ''}`}>
-                        {isLoading && <div className="card-preview-spinner" />}
-                        <img src={imageUrl} alt={getDisplayName()} className="card-preview-image" />
+                    <div className="card-preview-image-wrapper">
+                        <img
+                            src={imageUrl}
+                            alt={getDisplayName()}
+                            className="card-preview-image"
+                            onError={(event) => {
+                                setImageFailed(true);
+                                event.currentTarget.src = cardImageService.getFallbackImageUrl(displayCard, cardImageFallbackMode);
+                            }}
+                        />
+                        {imageFailed && (
+                            <div className="card-image-fallback-badge">
+                                Image fallback
+                            </div>
+                        )}
+                        {hasBackFace && (
+                            <div className="card-face-toggle" role="group" aria-label="Card face">
+                                <button
+                                    type="button"
+                                    className={selectedFace === 'front' ? 'active' : ''}
+                                    onClick={() => setSelectedFace('front')}
+                                >
+                                    Front
+                                </button>
+                                <button
+                                    type="button"
+                                    className={selectedFace === 'back' ? 'active' : ''}
+                                    onClick={() => setSelectedFace('back')}
+                                >
+                                    Back
+                                </button>
+                            </div>
+                        )}
                     </div>
-                    <button className="card-preview-close" onClick={onClose}>x</button>
+                    <button
+                        ref={closeButtonRef}
+                        type="button"
+                        className="card-preview-close"
+                        onClick={onClose}
+                        aria-label="Close card preview"
+                    >
+                        x
+                    </button>
                 </div>
 
                 <div className="card-info-panel">
                     <div className="card-info-header">
-                        <h2 className="card-info-name">{getDisplayName()}</h2>
+                        <h2 className="card-info-name" id={titleId}>{getDisplayName()}</h2>
                         {manaCost && (
-                            <div className="card-info-mana">{manaCost}</div>
+                            <div className="card-info-mana">
+                                <ManaCost cost={manaCost} size="md" />
+                            </div>
                         )}
                     </div>
+
+                    {featureBadges.length > 0 && (
+                        <div className="card-info-badges" aria-label="Card state">
+                            {featureBadges.map((badge) => (
+                                <span key={badge} className="card-info-badge">{badge}</span>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="card-info-type">
                         {getTypeLine()}
@@ -161,17 +392,77 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
                     {/* Indicator that we are viewing the source of a stack ability */}
                     {isAbility && (
                         <div className="card-info-ability-source">
-                            <span className="ability-label">⚡ Source of Ability</span>
+                            <span className="ability-label">Source of ability</span>
+                            <strong>{sourceDisplayCard.name}</strong>
                         </div>
                     )}
 
-                    {displayCard.rules && displayCard.rules.length > 0 && (
+                    {(triggerObjectId || triggerRuleText) && (
+                        <div className="card-info-trigger-actions" data-testid="card-preview-trigger-actions">
+                            <div className="card-info-trigger-title">Trigger Auto-Order</div>
+                            <div className="card-info-trigger-grid">
+                                <button
+                                    type="button"
+                                    disabled={!triggerObjectId}
+                                    onClick={() => sendTriggerOrder('TRIGGER_AUTO_ORDER_ABILITY_FIRST', triggerObjectId)}
+                                    data-testid="card-trigger-ability-first"
+                                >
+                                    Ability first
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={!triggerObjectId}
+                                    onClick={() => sendTriggerOrder('TRIGGER_AUTO_ORDER_ABILITY_LAST', triggerObjectId)}
+                                    data-testid="card-trigger-ability-last"
+                                >
+                                    Ability last
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={!triggerRuleText}
+                                    onClick={() => sendTriggerOrder('TRIGGER_AUTO_ORDER_NAME_FIRST', triggerRuleText)}
+                                    data-testid="card-trigger-name-first"
+                                >
+                                    Name first
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={!triggerRuleText}
+                                    onClick={() => sendTriggerOrder('TRIGGER_AUTO_ORDER_NAME_LAST', triggerRuleText)}
+                                    data-testid="card-trigger-name-last"
+                                >
+                                    Name last
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {visibleRulesText.length > 0 && (
                         <div className="card-info-rules">
-                            {displayCard.rules.map((rule, i) => (
+                            {visibleRulesText.map((rule, i) => (
                                 <div key={i} className="rules-text">
-                                    {parseRulesText(rule)}
+                                    {parseRulesText(rule, showCardReminderText)}
                                 </div>
                             ))}
+                        </div>
+                    )}
+
+                    {hasSplitDetails && (
+                        <div className="card-info-split" data-testid="card-preview-split-details">
+                            <SplitFaceSummary
+                                name={displayCard.leftSplitName || displayCard.name}
+                                typeLine={displayCard.leftSplitTypeLine}
+                                costs={displayCard.leftSplitCostsStr}
+                                rules={displayCard.leftSplitRules}
+                                showReminderText={showCardReminderText}
+                            />
+                            <SplitFaceSummary
+                                name={displayCard.rightSplitName || displayCard.alternateName || 'Right face'}
+                                typeLine={displayCard.rightSplitTypeLine}
+                                costs={displayCard.rightSplitCostsStr}
+                                rules={displayCard.rightSplitRules}
+                                showReminderText={showCardReminderText}
+                            />
                         </div>
                     )}
 
@@ -196,6 +487,36 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
                         </div>
                     )}
 
+                    {permanentCard && (
+                        <div className="card-info-state-grid">
+                            <CardStateItem label="Controller" value={permanentCard.nameController} />
+                            <CardStateItem label="Owner" value={permanentCard.nameOwner} />
+                            {(permanentCard.attachments?.length ?? 0) > 0 && (
+                                <CardStateItem label="Attached cards" value={String(permanentCard.attachments?.length ?? 0)} />
+                            )}
+                            {permanentCard.attachedTo && (
+                                <CardStateItem label="Attached to" value={permanentCard.attachedTo} />
+                            )}
+                            {originalCard && (
+                                <CardStateItem label="Original" value={originalCard.name} />
+                            )}
+                            {cardIconCount > 0 && (
+                                <CardStateItem label="Ability icons" value={String(cardIconCount)} />
+                            )}
+                        </div>
+                    )}
+
+                    {showCardHints && helperHints.length > 0 && (
+                        <div className="card-info-hints" data-testid="card-preview-helper-hints">
+                            <div className="card-info-hints-title">Helper Hints</div>
+                            <div className="card-info-hint-grid">
+                                {helperHints.map((hint) => (
+                                    <CardStateItem key={hint.label} label={hint.label} value={hint.value} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Counters for permanents */}
                     {permanentCard && permanentCard.counters && permanentCard.counters.length > 0 && (
                         <div className="card-info-counters">
@@ -211,18 +532,91 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
                     )}
 
                     {/* Set info */}
-                    <div className="card-info-set">
+                    {showCardSetInfo && <div className="card-info-set" data-testid="card-preview-set-info">
+                        <span
+                            className={`set-symbol rarity-${rarityClassName}`}
+                            data-testid="card-preview-set-symbol"
+                            aria-label={setSymbolLabel}
+                            title={setSymbolLabel}
+                        >
+                            <span className="set-symbol-glyph" aria-hidden="true">{getSetSymbolGlyph(displayCard.rarity)}</span>
+                            {displayCard.expansionSetCode && (
+                                <span className="set-symbol-code">{displayCard.expansionSetCode}</span>
+                            )}
+                        </span>
                         {displayCard.expansionSetCode && (
                             <span className="set-code">{displayCard.expansionSetCode}</span>
                         )}
+                        {displayCard.cardNumber && (
+                            <span className="set-number">#{displayCard.cardNumber}</span>
+                        )}
                         {displayCard.rarity && (
-                            <span className={`set-rarity rarity-${String(displayCard.rarity).toLowerCase()}`}>
-                                {displayCard.rarity}
+                            <span className={`set-rarity rarity-${rarityClassName}`}>
+                                {formatRarityLabel(displayCard.rarity)}
                             </span>
                         )}
-                    </div>
+                    </div>}
                 </div>
             </div>
         </div>
     );
 };
+
+interface SplitFaceSummaryProps {
+    name: string;
+    typeLine?: string;
+    costs?: string;
+    rules?: string[];
+    showReminderText: boolean;
+}
+
+const splitManaCost = (costs?: string): string[] | undefined => {
+    if (!costs) return undefined;
+    const symbols = costs.match(/\{[^}]+\}/g);
+    return symbols && symbols.length > 0 ? symbols : [costs];
+};
+
+const SplitFaceSummary: React.FC<SplitFaceSummaryProps> = ({ name, typeLine, costs, rules, showReminderText }) => {
+    const manaCost = splitManaCost(costs);
+    const visibleRules = showReminderText
+        ? rules
+        : rules?.map(stripReminderText).filter(Boolean);
+
+    return (
+        <section className="split-face-summary">
+            <div className="split-face-header">
+                <strong>{name}</strong>
+                {manaCost && <ManaCost cost={manaCost} size="sm" />}
+            </div>
+            {typeLine && <div className="split-face-type">{typeLine}</div>}
+            {visibleRules?.map((rule, index) => (
+                <div key={index} className="split-face-rule">
+                    {parseRulesText(rule, showReminderText)}
+                </div>
+            ))}
+        </section>
+    );
+};
+
+const CardStateItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+    <div className="card-state-item">
+        <span>{label}</span>
+        <strong>{value}</strong>
+    </div>
+);
+
+function getFocusableElements(container: HTMLElement | null): HTMLElement[] {
+    if (!container) return [];
+
+    const selector = [
+        'button:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        'textarea:not([disabled])',
+        'a[href]',
+        '[tabindex]:not([tabindex="-1"])',
+    ].join(',');
+
+    return Array.from(container.querySelectorAll<HTMLElement>(selector))
+        .filter(element => !element.hasAttribute('hidden') && element.offsetParent !== null);
+}

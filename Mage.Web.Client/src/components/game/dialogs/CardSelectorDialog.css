@@ -17,6 +17,73 @@
     margin-bottom: 8px;
 }
 
+.card-selector-order-hint {
+    padding: 10px 12px;
+    border: 1px solid rgba(251, 191, 36, 0.42);
+    border-radius: 8px;
+    background: rgba(120, 53, 15, 0.28);
+    color: #fde68a;
+    font-size: 0.9rem;
+}
+
+.card-selector-toolbar {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(120px, auto) minmax(140px, auto) auto;
+    gap: 10px;
+    align-items: end;
+}
+
+.card-selector-toolbar label {
+    display: grid;
+    gap: 4px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.card-selector-toolbar input,
+.card-selector-toolbar select,
+.card-selector-toolbar button {
+    min-height: 36px;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.82);
+    color: #e2e8f0;
+}
+
+.card-selector-toolbar input,
+.card-selector-toolbar select {
+    padding: 0 10px;
+}
+
+.card-selector-toolbar button {
+    padding: 0 12px;
+    cursor: pointer;
+}
+
+.card-selector-toolbar input:focus,
+.card-selector-toolbar select:focus,
+.card-selector-toolbar button:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.75);
+    outline-offset: 2px;
+}
+
+.card-selector-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: #cbd5e1;
+    font-size: 0.82rem;
+}
+
+.card-selector-status span {
+    padding: 4px 8px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.74);
+}
+
 .card-selector-cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -31,8 +98,12 @@
 .card-selector-item {
     position: relative;
     cursor: pointer;
+    padding: 0;
+    border: 0;
+    background: transparent;
     transition: transform 0.2s, box-shadow 0.2s;
     border-radius: 8px;
+    text-align: left;
 }
 
 .card-selector-item:hover {
@@ -43,6 +114,30 @@
 .card-selector-item.selected {
     outline: 3px solid #4a90e2;
     box-shadow: 0 0 15px rgba(74, 144, 226, 0.5);
+}
+
+.card-selector-item.playable-card::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 10px;
+    border: 2px solid rgba(251, 191, 36, 0.8);
+    box-shadow: 0 0 18px rgba(251, 191, 36, 0.36);
+    pointer-events: none;
+}
+
+.card-selector-playable-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(251, 191, 36, 0.65);
+    background: rgba(15, 23, 42, 0.88);
+    color: #fde68a;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 6px;
+    text-transform: uppercase;
 }
 
 .card-selector-item.valid-target {
@@ -59,6 +154,16 @@
     filter: grayscale(50%);
 }
 
+.card-selector-item:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.card-selector-item:focus {
+    outline: 3px solid rgba(59, 130, 246, 0.75);
+    outline-offset: 3px;
+}
+
 .card-selector-item img {
     width: 100%;
     border-radius: 8px;
@@ -73,6 +178,35 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.card-selector-type {
+    text-align: center;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.card-selector-shortcut,
+.card-selector-selected-badge {
+    position: absolute;
+    right: 8px;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.9);
+    color: #bfdbfe;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 6px;
+}
+
+.card-selector-shortcut {
+    top: 8px;
+}
+
+.card-selector-selected-badge {
+    bottom: 34px;
 }
 
 .card-selector-empty {
@@ -135,6 +269,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     min-width: 200px;
+    color: inherit;
 }
 
 .player-selector-item:hover {
@@ -142,6 +277,17 @@
     border-color: #3b82f6;
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+}
+
+.player-selector-item:focus {
+    outline: 3px solid rgba(59, 130, 246, 0.75);
+    outline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+    .card-selector-toolbar {
+        grid-template-columns: 1fr;
+    }
 }
 
 .player-selector-avatar {

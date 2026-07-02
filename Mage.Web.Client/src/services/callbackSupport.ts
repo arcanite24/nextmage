@@ -1,0 +1,397 @@
+import type { ClientCallback, ClientCallbackMethod } from '../types/api.js';
+
+export type CallbackDeliveryType =
+    | 'UPDATE'
+    | 'TABLE_CHANGE'
+    | 'MESSAGE'
+    | 'DIALOG'
+    | 'CLIENT_SIDE_EVENT';
+
+export type CallbackRouteTarget =
+    | 'game'
+    | 'chat'
+    | 'session'
+    | 'lobby'
+    | 'activity';
+
+export type CallbackDecisionReason =
+    | 'accepted'
+    | 'accepted-out-of-order'
+    | 'ignored-outdated-update'
+    | 'client-side-event';
+
+export interface CallbackOrderingDecision {
+    callback: ClientCallback;
+    deliveryType: CallbackDeliveryType | 'UNKNOWN';
+    shouldProcess: boolean;
+    reason: CallbackDecisionReason;
+    lastAnyMessageId: number;
+}
+
+interface DeliveryTypeInfo {
+    canComeInAnyOrder: boolean;
+    mustIgnoreOnOutdated: boolean;
+}
+
+const DELIVERY_TYPE_INFO: Record<CallbackDeliveryType, DeliveryTypeInfo> = {
+    UPDATE: { canComeInAnyOrder: true, mustIgnoreOnOutdated: true },
+    TABLE_CHANGE: { canComeInAnyOrder: false, mustIgnoreOnOutdated: false },
+    MESSAGE: { canComeInAnyOrder: true, mustIgnoreOnOutdated: false },
+    DIALOG: { canComeInAnyOrder: false, mustIgnoreOnOutdated: false },
+    CLIENT_SIDE_EVENT: { canComeInAnyOrder: true, mustIgnoreOnOutdated: true },
+};
+
+export const JAVA_CALLBACK_METHODS = [
+    'CHATMESSAGE',
+    'SHOW_USERMESSAGE',
+    'SERVER_MESSAGE',
+    'JOINED_TABLE',
+    'START_TOURNAMENT',
+    'TOURNAMENT_INIT',
+    'TOURNAMENT_UPDATE',
+    'TOURNAMENT_OVER',
+    'START_DRAFT',
+    'SIDEBOARD',
+    'CONSTRUCT',
+    'DRAFT_OVER',
+    'DRAFT_INIT',
+    'DRAFT_PICK',
+    'DRAFT_UPDATE',
+    'SHOW_TOURNAMENT',
+    'WATCHGAME',
+    'VIEW_LIMITED_DECK',
+    'VIEW_SIDEBOARD',
+    'USER_REQUEST_DIALOG',
+    'GAME_REDRAW_GUI',
+    'START_GAME',
+    'GAME_INIT',
+    'GAME_UPDATE_AND_INFORM',
+    'GAME_INFORM_PERSONAL',
+    'GAME_ERROR',
+    'GAME_UPDATE',
+    'GAME_TARGET',
+    'GAME_CHOOSE_ABILITY',
+    'GAME_CHOOSE_PILE',
+    'GAME_CHOOSE_CHOICE',
+    'GAME_ASK',
+    'GAME_SELECT',
+    'GAME_PLAY_MANA',
+    'GAME_PLAY_XMANA',
+    'GAME_GET_AMOUNT',
+    'GAME_GET_MULTI_AMOUNT',
+    'GAME_OVER',
+    'END_GAME_INFO',
+    'REPLAY_GAME',
+    'REPLAY_INIT',
+    'REPLAY_UPDATE',
+    'REPLAY_DONE',
+] as const;
+
+const METHOD_ALIASES: Record<string, ClientCallbackMethod> = {
+    CHAT_MESSAGE: 'chatMessage',
+    CHATMESSAGE: 'chatMessage',
+    chatMessage: 'chatMessage',
+    SHOW_USER_MESSAGE: 'showUserMessage',
+    SHOW_USERMESSAGE: 'showUserMessage',
+    showUserMessage: 'showUserMessage',
+    SERVER_MESSAGE: 'serverMessage',
+    serverMessage: 'serverMessage',
+
+    JOINED_TABLE: 'joinedTable',
+    joinedTable: 'joinedTable',
+
+    START_TOURNAMENT: 'startTournament',
+    startTournament: 'startTournament',
+    TOURNAMENT_INIT: 'tournamentInit',
+    tournamentInit: 'tournamentInit',
+    TOURNAMENT_UPDATE: 'tournamentUpdate',
+    tournamentUpdate: 'tournamentUpdate',
+    TOURNAMENT_OVER: 'tournamentOver',
+    tournamentOver: 'tournamentOver',
+
+    START_DRAFT: 'startDraft',
+    startDraft: 'startDraft',
+    SIDEBOARD: 'sideboard',
+    sideboard: 'sideboard',
+    CONSTRUCT: 'construct',
+    construct: 'construct',
+    DRAFT_OVER: 'draftOver',
+    draftOver: 'draftOver',
+    DRAFT_INIT: 'draftInit',
+    draftInit: 'draftInit',
+    DRAFT_PICK: 'draftPick',
+    draftPick: 'draftPick',
+    DRAFT_UPDATE: 'draftUpdate',
+    draftUpdate: 'draftUpdate',
+
+    SHOW_TOURNAMENT: 'showTournament',
+    showTournament: 'showTournament',
+    WATCH_GAME: 'watchGame',
+    WATCHGAME: 'watchGame',
+    watchGame: 'watchGame',
+
+    VIEW_LIMITED_DECK: 'viewLimitedDeck',
+    viewLimitedDeck: 'viewLimitedDeck',
+    VIEW_SIDEBOARD: 'viewSideboard',
+    viewSideboard: 'viewSideboard',
+
+    USER_REQUEST_DIALOG: 'userRequestDialog',
+    userRequestDialog: 'userRequestDialog',
+    GAME_REDRAW_GUI: 'gameRedrawGUI',
+    gameRedrawGUI: 'gameRedrawGUI',
+
+    START_GAME: 'startGame',
+    startGame: 'startGame',
+    GAME_INIT: 'gameInit',
+    gameInit: 'gameInit',
+    GAME_UPDATE_AND_INFORM: 'gameUpdateAndInform',
+    gameInform: 'gameUpdateAndInform',
+    gameUpdateAndInform: 'gameUpdateAndInform',
+    GAME_INFORM_PERSONAL: 'gameInformPersonal',
+    gameInformPersonal: 'gameInformPersonal',
+    GAME_ERROR: 'gameError',
+    gameError: 'gameError',
+    GAME_UPDATE: 'gameUpdate',
+    gameUpdate: 'gameUpdate',
+    GAME_TARGET: 'gameTarget',
+    gameTarget: 'gameTarget',
+    GAME_CHOOSE_ABILITY: 'gameChooseAbility',
+    gameChooseAbility: 'gameChooseAbility',
+    GAME_CHOOSE_PILE: 'gameChoosePile',
+    gameChoosePile: 'gameChoosePile',
+    GAME_CHOOSE_CHOICE: 'gameChooseChoice',
+    gameChooseChoice: 'gameChooseChoice',
+    GAME_ASK: 'gameAsk',
+    gameAsk: 'gameAsk',
+    GAME_SELECT: 'gameSelect',
+    gameSelect: 'gameSelect',
+    GAME_PLAY_MANA: 'gamePlayMana',
+    gamePlayMana: 'gamePlayMana',
+    GAME_PLAY_X_MANA: 'gamePlayXMana',
+    GAME_PLAY_XMANA: 'gamePlayXMana',
+    gamePlayXMana: 'gamePlayXMana',
+    GAME_GET_AMOUNT: 'gameGetAmount',
+    GAME_SELECT_AMOUNT: 'gameGetAmount',
+    gameSelectAmount: 'gameGetAmount',
+    gameGetAmount: 'gameGetAmount',
+    GAME_GET_MULTI_AMOUNT: 'gameGetMultiAmount',
+    GAME_SELECT_MULTI_AMOUNT: 'gameGetMultiAmount',
+    gameSelectMultiAmount: 'gameGetMultiAmount',
+    gameGetMultiAmount: 'gameGetMultiAmount',
+    GAME_OVER: 'gameOver',
+    gameOver: 'gameOver',
+    END_GAME_INFO: 'endGameInfo',
+    endGameInfo: 'endGameInfo',
+
+    REPLAY_GAME: 'replayGame',
+    replayGame: 'replayGame',
+    REPLAY_INIT: 'replayInit',
+    replayInit: 'replayInit',
+    REPLAY_UPDATE: 'replayUpdate',
+    replayUpdate: 'replayUpdate',
+    REPLAY_DONE: 'replayDone',
+    replayDone: 'replayDone',
+};
+
+const CALLBACK_DELIVERY_TYPES: Record<ClientCallbackMethod, CallbackDeliveryType> = {
+    chatMessage: 'MESSAGE',
+    showUserMessage: 'MESSAGE',
+    serverMessage: 'MESSAGE',
+    joinedTable: 'TABLE_CHANGE',
+    startTournament: 'TABLE_CHANGE',
+    tournamentInit: 'TABLE_CHANGE',
+    tournamentUpdate: 'UPDATE',
+    tournamentOver: 'TABLE_CHANGE',
+    startDraft: 'TABLE_CHANGE',
+    SIDEBOARD: 'TABLE_CHANGE',
+    sideboard: 'TABLE_CHANGE',
+    construct: 'TABLE_CHANGE',
+    draftOver: 'TABLE_CHANGE',
+    draftInit: 'TABLE_CHANGE',
+    draftPick: 'TABLE_CHANGE',
+    draftUpdate: 'UPDATE',
+    showTournament: 'TABLE_CHANGE',
+    watchGame: 'TABLE_CHANGE',
+    viewLimitedDeck: 'MESSAGE',
+    viewSideboard: 'MESSAGE',
+    userRequestDialog: 'DIALOG',
+    gameRedrawGUI: 'CLIENT_SIDE_EVENT',
+    startGame: 'TABLE_CHANGE',
+    gameInit: 'TABLE_CHANGE',
+    gameInform: 'UPDATE',
+    gameUpdateAndInform: 'UPDATE',
+    gameInformPersonal: 'MESSAGE',
+    gameError: 'MESSAGE',
+    gameUpdate: 'UPDATE',
+    gameTarget: 'DIALOG',
+    gameChooseAbility: 'DIALOG',
+    gameChoosePile: 'DIALOG',
+    gameChooseChoice: 'DIALOG',
+    gameAsk: 'DIALOG',
+    gameSelect: 'DIALOG',
+    gamePlayMana: 'DIALOG',
+    gamePlayXMana: 'DIALOG',
+    gameSelectAmount: 'DIALOG',
+    gameGetAmount: 'DIALOG',
+    gameSelectMultiAmount: 'DIALOG',
+    gameGetMultiAmount: 'DIALOG',
+    gameOver: 'TABLE_CHANGE',
+    endGameInfo: 'TABLE_CHANGE',
+    replayGame: 'TABLE_CHANGE',
+    replayInit: 'TABLE_CHANGE',
+    replayUpdate: 'UPDATE',
+    replayDone: 'TABLE_CHANGE',
+};
+
+const CALLBACK_ROUTE_TARGETS: Record<ClientCallbackMethod, CallbackRouteTarget[]> = {
+    chatMessage: ['chat'],
+    showUserMessage: ['session'],
+    serverMessage: ['chat'],
+    joinedTable: ['lobby'],
+    startTournament: ['activity'],
+    tournamentInit: ['activity'],
+    tournamentUpdate: ['activity'],
+    tournamentOver: ['activity'],
+    startDraft: ['activity'],
+    SIDEBOARD: ['game', 'activity'],
+    sideboard: ['game', 'activity'],
+    construct: ['activity'],
+    draftOver: ['activity'],
+    draftInit: ['activity'],
+    draftPick: ['activity'],
+    draftUpdate: ['activity'],
+    showTournament: ['activity'],
+    watchGame: ['activity'],
+    viewLimitedDeck: ['game', 'activity'],
+    viewSideboard: ['game'],
+    userRequestDialog: ['session'],
+    gameRedrawGUI: ['game'],
+    startGame: ['game', 'activity'],
+    gameInit: ['game', 'activity'],
+    gameInform: ['game'],
+    gameUpdateAndInform: ['game'],
+    gameInformPersonal: ['game'],
+    gameError: ['game'],
+    gameUpdate: ['game'],
+    gameTarget: ['game'],
+    gameChooseAbility: ['game'],
+    gameChoosePile: ['game'],
+    gameChooseChoice: ['game'],
+    gameAsk: ['game'],
+    gameSelect: ['game'],
+    gamePlayMana: ['game'],
+    gamePlayXMana: ['game'],
+    gameSelectAmount: ['game'],
+    gameGetAmount: ['game'],
+    gameSelectMultiAmount: ['game'],
+    gameGetMultiAmount: ['game'],
+    gameOver: ['game', 'activity'],
+    endGameInfo: ['game', 'activity'],
+    replayGame: ['activity'],
+    replayInit: ['activity'],
+    replayUpdate: ['activity'],
+    replayDone: ['activity'],
+};
+
+export function normalizeCallbackMethod(method: string): ClientCallbackMethod {
+    return METHOD_ALIASES[method] ?? (method as ClientCallbackMethod);
+}
+
+export function normalizeCallback(callback: ClientCallback): ClientCallback {
+    const normalizedMethod = normalizeCallbackMethod(String(callback.method));
+
+    if (normalizedMethod === callback.method) {
+        return callback;
+    }
+
+    return {
+        ...callback,
+        method: normalizedMethod,
+    };
+}
+
+export function getCallbackDeliveryType(method: string): CallbackDeliveryType | 'UNKNOWN' {
+    const normalizedMethod = normalizeCallbackMethod(method);
+    return CALLBACK_DELIVERY_TYPES[normalizedMethod] ?? 'UNKNOWN';
+}
+
+export function getCallbackRouteTargets(method: string): CallbackRouteTarget[] {
+    const normalizedMethod = normalizeCallbackMethod(method);
+    return CALLBACK_ROUTE_TARGETS[normalizedMethod] ?? [];
+}
+
+export class CallbackOrderingGuard {
+    private lastMessages: Record<CallbackDeliveryType, number> = {
+        UPDATE: 0,
+        TABLE_CHANGE: 0,
+        MESSAGE: 0,
+        DIALOG: 0,
+        CLIENT_SIDE_EVENT: 0,
+    };
+
+    reset(): void {
+        this.lastMessages = {
+            UPDATE: 0,
+            TABLE_CHANGE: 0,
+            MESSAGE: 0,
+            DIALOG: 0,
+            CLIENT_SIDE_EVENT: 0,
+        };
+    }
+
+    evaluate(rawCallback: ClientCallback): CallbackOrderingDecision {
+        const callback = normalizeCallback(rawCallback);
+        const deliveryType = getCallbackDeliveryType(callback.method);
+        const messageId = Number.isFinite(callback.messageId) ? callback.messageId : 0;
+        const lastAnyMessageId = Math.max(...Object.values(this.lastMessages));
+
+        if (deliveryType === 'UNKNOWN') {
+            return {
+                callback,
+                deliveryType,
+                shouldProcess: true,
+                reason: 'accepted',
+                lastAnyMessageId,
+            };
+        }
+
+        if (deliveryType === 'CLIENT_SIDE_EVENT') {
+            return {
+                callback,
+                deliveryType,
+                shouldProcess: true,
+                reason: 'client-side-event',
+                lastAnyMessageId,
+            };
+        }
+
+        const deliveryInfo = DELIVERY_TYPE_INFO[deliveryType];
+        const isOutOfOrder = lastAnyMessageId > messageId;
+
+        if (isOutOfOrder && deliveryInfo.mustIgnoreOnOutdated) {
+            return {
+                callback,
+                deliveryType,
+                shouldProcess: false,
+                reason: 'ignored-outdated-update',
+                lastAnyMessageId,
+            };
+        }
+
+        if (!deliveryInfo.canComeInAnyOrder) {
+            this.lastMessages[deliveryType] = messageId;
+        }
+
+        return {
+            callback,
+            deliveryType,
+            shouldProcess: true,
+            reason: isOutOfOrder ? 'accepted-out-of-order' : 'accepted',
+            lastAnyMessageId,
+        };
+    }
+}
+
+export function createCallbackOrderingGuard(): CallbackOrderingGuard {
+    return new CallbackOrderingGuard();
+}

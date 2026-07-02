@@ -121,6 +121,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+    min-width: 0;
     min-height: 0;
     /* Allow shrinking in grid */
 }
@@ -141,7 +142,7 @@
 .lobby-sidebar {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-3);
     max-height: calc(100vh - 100px);
     position: sticky;
     top: calc(60px + var(--space-6));
@@ -164,15 +165,17 @@
 
 /* Make chat collapsible and fixed height */
 .lobby-sidebar .chat-panel {
-    max-height: 350px;
+    min-height: 170px;
+    max-height: 180px;
     flex-shrink: 0;
 }
 
 /* Table details gets remaining space */
 .lobby-sidebar .table-details {
-    flex: 1;
+    height: auto;
+    flex: 0 0 260px;
     min-height: 0;
-    max-height: 400px;
+    max-height: 260px;
 }
 
 /* Responsive */
@@ -184,13 +187,17 @@
     .lobby-sidebar {
         position: static;
         max-height: none;
-        flex-direction: row;
+        flex-direction: column;
         gap: var(--space-4);
     }
 
     .lobby-sidebar>* {
-        flex: 1;
-        max-height: 400px;
+        max-height: none;
+    }
+
+    .lobby-sidebar .table-details,
+    .lobby-sidebar .chat-panel {
+        flex: none;
     }
 }
 
@@ -221,7 +228,8 @@
         flex-direction: column;
     }
 
-    .lobby-sidebar>* {
-        max-height: 300px;
+    .lobby-sidebar .chat-panel,
+    .lobby-sidebar .table-details {
+        max-height: none;
     }
 }

@@ -1,0 +1,239 @@
+#!/usr/bin/env node
+
+import { readFile, readdir } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const srcRoot = path.join(projectRoot, 'src');
+
+const failures = [];
+
+await checkModalAccessibility();
+await checkReducedMotion();
+await checkReadableContrast();
+await checkHighScaleText();
+await checkButtonAccessibleNames();
+await checkCoverageDoc();
+
+if (failures.length > 0) {
+    console.error('Accessibility coverage check failed:');
+    for (const failure of failures) {
+        console.error(`- ${failure}`);
+    }
+    process.exit(1);
+}
+
+console.log('Accessibility coverage check passed.');
+
+async function checkModalAccessibility() {
+    const source = await readProjectFile('src/components/common/Modal.tsx');
+    const requiredSnippets = [
+        ['role="dialog"', 'shared modal must use dialog role'],
+        ['aria-modal="true"', 'shared modal must mark background content modal'],
+        ['aria-labelledby=', 'shared modal must connect titles to dialogs'],
+        ['onKeyDown={handleKeyDown}', 'shared modal must trap Tab focus'],
+        ['getFocusableElements', 'shared modal must discover focusable controls'],
+        ['previouslyFocused.focus()', 'shared modal must restore focus on close'],
+    ];
+
+    for (const [snippet, label] of requiredSnippets) {
+        if (!source.includes(snippet)) {
+            failures.push(`${label} (${snippet})`);
+        }
+    }
+}
+
+async function checkReducedMotion() {
+    const cssFiles = await listFiles(srcRoot, file => file.endsWith('.css'));
+    const hasReducedMotion = await someFileContains(cssFiles, '@media (prefers-reduced-motion: reduce)');
+
+    if (!hasReducedMotion) {
+        failures.push('CSS must include a prefers-reduced-motion coverage block');
+    }
+}
+
+async function checkReadableContrast() {
+    const source = await readProjectFile('src/index.css');
+    const colors = extractCssHexVariables(source);
+    const darkSurfaces = ['--color-bg-darkest', '--color-bg-dark', '--color-bg-base', '--color-bg-elevated'];
+    const textPairs = [
+        ['--color-text-primary', 4.5],
+        ['--color-text-secondary', 4.5],
+        ['--color-accent-warning', 3],
+        ['--color-accent-danger', 3],
+    ];
+
+    for (const [textVariable, minimumRatio] of textPairs) {
+        for (const surfaceVariable of darkSurfaces) {
+            const textColor = colors.get(textVariable);
+            const surfaceColor = colors.get(surfaceVariable);
+
+            if (!textColor || !surfaceColor) {
+                failures.push(`missing color variable for contrast check: ${textVariable} on ${surfaceVariable}`);
+                continue;
+            }
+
+            const ratio = contrastRatio(textColor, surfaceColor);
+            if (ratio < minimumRatio) {
+                failures.push(`${textVariable} contrast on ${surfaceVariable} is ${ratio.toFixed(2)}:1, below ${minimumRatio}:1`);
+            }
+        }
+    }
+}
+
+async function checkHighScaleText() {
+    const cssFiles = await listFiles(srcRoot, file => file.endsWith('.css'));
+    const viewportFontSizePattern = /font-size\s*:[^;]*(vw|vh|vmin|vmax)/i;
+
+    for (const file of cssFiles) {
+        const source = await readFile(file, 'utf8');
+        const match = source.match(viewportFontSizePattern);
+
+        if (match) {
+            failures.push(`${relativePath(file)} uses viewport-scaled font sizing: ${match[0]}`);
+        }
+    }
+}
+
+async function checkButtonAccessibleNames() {
+    const tsxFiles = (await listFiles(srcRoot, file => file.endsWith('.tsx')))
+        .filter(file => !file.endsWith(`${path.sep}Button.tsx`));
+
+    for (const file of tsxFiles) {
+        const source = await readFile(file, 'utf8');
+        for (const button of findButtonElements(source)) {
+            if (hasAccessibleButtonName(button.attributes, button.body)) continue;
+
+            failures.push(`${relativePath(file)}:${lineNumberAt(source, button.index)} has a button without a static, labelled, or documented dynamic accessible name`);
+        }
+    }
+}
+
+async function checkCoverageDoc() {
+    const source = await readProjectFile('docs/AccessibilityCoverage.md');
+    const expectedTopics = [
+        'Keyboard-only play',
+        'Focus traps',
+        'Readable contrast',
+        'Reduced motion',
+        'Screen-reader names',
+        'High-scale text',
+    ];
+
+    for (const topic of expectedTopics) {
+        if (!source.includes(topic)) {
+            failures.push(`AccessibilityCoverage.md must cover ${topic}`);
+        }
+    }
+}
+
+function findButtonElements(source) {
+    const buttonPattern = /<button\b([^>]*)>([\s\S]*?)<\/button>/g;
+    const buttons = [];
+    let match;
+
+    while ((match = buttonPattern.exec(source)) !== null) {
+        buttons.push({
+            index: match.index,
+            attributes: match[1],
+            body: match[2],
+        });
+    }
+
+    return buttons;
+}
+
+function hasAccessibleButtonName(attributes, body) {
+    if (/\b(aria-label|aria-labelledby|title)=/.test(attributes)) return true;
+    if (/\bdata-a11y-dynamic-name\b/.test(attributes)) return true;
+
+    const staticText = body
+        .replace(/\{[\s\S]*?\}/g, '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (/[A-Za-z0-9]{2,}/.test(staticText)) return true;
+
+    return /\{[^}]*\b(label|title|name|text|displayName|pageName|tab\.label|activity\.title)\b[^}]*\}/i.test(body);
+}
+
+async function someFileContains(files, needle) {
+    for (const file of files) {
+        const source = await readFile(file, 'utf8');
+        if (source.includes(needle)) return true;
+    }
+
+    return false;
+}
+
+async function readProjectFile(relativeFilePath) {
+    return readFile(path.join(projectRoot, relativeFilePath), 'utf8');
+}
+
+async function listFiles(root, predicate) {
+    const entries = await readdir(root, { withFileTypes: true });
+    const files = [];
+
+    for (const entry of entries) {
+        const fullPath = path.join(root, entry.name);
+        if (entry.isDirectory()) {
+            files.push(...await listFiles(fullPath, predicate));
+        } else if (predicate(fullPath)) {
+            files.push(fullPath);
+        }
+    }
+
+    return files;
+}
+
+function extractCssHexVariables(source) {
+    const colors = new Map();
+    const variablePattern = /(--color-[\w-]+)\s*:\s*(#[0-9a-f]{6})\b/gi;
+    let match;
+
+    while ((match = variablePattern.exec(source)) !== null) {
+        colors.set(match[1], match[2]);
+    }
+
+    return colors;
+}
+
+function contrastRatio(foreground, background) {
+    const foregroundLuminance = relativeLuminance(foreground);
+    const backgroundLuminance = relativeLuminance(background);
+    const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+    const darker = Math.min(foregroundLuminance, backgroundLuminance);
+
+    return (lighter + 0.05) / (darker + 0.05);
+}
+
+function relativeLuminance(hexColor) {
+    const [red, green, blue] = hexToRgb(hexColor).map(channel => {
+        const normalized = channel / 255;
+        return normalized <= 0.03928
+            ? normalized / 12.92
+            : ((normalized + 0.055) / 1.055) ** 2.4;
+    });
+
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+function hexToRgb(hexColor) {
+    const value = Number.parseInt(hexColor.slice(1), 16);
+    return [
+        (value >> 16) & 255,
+        (value >> 8) & 255,
+        value & 255,
+    ];
+}
+
+function lineNumberAt(source, index) {
+    return source.slice(0, index).split('\n').length;
+}
+
+function relativePath(file) {
+    return path.relative(projectRoot, file);
+}

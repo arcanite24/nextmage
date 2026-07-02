@@ -1,5 +1,5 @@
-import { DeckCardLists } from "../types";
-import { DeckSerializer } from "./DeckSerializer";
+import type { DeckCardLists } from "../types/index.js";
+import { DeckSerializer } from "./DeckSerializer.js";
 
 export interface DeckSummary {
     id: string;
@@ -24,10 +24,14 @@ export interface DeckSummary {
 }
 
 export interface IDeckStorage {
-    saveDeck(deck: DeckCardLists): Promise<string>; // Returns ID
+    saveDeck(deck: DeckCardLists, options?: SaveDeckOptions): Promise<string>; // Returns ID
     loadDeck(id: string): Promise<DeckCardLists | null>;
     listDecks(): Promise<DeckSummary[]>;
     deleteDeck(id: string): Promise<void>;
+}
+
+export interface SaveDeckOptions {
+    forceNew?: boolean;
 }
 
 const STORAGE_PREFIX = "mage_deck_";
@@ -36,6 +40,7 @@ const META_KEY = "mage_decks_meta";
 interface DeckMeta {
     id: string;
     name: string;
+    description?: string;
     format?: string;
     updatedAt: number;
     cardCount?: number;
@@ -55,12 +60,14 @@ interface DeckMeta {
 }
 
 export class LocalDeckStorage implements IDeckStorage {
-    async saveDeck(deck: DeckCardLists): Promise<string> {
+    async saveDeck(deck: DeckCardLists, options: SaveDeckOptions = {}): Promise<string> {
         const meta = this.getMeta();
 
         // Use existing deck ID if available, otherwise generate new one or find by name
         let id: string;
-        if (deck.id) {
+        if (options.forceNew) {
+            id = crypto.randomUUID();
+        } else if (deck.id) {
             id = deck.id;
         } else {
             const existing = meta.find(m => m.name === deck.name);
@@ -79,6 +86,7 @@ export class LocalDeckStorage implements IDeckStorage {
         const newMetaItem: DeckMeta = {
             id,
             name: deck.name || "Untitled Deck",
+            description: deck.description,
             format: deck.format,
             updatedAt: Date.now(),
             cardCount: deck.cards.reduce((sum, c) => sum + c.amount, 0),
@@ -115,6 +123,7 @@ export class LocalDeckStorage implements IDeckStorage {
         const m = meta.find(x => x.id === id);
         if (m) {
             deck.name = m.name;
+            deck.description = m.description;
             deck.coverCard = m.coverCard;
             deck.colors = m.colors;
         }
@@ -127,6 +136,7 @@ export class LocalDeckStorage implements IDeckStorage {
         return meta.map(m => ({
             id: m.id,
             name: m.name,
+            description: m.description,
             format: m.format,
             updatedAt: m.updatedAt,
             cardCount: m.cardCount,

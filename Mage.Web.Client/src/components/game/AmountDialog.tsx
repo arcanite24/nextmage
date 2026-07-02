@@ -22,7 +22,7 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
     min,
     max
 }) => {
-    const { sendInteger } = useGameStore();
+    const sendInteger = useGameStore(state => state.sendInteger);
     const [value, setValue] = useState(min);
 
     // Reset value when dialog opens
@@ -82,6 +82,9 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
             onClose={() => { }} // Can't close without selecting
             title="Choose a Number"
             size="sm"
+            closeOnBackdrop={false}
+            closeOnEscape={false}
+            showCloseButton={false}
         >
             <div className="amount-dialog">
                 <p className="amount-message" dangerouslySetInnerHTML={{ __html: message }} />
@@ -91,6 +94,7 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
                         className="amount-btn amount-decrement"
                         onClick={handleDecrement}
                         disabled={value <= min}
+                        aria-label="Decrease amount"
                     >
                         −
                     </button>
@@ -109,6 +113,7 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
                         className="amount-btn amount-increment"
                         onClick={handleIncrement}
                         disabled={value >= max}
+                        aria-label="Increase amount"
                     >
                         +
                     </button>

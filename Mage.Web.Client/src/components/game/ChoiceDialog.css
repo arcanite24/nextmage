@@ -67,6 +67,40 @@
     outline: none;
 }
 
+.choice-option.mana-choice {
+    align-items: center;
+}
+
+.choice-mana-dot {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: #9ca3af;
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.18);
+}
+
+.choice-mana-dot.mana-white {
+    background: #f8f1d8;
+}
+
+.choice-mana-dot.mana-blue {
+    background: #60a5fa;
+}
+
+.choice-mana-dot.mana-black {
+    background: #1f2937;
+}
+
+.choice-mana-dot.mana-red {
+    background: #ef4444;
+}
+
+.choice-mana-dot.mana-green {
+    background: #22c55e;
+}
+
 .choice-number {
     flex-shrink: 0;
     width: 28px;
@@ -119,6 +153,11 @@
     font-style: italic;
 }
 
+.choice-special-group {
+    display: grid;
+    gap: var(--space-2);
+}
+
 /* Special option checkbox */
 .choice-special {
     display: flex;
@@ -160,6 +199,44 @@
     opacity: 1;
 }
 
+.choice-special-input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+}
+
+.choice-special-input,
+.choice-special-submit,
+.choice-actions button {
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-md);
+}
+
+.choice-special-input {
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+}
+
+.choice-special-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.choice-special-submit,
+.choice-actions button {
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-bg-hover);
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.choice-special-submit:hover,
+.choice-actions button:hover {
+    border-color: var(--color-primary);
+}
+
 /* Shortcut hint */
 .choice-shortcut-hint {
     text-align: center;
@@ -168,4 +245,9 @@
     padding: var(--space-2);
     background: rgba(139, 92, 246, 0.1);
     border-radius: var(--radius-sm);
+}
+
+.choice-actions {
+    display: flex;
+    justify-content: flex-end;
 }

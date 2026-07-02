@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from '../../stores';
+import { useSettingsStore } from '../../stores/settingsStore';
 import './GamePage.css';
 
 interface Point {
@@ -12,7 +13,14 @@ interface CombatLine {
     id: string;
     start: Point;
     end: Point;
-    type: 'attack' | 'block';
+    type: 'attack' | 'block' | 'target';
+}
+
+interface TargetMarker {
+    id: string;
+    point: Point;
+    label: string;
+    chosen: boolean;
 }
 
 const getElementCenter = (id: string): Point | null => {
@@ -38,38 +46,35 @@ const offsetFromEnd = (start: Point, end: Point, offset: number): Point => {
     };
 };
 
+const resolveElementCenter = (uuid: string): Point | null => {
+    return getElementCenter(`player-${uuid}`) || getElementCenter(`card-${uuid}`);
+};
+
 export const CombatOverlay: React.FC = React.memo(() => {
-    const { combat, step } = useGameStore(useShallow(state => ({
+    const { combat, pendingAction, selectedCardId, stack } = useGameStore(useShallow(state => ({
         combat: state.gameView?.combat,
-        step: state.gameView?.step
+        pendingAction: state.pendingAction,
+        selectedCardId: state.selectedCardId,
+        stack: state.gameView?.stack,
+    })));
+    const { animationsEnabled, animationSpeed } = useSettingsStore(useShallow(state => ({
+        animationsEnabled: state.settings.animationsEnabled,
+        animationSpeed: state.settings.animationSpeed,
     })));
     const [lines, setLines] = useState<CombatLine[]>([]);
+    const [markers, setMarkers] = useState<TargetMarker[]>([]);
     const animFrameRef = useRef<number | null>(null);
+    const pulseDuration = useMemo(() => `${Math.max(0.75, 1.5 / animationSpeed).toFixed(2)}s`, [animationSpeed]);
 
     const updateLines = useCallback(() => {
-        if (!combat || combat.length === 0) {
-            setLines([]);
-            return;
-        }
-
         const newLines: CombatLine[] = [];
+        const newMarkers: TargetMarker[] = [];
 
-        combat.forEach((group) => {
+        combat?.forEach((group) => {
             // 1. Attackers -> Defender
             // Defender can be a Player or a Permanent (Planeswalker/Battle)
             const defenderId = group.defenderId;
-            let targetPoint: Point | null = null;
-
-            // Try determining target element ID
-            // Check if it's a player
-            let targetElId = `player-${defenderId}`;
-            targetPoint = getElementCenter(targetElId);
-
-            // If not found, try card (planeswalker/battle)
-            if (!targetPoint) {
-                targetElId = `card-${defenderId}`;
-                targetPoint = getElementCenter(targetElId);
-            }
+            const targetPoint = resolveElementCenter(defenderId);
 
             if (targetPoint && group.attackers) {
                 Object.values(group.attackers).forEach(attacker => {
@@ -81,7 +86,7 @@ export const CombatOverlay: React.FC = React.memo(() => {
                             id: `atk-${attacker.id}-${defenderId}`,
                             start,
                             end: offsetEnd,
-                            type: 'attack'
+                            type: 'attack',
                         });
                     }
                 });
@@ -106,7 +111,7 @@ export const CombatOverlay: React.FC = React.memo(() => {
                                     id: `blk-${blocker.id}-${atkId}`,
                                     start,
                                     end: offsetEnd,
-                                    type: 'block'
+                                    type: 'block',
                                 });
                             }
                         });
@@ -115,8 +120,41 @@ export const CombatOverlay: React.FC = React.memo(() => {
             }
         });
 
+        if (pendingAction.type === 'target' && pendingAction.validTargets.length > 0) {
+            const stackCards = stack ? Object.values(stack) : [];
+            const sourceId = selectedCardId && getElementCenter(`card-${selectedCardId}`)
+                ? selectedCardId
+                : stackCards.length > 0
+                    ? stackCards[stackCards.length - 1].id
+                    : null;
+            const source = sourceId ? getElementCenter(`card-${sourceId}`) : null;
+
+            pendingAction.validTargets.forEach((targetId) => {
+                const target = resolveElementCenter(targetId);
+                if (!target) return;
+
+                const chosen = selectedCardId === targetId;
+                newMarkers.push({
+                    id: `target-marker-${targetId}`,
+                    point: target,
+                    label: chosen ? 'Chosen' : 'Target',
+                    chosen,
+                });
+
+                if (source && sourceId !== targetId) {
+                    newLines.push({
+                        id: `target-${sourceId}-${targetId}`,
+                        start: source,
+                        end: offsetFromEnd(source, target, 28),
+                        type: 'target',
+                    });
+                }
+            });
+        }
+
         setLines(newLines);
-    }, [combat]);
+        setMarkers(newMarkers);
+    }, [combat, pendingAction, selectedCardId, stack]);
 
     useEffect(() => {
         // Initial update with small delay to let DOM settle
@@ -162,44 +200,67 @@ export const CombatOverlay: React.FC = React.memo(() => {
                 cancelAnimationFrame(animFrameRef.current);
             }
         };
-    }, [updateLines, combat]);
+    }, [updateLines]);
 
-    if (lines.length === 0) return null;
+    if (lines.length === 0 && markers.length === 0) return null;
 
     return (
-        <svg className="combat-overlay">
-            <defs>
-                {/* Attack arrow - red with glow effect */}
-                <marker id="arrow-attack" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth">
-                    <path d="M0,0 L0,8 L12,4 z" fill="#ef4444" />
-                </marker>
-                {/* Block arrow - blue */}
-                <marker id="arrow-block" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth">
-                    <path d="M0,0 L0,8 L12,4 z" fill="#3b82f6" />
-                </marker>
-                {/* Glow filters */}
-                <filter id="glow-attack" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="3" result="blur" />
-                    <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-                <filter id="glow-block" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="2" result="blur" />
-                    <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-            </defs>
-            {lines.map(line => (
-                <CombatLineComponent
-                    key={line.id}
-                    line={line}
-                />
+        <div
+            className={`combat-overlay-root ${animationsEnabled ? '' : 'reduced-motion'}`}
+            style={{ '--combat-pulse-duration': pulseDuration } as React.CSSProperties}
+            data-testid="combat-overlay"
+        >
+            <svg className="combat-overlay">
+                <defs>
+                    <marker id="arrow-attack" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L0,8 L12,4 z" fill="#ef4444" />
+                    </marker>
+                    <marker id="arrow-block" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L0,8 L12,4 z" fill="#3b82f6" />
+                    </marker>
+                    <marker id="arrow-target" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L0,8 L12,4 z" fill="#fbbf24" />
+                    </marker>
+                    <filter id="glow-attack" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <filter id="glow-block" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <filter id="glow-target" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2.5" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+                {lines.map(line => (
+                    <CombatLineComponent
+                        key={line.id}
+                        line={line}
+                    />
+                ))}
+            </svg>
+            {markers.map(marker => (
+                <div
+                    key={marker.id}
+                    className={`combat-target-marker ${marker.chosen ? 'chosen' : ''}`}
+                    style={{ left: marker.point.x, top: marker.point.y }}
+                    data-testid="combat-target-marker"
+                >
+                    {marker.label}
+                </div>
             ))}
-        </svg>
+        </div>
     );
 });
 
@@ -210,10 +271,14 @@ interface CombatLineComponentProps {
 }
 
 const CombatLineComponent: React.FC<CombatLineComponentProps> = React.memo(({ line }) => {
-    const isAttack = line.type === 'attack';
+    const filterId = line.type === 'attack'
+        ? 'glow-attack'
+        : line.type === 'block'
+            ? 'glow-block'
+            : 'glow-target';
 
     return (
-        <g>
+        <g data-testid={`combat-line-${line.type}`}>
             {/* Outer glow line */}
             <line
                 x1={line.start.x}
@@ -230,7 +295,7 @@ const CombatLineComponent: React.FC<CombatLineComponentProps> = React.memo(({ li
                 y2={line.end.y}
                 className={`combat-line combat-line-${line.type}`}
                 markerEnd={`url(#arrow-${line.type})`}
-                filter={isAttack ? 'url(#glow-attack)' : 'url(#glow-block)'}
+                filter={`url(#${filterId})`}
             />
         </g>
     );

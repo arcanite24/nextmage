@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { PlayerView } from '../../types';
 import { useAnimationStore } from '../../stores';
+import { MatchPlayerFlagPill, MatchPlayerHudDetails } from './MatchPlayerHudDetails';
 import './ArenaLayout.css';
 import './AttackAnimation.css';
 
@@ -10,6 +10,7 @@ interface ArenaOpponentHUDProps {
     isActivePlayer?: boolean;
     onShowZone?: (zone: 'graveyard' | 'exile' | 'library' | 'sideboard', playerId: string) => void;
     onInteract?: (uuid: string) => void;
+    showPlayerName?: boolean;
 }
 
 // Default avatar SVG
@@ -20,53 +21,63 @@ const DefaultAvatarSVG = () => (
     </svg>
 );
 
-export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ player, isActivePlayer, onShowZone, onInteract }) => {
+export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ player, isActivePlayer, onShowZone, onInteract, showPlayerName = true }) => {
     // Check for deferred life update (visual override)
-    const visualLifeTotals = useAnimationStore(useShallow(state => state.visualLifeTotals));
+    const visualLifeTotals = useAnimationStore(state => state.visualLifeTotals);
     const displayedLife = visualLifeTotals?.[player.playerId] ?? player.life;
 
     const graveyardCount = useMemo(() => Object.keys(player.graveyard).length, [player.graveyard]);
     const exileCount = useMemo(() => Object.keys(player.exile).length, [player.exile]);
     const lifeClass = useMemo(() => displayedLife <= 5 ? 'low' : displayedLife >= 30 ? 'high' : '', [displayedLife]);
 
-    // Check if this player is currently taking damage
-    const isTakingDamage = useAnimationStore(
-        useShallow((state) => state.activeDamageEffects.some((d) => d.targetId === player.playerId))
-    );
+    const activeLifeEffect = useAnimationStore((state) => {
+        const effect = state.activeDamageEffects.find((entry) => entry.targetId === player.playerId);
+        return effect?.type ?? 'none';
+    });
 
     // Build avatar container class names
     const avatarContainerClasses = useMemo(() => {
         const classes = ['arena-opponent-avatar-container', 'clickable-stat'];
         if (isActivePlayer) classes.push('active-player');
         if (player.hasPriority) classes.push('has-priority');
-        if (isTakingDamage) classes.push('taking-damage');
+        if (activeLifeEffect === 'damage') classes.push('taking-damage');
+        if (activeLifeEffect === 'lifeGain') classes.push('gaining-life');
         return classes.join(' ');
-    }, [isActivePlayer, player.hasPriority, isTakingDamage]);
+    }, [isActivePlayer, player.hasPriority, activeLifeEffect]);
 
     return (
         <>
             {/* Opponent Info (Top Left) */}
-            <div className="arena-opponent-info">
-                <span className="arena-opponent-name">
-                    {player.name}
-                    {player.hasPriority && <span className="priority-indicator-opponent">⚡</span>}
-                </span>
+            <div className="arena-opponent-info" data-testid="opponent-hud">
+                {showPlayerName && (
+                    <span className="arena-opponent-name" data-testid="opponent-name">
+                        <MatchPlayerFlagPill flagName={player.userData?.flagName} />
+                        {player.name}
+                        {player.hasPriority && <span className="priority-indicator-opponent">⚡</span>}
+                    </span>
+                )}
                 <div className="arena-opponent-stats">
-                    <span
+                    <button
+                        type="button"
                         title="Graveyard"
                         className="clickable-stat"
                         onClick={() => onShowZone?.('graveyard', player.playerId)}
+                        aria-label={`View ${player.name}'s graveyard`}
+                        data-testid="opponent-zone-graveyard"
                     >
                         💀 {graveyardCount}
-                    </span>
+                    </button>
                     {exileCount > 0 && (
-                        <span
+                        <button
+                            type="button"
                             title="Exile"
                             className="clickable-stat"
                             onClick={() => onShowZone?.('exile', player.playerId)}
+                            aria-label={`View ${player.name}'s exile`}
+                            data-testid="opponent-zone-exile"
                         >
                             🌌 {exileCount}
-                        </span>
+                        </button>
                     )}
                 </div>
             </div>
@@ -93,10 +104,17 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
                         )}
                     </div>
 
-                    <div className={`arena-opponent-life ${lifeClass}`}>
-                        {displayedLife}
-                    </div>
+                <div className={`arena-opponent-life ${lifeClass}`}>
+                    {displayedLife}
                 </div>
+
+                <MatchPlayerHudDetails
+                    player={player}
+                    variant="opponent"
+                    displayedLife={displayedLife}
+                    onShowZone={onShowZone}
+                />
+            </div>
 
                 {/* Deck Info next to avatar */}
                 <div className="arena-opponent-deck-info">

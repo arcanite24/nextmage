@@ -105,6 +105,17 @@
     border-color: var(--color-accent-success);
 }
 
+.checkbox-badge.state-starting {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-accent-warning);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.filter-checkbox input:checked+.checkbox-badge.state-starting {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: var(--color-accent-warning);
+}
+
 .checkbox-badge.state-dueling {
     background: rgba(99, 102, 241, 0.15);
     color: var(--color-accent-primary);

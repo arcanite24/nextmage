@@ -2,7 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import './SkipIndicator.css';
 
 interface SkipIndicatorProps {
-    activeSkip: 'none' | 'F4' | 'F5' | 'F7' | 'F9';
+    activeSkip: 'none' | 'F4' | 'F5' | 'F6' | 'F7' | 'F9' | 'F10' | 'F11';
     onCancel: () => void;
 }
 
@@ -14,13 +14,19 @@ export const SkipIndicator: React.FC<SkipIndicatorProps> = React.memo(({ activeS
     const skipLabel = useMemo(() => {
         switch (activeSkip) {
             case 'F4':
-                return 'Until End of Turn';
+                return 'Until Next Turn';
             case 'F5':
-                return 'Until Next Main';
+                return 'Until End Step';
+            case 'F6':
+                return 'Next Turn, Skip Stack';
             case 'F7':
+                return 'Until Next Main';
+            case 'F10':
                 return 'Until Stack Resolves';
             case 'F9':
                 return 'Until My Turn';
+            case 'F11':
+                return 'End Step Before My Turn';
             default:
                 return '';
         }

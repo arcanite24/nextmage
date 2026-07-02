@@ -33,6 +33,7 @@ interface ChatState {
     // Quick access to common channels
     lobbyChannelId: UUID | null;
     gameChannelId: UUID | null;
+    tableChannelId: UUID | null;
 }
 
 interface ChatActions {
@@ -44,7 +45,7 @@ interface ChatActions {
     // Special channel lookups
     joinLobbyChat: (roomId: UUID) => Promise<void>;
     joinGameChat: (gameId: UUID) => Promise<void>;
-    joinTableChat: (tableId: UUID) => Promise<void>;
+    joinTableChat: (tableId: UUID) => Promise<UUID | null>;
 
     // Messaging
     sendMessage: (message: string, channelId?: UUID) => Promise<void>;
@@ -68,6 +69,7 @@ export const useChatStore = create<ChatState & ChatActions>()(
             activeChannelId: null,
             lobbyChannelId: null,
             gameChannelId: null,
+            tableChannelId: null,
 
             // Channel management
             joinChannel: async (channelId, name = 'Chat') => {
@@ -78,10 +80,11 @@ export const useChatStore = create<ChatState & ChatActions>()(
                     await wsService.send('chatJoin', [channelId, sessionId, userName]);
 
                     set((state) => {
+                        const existingChannel = state.channels[channelId];
                         state.channels[channelId] = {
                             id: channelId,
                             name,
-                            messages: [],
+                            messages: existingChannel?.messages ?? [],
                             isJoined: true,
                         };
                         if (!state.activeChannelId) {
@@ -111,6 +114,9 @@ export const useChatStore = create<ChatState & ChatActions>()(
                         }
                         if (state.gameChannelId === channelId) {
                             state.gameChannelId = null;
+                        }
+                        if (state.tableChannelId === channelId) {
+                            state.tableChannelId = null;
                         }
                     });
                 } catch (error) {
@@ -150,8 +156,13 @@ export const useChatStore = create<ChatState & ChatActions>()(
                 try {
                     const channelId = await wsService.send<UUID>('chatFindByTable', [tableId]);
                     await get().joinChannel(channelId, 'Table');
+                    set((state) => {
+                        state.tableChannelId = channelId;
+                    });
+                    return channelId;
                 } catch (error) {
                     console.error('Failed to join table chat:', error);
+                    return null;
                 }
             },
 
@@ -193,9 +204,11 @@ export const useChatStore = create<ChatState & ChatActions>()(
                 // The format varies based on the message type
                 const data = callback.data as {
                     chatId?: UUID;
+                    username?: string;
                     userName?: string;
                     message?: string;
                     type?: string;
+                    messageType?: string;
                 };
 
                 const channelId = callback.objectId || data.chatId;
@@ -213,14 +226,16 @@ export const useChatStore = create<ChatState & ChatActions>()(
                     }
 
                     // Add the message
-                    const messageType = data.type === 'STATUS' ? 'status' :
-                        data.type === 'ERROR' ? 'error' :
-                            data.userName === 'System' ? 'system' : 'user';
+                    const javaMessageType = data.messageType ?? data.type;
+                    const userName = data.username ?? data.userName ?? 'Unknown';
+                    const messageType = javaMessageType === 'STATUS' ? 'status' :
+                        javaMessageType === 'ERROR' ? 'error' :
+                            userName === 'System' || userName === 'SERVER' ? 'system' : 'user';
 
                     state.channels[channelId].messages.push({
                         id: crypto.randomUUID(),
                         timestamp: new Date(),
-                        userName: data.userName || 'Unknown',
+                        userName,
                         message: typeof data.message === 'string' ? data.message : String(callback.data),
                         type: messageType,
                     });

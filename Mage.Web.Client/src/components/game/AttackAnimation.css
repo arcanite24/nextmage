@@ -57,9 +57,19 @@
     animation: damageFlash 0.5s ease-out;
 }
 
+.arena-avatar-container.gaining-life,
+.arena-opponent-avatar-container.gaining-life {
+    animation: lifeGainFlash 0.5s ease-out;
+}
+
 .arena-avatar-container.taking-damage .arena-avatar,
 .arena-opponent-avatar-container.taking-damage .arena-opponent-avatar {
     animation: avatarShake 0.4s ease-out;
+}
+
+.arena-avatar-container.gaining-life .arena-avatar,
+.arena-opponent-avatar-container.gaining-life .arena-opponent-avatar {
+    animation: lifeGainPulse 0.42s ease-out;
 }
 
 @keyframes damageFlash {
@@ -77,6 +87,31 @@
 
     100% {
         filter: brightness(1);
+    }
+}
+
+@keyframes lifeGainFlash {
+    0% {
+        filter: brightness(1);
+    }
+
+    24% {
+        filter: brightness(1.65) saturate(1.5) hue-rotate(42deg);
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+}
+
+@keyframes lifeGainPulse {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    35% {
+        transform: scale(1.08);
     }
 }
 
@@ -130,6 +165,13 @@
             transparent 40%);
 }
 
+.damage-vignette.life-gain {
+    background: radial-gradient(ellipse at center,
+            transparent 44%,
+            rgba(34, 197, 94, 0.08) 62%,
+            rgba(34, 197, 94, 0.22) 100%);
+}
+
 @keyframes vignetteFlash {
     0% {
         opacity: 0;
@@ -161,6 +203,17 @@
     z-index: 700;
     animation: damageNumberFloat 1s ease-out forwards;
     transform: translate(-50%, -50%);
+}
+
+.damage-number.life-gain {
+    color: #86efac;
+    text-shadow:
+        0 0 10px rgba(34, 197, 94, 0.75),
+        0 2px 4px rgba(0, 0, 0, 0.8),
+        -1px -1px 0 #14532d,
+        1px -1px 0 #14532d,
+        -1px 1px 0 #14532d,
+        1px 1px 0 #14532d;
 }
 
 @keyframes damageNumberFloat {

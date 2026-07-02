@@ -5,24 +5,37 @@
  * to the appropriate stores.
  */
 
-import { wsService } from '../services';
+import { webSocketBridgeService, wsService } from '../services';
 import type { ClientCallback } from '../types';
 import { useLobbyStore } from './lobbyStore';
 import { useGameStore } from './gameStore';
 import { useChatStore } from './chatStore';
 import { useSessionStore } from './sessionStore';
 import { useDebugStore } from './debugStore';
+import { useActivityStore } from './activityStore';
+import { useNotificationStore } from './notificationStore';
+import {
+    createCallbackOrderingGuard,
+    getCallbackRouteTargets,
+} from '../services/callbackSupport';
+import { createTournamentLifecycleHandler } from '../services/TournamentLifecycleService';
 
 export { useSessionStore };
 export { useLobbyStore } from './lobbyStore';
 export { useGameStore } from './gameStore';
 export { useChatStore } from './chatStore';
 export { useDebugStore };
+export { useActivityStore } from './activityStore';
+export { useNotificationStore } from './notificationStore';
 export { useAnimationStore } from './animationStore';
+export { useSettingsStore } from './settingsStore';
 
 // Re-export types
 export type { PendingAction, MultiAmountMessage } from './gameStore';
 export type { ChatMessage } from './chatStore';
+export type { ClientActivity, ActivityKind, ActivityStatus } from './activityStore';
+export type { ClientNotification } from './notificationStore';
+export type { ClientSettings } from './settingsStore';
 
 /**
  * Initialize callback dispatcher
@@ -31,80 +44,75 @@ export type { ChatMessage } from './chatStore';
  * Should be called once when the app initializes.
  */
 export function initializeCallbackDispatcher(): () => void {
+    const orderingGuard = createCallbackOrderingGuard();
+    const tournamentLifecycleHandler = createTournamentLifecycleHandler({
+        getSessionId: () => {
+            const { isAuthenticated, sessionId } = useSessionStore.getState();
+            return isAuthenticated ? sessionId : null;
+        },
+        joinTournament: (tournamentId, sessionId) => webSocketBridgeService.joinTournament(tournamentId, sessionId),
+        joinDraft: (draftId, sessionId) => webSocketBridgeService.joinDraft(draftId, sessionId),
+        onError: (error, tournamentId) => {
+            console.error(`[Dispatcher] Failed to join tournament/draft activity ${tournamentId}`, error);
+        },
+    });
+
     const unsubscribe = wsService.onCallback((originalCallback: ClientCallback) => {
-        // Normalize method name from UPPER_SNAKE_CASE (Server Enum) to camelCase (Client Expectation)
-        // e.g. START_GAME -> startGame
-        const methodMap: Record<string, string> = {
-            'START_GAME': 'startGame',
-            'GAME_INIT': 'gameInit',
-            'GAME_UPDATE': 'gameUpdate',
-            'GAME_INFORM': 'gameInform',
-            'GAME_UPDATE_AND_INFORM': 'gameUpdateAndInform',
-            'GAME_INFORM_PERSONAL': 'gameInformPersonal',
-            'GAME_ASK': 'gameAsk',
-            'GAME_TARGET': 'gameTarget',
-            'GAME_SELECT': 'gameSelect',
-            'GAME_CHOOSE_ABILITY': 'gameChooseAbility',
-            'GAME_CHOOSE_PILE': 'gameChoosePile',
-            'GAME_CHOOSE_CHOICE': 'gameChooseChoice',
-            'GAME_PLAY_MANA': 'gamePlayMana',
-            'GAME_PLAY_X_MANA': 'gamePlayXMana',
-            'GAME_PLAY_XMANA': 'gamePlayXMana',
-            'GAME_GET_AMOUNT': 'gameGetAmount',
-            'GAME_GET_MULTI_AMOUNT': 'gameGetMultiAmount',
-            'GAME_ERROR': 'gameError',
-            'GAME_OVER': 'gameOver',
-            'END_GAME_INFO': 'endGameInfo',
+        const decision = orderingGuard.evaluate(originalCallback);
+        const callback = decision.callback;
+        const routeTargets = getCallbackRouteTargets(callback.method);
 
-            'CHAT_MESSAGE': 'chatMessage',
-            'CHATMESSAGE': 'chatMessage',
-            'SERVER_MESSAGE': 'serverMessage',
-            'SHOW_USER_MESSAGE': 'showUserMessage',
-            'SHOW_USERMESSAGE': 'showUserMessage',
+        if (!decision.shouldProcess) {
+            console.warn(
+                `[Dispatcher] Ignoring stale callback ${originalCallback.method} (${originalCallback.messageId}) ` +
+                `after message ${decision.lastAnyMessageId}`
+            );
+            return;
+        }
 
-            'JOINED_TABLE': 'joinedTable',
-            'SHOW_TOURNAMENT': 'showTournament',
-            'WATCH_GAME': 'watchGame',
-            'WATCHGAME': 'watchGame',
-            'REPLAY_INIT': 'replayInit',
-            'REPLAY_UPDATE': 'replayUpdate',
-            'REPLAY_DONE': 'replayDone',
-        };
+        console.log(`[Dispatcher] Routing callback: ${originalCallback.method} -> ${callback.method}`, routeTargets);
+        useDebugStore.getState().recordCallbackFixture(callback);
+        useNotificationStore.getState().handleCallback(callback);
+        tournamentLifecycleHandler.handleCallback(callback);
 
-        const normalizedMethod = methodMap[originalCallback.method] || originalCallback.method;
-
-        // Create a new callback object with normalized method
-        const callback = { ...originalCallback, method: normalizedMethod as any };
-
-        console.log(`[Dispatcher] Routing callback: ${originalCallback.method} -> ${normalizedMethod}`);
-
-        // Game-related callbacks
-        if (callback.method.startsWith('game') ||
-            callback.method === 'startGame' ||
-            callback.method === 'endGameInfo') {
+        if (routeTargets.includes('game')) {
             useGameStore.getState().handleCallback(callback);
         }
 
-        // Chat callbacks
-        if (callback.method === 'chatMessage' ||
-            callback.method === 'serverMessage') {
+        if (callback.method === 'viewSideboard') {
+            const data = typeof callback.data === 'object' && callback.data !== null ? callback.data as Record<string, unknown> : {};
+            const gameId = typeof data.gameId === 'string' ? data.gameId : callback.objectId ?? null;
+            const playerId = typeof data.playerId === 'string' ? data.playerId : null;
+            const gameView = useGameStore.getState().gameView;
+            const player = playerId && gameView?.players
+                ? gameView.players.find(candidate => candidate.playerId === playerId)
+                : null;
+
+            if (player) {
+                useActivityStore.getState().openViewedSideboard({
+                    gameId,
+                    playerId: player.playerId,
+                    playerName: player.name,
+                    sideboard: player.sideboard ?? {},
+                });
+            }
+        }
+
+        if (routeTargets.includes('chat')) {
             useChatStore.getState().handleCallback(callback);
         }
 
-        // Session / Alert callbacks
-        if (callback.method === 'showUserMessage') {
+        if (routeTargets.includes('session')) {
             useSessionStore.getState().handleCallback(callback);
         }
 
-        // Lobby callbacks
-        if (callback.method === 'joinedTable') {
+        if (routeTargets.includes('lobby')) {
             useLobbyStore.getState().handleCallback(callback);
         }
 
-        // Could add more routing for:
-        // - Tournament callbacks
-        // - Draft callbacks
-        // - Replay callbacks
+        if (routeTargets.includes('activity')) {
+            useActivityStore.getState().handleCallback(callback);
+        }
     });
 
     return unsubscribe;

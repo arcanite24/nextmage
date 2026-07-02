@@ -40,8 +40,16 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
         switch (state) {
             case TableState.WAITING:
                 return { label: 'Waiting for players', color: 'success' };
+            case TableState.READY_TO_START:
+                return { label: 'Ready to start', color: 'warning' };
             case TableState.STARTING:
                 return { label: 'Starting soon', color: 'warning' };
+            case TableState.DRAFTING:
+                return { label: 'Drafting', color: 'warning' };
+            case TableState.SIDEBOARDING:
+                return { label: 'Sideboarding', color: 'warning' };
+            case TableState.CONSTRUCTING:
+                return { label: 'Constructing', color: 'warning' };
             case TableState.DUELING:
                 return { label: 'Game in progress', color: 'primary' };
             case TableState.FINISHED:
@@ -56,9 +64,9 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
     const canWatch = table.tableState === TableState.DUELING && table.spectatorsAllowed;
 
     return (
-        <div className="table-details">
+        <div className="table-details" data-testid="table-details" data-table-id={table.tableId}>
             <div className="details-header">
-                <h3>{table.tableName}</h3>
+                <h3 data-testid="table-details-name">{table.tableName}</h3>
                 <button className="close-btn" onClick={onClose} aria-label="Close">
                     ×
                 </button>
@@ -66,7 +74,7 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
 
             <div className="details-content">
                 {/* Status */}
-                <div className={`status-banner status-${stateInfo.color}`}>
+                <div className={`status-banner status-${stateInfo.color}`} data-testid="table-details-status">
                     {stateInfo.label}
                 </div>
 
@@ -151,7 +159,7 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
                     </Button>
                 )}
                 {canWatch && (
-                    <Button variant="secondary" fullWidth onClick={onWatch}>
+                    <Button variant="secondary" fullWidth onClick={onWatch} data-testid="watch-table-button">
                         Watch Game
                     </Button>
                 )}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { useGameStore, useSessionStore, useChatStore, useDebugStore, useAnimationStore } from '../../stores';
+import { useGameStore, useDebugStore, useAnimationStore } from '../../stores';
 import { Button } from '../common';
 import { Battlefield } from './Battlefield';
 import { Hand } from './Hand';
@@ -25,54 +25,106 @@ import { CardSelectorDialog } from "./dialogs/CardSelectorDialog";
 import { SideboardDialog } from './dialogs/SideboardDialog';
 import { SkipIndicator } from './SkipIndicator';
 import { ArenaPriorityControls } from './ArenaPriorityControls';
+import { MatchActionPanel } from './MatchActionPanel';
+import { MatchZonePanel } from './MatchZonePanel';
+import { MatchLogPanel } from './MatchLogPanel';
 import { cardImageService } from '../../services/CardImageService';
+import { keybindService } from '../../services/KeybindService';
 import { DebugMode } from '../debug/DebugMode';
-import { UUID } from '../../types';
+import { CardView, ManaType, PermanentView, PlayerView, StackAbilityView, UUID } from '../../types';
+import { useSettingsStore } from '../../stores/settingsStore';
+import type { MatchSeatOrientation } from '../../services/AppConfigService';
 import './GamePage.css';
 import './ArenaLayout.css';
 
 interface GamePageProps {
     gameId: string;
     onLeave: () => void;
+    isReplay?: boolean;
 }
 
-export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
+const isStackAbilityCard = (card: CardView | PermanentView): card is StackAbilityView => {
+    return card.isAbility && 'sourceCard' in card && Boolean((card as StackAbilityView).sourceCard);
+};
+
+function orientOpponents(
+    opponents: PlayerView[],
+    activePlayerId: string | undefined,
+    orientation: MatchSeatOrientation,
+): PlayerView[] {
+    if (opponents.length < 2) {
+        return opponents;
+    }
+
+    if (orientation === 'reverse') {
+        return [...opponents].reverse();
+    }
+
+    if (orientation === 'active-first' && activePlayerId) {
+        const activeIndex = opponents.findIndex((player) => player.playerId === activePlayerId);
+        if (activeIndex > 0) {
+            return [...opponents.slice(activeIndex), ...opponents.slice(0, activeIndex)];
+        }
+    }
+
+    return opponents;
+}
+
+export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = false }) => {
     const gameStore = useGameStore(useShallow(state => ({
         gameView: state.gameView,
         isLoading: state.isLoading,
         gameEnded: state.gameEnded,
         gameEndView: state.gameEndView,
         endGameInfo: state.endGameInfo,
+        isWatching: state.isWatching,
         pendingAction: state.pendingAction,
         activeSkip: state.activeSkip,
         showingZone: state.showingZone,
         showingPlayerId: state.showingPlayerId,
-        arenaSkipEnabled: state.arenaSkipEnabled
+        arenaSkipEnabled: state.arenaSkipEnabled,
+        lastMessage: state.lastMessage,
+        lastError: state.lastError,
     })));
 
     const actions = useGameStore(useShallow(state => ({
         leaveGame: state.leaveGame,
         sendUUID: state.sendUUID,
+        sendBoolean: state.sendBoolean,
+        sendManaType: state.sendManaType,
         passPriority: state.passPriority,
         passPriorityUntilEndOfTurn: state.passPriorityUntilEndOfTurn,
+        passPriorityUntilNextTurnSkipStack: state.passPriorityUntilNextTurnSkipStack,
         passPriorityUntilNextMain: state.passPriorityUntilNextMain,
         passPriorityUntilStackResolved: state.passPriorityUntilStackResolved,
         passPriorityUntilNextTurn: state.passPriorityUntilNextTurn,
+        passPriorityUntilMyNextTurn: state.passPriorityUntilMyNextTurn,
+        passPriorityUntilEndStepBeforeMyTurn: state.passPriorityUntilEndStepBeforeMyTurn,
         cancelPassActions: state.cancelPassActions,
+        concede: state.concede,
         showZone: state.showZone,
         submitDeck: state.submitDeck,
         sendPlayerAction: state.sendPlayerAction,
         toggleArenaSkip: state.toggleArenaSkip
     })));
 
-    const { config, toggleDebugMode } = useDebugStore();
-    const [previewCard, setPreviewCard] = React.useState<any>(null);
+    const config = useDebugStore(state => state.config);
+    const toggleDebugMode = useDebugStore(state => state.toggleDebugMode);
+    const { settings, syncRuntimeSettings } = useSettingsStore(useShallow(state => ({
+        settings: state.settings,
+        syncRuntimeSettings: state.syncRuntimeSettings,
+    })));
+    const [previewCard, setPreviewCard] = React.useState<CardView | PermanentView | null>(null);
+    const [hoverPreviewCard, setHoverPreviewCard] = React.useState<CardView | PermanentView | null>(null);
     const [resultModalClosed, setResultModalClosed] = React.useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [debugModeOpen, setDebugModeOpen] = useState(false);
+    const hoverPreviewTimerRef = useRef<number | null>(null);
 
     // Animation store for life change detection and attack animations
-    const { updateLifeTotals, queueMultipleAttacks, clearAnimationQueue } = useAnimationStore();
+    const updateLifeTotals = useAnimationStore(state => state.updateLifeTotals);
+    const queueMultipleAttacks = useAnimationStore(state => state.queueMultipleAttacks);
+    const clearAnimationQueue = useAnimationStore(state => state.clearAnimationQueue);
     const previousLifeRef = useRef<Record<UUID, number>>({});
     const previousStepRef = useRef<string | null>(null);
     const hasQueuedAttacksRef = useRef(false);
@@ -148,83 +200,230 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
         previousStepRef.current = currentStep || null;
     }, [gameStore.gameView?.step, gameStore.gameView?.combat, queueMultipleAttacks, clearAnimationQueue]);
 
+    useEffect(() => {
+        if (gameStore.gameView && settings.preloadMatchImages) {
+            void cardImageService.preloadGameViewImages(gameStore.gameView);
+        }
+    }, [gameStore.gameView, settings.preloadMatchImages]);
+
+    useEffect(() => {
+        syncRuntimeSettings();
+    }, [gameId, syncRuntimeSettings]);
+
+    const handleConfirmCurrentRequest = React.useCallback(async () => {
+        if (useGameStore.getState().isWatching) {
+            return;
+        }
+
+        const pendingType = useGameStore.getState().pendingAction.type;
+        if (pendingType !== 'none') {
+            if (pendingType === 'priority') {
+                await actions.sendBoolean(false);
+                return;
+            }
+            await actions.sendBoolean(true);
+            return;
+        }
+
+        await actions.passPriority();
+    }, [actions.passPriority, actions.sendBoolean]);
+
+    const handleUseFirstManaAbilityStart = React.useCallback(async () => {
+        if (useGameStore.getState().isWatching) {
+            return;
+        }
+
+        await actions.sendPlayerAction('USE_FIRST_MANA_ABILITY_ON');
+    }, [actions.sendPlayerAction]);
+
+    const handleUseFirstManaAbilityEnd = React.useCallback(async () => {
+        if (useGameStore.getState().isWatching) {
+            return;
+        }
+
+        await actions.sendPlayerAction('USE_FIRST_MANA_ABILITY_OFF');
+    }, [actions.sendPlayerAction]);
+
+    const guardPlayerControl = React.useCallback((handler: () => Promise<void>) => {
+        if (useGameStore.getState().isWatching) {
+            return;
+        }
+
+        void handler();
+    }, []);
+
     // Global keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Don't trigger shortcuts if user is typing in an input
-            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-                return;
-            }
-
-            switch (e.key) {
-                case 'F2':
-                    e.preventDefault();
-                    actions.passPriority();
-                    break;
-                case 'F4':
-                    e.preventDefault();
-                    actions.passPriorityUntilEndOfTurn();
-                    break;
-                case 'F5':
-                    e.preventDefault();
-                    actions.passPriorityUntilNextMain();
-                    break;
-                case 'F7':
-                    e.preventDefault();
-                    actions.passPriorityUntilStackResolved();
-                    break;
-                case 'F9':
-                    e.preventDefault();
-                    actions.passPriorityUntilNextTurn();
-                    break;
-                case 'Escape':
-                    e.preventDefault();
-                    if (debugModeOpen) {
-                        setDebugModeOpen(false);
-                    } else {
-                        actions.cancelPassActions();
-                    }
-                    break;
-                case 'd':
-                case 'D':
-                    if (e.ctrlKey || e.metaKey) {
-                        e.preventDefault();
-                        toggleDebugMode();
-                        setDebugModeOpen(!debugModeOpen);
-                    }
-                    break;
-            }
+            keybindService.handleKeyDown(e);
+        };
+        const handleKeyUp = (e: KeyboardEvent) => {
+            keybindService.handleKeyUp(e);
         };
 
+        const unregister = keybindService.registerMany([
+            { id: 'confirm-request', label: 'Confirm current request', key: 'F2', handler: handleConfirmCurrentRequest },
+            { id: 'cancel-skip', label: 'Cancel active skip action', key: 'F3', handler: () => guardPlayerControl(actions.cancelPassActions) },
+            { id: 'pass-next-turn', label: 'Until Next Turn', key: 'F4', handler: () => guardPlayerControl(actions.passPriorityUntilNextTurn) },
+            { id: 'pass-end-step', label: 'Until End Step', key: 'F5', handler: () => guardPlayerControl(actions.passPriorityUntilEndOfTurn) },
+            { id: 'pass-next-turn-skip-stack', label: 'Until Next Turn, Skip Stack', key: 'F6', handler: () => guardPlayerControl(actions.passPriorityUntilNextTurnSkipStack) },
+            { id: 'pass-next-main', label: 'Until Next Main', key: 'F7', handler: () => guardPlayerControl(actions.passPriorityUntilNextMain) },
+            { id: 'pass-my-turn', label: 'Until My Turn', key: 'F9', handler: () => guardPlayerControl(actions.passPriorityUntilMyNextTurn) },
+            { id: 'pass-stack', label: 'Until Stack Resolved', key: 'F10', handler: () => guardPlayerControl(actions.passPriorityUntilStackResolved) },
+            { id: 'pass-prior-end-step', label: 'Until End Step Before My Turn', key: 'F11', handler: () => guardPlayerControl(actions.passPriorityUntilEndStepBeforeMyTurn) },
+            {
+                id: 'use-first-mana-ability-hold',
+                label: 'Hold first mana ability',
+                key: '1',
+                altKey: true,
+                ignoreRepeat: true,
+                handler: handleUseFirstManaAbilityStart,
+            },
+            {
+                id: 'use-first-mana-ability-release',
+                label: 'Release first mana ability',
+                key: '1',
+                eventType: 'keyup',
+                altKey: true,
+                handler: handleUseFirstManaAbilityEnd,
+            },
+            {
+                id: 'cancel',
+                label: 'Cancel',
+                key: 'Escape',
+                handler: () => {
+                    if (debugModeOpen) {
+                        setDebugModeOpen(false);
+                    } else if (!useGameStore.getState().isWatching) {
+                        void actions.cancelPassActions();
+                    }
+                },
+            },
+            {
+                id: 'debug-mode',
+                label: 'Debug Mode',
+                key: 'd',
+                ctrlOrMeta: true,
+                handler: () => {
+                    toggleDebugMode();
+                    setDebugModeOpen((open) => !open);
+                },
+            },
+        ]);
+
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [actions.passPriority, actions.passPriorityUntilEndOfTurn, actions.passPriorityUntilNextMain, actions.passPriorityUntilStackResolved, actions.passPriorityUntilNextTurn, actions.cancelPassActions]);
+        window.addEventListener('keyup', handleKeyUp);
+        return () => {
+            unregister();
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [
+        actions.passPriority,
+        actions.sendBoolean,
+        actions.sendPlayerAction,
+        actions.passPriorityUntilEndOfTurn,
+        actions.passPriorityUntilNextTurnSkipStack,
+        actions.passPriorityUntilNextMain,
+        actions.passPriorityUntilStackResolved,
+        actions.passPriorityUntilNextTurn,
+        actions.passPriorityUntilMyNextTurn,
+        actions.passPriorityUntilEndStepBeforeMyTurn,
+        actions.cancelPassActions,
+        debugModeOpen,
+        guardPlayerControl,
+        handleConfirmCurrentRequest,
+        handleUseFirstManaAbilityEnd,
+        handleUseFirstManaAbilityStart,
+        toggleDebugMode,
+    ]);
 
     const handleLeave = React.useCallback(async () => {
         await actions.leaveGame();
         onLeave();
     }, [actions.leaveGame, onLeave]);
 
+    const handleConcedeGame = React.useCallback(async () => {
+        await actions.concede();
+    }, [actions.concede]);
+
+    const handleManaClick = React.useCallback(async (manaType: ManaType) => {
+        if (gameStore.isWatching) {
+            return;
+        }
+
+        await actions.sendManaType(manaType);
+    }, [actions.sendManaType, gameStore.isWatching]);
 
     const handleCardClick = React.useCallback((cardId: string) => {
+        if (gameStore.isWatching) {
+            return;
+        }
+
         console.log('Card clicked:', cardId);
         // By default, just sending UUID to server handles most interactions 
         // (casting, activating, targeting) if the server state expects it.
         actions.sendUUID(cardId);
-    }, [actions.sendUUID]);
+    }, [actions.sendUUID, gameStore.isWatching]);
 
-    const handleCardInspect = React.useCallback((cardId: string) => {
-        // We need current gameView to inspect. 
-        // We can't put gameView in dependency array effectively if it changes too much.
-        // But preventing the function recreation helps Battlefield memo.
-        // To do this safely, we might need a ref to gameView OR just accept that if gameView changes, we re-create this.
-        // However, Battlefield re-renders on gameView props anyway?
-        // Actually, preventing 'handleCardClick' (which doesn't depend on gameView) from changing is a win.
-        // For 'handleCardInspect', we need gameView.
-        // Let's rely on useGameStore.getState() inside the callback to keep it stable!
+    React.useEffect(() => {
+        const findHandCardAtPoint = (clientX: number, clientY: number): HTMLElement | null => {
+            const pointElements = document.elementsFromPoint(clientX, clientY);
+            for (const element of pointElements) {
+                const handCard = element.closest<HTMLElement>('[data-testid="hand-card"][data-card-id]');
+                if (handCard) {
+                    return handCard;
+                }
+            }
+
+            const handCards = Array.from(document.querySelectorAll<HTMLElement>('[data-testid="hand-card"][data-card-id]'));
+            return handCards
+                .filter((element) => {
+                    const rect = element.getBoundingClientRect();
+                    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+                })
+                .sort((left, right) => {
+                    const leftZ = Number.parseInt(window.getComputedStyle(left).zIndex || '0', 10);
+                    const rightZ = Number.parseInt(window.getComputedStyle(right).zIndex || '0', 10);
+                    return (Number.isFinite(rightZ) ? rightZ : 0) - (Number.isFinite(leftZ) ? leftZ : 0);
+                })[0] ?? null;
+        };
+
+        const handleDocumentClick = (event: MouseEvent) => {
+            if (event.button !== 0 || useGameStore.getState().isWatching) {
+                return;
+            }
+
+            const pendingType = useGameStore.getState().pendingAction.type;
+            if (pendingType !== 'target' && pendingType !== 'select' && pendingType !== 'priority') {
+                return;
+            }
+
+            const targetElement = event.target instanceof Element ? event.target : null;
+            const clickedHandCard = targetElement?.closest<HTMLElement>('[data-testid="hand-card"][data-card-id]') ?? null;
+            if (targetElement?.closest('[data-testid="game-feedback-panel"], [data-testid="priority-next-button"], [data-testid="priority-skip-toggle"], button, input, select, textarea, a')) {
+                return;
+            }
+
+            const handCard = clickedHandCard ?? findHandCardAtPoint(event.clientX, event.clientY);
+            const cardId = handCard?.dataset.cardId;
+            if (!cardId) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            handleCardClick(cardId);
+        };
+
+        document.addEventListener('click', handleDocumentClick, true);
+        return () => document.removeEventListener('click', handleDocumentClick, true);
+    }, [handleCardClick]);
+
+    const findCardById = React.useCallback((cardId: string): CardView | PermanentView | null => {
         const { gameView, getMyPlayer, getOpponents } = useGameStore.getState();
 
-        if (!gameView) return;
+        if (!gameView) return null;
 
         // Find card in hand
         let card = gameView.myHand ? gameView.myHand[cardId] : undefined;
@@ -254,15 +453,57 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             }
         }
 
+        return card ?? null;
+    }, []);
+
+    const handleCardInspect = React.useCallback((cardId: string) => {
+        const card = findCardById(cardId);
         if (card) {
+            setHoverPreviewCard(null);
             setPreviewCard(card);
         }
-    }, [setPreviewCard]); // Dependency array is now super stable!
+    }, [findCardById, setPreviewCard]);
 
+    const handleCardHover = React.useCallback((cardId: string | null) => {
+        if (hoverPreviewTimerRef.current !== null) {
+            window.clearTimeout(hoverPreviewTimerRef.current);
+            hoverPreviewTimerRef.current = null;
+        }
+
+        if (!cardId || previewCard) {
+            setHoverPreviewCard(null);
+            return;
+        }
+
+        hoverPreviewTimerRef.current = window.setTimeout(() => {
+            setHoverPreviewCard(findCardById(cardId));
+            hoverPreviewTimerRef.current = null;
+        }, 180);
+    }, [findCardById, previewCard]);
+
+    const getHoverPreviewImageCard = React.useCallback((card: CardView | PermanentView): CardView | PermanentView => {
+        if (isStackAbilityCard(card)) {
+            return card.sourceCard;
+        }
+
+        return card;
+    }, []);
+
+    const getHoverPreviewImageUrl = React.useCallback((card: CardView | PermanentView): string => {
+        return cardImageService.getImageUrl(getHoverPreviewImageCard(card));
+    }, [getHoverPreviewImageCard]);
+
+    useEffect(() => {
+        return () => {
+            if (hoverPreviewTimerRef.current !== null) {
+                window.clearTimeout(hoverPreviewTimerRef.current);
+            }
+        };
+    }, []);
 
     if (!gameStore.gameView) {
         return (
-            <div className="game-loading">
+            <div className="game-loading" data-testid="game-loading">
                 <div className="loading-spinner"></div>
                 <p>Waiting for game data...</p>
                 <Button onClick={handleLeave} variant="ghost">Cancel</Button>
@@ -272,6 +513,12 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
 
     const myPlayer = useGameStore.getState().getMyPlayer();
     const opponents = useGameStore.getState().getOpponents();
+    const orientedOpponents = orientOpponents(opponents, gameStore.gameView?.activePlayerId, settings.matchSeatOrientation);
+    const opponentLayoutClass = [
+        'arena-opponents-grid',
+        `arena-opponents-${Math.min(Math.max(orientedOpponents.length, 1), 4)}`,
+        orientedOpponents.length > 1 ? 'arena-opponents-with-phase-offset' : '',
+    ].filter(Boolean).join(' ');
 
     // Determine Turn label - if it's my turn
     const isMyTurn = gameStore.gameView.activePlayerId === myPlayer?.playerId;
@@ -285,7 +532,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
     const showResultModal = (gameStore.gameEnded || hasLeft) && !resultModalClosed;
 
     return (
-        <div className="game-page arena-layout">
+        <div className="game-page arena-layout" data-testid="game-page">
             <CombatOverlay />
             <AttackAnimation />
             <DamageEffects />
@@ -295,6 +542,21 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     card={previewCard}
                     onClose={() => setPreviewCard(null)}
                 />
+            )}
+            {hoverPreviewCard && !previewCard && (
+                <div className="match-hover-preview" data-testid="match-hover-preview" aria-hidden="true">
+                    <img
+                        src={getHoverPreviewImageUrl(hoverPreviewCard)}
+                        alt=""
+                        draggable={false}
+                        onError={(event) => {
+                            event.currentTarget.src = cardImageService.getFallbackImageUrl(
+                                getHoverPreviewImageCard(hoverPreviewCard),
+                                settings.cardImageFallbackMode
+                            );
+                        }}
+                    />
+                </div>
             )}
 
             {/* Dialogs */}
@@ -321,10 +583,13 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     keyChoices={gameStore.pendingAction.keyChoices}
                     hintData={gameStore.pendingAction.hintData}
                     hintType={gameStore.pendingAction.hintType}
+                    required={gameStore.pendingAction.required}
                     specialEnabled={gameStore.pendingAction.specialEnabled}
+                    specialCanBeEmpty={gameStore.pendingAction.specialCanBeEmpty}
                     specialText={gameStore.pendingAction.specialText}
                     specialHint={gameStore.pendingAction.specialHint}
                     searchEnabled={gameStore.pendingAction.searchEnabled}
+                    manaColorChoice={gameStore.pendingAction.manaColorChoice}
                 />
             )}
 
@@ -371,15 +636,18 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             {/* Show CardSelectorDialog for target/select with cardsView (e.g., discard from hand) */}
             {!gameStore.showingZone &&
                 (gameStore.pendingAction.type === 'target' || gameStore.pendingAction.type === 'select') &&
-                (gameStore.pendingAction as any).cardsView &&
-                Object.keys((gameStore.pendingAction as any).cardsView).length > 0 && (
+                (
+                    ((gameStore.pendingAction as any).cardsView && Object.keys((gameStore.pendingAction as any).cardsView).length > 0) ||
+                    (gameStore.pendingAction.type === 'target' && gameStore.gameView?.players?.some((player) => (
+                        gameStore.pendingAction.type === 'target' && gameStore.pendingAction.validTargets.includes(player.playerId)
+                    )))
+                ) && (
                     <CardSelectorDialog
                         isOpen={true}
                         pendingAction={gameStore.pendingAction}
                         onClose={() => {
-                            // Can't close a required selection
                             if (!(gameStore.pendingAction as any).required) {
-                                actions.sendPlayerAction('PASS_PRIORITY_CANCEL_ALL_ACTIONS');
+                                void actions.sendUUID(null);
                             }
                         }}
                     />
@@ -406,24 +674,32 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             </div>
 
             {/* ===== ARENA LAYOUT ===== */}
-            <div className="arena-battlefield-area">
+            <div className="arena-battlefield-area" data-testid="arena-battlefield">
                 {/* Opponent Area (Top) */}
-                {opponents.map(p => (
-                    <div key={p.playerId} className="arena-opponent-area">
-                        <ArenaOpponentHUD
-                            player={p}
-                            isActivePlayer={gameStore.gameView?.activePlayerId === p.playerId}
-                            onShowZone={actions.showZone}
-                            onInteract={handleCardClick}
-                        />
-                        <Battlefield
-                            player={p}
-                            onCardClick={handleCardClick}
-                            onCardInspect={handleCardInspect}
-                            isMe={false}
-                        />
-                    </div>
-                ))}
+                <div
+                    className={opponentLayoutClass}
+                    data-testid="arena-opponents-grid"
+                    data-seat-orientation={settings.matchSeatOrientation}
+                >
+                    {orientedOpponents.map((p, index) => (
+                        <div key={p.playerId} className="arena-opponent-area" data-seat-index={index} data-player-id={p.playerId}>
+                            <ArenaOpponentHUD
+                                player={p}
+                                isActivePlayer={gameStore.gameView?.activePlayerId === p.playerId}
+                                onShowZone={actions.showZone}
+                                onInteract={handleCardClick}
+                                showPlayerName={settings.alwaysShowPlayerNames}
+                            />
+                            <Battlefield
+                                player={p}
+                                onCardClick={handleCardClick}
+                                onCardInspect={handleCardInspect}
+                                onCardHover={handleCardHover}
+                                isMe={false}
+                            />
+                        </div>
+                    ))}
+                </div>
 
                 {/* Player Area (Bottom) */}
                 {myPlayer && (
@@ -433,6 +709,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                             isMe
                             onCardClick={handleCardClick}
                             onCardInspect={handleCardInspect}
+                            onCardHover={handleCardHover}
                         />
                     </div>
                 )}
@@ -446,12 +723,14 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     isActivePlayer={isMyTurn}
                     onShowZone={actions.showZone}
                     onInteract={handleCardClick}
+                    onManaClick={handleManaClick}
+                    showPlayerName={settings.alwaysShowPlayerNames}
                 />
             )}
 
             {/* Hand (fixed position at bottom) */}
             {myPlayer && (
-                <div className="arena-hand-area">
+                <div className="arena-hand-area" data-testid="arena-hand">
                     <Hand
                         hand={gameStore.gameView.myHand}
                         onCardClick={handleCardClick}
@@ -465,10 +744,11 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                 stack={gameStore.gameView.stack}
                 onCardClick={handleCardClick}
                 onCardInspect={handleCardInspect}
+                onCardHover={handleCardHover}
             />
 
             {/* Arena-style Priority Controls (bottom-right) */}
-            {myPlayer && (
+            {myPlayer && !gameStore.isWatching && (
                 <ArenaPriorityControls
                     hasPriority={myPlayer.hasPriority}
                     isMyTurn={isMyTurn}
@@ -479,12 +759,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             )}
 
             {/* Phase Indicator (Top right corner) */}
-            <div style={{
-                position: 'fixed',
-                top: 10,
-                right: 20,
-                zIndex: 100
-            }}>
+            <div className="game-phase-region" data-testid="game-phase-region">
                 <PhaseIndicator turn={gameStore.gameView.turn} step={gameStore.gameView.step} />
                 <div className="turn-indicator" style={{
                     marginTop: 8,
@@ -495,7 +770,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     color: isMyTurn ? '#22c55e' : '#94a3b8',
                     textAlign: 'center'
                 }}>
-                    {isMyTurn ? "Your Turn" : `${gameStore.gameView?.activePlayerName || opponents.find(p => p.playerId === gameStore.gameView?.activePlayerId)?.name || 'Unknown'}'s Turn`}
+                    {isMyTurn ? "Your Turn" : `${gameStore.gameView?.activePlayerName || orientedOpponents.find(p => p.playerId === gameStore.gameView?.activePlayerId)?.name || 'Unknown'}'s Turn`}
                 </div>
             </div>
 
@@ -503,6 +778,8 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
             <button
                 className={`arena-sidebar-toggle ${sidebarOpen ? 'open' : ''}`}
                 onClick={() => setSidebarOpen(!sidebarOpen)}
+                aria-label={sidebarOpen ? 'Close game sidebar' : 'Open game sidebar'}
+                data-testid="game-sidebar-toggle"
             >
                 {sidebarOpen ? '▶' : '◀'}
             </button>
@@ -515,23 +792,57 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                     </h4>
                 </div>
 
+                <div className="sidebar-content">
+                    <MatchZonePanel
+                        gameView={gameStore.gameView}
+                        onShowZone={actions.showZone}
+                    />
+                </div>
+
+                <div className="sidebar-content">
+                    <MatchActionPanel
+                        players={gameStore.gameView.players}
+                        myPlayerId={gameStore.gameView.myPlayerId}
+                        isWatching={gameStore.isWatching}
+                        isReplay={isReplay}
+                        rollbackTurnsAllowed={gameStore.gameView.rollbackTurnsAllowed}
+                        rangeOfInfluence={gameStore.gameView.rangeOfInfluence}
+                        attackOption={gameStore.gameView.attackOption}
+                    />
+                </div>
+
                 <div className="sidebar-content keyboard-shortcuts">
                     <h4>Shortcuts</h4>
                     <div className="shortcut-list">
                         <div className="shortcut-item">
-                            <kbd>F2</kbd> <span>Pass Priority</span>
+                            <kbd>F2</kbd> <span>Confirm</span>
                         </div>
                         <div className="shortcut-item">
-                            <kbd>F4</kbd> <span>Until End of Turn</span>
+                            <kbd>F3</kbd> <span>Cancel Skip</span>
                         </div>
                         <div className="shortcut-item">
-                            <kbd>F5</kbd> <span>Until Next Main</span>
+                            <kbd>F4</kbd> <span>Next Turn</span>
                         </div>
                         <div className="shortcut-item">
-                            <kbd>F7</kbd> <span>Until Stack Resolved</span>
+                            <kbd>F5</kbd> <span>End Step</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>F6</kbd> <span>Next Turn, Skip Stack</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>F7</kbd> <span>Next Main</span>
                         </div>
                         <div className="shortcut-item">
                             <kbd>F9</kbd> <span>Until My Turn</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>F10</kbd> <span>Stack Resolved</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>F11</kbd> <span>Prior End Step</span>
+                        </div>
+                        <div className="shortcut-item">
+                            <kbd>Alt+1</kbd> <span>Hold First Mana</span>
                         </div>
                         <div className="shortcut-item">
                             <kbd>ESC</kbd> <span>Cancel</span>
@@ -540,10 +851,25 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave }) => {
                 </div>
 
                 <div className="sidebar-chat-panel">
+                    <MatchLogPanel
+                        gameId={gameStore.gameView ? gameId : null}
+                        gameView={gameStore.gameView}
+                        lastMessage={gameStore.lastMessage}
+                        lastError={gameStore.lastError}
+                    />
                     <ChatPanel />
                 </div>
 
                 <div className="sidebar-footer">
+                    <Button
+                        onClick={handleConcedeGame}
+                        variant="danger"
+                        size="sm"
+                        className="sidebar-concede-button"
+                        data-testid="game-concede-game-button"
+                    >
+                        Concede Game
+                    </Button>
                     <Button onClick={handleLeave} variant="secondary" size="sm" className="sidebar-leave-button">
                         Concede / Leave
                     </Button>

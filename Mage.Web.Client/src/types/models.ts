@@ -2,14 +2,21 @@
  * Lobby, Table, Tournament, and Deck Models
  */
 
-import { UUID, TableState, SkillLevel } from './api';
+import { UUID, TableState, SkillLevel } from './api.js';
 
 // === Lobby/Table Models ===
 
 export interface SeatView {
-    seatNum: number;
-    name: string;
+    seatNum?: number;
+    name?: string;
+    playerName?: string;
+    playerId?: UUID | null;
     playerType: string;
+    flagName?: string;
+    history?: string;
+    generalRating?: number;
+    constructedRating?: number;
+    limitedRating?: number;
 }
 
 
@@ -56,23 +63,38 @@ export interface MatchView {
 // === Users ===
 
 export interface UserView {
-    name: string;
+    userName: string;
+    host: string;
+    sessionId: string;
+    timeConnected: string;
+    lastActivity: string;
+    gameInfo: string;
+    userState: string;
+    muteChatUntil: string | null;
+    clientVersion: string;
+    email: string;
+    userIdStr: string;
+}
+
+export interface UsersView {
+    flagName: string;
+    userName: string;
     matchHistory: string;
     matchQuitRatio: number;
     tourneyHistory: string;
     tourneyQuitRatio: number;
-    flagName: string;
+    infoGames: string;
+    infoPing: string;
     generalRating: number;
     constructedRating: number;
     limitedRating: number;
 }
 
-export interface UsersView {
-    users: UserView[];
-}
-
 export interface RoomUsersView {
-    usersView: UsersView;
+    numberActiveGames: number;
+    numberGameThreads: number;
+    numberMaxGames: number;
+    usersView: UsersView[];
 }
 
 // === Deck Models ===
@@ -98,6 +120,7 @@ export interface DeckCoverCard {
 export interface DeckCardLists {
     id?: string;
     name?: string;
+    description?: string;
     author?: string;
     format?: string; // e.g. "Constructed - Standard", syncs with deckType
     cards: DeckCardInfo[];
@@ -136,14 +159,18 @@ export interface MatchOptions {
     spectatorsAllowed: boolean;
     playerTypes?: string[];
     planesToUse?: string[];
+    perPlayerEmblemCards?: DeckCardInfo[];
+    globalEmblemCards?: DeckCardInfo[];
     customStartLifeEnabled?: boolean;
     customStartLife?: number;
     customStartHandSizeEnabled?: boolean;
     customStartHandSize?: number;
     mulliganType?: string;
+    planeChase?: boolean;
     quitRatio?: number;
     minimumRating?: number;
-    edhPowerLevel?: string;
+    edhPowerLevel?: number;
+    bannedUsers?: string[];
 }
 
 
@@ -165,8 +192,9 @@ export interface DraftView {
 export interface DraftPickView {
     booster: Record<UUID, unknown>;
     picks: Record<UUID, unknown>;
+    picking: boolean;
     timeout: number;
-    message: string;
+    message?: string;
 }
 
 // === Tournament Models ===
@@ -194,13 +222,33 @@ export interface TournamentPlayerView {
 }
 
 export interface TournamentView {
-    tournamentId: UUID;
+    tournamentId?: UUID;
     tournamentName: string;
     tournamentType: string;
+    tournamentState: string;
     startTime: string;
     endTime?: string;
+    stepStartTime: string;
+    serverTime: string;
+    constructionTime: number;
+    watchingAllowed: boolean;
     rounds: RoundView[];
     players: TournamentPlayerView[];
+    runningInfo: string;
+}
+
+export type ChatMessageColor = 'BLACK' | 'RED' | 'GREEN' | 'BLUE' | 'ORANGE' | 'YELLOW';
+export type ChatMessageType = 'USER_INFO' | 'STATUS' | 'GAME' | 'TALK' | 'WHISPER_FROM' | 'WHISPER_TO';
+export type ChatSoundToPlay = 'PlayerLeft' | 'PlayerQuitTournament' | 'PlayerSubmittedDeck' | 'PlayerWhispered';
+
+export interface ChatMessageView {
+    username: string;
+    time: string | null;
+    turnInfo: string | null;
+    message: string;
+    color: ChatMessageColor | null;
+    soundToPlay?: ChatSoundToPlay | null;
+    messageType: ChatMessageType | null;
 }
 
 // === Server State ===
@@ -231,8 +279,11 @@ export interface TournamentTypeView {
 export interface MageVersion {
     major: number;
     minor: number;
-    patch: number;
-    info: string;
+    release?: number;
+    releaseInfo?: string;
+    buildTime?: string;
+    patch?: number;
+    info?: string;
 }
 
 export interface ServerState {

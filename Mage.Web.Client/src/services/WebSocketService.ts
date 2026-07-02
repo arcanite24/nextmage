@@ -10,7 +10,7 @@
  * - Request timeout handling (default: 30 seconds)
  */
 
-import { ClientCallback, JsonRpcRequest, JsonRpcResponse, SearchCardView, CardSearchCriteria } from '../types';
+import { ClientCallback, JsonRpcRequest, JsonRpcResponse, SearchCardView, CardSearchCriteria, BasicLandSetInfo, DeckCardLists, DeckValidationResultView, ExpansionSetInfo } from '../types/index.js';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
@@ -52,6 +52,7 @@ class WebSocketService {
     private intentionalDisconnect = false;
     private config: WebSocketServiceConfig;
     private _status: ConnectionStatus = 'disconnected';
+    private sessionIdProvider: (() => string | null | undefined) | null = null;
 
     constructor(config: Partial<WebSocketServiceConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -168,6 +169,72 @@ class WebSocketService {
     }
 
     /**
+     * Send a single JSON-RPC request over an isolated socket.
+     * Useful for unauthenticated probes such as server status checks that must
+     * not mutate the app's active session connection or reconnect state.
+     */
+    requestOnce<T = unknown>(url: string, method: string, params: unknown[] = []): Promise<T> {
+        const id = ++this.requestId;
+
+        return new Promise((resolve, reject) => {
+            let settled = false;
+            let socket: WebSocket;
+
+            const settle = (callback: () => void) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
+                callback();
+                if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+                    socket.close(1000, 'Status probe complete');
+                }
+            };
+
+            const timeout = setTimeout(() => {
+                settle(() => reject(new Error(`Request timeout: ${method} (id: ${id})`)));
+            }, this.config.requestTimeout);
+
+            try {
+                socket = new WebSocket(url);
+            } catch (error) {
+                clearTimeout(timeout);
+                reject(new Error(`Failed to create WebSocket: ${error}`));
+                return;
+            }
+
+            socket.onopen = () => {
+                const request: JsonRpcRequest = { method, params, id };
+                socket.send(JSON.stringify(request));
+                console.log('[WebSocket] Probe sent:', method, params);
+            };
+
+            socket.onerror = () => {
+                settle(() => reject(new Error('WebSocket connection failed')));
+            };
+
+            socket.onclose = () => {
+                settle(() => reject(new Error('Connection closed')));
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const response = JSON.parse(event.data) as JsonRpcResponse<T>;
+                    if (response.id !== id) return;
+
+                    if (response.error) {
+                        settle(() => reject(new Error(response.error)));
+                    } else {
+                        console.log('[WebSocket] Probe response:', response.id, response.result);
+                        settle(() => resolve(response.result as T));
+                    }
+                } catch (error) {
+                    settle(() => reject(new Error(`Failed to parse response: ${error}`)));
+                }
+            };
+        });
+    }
+
+    /**
      * Register a callback handler for server push messages
      * Returns an unsubscribe function
      */
@@ -189,12 +256,18 @@ class WebSocketService {
         };
     }
 
+    setSessionIdProvider(provider: (() => string | null | undefined) | null): void {
+        this.sessionIdProvider = provider;
+    }
+
     /**
      * Send a ping to keep the connection alive
      */
     async ping(): Promise<boolean> {
         try {
-            return await this.send<boolean>('ping', []);
+            const sessionId = this.sessionIdProvider?.();
+            const params = sessionId ? [sessionId, 'web-client'] : [];
+            return await this.send<boolean>('ping', params);
         } catch (error) {
             console.warn('[WebSocket] Ping failed:', error);
             return false;
@@ -209,6 +282,22 @@ class WebSocketService {
      */
     async searchCards(criteria: CardSearchCriteria): Promise<SearchCardView[]> {
         return this.send<SearchCardView[]>('searchCards', [criteria]);
+    }
+
+    async validateDeck(deckType: string, deck: DeckCardLists): Promise<DeckValidationResultView> {
+        return this.send<DeckValidationResultView>('deckValidate', [deckType, deck]);
+    }
+
+    async getBasicLandSets(): Promise<BasicLandSetInfo[]> {
+        return this.send<BasicLandSetInfo[]>('getBasicLandSets', []);
+    }
+
+    async getDeckTypes(): Promise<string[]> {
+        return this.send<string[]>('getDeckTypes', []);
+    }
+
+    async getExpansionSets(): Promise<ExpansionSetInfo[]> {
+        return this.send<ExpansionSetInfo[]>('getExpansionSets', []);
     }
 
     // === Private Methods ===

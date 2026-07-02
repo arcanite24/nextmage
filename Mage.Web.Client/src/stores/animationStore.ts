@@ -23,7 +23,7 @@ export interface DamageAnimation {
     id: string;
     targetId: UUID; // Player ID
     amount: number;
-    type: 'damage';
+    type: 'damage' | 'lifeGain';
     timestamp: number;
 }
 
@@ -65,6 +65,7 @@ interface AnimationActions {
 
     // Damage animations
     triggerDamageEffect: (targetId: UUID, amount: number) => void;
+    triggerLifeGainEffect: (targetId: UUID, amount: number) => void;
     clearDamageEffect: (damageId: string) => void;
     applyCombatDamage: (targetId: UUID) => void;
 
@@ -217,6 +218,24 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
                 }, duration);
             },
 
+            triggerLifeGainEffect: (targetId, amount) => {
+                const id = `life-gain-${targetId}-${Date.now()}`;
+                set((state) => {
+                    state.activeDamageEffects.push({
+                        id,
+                        targetId,
+                        amount,
+                        type: 'lifeGain',
+                        timestamp: Date.now(),
+                    });
+                });
+
+                const duration = BASE_DAMAGE_EFFECT_DURATION / get().animationSpeed;
+                setTimeout(() => {
+                    get().clearDamageEffect(id);
+                }, duration);
+            },
+
             clearDamageEffect: (damageId) => {
                 set((state) => {
                     state.activeDamageEffects = state.activeDamageEffects.filter(
@@ -301,6 +320,8 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
                             // Trigger immediate effect for non-deferred
                             if (delta < 0) {
                                 get().triggerDamageEffect(playerId, Math.abs(delta));
+                            } else if (delta > 0) {
+                                get().triggerLifeGainEffect(playerId, delta);
                             }
                         }
                     }

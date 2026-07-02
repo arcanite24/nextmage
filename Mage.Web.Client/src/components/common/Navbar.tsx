@@ -9,20 +9,24 @@ import { useSessionStore } from '../../stores';
 import { Button } from './Button';
 import './Navbar.css';
 
-export type NavPage = 'lobby' | 'decks' | 'tournaments' | 'history';
+export type NavPage = 'lobby' | 'decks' | 'settings' | 'tournaments' | 'history';
 
 interface NavbarProps {
     currentPage: NavPage;
     onNavigate: (page: NavPage) => void;
-    onLogout: () => void;
+    onLogout: () => void | boolean;
+    supportMenu?: React.ReactNode;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout }) => {
+export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, supportMenu }) => {
     const { userName, logout } = useSessionStore();
 
     const handleLogout = () => {
+        const shouldLogout = onLogout();
+        if (shouldLogout === false) {
+            return;
+        }
         logout();
-        onLogout();
     };
 
     return (
@@ -62,6 +66,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogou
                         Decks
                     </button>
                     <button
+                        className={`nav-item ${currentPage === 'settings' ? 'active' : ''}`}
+                        onClick={() => onNavigate('settings')}
+                    >
+                        Settings
+                    </button>
+                    <button
                         className={`nav-item ${currentPage === 'tournaments' ? 'active' : ''}`}
                         onClick={() => onNavigate('tournaments')}
                     >
@@ -77,6 +87,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogou
             </div>
 
             <div className="navbar-right">
+                {supportMenu && (
+                    <div className="navbar-support">
+                        {supportMenu}
+                    </div>
+                )}
                 <div className="user-info">
                     <span className="user-avatar">
                         {userName?.charAt(0).toUpperCase()}

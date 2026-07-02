@@ -26,7 +26,6 @@ import mage.server.managers.ManagerFactory;
 import mage.util.MultiAmountMessage;
 import mage.util.ThreadUtils;
 import mage.util.XmageThreadFactory;
-import mage.utils.StreamUtils;
 import mage.utils.timer.PriorityTimer;
 import mage.view.*;
 import mage.view.ChatMessage.MessageColor;
@@ -981,23 +980,16 @@ public class GameController implements GameCallback {
     }
 
     public boolean saveGame() {
-        OutputStream file = null;
-        ObjectOutput output = null;
-        OutputStream buffer = null;
-        try {
-            file = new FileOutputStream("saved/" + game.getId().toString() + ".game");
-            buffer = new BufferedOutputStream(file);
-            output = new ObjectOutputStream(new GZIPOutputStream(buffer));
+        try (ObjectOutputStream output = new ObjectOutputStream(
+                new GZIPOutputStream(
+                        new BufferedOutputStream(
+                                new FileOutputStream("saved/" + game.getId().toString() + ".game"))))) {
             output.writeObject(game);
             output.writeObject(game.getGameStates());
             logger.debug("Saved game:" + game.getId());
             return true;
         } catch (IOException ex) {
             logger.fatal("Cannot save game.", ex);
-        } finally {
-            StreamUtils.closeQuietly(file);
-            StreamUtils.closeQuietly(output);
-            StreamUtils.closeQuietly(buffer);
         }
         return false;
     }

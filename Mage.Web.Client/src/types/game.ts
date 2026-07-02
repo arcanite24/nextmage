@@ -12,7 +12,7 @@ import {
     MageObjectType,
     Rarity,
     ObjectColor,
-} from './api';
+} from './api.js';
 
 // === Card Views ===
 
@@ -57,6 +57,9 @@ export interface CardView extends SimpleCardView {
     isToken: boolean;
     isAbility: boolean;
     abilityType?: string;
+    imageFileName?: string;
+    imageNumber?: number;
+    extraDeckCard?: boolean;
 
     // Transform/Flip info
     transformable: boolean;
@@ -77,9 +80,12 @@ export interface CardView extends SimpleCardView {
     rightSplitRules?: string[];
     rightSplitTypeLine?: string;
     isDoubleFacedCard: boolean;
+    artRect?: string;
 
     // Interactive state
     targets?: UUID[];
+    pairedCard?: UUID;
+    bandedCards?: UUID[];
     paid: boolean;
     counters?: CounterView[];
     controlledByOwner: boolean;
@@ -89,6 +95,11 @@ export interface CardView extends SimpleCardView {
     canAttack: boolean;
     canBlock: boolean;
     inViewerOnly: boolean;
+    cardIcons?: unknown[];
+    originalPower?: unknown;
+    originalToughness?: unknown;
+    originalColorIdentity?: string | null;
+    originalIsCopy?: boolean;
 }
 
 export interface PermanentView extends CardView {
@@ -188,11 +199,14 @@ export interface PlayerView {
     graveyard: CardsView;
     exile: CardsView;
     sideboard: CardsView;
+    helperCards?: CardsView;
     battlefield: PermanentsView;
     topCard?: CardView;
     userData: UserData;
-    commandObjectList: CommandObjectView[];
+    commandList: CommandObjectView[];
+    commandObjectList?: CommandObjectView[];
     attachments: UUID[];
+    statesSavedSize: number;
 
     // Timer state
     priorityTimeLeftSecs: number;
@@ -248,6 +262,8 @@ export interface GameView {
     turn: number;
     special: boolean;
     rollbackTurnsAllowed: boolean;
+    attackOption?: string;
+    rangeOfInfluence?: string;
 
     // Debug info
     totalErrorsCount: number;

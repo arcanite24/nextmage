@@ -36,6 +36,35 @@
     justify-content: center;
 }
 
+.card-face-toggle {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.card-face-toggle button {
+    border: 0;
+    border-radius: 5px;
+    padding: 5px 9px;
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.card-face-toggle button.active {
+    background: #d6a434;
+    color: #111827;
+}
+
 .card-preview-image-wrapper.loading {
     min-width: 300px;
     min-height: 420px;
@@ -63,6 +92,20 @@
     border-radius: 12px;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
     display: block;
+}
+
+.card-image-fallback-badge {
+    position: absolute;
+    left: 50%;
+    bottom: 56px;
+    transform: translateX(-50%);
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(248, 250, 252, 0.18);
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .card-preview-close {
@@ -120,9 +163,6 @@
 }
 
 .card-info-mana {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #94a3b8;
     white-space: nowrap;
     background: rgba(0, 0, 0, 0.3);
     padding: 4px 10px;
@@ -140,6 +180,24 @@
     color: #94a3b8;
 }
 
+.card-info-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.card-info-badge {
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(125, 211, 252, 0.24);
+    color: #bae6fd;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0;
+}
+
 /* Ability source info */
 .card-info-ability-source {
     display: flex;
@@ -151,6 +209,11 @@
     border: 1px solid rgba(147, 51, 234, 0.3);
 }
 
+.card-info-ability-source strong {
+    color: #e9d5ff;
+    font-size: 0.9rem;
+}
+
 .ability-label {
     font-size: 0.85rem;
     color: #a78bfa;
@@ -160,6 +223,54 @@
     font-size: 0.95rem;
     font-weight: 600;
     color: #e2e8f0;
+}
+
+.card-info-trigger-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.74);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.card-info-trigger-title {
+    color: #fcd34d;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.card-info-trigger-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.card-info-trigger-grid button {
+    min-width: 0;
+    min-height: 28px;
+    padding: 5px 7px;
+    border-radius: 6px;
+    border: 1px solid rgba(251, 191, 36, 0.24);
+    background: rgba(120, 53, 15, 0.28);
+    color: #fde68a;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.card-info-trigger-grid button:hover:not(:disabled),
+.card-info-trigger-grid button:focus-visible:not(:disabled) {
+    background: rgba(120, 53, 15, 0.44);
+    outline: none;
+}
+
+.card-info-trigger-grid button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
 }
 
 .card-info-rules {
@@ -180,6 +291,40 @@
 
 .rules-line:last-child {
     margin-bottom: 0;
+}
+
+.card-info-split {
+    display: grid;
+    gap: 10px;
+}
+
+.split-face-summary {
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.split-face-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    color: #f8fafc;
+}
+
+.split-face-type {
+    margin-top: 6px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+}
+
+.split-face-rule {
+    margin-top: 8px;
+    color: #e2e8f0;
+    font-size: 0.84rem;
+    line-height: 1.45;
 }
 
 .card-info-pt {
@@ -222,6 +367,62 @@
     margin-left: 8px;
 }
 
+.card-info-state-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-info-hints {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-info-hints-title {
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.card-info-hint-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.card-state-item {
+    min-width: 0;
+    padding: 8px;
+    border-radius: 7px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.card-state-item span,
+.card-state-item strong {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.card-state-item span {
+    color: #94a3b8;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+}
+
+.card-state-item strong {
+    margin-top: 2px;
+    color: #e2e8f0;
+    font-size: 0.84rem;
+}
+
 .card-info-counters {
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -252,11 +453,44 @@
 
 .card-info-set {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     align-items: center;
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 0.85rem;
+}
+
+.set-symbol {
+    --set-symbol-accent: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 48px;
+    min-height: 28px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--set-symbol-accent) 58%, transparent);
+    background:
+        radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--set-symbol-accent) 24%, transparent), transparent 58%),
+        rgba(15, 23, 42, 0.78);
+    color: var(--set-symbol-accent);
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.42);
+}
+
+.set-symbol-glyph {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.set-symbol-code {
+    color: #e2e8f0;
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 0;
 }
 
 .set-code {
@@ -267,30 +501,72 @@
     font-family: monospace;
 }
 
+.set-number {
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.75);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
 .set-rarity {
     padding: 4px 8px;
     border-radius: 4px;
-    text-transform: capitalize;
 }
 
+.set-symbol.rarity-land,
 .set-rarity.rarity-common {
     color: #94a3b8;
     background: rgba(148, 163, 184, 0.1);
 }
 
+.set-symbol.rarity-common {
+    --set-symbol-accent: #94a3b8;
+}
+
+.set-symbol.rarity-land {
+    --set-symbol-accent: #60a5fa;
+}
+
+.set-symbol.rarity-uncommon,
 .set-rarity.rarity-uncommon {
     color: #c0c0c0;
     background: rgba(192, 192, 192, 0.1);
 }
 
+.set-symbol.rarity-uncommon {
+    --set-symbol-accent: #cbd5e1;
+}
+
+.set-symbol.rarity-rare,
 .set-rarity.rarity-rare {
     color: #fbbf24;
     background: rgba(251, 191, 36, 0.1);
 }
 
+.set-symbol.rarity-rare {
+    --set-symbol-accent: #fbbf24;
+}
+
+.set-symbol.rarity-mythic,
 .set-rarity.rarity-mythic {
     color: #f97316;
     background: rgba(249, 115, 22, 0.1);
+}
+
+.set-symbol.rarity-mythic {
+    --set-symbol-accent: #f97316;
+}
+
+.set-symbol.rarity-special,
+.set-symbol.rarity-bonus {
+    --set-symbol-accent: #c084fc;
+}
+
+.set-rarity.rarity-special,
+.set-rarity.rarity-bonus {
+    color: #d8b4fe;
+    background: rgba(168, 85, 247, 0.12);
 }
 
 @keyframes fadeIn {
@@ -329,5 +605,17 @@
     .card-info-panel {
         width: 100%;
         max-width: 400px;
+    }
+
+    .card-info-state-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-info-hint-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-info-trigger-grid {
+        grid-template-columns: 1fr;
     }
 }

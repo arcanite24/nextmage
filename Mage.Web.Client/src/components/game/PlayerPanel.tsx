@@ -1,6 +1,7 @@
 import React from 'react';
 import { PlayerView } from '../../types';
 import { cardImageService } from '../../services/CardImageService';
+import { useSettingsStore } from '../../stores/settingsStore';
 import './GamePage.css';
 
 interface PlayerPanelProps {
@@ -12,6 +13,8 @@ interface PlayerPanelProps {
 }
 
 export const PlayerPanel: React.FC<PlayerPanelProps> = ({ player, isMe, isOpponent, onClick, onShowZone }) => {
+    const cardImageFallbackMode = useSettingsStore(state => state.settings.cardImageFallbackMode);
+
     return (
         <div
             id={`player-${player.playerId}`}
@@ -83,6 +86,9 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({ player, isMe, isOppone
                             src={cardImageService.getImageUrl(player.topCard)}
                             alt="Top Card"
                             style={{ height: '60px', borderRadius: '4px' }}
+                            onError={(event) => {
+                                event.currentTarget.src = cardImageService.getFallbackImageUrl(player.topCard, cardImageFallbackMode);
+                            }}
                         />
                     </div>
                 )}

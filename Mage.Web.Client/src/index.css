@@ -139,6 +139,17 @@ body {
   overflow-x: hidden;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 
 /* === Scrollbar Styling === */
 ::-webkit-scrollbar {
@@ -627,6 +638,8 @@ h6 {
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
   max-width: 500px;
   width: 90%;
   max-height: 85vh;
@@ -648,6 +661,7 @@ h6 {
 }
 
 .modal-body {
+  min-height: 0;
   padding: var(--space-6);
   overflow-y: auto;
 }

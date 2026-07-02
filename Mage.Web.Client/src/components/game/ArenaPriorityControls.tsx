@@ -2,6 +2,7 @@ import React from 'react';
 import { PhaseStep } from '../../types';
 import { useGameStore } from '../../stores';
 import { useShallow } from 'zustand/react/shallow';
+import { shouldCompleteSelectWithBooleanFalse } from '../../services/BattlefieldPerformanceService';
 import './ArenaPriorityControls.css';
 
 interface ArenaPriorityControlsProps {
@@ -59,24 +60,38 @@ export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = React
     skipEnabled,
     onToggleSkip,
 }) => {
-    const { pendingType, sendBoolean, sendPlayerAction } = useGameStore(useShallow(state => ({
-        pendingType: state.pendingAction.type,
+    const { pendingAction, sendBoolean, sendUUID, sendPlayerAction } = useGameStore(useShallow(state => ({
+        pendingAction: state.pendingAction,
         sendBoolean: state.sendBoolean,
+        sendUUID: state.sendUUID,
         sendPlayerAction: state.sendPlayerAction
     })));
 
-    const phaseLabel = getNextPhaseLabel(currentPhase, pendingType);
+    const phaseLabel = getNextPhaseLabel(currentPhase, pendingAction.type);
 
     // Handler for "Next" button - context-aware
     const handleNext = () => {
         // If there's a pending action requiring a response, respond to it
-        switch (pendingType) {
+        switch (pendingAction.type) {
             case 'ask':
-            case 'target':
-            case 'select':
                 // Confirm/Done - same as pressing Space in FeedbackPanel
                 sendBoolean(true);
                 break;
+            case 'priority':
+                sendBoolean(false);
+                break;
+            case 'target':
+            case 'select': {
+                if (shouldCompleteSelectWithBooleanFalse(pendingAction)) {
+                    sendBoolean(false);
+                    break;
+                }
+                const min = typeof pendingAction.min === 'number' ? pendingAction.min : pendingAction.required ? 1 : 0;
+                if (!pendingAction.required && min === 0) {
+                    sendUUID(null);
+                }
+                break;
+            }
             default:
                 // No pending action - just pass priority
                 sendPlayerAction('PASS_PRIORITY_CANCEL_ALL_ACTIONS');
@@ -90,13 +105,15 @@ export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = React
     }
 
     return (
-        <div className="arena-priority-controls">
+        <div className="arena-priority-controls" data-testid="arena-priority-controls">
             {/* Main "Next" Button */}
             <button
                 className={`arena-next-button ${hasPriority ? 'has-priority' : ''}`}
                 onClick={handleNext}
                 disabled={!hasPriority}
                 title="Pass Priority / Confirm (Space)"
+                aria-label={`${phaseLabel}: pass priority or confirm`}
+                data-testid="priority-next-button"
             >
                 <span className="next-label">Next</span>
                 <span className="next-phase">{phaseLabel}</span>
@@ -107,10 +124,11 @@ export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = React
                 className={`arena-skip-toggle ${skipEnabled ? 'active' : ''}`}
                 onClick={onToggleSkip}
                 title={skipEnabled ? 'Stop Auto-Pass (Click or ESC)' : 'Enable Auto-Pass'}
+                aria-label={skipEnabled ? 'Stop auto-pass' : 'Enable auto-pass'}
+                data-testid="priority-skip-toggle"
             >
                 <span className="skip-icon">⏩</span>
             </button>
         </div>
     );
 });
-

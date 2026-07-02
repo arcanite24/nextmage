@@ -304,6 +304,11 @@ public class TableManagerImpl implements TableManager {
     }
 
     @Override
+    public void endGameOnGameThread(UUID tableId) {
+        managerFactory.threadExecutor().getGameExecutor().execute(() -> endGame(tableId));
+    }
+
+    @Override
     public void endDraft(UUID tableId, Draft draft) {
         if (controllers.containsKey(tableId)) {
             controllers.get(tableId).endDraft(draft);
