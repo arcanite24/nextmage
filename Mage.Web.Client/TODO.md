@@ -491,15 +491,19 @@
   - Progress: Prompt modals now use trapped focus, first-action/search autofocus, dialog semantics for the ability picker, keyboard activation for card/pile/amount/multi-amount prompts, optional Escape/cancel only where allowed, modal layering above gameplay overlays, and no required-prompt Done/cancel affordance that can send an accidental null response.
 
 ### P1 - Sideboarding, spectating, and replay for normal matches
-- [ ] Promote the local-server sideboard/watch/replay `fixme` into passing smoke coverage once each promoted control is backed by live payload state, stable selectors, and explicit harness assertions.
+- [x] Promote the local-server sideboard/watch/replay `fixme` into passing smoke coverage once each promoted control is backed by live payload state, stable selectors, and explicit harness assertions.
   - Sideboard submit promotion is now live behind `MAGE_E2E_ADVANCED_FLOWS=1`: `e2e/local-server-sideboard-watch-replay.spec.ts` verifies a rebuilt test-mode server can enter sideboarding through `testEndGame`, mount the browser player's live sideboard payload in the promoted full editor, submit it, submit the fixture opponent, and return to the match.
-- [ ] Implement replay callbacks and controls for normal matches: replay init/update/done, previous play, next play, skip forward, autoplay, replay messages, and stop replay confirmation.
-- [ ] Back replay controls with live local-server assertions before making them required: replay screen state, previous play, next play, skip forward, autoplay, stop replay confirmation, replay done state, and finished-match replay entry from the lobby.
-- [ ] Expose finished-match replay from the lobby match table list.
-- [ ] Finish normal-match spectating parity: watch table, watch game, stop watching, request hand permission, and watcher-specific restricted controls.
-- [ ] Back sideboarding controls with live local-server assertions before making them required: sideboard submit, reset/cancel, Add Lands where allowed, view sideboard, deck validation, timer/ready state, and return-to-match transition.
-  - Live submit, resolved callback card metadata, and return-to-match are covered for the promoted full editor; keep this open for reset/cancel, view-sideboard, timer/ready-state, validation-detail assertions, and Add Lands policy where allowed.
-- [ ] Keep tournament-table watching in the tournament/draft P2 slice so normal-match P1 remains independently shippable.
+- [x] Implement replay callbacks and controls for normal matches: replay init/update/done, previous play, next play, skip forward, autoplay, replay messages, and stop replay confirmation.
+  - Replay activities now preserve `replayGame`, `replayInit`, `replayUpdate`, and `replayDone` state from live callbacks, expose a replay payload status band, and wire Previous, Next, Skip Forward, Autoplay, and Stop Replay through the existing websocket replay bridge with a local stop confirmation.
+- [x] Back replay controls with live local-server assertions before making them required: replay screen state, previous play, next play, skip forward, autoplay, stop replay confirmation, replay done state, and finished-match replay entry from the lobby.
+  - `e2e/local-server-sideboard-watch-replay.spec.ts` now asserts finished-match Replay entry, replay workspace state, and enabled previous/next/skip/autoplay/stop controls behind `MAGE_E2E_REPLAY_FLOWS=1`; default runs keep the save-game-dependent flow gated when no replay-enabled local server is configured.
+- [x] Expose finished-match replay from the lobby match table list.
+  - Finished-match rows in the dense lobby table and sidebar expose Replay actions for replayable normal matches; the replay action starts the server replay and the app now auto-opens the replay workspace when replay callbacks arrive.
+- [x] Finish normal-match spectating parity: watch table, watch game, stop watching, request hand permission, and watcher-specific restricted controls.
+  - Normal watch callbacks now route into the game viewer through `gameWatchStart`, watcher mode keeps player-only controls locked, Stop Watching uses the shared confirmation modal and `gameWatchStop`, hand-permission requests remain available to watchers, and the promoted local-server watch smoke asserts watch entry plus confirmed exit behind `MAGE_E2E_ADVANCED_FLOWS=1`.
+- [x] Back sideboarding controls with live local-server assertions before making them required: sideboard submit, reset/cancel, Add Lands where allowed, view sideboard, deck validation, timer/ready state, and return-to-match transition.
+  - Live submit, reset, resolved callback card metadata, timer/ready state, server-backed deck validation, full-editor return-to-match, view-sideboard activity routing, and limited Add Lands policy are covered by the promoted sideboard/draft local-server assertions.
+- [x] Keep tournament-table watching in the tournament/draft P2 slice so normal-match P1 remains independently shippable.
 
 ### P2 - Chat, social, and table communication
 - [ ] Support lobby, table, game, and tournament chat channels with clear tabs, unread counts, channel join/leave, and reconnect recovery.

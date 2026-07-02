@@ -144,15 +144,24 @@ test.describe('local Mage server sideboard, watch, and replay smoke', () => {
         await expect(page.getByTestId('game-phase-region')).toContainText(/Turn \d+|Mulligan/i);
     });
 
-    test('watches a normal match and exits watcher mode cleanly', async () => {
+    test('watches a normal match and exits watcher mode cleanly', async ({ page }) => {
         test.fixme(
             !RUN_ADVANCED_LOCAL_SERVER_FLOWS,
             'Set MAGE_E2E_ADVANCED_FLOWS=1 after watcher-only game selectors are ready.',
         );
 
         const fixture = await fixtures.createWatchableMatch('watchable match');
+        expect(fixture.gameId).toBeTruthy();
         await harness.login();
         await harness.expectWatchActionForTable(fixture.tableName);
+        await page.getByTestId('watch-table-button').click();
+        await expect(page.getByTestId('game-page')).toBeVisible({ timeout: 45_000 });
+        await expect(page.getByTestId('match-watch-banner')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Hold' })).toBeDisabled();
+        await page.getByRole('button', { name: 'Stop Watching' }).click();
+        await expect(page.getByRole('dialog', { name: 'Stop watching' })).toBeVisible();
+        await page.getByRole('button', { name: 'Yes' }).click();
+        await harness.expectLobbyReady();
     });
 
     test('creates a deterministic finished normal-match fixture before promoting replay controls', async () => {
@@ -170,7 +179,7 @@ test.describe('local Mage server sideboard, watch, and replay smoke', () => {
         expect(typeof fixture.replayAvailable).toBe('boolean');
     });
 
-    test('opens a replayable normal match and drives replay controls', async () => {
+    test('opens a replayable normal match and drives replay controls', async ({ page }) => {
         test.fixme(
             !RUN_REPLAY_LOCAL_SERVER_FLOWS,
             'Set MAGE_E2E_REPLAY_FLOWS=1 against a saveGameActivated=true local server to verify replay callbacks.',
@@ -185,6 +194,22 @@ test.describe('local Mage server sideboard, watch, and replay smoke', () => {
         expect(fixture.replayAvailable).toBe(true);
         expect(fixture.replayInitialized).toBe(true);
         expect(['REPLAY_UPDATE', 'REPLAY_DONE']).toContain(fixture.replayAdvanceCallback);
+
+        await harness.login();
+        const replayRow = page.getByTestId('finished-match-row').filter({ hasText: fixture.tableName });
+        await expect(replayRow).toBeVisible({ timeout: 30_000 });
+        const replayButton = replayRow.getByRole('button', { name: 'Replay' });
+        await expect(replayButton).toBeEnabled();
+        await replayButton.click();
+
+        const workspace = await harness.expectActivityWorkspace('replay', /Replay/i);
+        await expect(workspace.getByTestId('activity-command-panel')).toHaveAttribute('data-activity-command-kind', 'replay');
+        await expect(workspace.getByTestId('activity-replay-payload')).toHaveAttribute('data-replay-state', /requested|ready|updated|done/);
+        await expect(workspace.getByTestId('replay-previous-button')).toBeEnabled();
+        await expect(workspace.getByTestId('replay-next-button')).toBeEnabled();
+        await expect(workspace.getByTestId('replay-skip-forward-button')).toBeEnabled();
+        await expect(workspace.getByTestId('replay-autoplay-button')).toBeEnabled();
+        await expect(workspace.getByTestId('replay-stop-button')).toBeEnabled();
     });
 });
 

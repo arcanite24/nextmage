@@ -100,7 +100,7 @@ function App() {
 
   useEffect(() => {
     if (!activeActivity || activeActivity.status === 'completed') return;
-    if (!['construction', 'sideboard', 'draft'].includes(activeActivity.kind)) return;
+    if (!['construction', 'sideboard', 'draft', 'replay'].includes(activeActivity.kind)) return;
     if (openedActivityIdRef.current === activeActivity.id) return;
     if (currentView === 'deck-editor' && useDeckStore.getState().isDirty) return;
 

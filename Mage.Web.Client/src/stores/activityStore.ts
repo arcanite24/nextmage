@@ -4,7 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import type { ClientCallback, ClientCallbackMethod, UUID } from '../types/index.js';
 import { normalizeDeckSubmitPayload } from '../services/WebSocketBridgeService.js';
 import { getUtilityActivityTitle, type ActivityKind } from '../services/ActivityShellService.js';
-import type { CardView, CardsView, DeckCardInfo, DeckCardLists, DeckView } from '../types/index.js';
+import type { CardView, CardsView, DeckCardInfo, DeckCardLists, DeckView, GameView } from '../types/index.js';
 
 export type { ActivityKind } from '../services/ActivityShellService.js';
 
@@ -19,6 +19,16 @@ export interface DraftPickPayload {
     message?: string;
 }
 
+export interface ReplayPayload {
+    state: 'requested' | 'ready' | 'updated' | 'done';
+    message: string;
+    turn?: number;
+    phase?: string;
+    step?: string;
+    activePlayerName?: string;
+    priorityPlayerName?: string;
+}
+
 export interface ClientActivity {
     id: string;
     kind: ActivityKind;
@@ -30,6 +40,7 @@ export interface ClientActivity {
     updatedAt: number;
     deck?: DeckCardLists | null;
     draftPick?: DraftPickPayload | null;
+    replay?: ReplayPayload | null;
     limitedSideboard?: boolean;
     time?: number;
 }
@@ -42,6 +53,7 @@ interface ActivityDraft {
     status?: ActivityStatus;
     deck?: DeckCardLists | null;
     draftPick?: DraftPickPayload | null;
+    replay?: ReplayPayload | null;
     limitedSideboard?: boolean;
     time?: number;
 }
@@ -79,6 +91,53 @@ function readNumber(value: unknown): number | null {
 
 function readBoolean(value: unknown): boolean | null {
     return typeof value === 'boolean' ? value : null;
+}
+
+function readGameView(value: unknown): GameView | null {
+    return isRecord(value) && Array.isArray(value.players) && 'turn' in value
+        ? value as unknown as GameView
+        : null;
+}
+
+function replayPayloadFromCallback(callback: ClientCallback): ReplayPayload | null {
+    switch (callback.method) {
+        case 'replayGame':
+            return {
+                state: 'requested',
+                message: 'Replay requested.',
+            };
+        case 'replayInit': {
+            const gameView = readGameView(callback.data);
+            return {
+                state: 'ready',
+                message: 'Replay ready.',
+                turn: gameView?.turn,
+                phase: gameView?.phase,
+                step: gameView?.step,
+                activePlayerName: gameView?.activePlayerName,
+                priorityPlayerName: gameView?.priorityPlayerName,
+            };
+        }
+        case 'replayUpdate': {
+            const gameView = readGameView(callback.data);
+            return {
+                state: 'updated',
+                message: 'Replay advanced.',
+                turn: gameView?.turn,
+                phase: gameView?.phase,
+                step: gameView?.step,
+                activePlayerName: gameView?.activePlayerName,
+                priorityPlayerName: gameView?.priorityPlayerName,
+            };
+        }
+        case 'replayDone':
+            return {
+                state: 'done',
+                message: 'Replay finished.',
+            };
+        default:
+            return null;
+    }
 }
 
 function readDraftPickPayload(data: Record<string, unknown>): DraftPickPayload | null {
@@ -355,6 +414,7 @@ function activityFromCallback(callback: ClientCallback): ActivityDraft | null {
                 title: titleFor('replay'),
                 objectId,
                 status: callback.method === 'replayDone' ? 'completed' : 'active',
+                replay: replayPayloadFromCallback(callback),
             };
 
         case 'startTournament':
@@ -467,6 +527,7 @@ export const useActivityStore = create<ActivityState & ActivityActions>()(
                         updatedAt: Date.now(),
                         deck,
                         draftPick,
+                        replay: activity.replay ?? existing?.replay ?? null,
                         limitedSideboard: activity.limitedSideboard ?? existing?.limitedSideboard ?? false,
                         time: activity.time ?? draftPick?.timeout ?? existing?.time,
                     };

@@ -143,6 +143,48 @@ test('activity store retains normalized sideboard deck payloads from callbacks',
     ]);
 });
 
+test('activity store keeps replay callback state for replay controls', () => {
+    useActivityStore.setState({ activities: [], activeActivityId: null });
+
+    const gameId = '00000000-0000-0000-0000-000000000777';
+    useActivityStore.getState().handleCallback({
+        method: 'replayInit',
+        messageId: 51,
+        objectId: gameId,
+        data: {
+            players: [],
+            myPlayerId: null,
+            turn: 3,
+            phase: 'COMBAT',
+            step: 'DECLARE_ATTACKERS',
+            activePlayerName: 'Alice',
+            priorityPlayerName: 'Bob',
+        },
+    } as ClientCallback);
+
+    let activity = useActivityStore.getState().activities[0];
+    assert.equal(activity.kind, 'replay');
+    assert.equal(activity.status, 'active');
+    assert.equal(activity.objectId, gameId);
+    assert.equal(activity.replay?.state, 'ready');
+    assert.equal(activity.replay?.turn, 3);
+    assert.equal(activity.replay?.phase, 'COMBAT');
+    assert.equal(activity.replay?.step, 'DECLARE_ATTACKERS');
+    assert.equal(useActivityStore.getState().activeActivityId, activity.id);
+
+    useActivityStore.getState().handleCallback({
+        method: 'replayDone',
+        messageId: 52,
+        objectId: gameId,
+        data: {},
+    });
+
+    activity = useActivityStore.getState().activities[0];
+    assert.equal(activity.status, 'completed');
+    assert.equal(activity.replay?.state, 'done');
+    assert.equal(activity.replay?.message, 'Replay finished.');
+});
+
 test('activity store preserves limited sideboard callbacks from the Java flag bit', () => {
     useActivityStore.setState({ activities: [], activeActivityId: null });
 

@@ -261,7 +261,7 @@ const CALLBACK_ROUTE_TARGETS: Record<ClientCallbackMethod, CallbackRouteTarget[]
     draftPick: ['activity'],
     draftUpdate: ['activity'],
     showTournament: ['activity'],
-    watchGame: ['activity'],
+    watchGame: ['game', 'activity'],
     viewLimitedDeck: ['game', 'activity'],
     viewSideboard: ['game'],
     userRequestDialog: ['session'],

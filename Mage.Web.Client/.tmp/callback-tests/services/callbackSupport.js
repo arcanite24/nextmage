@@ -214,7 +214,7 @@ const CALLBACK_ROUTE_TARGETS = {
     draftPick: ['activity'],
     draftUpdate: ['activity'],
     showTournament: ['activity'],
-    watchGame: ['activity'],
+    watchGame: ['game', 'activity'],
     viewLimitedDeck: ['game', 'activity'],
     viewSideboard: ['game'],
     userRequestDialog: ['session'],

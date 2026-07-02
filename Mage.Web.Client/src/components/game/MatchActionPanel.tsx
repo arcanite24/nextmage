@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { PlayerAction, PlayerView } from '../../types';
 import { useGameStore } from '../../stores';
+import { useSessionStore } from '../../stores/sessionStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import './MatchActionPanel.css';
 
@@ -71,13 +72,16 @@ export const MatchActionPanel: React.FC<MatchActionPanelProps> = React.memo(({
 }) => {
     const [selectedPlayerId, setSelectedPlayerId] = useState('');
     const [rollbackTurns, setRollbackTurns] = useState(1);
-    const { sendPlayerAction, holdPriority, undo, cancelPassActions, stopReplay } = useGameStore(useShallow(state => ({
+    const { gameId, sendPlayerAction, holdPriority, undo, cancelPassActions, stopWatching, stopReplay } = useGameStore(useShallow(state => ({
+        gameId: state.gameId,
         sendPlayerAction: state.sendPlayerAction,
         holdPriority: state.holdPriority,
         undo: state.undo,
         cancelPassActions: state.cancelPassActions,
+        stopWatching: state.stopWatching,
         stopReplay: state.stopReplay,
     })));
+    const showLocalUserRequest = useSessionStore(state => state.showLocalUserRequest);
     const { settings, setSetting } = useSettingsStore(useShallow(state => ({
         settings: state.settings,
         setSetting: state.setSetting,
@@ -107,6 +111,38 @@ export const MatchActionPanel: React.FC<MatchActionPanelProps> = React.memo(({
 
     const requestRollback = (turns: number) => {
         void sendPlayerAction('ROLLBACK_TURNS', turns);
+    };
+
+    const confirmStopWatching = async () => {
+        if (!isWatching || !gameId) return;
+        const confirmed = await showLocalUserRequest({
+            title: 'Stop watching',
+            message: 'Are you sure you want to stop watching?',
+            gameId,
+            button1Text: 'No',
+            button1Action: null,
+            button2Text: 'Yes',
+            button2Action: 'CLIENT_STOP_WATCHING',
+        });
+        if (confirmed === 2) {
+            await stopWatching();
+        }
+    };
+
+    const confirmStopReplay = async () => {
+        if (!isReplay || !gameId) return;
+        const confirmed = await showLocalUserRequest({
+            title: 'Stop replay',
+            message: 'Are you sure you want to stop replay?',
+            gameId,
+            button1Text: 'No',
+            button1Action: null,
+            button2Text: 'Yes',
+            button2Action: 'CLIENT_REPLAY_ACTION',
+        });
+        if (confirmed === 2) {
+            await stopReplay();
+        }
     };
 
     return (
@@ -362,10 +398,10 @@ export const MatchActionPanel: React.FC<MatchActionPanelProps> = React.memo(({
                     <button type="button" onClick={() => sendPlayerAction('CLIENT_CONCEDE_MATCH')} disabled={isWatching}>
                         Concede Match
                     </button>
-                    <button type="button" onClick={() => sendPlayerAction('CLIENT_STOP_WATCHING')} disabled={!isWatching}>
+                    <button type="button" onClick={() => void confirmStopWatching()} disabled={!isWatching}>
                         Stop Watching
                     </button>
-                    <button type="button" onClick={stopReplay} disabled={!isReplay}>
+                    <button type="button" onClick={() => void confirmStopReplay()} disabled={!isReplay}>
                         Stop Replay
                     </button>
                 </div>

@@ -272,10 +272,12 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
     onOpenDeckEditor,
 }) => {
     const sessionId = useSessionStore(state => state.sessionId);
+    const showLocalUserRequest = useSessionStore(state => state.showLocalUserRequest);
     const updateDraftPick = useActivityStore(state => state.updateDraftPick);
     const [submitStatus, setSubmitStatus] = React.useState<string | null>(null);
     const [isSubmittingDeck, setIsSubmittingDeck] = React.useState(false);
     const [isDraftCommandBusy, setIsDraftCommandBusy] = React.useState(false);
+    const [isReplayCommandBusy, setIsReplayCommandBusy] = React.useState(false);
     const [isAddLandsOpen, setIsAddLandsOpen] = React.useState(false);
     const [isAddingLands, setIsAddingLands] = React.useState(false);
     const [addLandsError, setAddLandsError] = React.useState<string | null>(null);
@@ -303,6 +305,8 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
     const draftPickCount = Object.keys(activity?.draftPick?.picks ?? {}).length;
     const draftBoosterCount = Object.keys(activity?.draftPick?.booster ?? {}).length;
     const canRunDraftCommand = Boolean(canQuitDraft && draftCardId && isDraftPicking);
+    const replayPayload = activity?.kind === 'replay' ? activity.replay ?? null : null;
+    const canRunReplayCommand = Boolean(activity?.kind === 'replay' && activity.objectId && sessionId && activity.status !== 'completed');
     const [editableDeck, setEditableDeck] = React.useState<DeckCardLists | null>(() => (
         deckPayload ? cloneDeck(deckPayload) : null
     ));
@@ -669,6 +673,58 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
         }
     }, [activity, draftCardId, sessionId, updateDraftPick]);
 
+    const handleReplayCommand = React.useCallback(async (command: 'previous' | 'next' | 'skip-forward' | 'autoplay' | 'stop') => {
+        if (activity?.kind !== 'replay' || !activity.objectId) return;
+
+        setIsReplayCommandBusy(true);
+        setSubmitStatus(null);
+        try {
+            if (command === 'stop') {
+                const confirmed = await showLocalUserRequest({
+                    title: 'Stop replay',
+                    message: 'Are you sure you want to stop replay?',
+                    gameId: activity.objectId,
+                    button1Text: 'No',
+                    button1Action: null,
+                    button2Text: 'Yes',
+                    button2Action: 'CLIENT_REPLAY_ACTION',
+                });
+                if (confirmed !== 2) {
+                    setSubmitStatus('Replay stop cancelled.');
+                    return;
+                }
+                const stopped = await webSocketBridgeService.stopReplay(activity.objectId, sessionId);
+                setSubmitStatus(stopped ? 'Replay stop requested.' : 'Replay stop was rejected.');
+                return;
+            }
+
+            if (command === 'previous') {
+                const moved = await webSocketBridgeService.previousReplay(activity.objectId, sessionId);
+                setSubmitStatus(moved ? 'Previous play requested.' : 'Previous play was rejected.');
+                return;
+            }
+
+            if (command === 'next') {
+                const moved = await webSocketBridgeService.nextReplay(activity.objectId, sessionId);
+                setSubmitStatus(moved ? 'Next play requested.' : 'Next play was rejected.');
+                return;
+            }
+
+            if (command === 'skip-forward') {
+                const skipped = await webSocketBridgeService.skipReplayForward(activity.objectId, sessionId, 10);
+                setSubmitStatus(skipped ? 'Replay skip requested.' : 'Replay skip was rejected.');
+                return;
+            }
+
+            const started = await webSocketBridgeService.startReplay(activity.objectId, sessionId);
+            setSubmitStatus(started ? 'Replay autoplay started.' : 'Replay autoplay was rejected.');
+        } catch (error) {
+            setSubmitStatus(error instanceof Error ? error.message : 'Replay command failed.');
+        } finally {
+            setIsReplayCommandBusy(false);
+        }
+    }, [activity, sessionId, showLocalUserRequest]);
+
     const handleOpenDeckEditor = React.useCallback(() => {
         if (!editableDeck || !onOpenDeckEditor) return;
         onOpenDeckEditor(
@@ -874,10 +930,38 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                     data-testid="activity-command-panel"
                     data-activity-command-kind={activity.kind}
                     data-command-count={commands.length}
-                    data-controls-ready={canSubmitDeck ? 'true' : 'false'}
+                    data-controls-ready={canSubmitDeck || canRunReplayCommand ? 'true' : 'false'}
                     data-deck-read-only={isReadOnlyDeck ? 'true' : 'false'}
                 >
                     <h2>{getActivityKindLabel(activity.kind)} {commands.length > 0 ? 'Controls' : 'Deck View'}</h2>
+                    {activity.kind === 'replay' && (
+                        <div
+                            className="activity-replay-payload"
+                            data-testid="activity-replay-payload"
+                            data-replay-state={replayPayload?.state ?? 'waiting'}
+                            data-replay-turn={replayPayload?.turn ?? 0}
+                            data-replay-phase={replayPayload?.phase ?? 'unknown'}
+                            data-replay-step={replayPayload?.step ?? 'unknown'}
+                            data-replay-active-player={replayPayload?.activePlayerName ?? ''}
+                            data-replay-priority-player={replayPayload?.priorityPlayerName ?? ''}
+                            data-controls-ready={String(canRunReplayCommand)}
+                        >
+                            <div>
+                                <span>Replay</span>
+                                <strong data-testid="activity-replay-state">{replayPayload?.message ?? 'Waiting for replay payload.'}</strong>
+                            </div>
+                            <div>
+                                <span>Turn</span>
+                                <strong data-testid="activity-replay-turn">{replayPayload?.turn ?? '-'}</strong>
+                            </div>
+                            <div>
+                                <span>Phase</span>
+                                <strong data-testid="activity-replay-phase">
+                                    {[replayPayload?.phase, replayPayload?.step].filter(Boolean).join(' / ') || '-'}
+                                </strong>
+                            </div>
+                        </div>
+                    )}
                     {editableDeck && (
                         <div
                             className="activity-deck-payload"
@@ -1050,7 +1134,9 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                                 data-testid={command.testId}
                                 data-activity-command={command.key}
                                 disabled={
-                                    activity.kind === 'draft'
+                                    activity.kind === 'replay'
+                                        ? isReplayCommandBusy || !canRunReplayCommand
+                                    : activity.kind === 'draft'
                                         ? isDraftCommandBusy || (command.key === 'quit' ? !canQuitDraft : !canRunDraftCommand)
                                         : isSubmittingDeck || (
                                         command.key === 'reset-sideboard'
@@ -1062,7 +1148,9 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                                     )
                                 }
                                 title={
-                                    activity.kind === 'draft' && (command.key === 'quit' ? canQuitDraft : canRunDraftCommand)
+                                    activity.kind === 'replay' && canRunReplayCommand
+                                        ? 'Run this replay command against the live replay session.'
+                                    : activity.kind === 'draft' && (command.key === 'quit' ? canQuitDraft : canRunDraftCommand)
                                         ? 'Run this draft command against the live booster payload.'
                                     :
                                     canSubmitDeck && (command.key === 'submit-sideboard' || command.key === 'submit-deck')
@@ -1088,6 +1176,16 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                                             ? () => void handleDraftCommand('booster-loaded')
                                         : command.key === 'quit'
                                             ? () => void handleDraftCommand('quit')
+                                        : command.key === 'previous'
+                                            ? () => void handleReplayCommand('previous')
+                                        : command.key === 'next'
+                                            ? () => void handleReplayCommand('next')
+                                        : command.key === 'skip-forward'
+                                            ? () => void handleReplayCommand('skip-forward')
+                                        : command.key === 'autoplay'
+                                            ? () => void handleReplayCommand('autoplay')
+                                        : command.key === 'stop'
+                                            ? () => void handleReplayCommand('stop')
                                         : undefined
                                 }
                             >

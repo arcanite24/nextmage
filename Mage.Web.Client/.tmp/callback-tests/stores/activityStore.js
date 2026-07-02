@@ -18,6 +18,51 @@ function readNumber(value) {
 function readBoolean(value) {
     return typeof value === 'boolean' ? value : null;
 }
+function readGameView(value) {
+    return isRecord(value) && Array.isArray(value.players) && 'turn' in value
+        ? value
+        : null;
+}
+function replayPayloadFromCallback(callback) {
+    switch (callback.method) {
+        case 'replayGame':
+            return {
+                state: 'requested',
+                message: 'Replay requested.',
+            };
+        case 'replayInit': {
+            const gameView = readGameView(callback.data);
+            return {
+                state: 'ready',
+                message: 'Replay ready.',
+                turn: gameView?.turn,
+                phase: gameView?.phase,
+                step: gameView?.step,
+                activePlayerName: gameView?.activePlayerName,
+                priorityPlayerName: gameView?.priorityPlayerName,
+            };
+        }
+        case 'replayUpdate': {
+            const gameView = readGameView(callback.data);
+            return {
+                state: 'updated',
+                message: 'Replay advanced.',
+                turn: gameView?.turn,
+                phase: gameView?.phase,
+                step: gameView?.step,
+                activePlayerName: gameView?.activePlayerName,
+                priorityPlayerName: gameView?.priorityPlayerName,
+            };
+        }
+        case 'replayDone':
+            return {
+                state: 'done',
+                message: 'Replay finished.',
+            };
+        default:
+            return null;
+    }
+}
 function readDraftPickPayload(data) {
     const candidate = data.draftPickView;
     if (!isRecord(candidate) || !isRecord(candidate.booster) || !isRecord(candidate.picks))
@@ -268,6 +313,7 @@ function activityFromCallback(callback) {
                 title: titleFor('replay'),
                 objectId,
                 status: callback.method === 'replayDone' ? 'completed' : 'active',
+                replay: replayPayloadFromCallback(callback),
             };
         case 'startTournament':
         case 'showTournament':
@@ -375,6 +421,7 @@ export const useActivityStore = create()(devtools(immer((set) => ({
                 updatedAt: Date.now(),
                 deck,
                 draftPick,
+                replay: activity.replay ?? existing?.replay ?? null,
                 limitedSideboard: activity.limitedSideboard ?? existing?.limitedSideboard ?? false,
                 time: activity.time ?? draftPick?.timeout ?? existing?.time,
             };

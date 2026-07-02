@@ -36,6 +36,7 @@ test('routes lifecycle callbacks to the activity foundation', () => {
     assert.deepEqual(getCallbackRouteTargets('START_GAME'), ['game', 'activity']);
     assert.deepEqual(getCallbackRouteTargets('GAME_INIT'), ['game', 'activity']);
     assert.deepEqual(getCallbackRouteTargets('SIDEBOARD'), ['game', 'activity']);
+    assert.deepEqual(getCallbackRouteTargets('WATCH_GAME'), ['game', 'activity']);
     assert.deepEqual(getCallbackRouteTargets('REPLAY_INIT'), ['activity']);
     assert.deepEqual(getCallbackRouteTargets('DRAFT_UPDATE'), ['activity']);
     assert.deepEqual(getCallbackRouteTargets('TOURNAMENT_OVER'), ['activity']);

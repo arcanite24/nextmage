@@ -56,6 +56,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function readStringValue(value: unknown): string | null {
+    return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
 function extractGameView(data: unknown): GameView | null {
     if (!isRecord(data)) return null;
 
@@ -218,6 +222,7 @@ interface GameActions {
     // Game lifecycle
     initGame: (gameId: UUID, playerId: UUID | null) => void;
     joinGame: (gameId: UUID) => Promise<boolean>;
+    watchGame: (gameId: UUID) => Promise<boolean>;
     updateGameView: (gameView: GameView) => void;
     endGame: (gameEndView: GameEndView) => void;
     setEndGameInfo: (info: EndGameInfo) => void;
@@ -237,6 +242,7 @@ interface GameActions {
     toggleArenaSkip: () => Promise<void>;
     concede: () => Promise<void>;
     undo: () => Promise<void>;
+    stopWatching: () => Promise<void>;
     stopReplay: () => Promise<void>;
 
     // Responses
@@ -317,6 +323,22 @@ export const useGameStore = create<GameState & GameActions>()(
                 } catch (error) {
                     console.error('Failed to join game:', error);
                     set((state) => { state.lastError = `Failed to join game: ${error}`; });
+                    return false;
+                }
+            },
+
+            watchGame: async (gameId: UUID) => {
+                const { sessionId } = useSessionStore.getState();
+                const { initGame } = get();
+
+                try {
+                    await wsService.send('gameWatchStart', [gameId, sessionId]);
+                    initGame(gameId, null);
+                    useLobbyStore.getState().clearCurrentTable();
+                    return true;
+                } catch (error) {
+                    console.error('Failed to watch game:', error);
+                    set((state) => { state.lastError = `Failed to watch game: ${error}`; });
                     return false;
                 }
             },
@@ -513,6 +535,31 @@ export const useGameStore = create<GameState & GameActions>()(
                 await get().sendPlayerAction('UNDO');
             },
 
+            stopWatching: async () => {
+                const { gameId } = get();
+                const { sessionId } = useSessionStore.getState();
+
+                if (!gameId) return;
+
+                try {
+                    await wsService.send('gameWatchStop', [gameId, sessionId]);
+                    set((state) => {
+                        state.gameId = null;
+                        state.playerId = null;
+                        state.gameView = null;
+                        state.isWatching = false;
+                        state.pendingAction = { type: 'none' };
+                        state.gameEnded = false;
+                        state.gameEndView = null;
+                        state.endGameInfo = null;
+                    });
+                    useDebugStore.getState().endMatch();
+                } catch (error) {
+                    console.error('Failed to stop watching:', error);
+                    set((state) => { state.lastError = `Stop watching failed: ${error}`; });
+                }
+            },
+
             stopReplay: async () => {
                 const { gameId } = get();
                 const { sessionId } = useSessionStore.getState();
@@ -635,7 +682,7 @@ export const useGameStore = create<GameState & GameActions>()(
             // Callbacks
             handleCallback: (callback) => {
                 useDebugStore.getState().recordAction(callback);
-                const { updateGameView, endGame, joinGame } = get();
+                const { updateGameView, endGame, joinGame, watchGame } = get();
                 const earlyGameView = extractGameView(callback.data);
 
                 if (callback.objectId && earlyGameView && !firstGameViewsByGameId.has(callback.objectId)) {
@@ -682,6 +729,21 @@ export const useGameStore = create<GameState & GameActions>()(
                             });
                         } else {
                             console.error('[GameStore] Received startGame but could not parse gameId:', callback.data);
+                        }
+                        break;
+                    }
+
+                    case 'watchGame': {
+                        const gameId = callback.objectId
+                            ?? (isRecord(callback.data) ? readStringValue(callback.data.gameId) : null)
+                            ?? (isRecord(callback.data) ? readStringValue(callback.data.id) : null);
+
+                        if (gameId) {
+                            watchGame(gameId).catch(error => {
+                                console.error('[GameStore] gameWatchStart failed after watchGame callback:', gameId, error);
+                            });
+                        } else {
+                            console.error('[GameStore] Received watchGame but could not parse gameId:', callback.data);
                         }
                         break;
                     }
