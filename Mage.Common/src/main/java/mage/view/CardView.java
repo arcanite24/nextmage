@@ -57,6 +57,10 @@ public class CardView extends SimpleCardView {
     private static final long serialVersionUID = 1L;
 
     protected UUID parentId;
+    // web client: the physical card behind this view (a spell has its own id on the stack), its owner and controller
+    protected UUID cardId;
+    protected UUID ownerId;
+    protected UUID controllerId;
     @Expose
     protected String name; // TODO: remove duplicated field name/displayName???
     @Expose
@@ -187,6 +191,9 @@ public class CardView extends SimpleCardView {
         // generetate new ID (TODO: why new ID?)
         this.id = UUID.randomUUID();
         this.parentId = cardView.parentId;
+        this.cardId = cardView.cardId;
+        this.ownerId = cardView.ownerId;
+        this.controllerId = cardView.controllerId;
 
         this.name = cardView.name;
         this.displayName = cardView.displayName;
@@ -318,6 +325,16 @@ public class CardView extends SimpleCardView {
 
         // find real name from original card, cause face down status can be applied to card/spell
         String sourceName = sourceCard.getMainCard().getName();
+
+        this.cardId = sourceCard.getMainCard().getId();
+        this.ownerId = sourceCard.getOwnerId();
+        if (sourceCard instanceof Spell) {
+            this.controllerId = ((Spell) sourceCard).getControllerId();
+        } else if (sourceCard instanceof Permanent) {
+            this.controllerId = ((Permanent) sourceCard).getControllerId();
+        } else {
+            this.controllerId = this.ownerId;
+        }
 
         // find real spell characteristics before resolve
         Card card = sourceCard.copy();
@@ -1407,6 +1424,18 @@ public class CardView extends SimpleCardView {
             parentId = this.id;
         }
         this.id = id;
+    }
+
+    public UUID getCardId() {
+        return cardId;
+    }
+
+    public UUID getOwnerId() {
+        return ownerId;
+    }
+
+    public UUID getControllerId() {
+        return controllerId;
     }
 
     public UUID getParentId() {

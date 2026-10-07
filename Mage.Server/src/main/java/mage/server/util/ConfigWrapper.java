@@ -150,4 +150,13 @@ public class ConfigWrapper implements ConfigSettings {
         return 17172; // default port
     }
 
+    /**
+     * Browser origins allowed to open the web client WebSocket, comma separated.
+     * Empty or "*" allows any origin (development default).
+     */
+    public String getWebsocketAllowedOrigins() {
+        String origins = config.getServer().getWebsocketAllowedOrigins();
+        return origins == null ? "" : origins.trim();
+    }
+
 }

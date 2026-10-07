@@ -650,7 +650,7 @@ public class Session {
         return timeConnected;
     }
 
-    void setHost(String hostAddress) {
+    public void setHost(String hostAddress) {
         this.host = hostAddress;
     }
 
