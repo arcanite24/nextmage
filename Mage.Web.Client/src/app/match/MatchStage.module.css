@@ -23,8 +23,82 @@
   position: absolute;
   z-index: 5;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
+  border-radius: 16px;
+  /* the zone printed in ivory ink on the mat */
+  box-shadow: inset 0 0 0 2px rgb(233 228 214 / 0.09);
+}
+
+.row::before {
+  content: attr(data-label);
+  position: absolute;
+  left: 16px;
+  bottom: 8px;
+  font-family: var(--font-print);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.rowFlip::before {
+  top: 8px;
+  bottom: auto;
+}
+
+.printMine,
+.printTheirs {
+  position: absolute;
+  left: 0;
+  right: 0;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.printTheirs {
+  top: 0;
+  height: 540px;
+  transform: rotate(180deg);
+}
+
+.printMine {
+  top: 540px;
+  bottom: 0;
+}
+
+/* the decision, printed across the middle of the table */
+.prompt {
+  position: absolute;
+  left: 50%;
+  top: 540px;
+  z-index: 45;
+  max-width: 1000px;
+  padding: 6px 28px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: rgb(7 12 10 / 0.82);
+  box-shadow: inset 0 0 0 2px var(--decision), 0 0 30px var(--decision-glow);
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  animation: promptIn var(--dur-place) var(--ease-place);
+}
+
+@keyframes promptIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -30%);
+  }
 }
 
 .myPlate {
@@ -58,7 +132,7 @@
 .myPiles > *,
 .theirPiles > * {
   flex-wrap: wrap;
-  width: 200px;
+  width: 240px;
   row-gap: 10px;
 }
 

@@ -43,6 +43,23 @@
   box-shadow: 0 0 0 3px var(--decision);
 }
 
+.choosable {
+  cursor: pointer;
+}
+
+.choosable::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 11px;
+  box-shadow: 0 0 0 3px var(--decision), 0 0 22px 4px var(--decision-glow);
+  pointer-events: none;
+}
+
+.unchoosable {
+  filter: brightness(0.5) saturate(0.6);
+}
+
 .selected {
   transform: translateY(-60px) rotate(0deg);
 }

@@ -78,7 +78,7 @@
 .name {
   max-width: 220px;
   font-family: var(--font-print);
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -135,7 +135,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   background: rgb(233 228 214 / 0.1);
-  font-size: 14px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--ink);
   white-space: nowrap;
@@ -150,12 +150,12 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 16px;
+  font-size: 22px;
 }
 
 .poolItem b {
   font-family: var(--font-print);
-  font-size: 18px;
+  font-size: 24px;
 }
 
 @keyframes hurt {

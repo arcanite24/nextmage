@@ -4,10 +4,20 @@ import { chromium } from '@playwright/test';
 const base = process.env.BASE ?? 'http://localhost:5173';
 const out = new URL('../.impeccable/review/', import.meta.url).pathname;
 const browser = await chromium.launch({ channel: 'chrome' });
-const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+// TABLET=1 captures the narrowest supported size (landscape tablet) with a mobile- prefix
+const tablet = process.env.TABLET === '1';
+const page = await browser.newPage({ viewport: tablet ? { width: 1024, height: 768 } : { width: 1440, height: 900 }, colorScheme: 'dark' });
 const shot = async (name) => {
   await page.waitForTimeout(1200);
-  await page.screenshot({ path: `${out}${name}.png` });
+  await page.mouse.move(0, 0);
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    // lazy images that never load would hold decode() forever
+    const decoded = Promise.all([...document.images].map((image) => image.decode().catch(() => undefined)));
+    await Promise.race([decoded, new Promise((resolve) => setTimeout(resolve, 4000))]);
+  });
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: `${out}${tablet ? 'mobile-' : ''}${name}.png` });
   console.log('shot', name);
 };
 

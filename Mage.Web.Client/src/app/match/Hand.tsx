@@ -8,6 +8,8 @@ import styles from './Hand.module.css';
 
 export interface HandProps {
   cards: CardView[];
+  /** a prompt asks for cards from hand: eligible ones take the decision edge, the rest step back */
+  choosing?: boolean;
   clickable: ReadonlySet<string>;
   selected: ReadonlySet<string>;
   sleeve: string;
@@ -22,7 +24,7 @@ const CARD_WIDTH = 168;
 const DRAG_THRESHOLD = 12;
 
 /** The player's hand, fanned along the bottom edge. Hover lifts a card; drag it up (or click it) to play it. */
-export function Hand({ cards, clickable, selected, sleeve, onPlay, playLine, libraryOrigin }: HandProps) {
+export function Hand({ cards, choosing = false, clickable, selected, sleeve, onPlay, playLine, libraryOrigin }: HandProps) {
   const count = cards.length;
   const spread = Math.min(CARD_WIDTH * 0.78, 1000 / Math.max(1, count));
   const arc = Math.min(4, 26 / Math.max(1, count));
@@ -41,6 +43,7 @@ export function Hand({ cards, clickable, selected, sleeve, onPlay, playLine, lib
             rotate={offset * arc}
             drop={Math.abs(offset) * Math.abs(offset) * arc * 0.9}
             clickable={clickable.has(card.id!)}
+            choosing={choosing}
             selected={selected.has(card.id!)}
             sleeve={sleeve}
             onPlay={onPlay}
@@ -55,6 +58,7 @@ export function Hand({ cards, clickable, selected, sleeve, onPlay, playLine, lib
 
 interface HandCardProps {
   card: CardView;
+  choosing: boolean;
   index: number;
   left: number;
   rotate: number;
@@ -67,7 +71,7 @@ interface HandCardProps {
   libraryOrigin: string;
 }
 
-function HandCard({ card, index, left, rotate, drop, clickable, selected, sleeve, onPlay, playLine, libraryOrigin }: HandCardProps) {
+function HandCard({ card, choosing, index, left, rotate, drop, clickable, selected, sleeve, onPlay, playLine, libraryOrigin }: HandCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const stage = useStage();
   const setZoom = useMatchUi((state) => state.setZoom);
@@ -117,7 +121,7 @@ function HandCard({ card, index, left, rotate, drop, clickable, selected, sleeve
     <div
       ref={ref}
       role="listitem"
-      className={[styles.card, clickable ? styles.playable : '', selected ? styles.selected : '', drag?.moved ? styles.dragging : ''].join(' ')}
+      className={[styles.card, clickable ? (choosing ? styles.choosable : styles.playable) : choosing ? styles.unchoosable : '', selected ? styles.selected : '', drag?.moved ? styles.dragging : ''].join(' ')}
       style={style}
       tabIndex={clickable ? 0 : -1}
       aria-label={`${card.name}${clickable ? ', playable' : ''}${selected ? ', chosen' : ''}`}
