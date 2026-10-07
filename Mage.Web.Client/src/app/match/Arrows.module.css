@@ -39,3 +39,55 @@
     stroke-dashoffset: -28;
   }
 }
+
+/* an attack: a heavy oxblood stroke with an ember glow, and a bright pulse running toward the target */
+.attack {
+  --attack-ink: #d9493b;
+  animation: attack-in 260ms var(--ease-out, ease-out) both;
+}
+
+.attackGlow,
+.attackBody,
+.attackFlow {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.attackGlow {
+  stroke: rgb(217 73 59 / 0.35);
+  stroke-width: 22;
+  filter: blur(6px);
+}
+
+.attackBody {
+  stroke: var(--attack-ink);
+  stroke-width: 9;
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.65));
+}
+
+.attackFlow {
+  stroke: #ffd2b8;
+  stroke-width: 3;
+  stroke-dasharray: 18 70;
+  opacity: 0.85;
+  animation: march-attack 700ms linear infinite;
+}
+
+@keyframes march-attack {
+  to {
+    stroke-dashoffset: -88;
+  }
+}
+
+@keyframes attack-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attack,
+  .attackFlow {
+    animation: none;
+  }
+}

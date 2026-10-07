@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Command, Interaction } from '../../core/game/interaction';
 import type { Prompt } from '../../core/game/prompt';
 import { stripMarkup } from '../../core/game/prompt';
+import { isStackAbility } from '../../core/game/cards';
 import type { CardView, GameEndView } from '../../protocol/generated/views';
 import { Button } from '../ui/Button';
+import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { PromptText } from '../ui/PromptText';
 import { cleanText } from '../ui/text';
@@ -63,7 +65,7 @@ export function CardPicker({ title, cards, interaction, sleeve, onCommand }: {
     <div className={styles.scrim} role="dialog" aria-modal="true" aria-label={title}>
       <div className={styles.panel}>
         <header className={styles.panelHead}>
-          <h2 className={styles.panelTitle}>{cleanText(title)}</h2>
+          <h2 className={styles.panelTitle}>{cards.length > 0 && cards.every(isStackAbility) ? 'Choose an ability' : cleanText(title)}</h2>
           <Button variant="quiet" size="sm" onClick={() => setHidden(true)}>See the board</Button>
         </header>
         <p className={styles.panelText}><PromptText text={interaction.headline} /></p>
@@ -72,6 +74,8 @@ export function CardPicker({ title, cards, interaction, sleeve, onCommand }: {
             const id = card.id!;
             const clickable = interaction.clickable.has(id);
             const selected = interaction.selected.has(id);
+            const ability = isStackAbility(card) ? card : null;
+            const name = ability ? `${ability.sourceCard?.name ?? 'Ability'}: ${(ability.rules ?? []).map(stripMarkup).join(' ')}` : card.name;
             return (
               <button
                 key={id}
@@ -79,10 +83,10 @@ export function CardPicker({ title, cards, interaction, sleeve, onCommand }: {
                 className={[styles.pick, clickable ? styles.pickable : styles.unpickable, selected ? styles.picked : ''].join(' ')}
                 disabled={!clickable}
                 aria-pressed={selected}
-                aria-label={`${card.name}${selected ? ', chosen' : ''}`}
+                aria-label={`${name}${selected ? ', chosen' : ''}`}
                 onClick={() => onCommand({ type: 'uuid', id })}
               >
-                <CardFace card={card} sleeve={sleeve} size="normal" />
+                {ability ? <AbilityCard ability={ability} sleeve={sleeve} /> : <CardFace card={card} sleeve={sleeve} size="normal" />}
               </button>
             );
           })}

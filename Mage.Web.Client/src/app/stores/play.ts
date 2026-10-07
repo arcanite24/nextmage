@@ -95,13 +95,15 @@ export const usePlay = create<PlayState>((set, get) => ({
     useEvents.setState({ currentTournamentId: null });
     try {
       const { deck } = await useDecks.getState().loadForPlay(deckId);
-      // the whole deck's pictures download while the table is set up, before the first card is drawn
+      // both decks' pictures download while the table is set up, before the first card is drawn: nothing either
+      // player casts should wait on the network
       warmCards([...deck.cards, ...deck.sideboard].map((card) => ({ name: card.cardName, setCode: card.setCode ?? undefined, cardNumber: card.cardNumber ?? undefined })));
       const size = deck.cards.reduce((sum, card) => sum + card.amount, 0);
       if (size < MIN_DECK_SIZE) {
         throw new Error(`${deck.name || 'This deck'} has ${size} ${size === 1 ? 'card' : 'cards'}. Decks need at least ${MIN_DECK_SIZE}; add more in the deck builder.`);
       }
       const opponentDeck = await aiDeck(options.opponentDeckId);
+      warmCards([...(opponentDeck.cards ?? []), ...(opponentDeck.sideboard ?? [])].map((card) => ({ name: card.cardName, setCode: card.setCode, cardNumber: card.cardNumber })));
       const table = await api.roomCreateTable(roomId, {
         name: `${userName} vs AI`,
         gameType: 'Two Player Duel',

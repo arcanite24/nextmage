@@ -72,20 +72,21 @@ describe('interaction model', () => {
     expect(passLabel(view({ step: 'POSTCOMBAT_MAIN' }))).toBe('End Turn');
   });
 
-  test('attacks: no attackers yet offers "No Attacks" and "All attack"', () => {
+  test('attacks: with none chosen, Space attacks with all and "No Attacks" takes a click', () => {
     const prompt = parsePrompt('GAME_SELECT', {
       message: 'Select attackers',
       options: { possibleAttackers: ['bear'], specialButton: 'All attack' } as never,
     });
     const idle = deriveInteraction(view(), prompt);
-    expect(idle.mainButton).toMatchObject({ label: 'No Attacks', command: { type: 'boolean', value: true } });
-    expect(idle.secondaryButtons[0]).toMatchObject({ label: 'All attack', command: { type: 'string', value: 'special' } });
+    expect(idle.mainButton).toMatchObject({ label: 'All attack', command: { type: 'string', value: 'special' }, shortcut: 'Space' });
+    expect(idle.secondaryButtons[0]).toMatchObject({ label: 'No Attacks', command: { type: 'boolean', value: true } });
 
     const attacking = deriveInteraction(view({
       combat: [{ defenderId: OPPONENT, attackers: { bear: { name: 'Bear', controllerId: ME } } }],
     }), prompt);
     expect(attacking.selected.has('bear')).toBe(true);
     expect(attacking.mainButton?.label).toBe('Attack (1)');
+    expect(attacking.secondaryButtons.map((button) => button.label)).toEqual(['All attack']);
   });
 
   test('targets: players are clickable on the board, finishing needs enough targets', () => {
