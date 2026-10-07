@@ -58,9 +58,10 @@ export function EventScreen() {
     <div className={styles.page}>
       <header className={styles.head}>
         <div>
-          <span className={styles.kicker}>{view.tournamentType}</span>
           <h1 className={styles.title}>{view.tournamentName}</h1>
-          <p className={styles.state}>{finished ? 'Event complete' : view.runningInfo || stateLine(view.tournamentState)}</p>
+          <p className={styles.state}>
+            {[view.tournamentType, finished ? 'Event complete' : view.runningInfo || stateLine(view.tournamentState)].filter(Boolean).join(' · ')}
+          </p>
         </div>
         <div className={styles.headActions}>
           {buildPending && (
@@ -77,10 +78,7 @@ export function EventScreen() {
       {finished && players[0] && (players[0].points ?? 0) > (players[1]?.points ?? -1) && (
         <div className={styles.winner}>
           <Trophy size={28} aria-hidden="true" />
-          <div>
-            <span className={styles.kicker}>Winner</span>
-            <strong>{players[0].name}</strong>
-          </div>
+          <p><strong>{players[0].name}</strong> wins the event</p>
         </div>
       )}
 

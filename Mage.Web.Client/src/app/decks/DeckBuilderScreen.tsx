@@ -65,7 +65,7 @@ function DeckLoader({ deckId }: { deckId: string }) {
       <div className={styles.missing}>
         <h1>Deck not found</h1>
         <p>{error}</p>
-        <Button variant="decision" onClick={() => navigate('/decks')}>Back to decks</Button>
+        <Button variant="print" onClick={() => navigate('/decks')}>Back to decks</Button>
       </div>
     );
   }

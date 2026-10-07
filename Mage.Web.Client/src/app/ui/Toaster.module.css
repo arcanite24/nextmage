@@ -24,7 +24,7 @@
 }
 
 .error {
-  background: #3a1d1a;
+  background: color-mix(in srgb, var(--oxblood) 32%, var(--mat-800));
   box-shadow: inset 0 0 0 1px rgb(229 135 124 / 0.4), var(--shadow-lifted);
 }
 

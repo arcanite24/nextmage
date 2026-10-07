@@ -96,6 +96,52 @@
   gap: var(--space-4);
 }
 
+/* nothing running: the three kinds of event, printed as a ruled list */
+.starts {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  list-style: none;
+}
+
+.starts li + li {
+  border-top: 1px solid var(--ink-ghost);
+}
+
+.start {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  min-height: 56px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink-soft);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-quick) linear, color var(--dur-quick) linear;
+}
+
+.start:hover {
+  background: rgb(233 228 214 / 0.05);
+  color: var(--ink-strong);
+}
+
+.start strong {
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  color: var(--ink-strong);
+}
+
+.start svg {
+  color: var(--ink-dim);
+}
+
 .kinds {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

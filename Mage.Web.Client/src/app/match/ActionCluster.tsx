@@ -121,7 +121,7 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
           <Button
             variant="decision"
             size="xl"
-            className={[styles.main, main.tone === 'attack' ? styles.mainAttack : ''].join(' ')}
+            className={styles.main}
             onClick={() => onCommand(main.command)}
           >
             {main.label}

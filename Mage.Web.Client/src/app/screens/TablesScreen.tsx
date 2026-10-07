@@ -80,7 +80,7 @@ export function TablesScreen() {
       <div className={styles.columns}>
         <Zone
           label="Open tables"
-          aside={<Button size="sm" variant="decision" icon={<Plus size={16} />} onClick={() => setHostOpen(true)}>Host a table</Button>}
+          aside={<Button size="sm" variant="print" icon={<Plus size={16} />} onClick={() => setHostOpen(true)}>Host a table</Button>}
           className={styles.list}
         >
           {mine.length > 0 && (

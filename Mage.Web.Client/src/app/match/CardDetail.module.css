@@ -41,7 +41,7 @@
 
 .card {
   width: 470px;
-  border-radius: 22px;
+  border-radius: var(--card-radius) / calc(var(--card-radius) * 63 / 88);
   box-shadow: var(--shadow-held);
   animation: lift 420ms var(--ease-place);
 }

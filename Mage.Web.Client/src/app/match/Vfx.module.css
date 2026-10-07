@@ -49,11 +49,11 @@
 }
 
 .damage .ring {
-  box-shadow: inset 0 0 0 6px var(--oxblood), 0 0 30px rgb(160 52 42 / 0.6);
+  box-shadow: inset 0 0 0 6px var(--oxblood), 0 0 30px color-mix(in srgb, var(--oxblood) 60%, transparent);
 }
 
 .heal .ring {
-  box-shadow: inset 0 0 0 5px var(--sage), 0 0 30px rgb(127 168 136 / 0.5);
+  box-shadow: inset 0 0 0 5px var(--sage), 0 0 30px color-mix(in srgb, var(--sage) 50%, transparent);
 }
 
 @keyframes ring {
@@ -115,7 +115,7 @@
 .hurt {
   position: absolute;
   inset: 0;
-  box-shadow: inset 0 0 160px 40px rgb(160 52 42 / 0.55);
+  box-shadow: inset 0 0 160px 40px color-mix(in srgb, var(--oxblood) 55%, transparent);
   animation: flush 700ms ease-out forwards;
 }
 
@@ -182,7 +182,7 @@
   border-radius: 14px;
   background:
     radial-gradient(closest-side, rgb(7 12 10 / 0.85), rgb(7 12 10 / 0.4) 60%, transparent),
-    radial-gradient(closest-side at 40% 60%, rgb(160 52 42 / 0.45), transparent 70%);
+    radial-gradient(closest-side at 40% 60%, color-mix(in srgb, var(--oxblood) 45%, transparent), transparent 70%);
   filter: blur(2px);
   animation: dissolve 850ms ease-out forwards;
 }
@@ -207,7 +207,7 @@
   height: 220px;
   translate: -50% -50%;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(160 52 42 / 0.55), transparent);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--oxblood) 55%, transparent), transparent);
   animation: charge 560ms ease-out forwards;
 }
 

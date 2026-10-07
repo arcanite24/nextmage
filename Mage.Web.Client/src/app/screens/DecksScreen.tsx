@@ -42,7 +42,7 @@ export function DecksScreen() {
           <>
             <Button size="sm" icon={<FileUp size={16} />} onClick={() => fileInput.current?.click()}>Import file</Button>
             <Button size="sm" icon={<Plus size={16} />} onClick={() => setImportOpen(true)}>Paste a list</Button>
-            <Button size="sm" variant="decision" icon={<PencilRuler size={16} />} onClick={() => navigate('/decks/new')}>Build a deck</Button>
+            <Button size="sm" variant="print" icon={<PencilRuler size={16} />} onClick={() => navigate('/decks/new')}>Build a deck</Button>
             <input
               ref={fileInput}
               type="file"

@@ -164,7 +164,7 @@ function SewnEdge() {
 
 const DECK_SIZE = 7;
 
-/** A sleeved deck by the seat: it riffles now and then, and deals itself across the table on sign-in. */
+/** A sleeved deck set down by the seat; it deals itself across the table on sign-in. */
 function Deck({ dealing }: { dealing: boolean }) {
   return (
     <div className={[styles.deck, dealing ? styles.dealing : ''].join(' ')} aria-hidden="true">

@@ -65,7 +65,7 @@
   padding-bottom: var(--space-2);
 }
 
-.deckKicker {
+.deckNote {
   font-family: var(--font-print);
   font-size: var(--text-lg);
   font-weight: 600;
@@ -107,26 +107,26 @@
   color: var(--ink);
 }
 
+/* who you play: two printed segments, the chosen one outlined in ink */
 .modes {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 6px;
 }
 
 .mode {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  column-gap: 10px;
-  row-gap: 2px;
-  align-items: center;
-  padding: 12px;
+  min-height: 48px;
+  padding: 0 12px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   background: rgb(233 228 214 / 0.04);
   box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
   color: var(--ink-soft);
-  text-align: left;
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
   cursor: pointer;
   transition: box-shadow var(--dur-quick) linear, background-color var(--dur-quick) linear, color var(--dur-quick) linear;
 }
@@ -138,22 +138,14 @@
 
 .modeOn {
   background: rgb(233 228 214 / 0.1);
-  box-shadow: inset 0 0 0 2px var(--ink);
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong);
   color: var(--ink-strong);
 }
 
-.modeLabel {
-  font-family: var(--font-print);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.modeDetail {
-  grid-column: 1 / -1;
+.modeNote {
+  padding: 10px 12px;
   font-size: var(--text-sm);
-  color: var(--ink-dim);
+  color: var(--ink-soft);
 }
 
 .error {

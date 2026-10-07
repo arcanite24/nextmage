@@ -5,7 +5,7 @@ import styles from './Stage.module.css';
 /**
  * The match is laid out at 1080 stage pixels tall and scaled to the window, like a game: nothing reflows or scrolls
  * and every zone keeps its place. The stage is 1920 wide at 16:9 and widens with wider windows, so the battlefield
- * reaches the edges of a 16:10 laptop as well as a 21:9 monitor; the side columns are anchored to the stage edges.
+ * reaches the edges of anything wider than 16:9, up to a 21:9 monitor; the side columns are anchored to the stage edges.
  * Narrower windows keep 1920 and the mat fills above and below.
  */
 export function Stage({ children, background }: { children: ReactNode | ((width: number) => ReactNode); background?: ReactNode }) {

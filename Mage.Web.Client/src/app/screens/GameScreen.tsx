@@ -16,7 +16,7 @@ export function GameScreen() {
       <div className={styles.missing}>
         <h1>This game isn't open here</h1>
         <p>It may have ended, or it was started in another tab.</p>
-        <Button variant="decision" onClick={() => navigate('/')}>Back to Play</Button>
+        <Button variant="print" onClick={() => navigate('/')}>Back to Play</Button>
       </div>
     );
   }

@@ -213,7 +213,6 @@
 .waitTitle {
   font-size: var(--text-2xl);
   text-transform: uppercase;
-  animation: breathe 2.4s ease-in-out infinite;
 }
 
 .sub {
@@ -282,8 +281,3 @@
   }
 }
 
-@keyframes breathe {
-  50% {
-    opacity: 0.55;
-  }
-}
