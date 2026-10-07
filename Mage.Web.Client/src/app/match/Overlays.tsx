@@ -270,10 +270,11 @@ function MultiAmountChooser({ prompt, onCommand }: { prompt: Extract<Prompt, { k
 }
 
 /** The end of a game: who won, the match score, and where to go next. */
-export function GameOverOverlay({ message, endInfo, onLeave, onPlayAgain }: {
+export function GameOverOverlay({ message, endInfo, onLeave, leaveLabel = 'Back to Play', onPlayAgain }: {
   message: string;
   endInfo: GameEndView | null;
   onLeave(): void;
+  leaveLabel?: string;
   onPlayAgain?(): void;
 }) {
   const won = endInfo?.won ?? /you won|winner.*you/i.test(message);
@@ -289,7 +290,7 @@ export function GameOverOverlay({ message, endInfo, onLeave, onPlayAgain }: {
         )}
         {endInfo?.matchInfo && <p className={styles.subtitle}>{stripMarkup(endInfo.matchInfo)}</p>}
         <div className={styles.buttons}>
-          <Button variant="print" size="lg" onClick={onLeave}>Back to Play</Button>
+          <Button variant="print" size="lg" onClick={onLeave}>{leaveLabel}</Button>
           {onPlayAgain && <Button variant="decision" size="xl" onClick={onPlayAgain}>Play again</Button>}
         </div>
       </div>

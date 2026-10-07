@@ -6,6 +6,7 @@ import type { GameSession, GameSessionState } from '../../core/game/gameSession'
 import type { Command } from '../../core/game/interaction';
 import type { CardView, GameView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
+import { useEvents } from '../stores/events';
 import { useGames } from '../stores/games';
 import { usePlay } from '../stores/play';
 import { useSettings } from '../stores/settings';
@@ -109,10 +110,12 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const sleeveOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? sleeves.theirs : sleeves.mine), [myId, sleeves]);
   const originOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? `hand:${card.controllerId}` : undefined), [myId]);
 
+  // games inside an event lead back to the event; others back to Play
+  const eventId = useEvents((events) => events.currentTournamentId);
   const leave = useCallback(() => {
     useGames.getState().close(state.gameId);
-    navigate('/');
-  }, [navigate, state.gameId]);
+    navigate(eventId ? `/event/${eventId}` : '/');
+  }, [navigate, state.gameId, eventId]);
   const deckId = usePlay((play) => play.deckId);
   const playAgain = useCallback(() => {
     const { lastOptions } = usePlay.getState();
@@ -235,7 +238,8 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
           message={state.gameOver}
           endInfo={state.endInfo}
           onLeave={leave}
-          onPlayAgain={mode === 'play' && deckId ? playAgain : undefined}
+          leaveLabel={eventId ? 'Back to the event' : 'Back to Play'}
+          onPlayAgain={mode === 'play' && deckId && !eventId ? playAgain : undefined}
         />
       )}
       <CardZoom />

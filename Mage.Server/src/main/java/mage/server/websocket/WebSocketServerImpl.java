@@ -191,7 +191,7 @@ public class WebSocketServerImpl extends WebSocketServer {
                 response.addProperty("jsonrpc", "2.0");
                 response.add("id", id);
                 response.add("result", JsonCodec.GSON.toJsonTree(result));
-                conn.send(JsonCodec.GSON.toJson(response));
+                sendText(conn, JsonCodec.GSON.toJson(response));
             }
         } catch (RpcException e) {
             sendError(conn, id, e);
@@ -221,7 +221,18 @@ public class WebSocketServerImpl extends WebSocketServer {
         response.addProperty("jsonrpc", "2.0");
         response.add("id", id);
         response.add("error", errorJson);
-        conn.send(JsonCodec.GSON.toJson(response));
+        sendText(conn, JsonCodec.GSON.toJson(response));
+    }
+
+    /**
+     * Every outgoing message goes through here. RPC responses and server callbacks are sent from different threads,
+     * and the permessage-deflate encoder keeps per-connection state that is not thread safe ("Deflater has been closed"),
+     * so sends on one connection are serialized.
+     */
+    static void sendText(WebSocket conn, String text) {
+        synchronized (conn) {
+            conn.send(text);
+        }
     }
 
     @Override

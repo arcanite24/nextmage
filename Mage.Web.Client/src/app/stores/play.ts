@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../connection';
 import { useDecks, STARTER_PREFIX } from './decks';
+import { useEvents } from './events';
 import { useSession } from './session';
 import { toWire } from '../decks/deckModel';
 import type { DeckCardLists as WireDeck } from '../../protocol/generated/views';
@@ -51,6 +52,8 @@ export const usePlay = create<PlayState>((set, get) => ({
     const { roomId, userName } = useSession.getState();
     if (!roomId) return;
     set({ phase: 'starting', error: null, deckId, lastOptions: options });
+    // a game outside any event: leaving it goes back to Play
+    useEvents.setState({ currentTournamentId: null });
     try {
       const { deck } = await useDecks.getState().loadForPlay(deckId);
       const opponentDeck = await aiDeck(options.starterFile ?? null);
