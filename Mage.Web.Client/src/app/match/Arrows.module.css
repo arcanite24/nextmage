@@ -18,11 +18,10 @@
 }
 
 .block {
-  stroke: var(--oxblood-ink);
-  stroke-width: 4;
+  stroke: var(--ink-strong);
+  stroke-width: 6;
   stroke-linecap: round;
-  stroke-dasharray: 1 9;
-  opacity: 0.9;
+  stroke-dasharray: 12 10;
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
 }
 
