@@ -1,5 +1,6 @@
 import type { DeckCardLists } from "./types.js";
 import { DeckSerializer } from "./DeckSerializer.js";
+import { newId } from "../util/uuid.js";
 
 export interface DeckSummary {
     id: string;
@@ -66,12 +67,12 @@ export class LocalDeckStorage implements IDeckStorage {
         // Use existing deck ID if available, otherwise generate new one or find by name
         let id: string;
         if (options.forceNew) {
-            id = crypto.randomUUID();
+            id = newId();
         } else if (deck.id) {
             id = deck.id;
         } else {
             const existing = meta.find(m => m.name === deck.name);
-            id = existing?.id || crypto.randomUUID();
+            id = existing?.id || newId();
         }
 
         // Store extended deck data as JSON (preserving metadata)
