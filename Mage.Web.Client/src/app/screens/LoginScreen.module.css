@@ -1,0 +1,122 @@
+.mat {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 440px);
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) clamp(var(--space-6), 8vw, 140px);
+  background:
+    radial-gradient(90% 90% at 25% 40%, var(--mat-600), transparent 70%),
+    radial-gradient(140% 120% at 70% 30%, var(--mat-700), var(--mat-900) 75%);
+  overflow: auto;
+}
+
+.mat::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--mat-grain);
+  pointer-events: none;
+}
+
+.welcome {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-print);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+/* the mat's printed slogan: big, condensed, in ivory ink */
+.headline {
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 0.92;
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+  color: var(--ink-strong);
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.25);
+}
+
+.lede {
+  max-width: 40ch;
+  font-size: var(--text-lg);
+  color: var(--ink-soft);
+}
+
+.zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border-radius: var(--radius-zone);
+  background: rgb(7 12 10 / 0.5);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint), var(--shadow-lifted);
+}
+
+.zoneLabel {
+  font-size: var(--text-xl);
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.server {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.serverChip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: rgb(233 228 214 / 0.07);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.serverChip:hover {
+  background: rgb(233 228 214 / 0.13);
+  color: var(--ink-strong);
+}
+
+.flipped {
+  transform: rotate(180deg);
+}
+
+.error {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
+  background: rgb(138 47 42 / 0.25);
+  color: var(--oxblood-ink);
+}
+
+.submit {
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 860px) {
+  .mat {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    align-content: center;
+  }
+}

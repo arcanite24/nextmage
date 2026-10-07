@@ -1,0 +1,191 @@
+.home {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: var(--space-6);
+  height: 100%;
+}
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rosterHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-2) 0 var(--space-3);
+}
+
+.rosterHead h2 {
+  font-size: var(--text-md);
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.rosterList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  /* room for the lifted deck */
+  padding: 4px 16px 24px 2px;
+  margin-right: -16px;
+  overflow: auto;
+}
+
+.empty {
+  color: var(--ink-dim);
+}
+
+/* the mat itself: your deck's art screen-printed into it */
+.mat {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+  grid-template-rows: 1fr auto;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border-radius: var(--radius-zone);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.deckTitle {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+.deckKicker {
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* the deck name, printed big on the mat */
+.deckName {
+  max-width: 14ch;
+  font-size: clamp(2.8rem, 5.6vw, 6rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: var(--ink-strong);
+  text-shadow: 0 3px 18px rgb(0 0 0 / 0.55);
+}
+
+/* the printed PLAY zone, in card-zone proportions */
+.playZone {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-zone);
+  background: rgb(7 12 10 / 0.62);
+  box-shadow: inset 0 0 0 2px var(--ink-faint), var(--shadow-lifted);
+  backdrop-filter: blur(2px) saturate(0.8);
+}
+
+.zoneLabel {
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mode {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 2px;
+  align-items: center;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(233 228 214 / 0.04);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  color: var(--ink-soft);
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow var(--dur-quick) linear, background-color var(--dur-quick) linear, color var(--dur-quick) linear;
+}
+
+.mode:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink-strong);
+}
+
+.modeOn {
+  background: rgb(233 228 214 / 0.1);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  color: var(--ink-strong);
+}
+
+.modeLabel {
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.modeDetail {
+  grid-column: 1 / -1;
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.error {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: rgb(138 47 42 / 0.3);
+  color: var(--oxblood-ink);
+  font-size: var(--text-sm);
+}
+
+.playRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.playButton {
+  min-width: 220px;
+}
+
+@media (max-width: 1200px) {
+  .mat {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .deckTitle {
+    grid-row: 1;
+  }
+
+  .playZone {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}

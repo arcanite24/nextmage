@@ -29,7 +29,7 @@ export default defineConfig([
   },
   {
     // Standalone entry point, never hot-reloaded as a module.
-    files: ['src/visualHarness.tsx'],
+    files: ['src/visualHarness.tsx', 'src/app/main.tsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

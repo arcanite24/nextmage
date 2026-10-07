@@ -1,0 +1,10 @@
+.cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.sm { font-size: 12px; }
+.md { font-size: 15px; }
+.lg { font-size: 20px; }

@@ -1,0 +1,24 @@
+.stitch {
+  position: absolute;
+  width: calc(100% - 2 * var(--stitch-inset));
+  height: calc(100% - 2 * var(--stitch-inset));
+  pointer-events: none;
+  overflow: visible;
+  z-index: var(--z-rail);
+}
+
+/* the rim the thread sits in: a darker pressed line */
+.groove {
+  fill: none;
+  stroke: rgb(0 0 0 / 0.45);
+  stroke-width: 4;
+}
+
+.thread {
+  fill: none;
+  stroke: var(--thread);
+  stroke-opacity: 0.55;
+  stroke-width: 2;
+  stroke-dasharray: 7 5;
+  stroke-linecap: round;
+}

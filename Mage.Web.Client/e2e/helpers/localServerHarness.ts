@@ -1577,7 +1577,7 @@ export class LocalServerHarness {
             window.localStorage.removeItem('xmage-session');
             window.localStorage.removeItem('activity-store');
         });
-        await this.page.goto('/', { waitUntil: 'domcontentloaded' });
+        await this.page.goto('/legacy.html', { waitUntil: 'domcontentloaded' });
         const endpoint = new URL(SERVER_URL);
         await this.page.getByTestId('login-server-host').fill(endpoint.hostname);
         await this.page.getByTestId('login-server-port').fill(endpoint.port || '17172');
