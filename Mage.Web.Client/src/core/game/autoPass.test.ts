@@ -50,6 +50,14 @@ describe('autoAnswer', () => {
     expect(autoAnswer(view({}), noAttackers, on)).toBe('noAttacks');
     expect(autoAnswer(view({}), attackers, on)).toBeNull();
   });
+  it('waits for confirmation once every creature is declared (the server then lists none as possible)', () => {
+    const noneLeft = parsePrompt('GAME_SELECT', { message: 'Select attackers', options: { possibleAttackers: [] } as never });
+    const allDeclared: GameView = { ...view({}), combat: [{ defenderId: 'them', attackers: { bear: { controllerId: 'me' } } }] };
+    expect(autoAnswer(allDeclared, noneLeft, on)).toBeNull();
+    const noBlockersLeft = parsePrompt('GAME_SELECT', { message: 'Select blockers', options: { possibleBlockers: [] } as never });
+    const blocking: GameView = { ...view({}), combat: [{ defenderId: 'me', attackers: { ogre: { controllerId: 'them' } }, blockers: { bear: { controllerId: 'me' } } }] };
+    expect(autoAnswer(blocking, noBlockersLeft, on)).toBeNull();
+  });
   it('lets the rest of combat go by when nobody attacks, unless something is on the stack', () => {
     const instant = view({ roar: { basicCastAbilities: record } });
     expect(autoAnswer({ ...instant, step: 'DECLARE_ATTACKERS', combat: [] }, priority, on)).toBe('pass');

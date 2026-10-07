@@ -1,4 +1,5 @@
 import type { GameView } from '../../protocol/generated/views';
+import { myAttackers, myBlockers } from './interaction';
 import type { Prompt } from './prompt';
 
 /**
@@ -56,10 +57,12 @@ export function autoAnswer(view: GameView | null | undefined, prompt: Prompt | n
       const myTurn = !!view.myPlayerId && view.activePlayerId === view.myPlayerId;
       return meaningfulPlays(view, myTurn || settings.abilitiesOnTheirTurn).length === 0 ? 'pass' : null;
     }
+    // the server stops listing creatures once they are declared: with everything chosen the list is empty too, and
+    // that declaration is the player's to confirm
     case 'declareAttackers':
-      return settings.autoSkipCombat && prompt.possibleAttackers.length === 0 ? 'noAttacks' : null;
+      return settings.autoSkipCombat && prompt.possibleAttackers.length === 0 && myAttackers(view).length === 0 ? 'noAttacks' : null;
     case 'declareBlockers':
-      return settings.autoSkipCombat && prompt.possibleBlockers.length === 0 ? 'noBlocks' : null;
+      return settings.autoSkipCombat && prompt.possibleBlockers.length === 0 && myBlockers(view).length === 0 ? 'noBlocks' : null;
     default:
       return null;
   }
