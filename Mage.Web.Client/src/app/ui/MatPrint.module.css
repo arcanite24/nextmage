@@ -1,0 +1,86 @@
+.print {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* the print fades into the plain mat toward the edges */
+  mask-image: radial-gradient(120% 95% at 62% 42%, #000 35%, transparent 82%);
+}
+
+.pass {
+  position: absolute;
+  inset: 0;
+}
+
+.layer {
+  position: absolute;
+  inset: -2%;
+  background-size: cover;
+  background-position: center 30%;
+}
+
+/* separation 1: deep shadows pressed into the green */
+.shadowInk {
+  filter: grayscale(1) contrast(1.6) brightness(0.55);
+  mix-blend-mode: multiply;
+  opacity: 0.85;
+  animation: register-a var(--dur-print) var(--ease-place) both;
+}
+
+/* separation 2: ivory ink for the highlights */
+.lightInk {
+  filter: grayscale(1) contrast(1.45) brightness(1.05) sepia(0.25);
+  mix-blend-mode: screen;
+  opacity: 0.32;
+  animation: register-b var(--dur-print) var(--ease-place) both;
+}
+
+/* separation 3: a faint key layer that holds the image together */
+.keyInk {
+  filter: grayscale(1) contrast(1.2) brightness(0.8) sepia(0.6) hue-rotate(85deg) saturate(1.4);
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+  animation: register-c var(--dur-print) var(--ease-place) both;
+}
+
+/* the print takes the mat's dye: hue from the neoprene, values from the art */
+.dye {
+  position: absolute;
+  inset: 0;
+  background: #2f6b58;
+  mix-blend-mode: color;
+  opacity: 0.9;
+}
+
+/* printed halftone dots over the art, like ink on neoprene */
+.halftone {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgb(0 0 0 / 0.28) 0.9px, transparent 1.3px);
+  background-size: 4px 4px;
+  mix-blend-mode: multiply;
+}
+
+@keyframes register-a {
+  from { opacity: 0; transform: translate(-14px, 8px); }
+}
+
+@keyframes register-b {
+  from { opacity: 0; transform: translate(12px, -10px); }
+}
+
+@keyframes register-c {
+  from { opacity: 0; transform: translate(4px, 14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shadowInk,
+  .lightInk,
+  .keyInk {
+    animation-name: fade-in;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+}

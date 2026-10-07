@@ -1,0 +1,116 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--space-5);
+  height: 100%;
+}
+
+.shelf {
+  min-height: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px 20px;
+  align-content: start;
+  min-height: 0;
+  padding: 4px 14px 20px 2px;
+  overflow: auto;
+}
+
+.cell {
+  min-width: 0;
+}
+
+.detail {
+  align-self: start;
+}
+
+.detailBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.detailName {
+  font-size: var(--text-3xl);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.detailNote {
+  color: var(--ink-soft);
+}
+
+.subLabel {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.sleeves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch {
+  width: 32px;
+  height: 44px;
+  border: 0;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.4), var(--shadow-placed);
+  cursor: pointer;
+}
+
+.swatch[aria-checked='true'] {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.4), 0 0 0 2px var(--ink);
+}
+
+.soon {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.importForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.textareaLabel {
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.textarea {
+  min-height: 260px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: rgb(7 12 10 / 0.6);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost), inset 0 2px 6px rgb(0 0 0 / 0.4);
+  color: var(--ink-strong);
+  font-size: var(--text-md);
+  line-height: 1.5;
+  resize: vertical;
+  caret-color: var(--decision);
+}
+
+.textarea:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--decision);
+}
+
+.error {
+  color: var(--danger-text);
+  font-size: var(--text-sm);
+}

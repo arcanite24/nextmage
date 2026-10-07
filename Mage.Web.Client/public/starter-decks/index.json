@@ -1,0 +1,92 @@
+[
+  {
+    "file": "ajani-valiant-protector.dck",
+    "name": "Ajani, Valiant Protector",
+    "cards": 60,
+    "cover": {
+      "name": "Ajani, Valiant Protector",
+      "setCode": "AER",
+      "cardNumber": "185"
+    }
+  },
+  {
+    "file": "chandra-bold-pyromancer.dck",
+    "name": "Chandra, Bold Pyromancer",
+    "cards": 60,
+    "cover": {
+      "name": "Chandra, Bold Pyromancer",
+      "setCode": "DOM",
+      "cardNumber": "275"
+    }
+  },
+  {
+    "file": "chandra-pyrogenius.dck",
+    "name": "Chandra, Pyrogenius",
+    "cards": 60,
+    "cover": {
+      "name": "Chandra, Pyrogenius",
+      "setCode": "KLD",
+      "cardNumber": "265"
+    }
+  },
+  {
+    "file": "gideon-martial-paragon.dck",
+    "name": "Gideon, Martial Paragon",
+    "cards": 60,
+    "cover": {
+      "name": "Gideon, Martial Paragon",
+      "setCode": "AKH",
+      "cardNumber": "270"
+    }
+  },
+  {
+    "file": "huatli-dinosaur-knight.dck",
+    "name": "Huatli, Dinosaur Knight",
+    "cards": 60,
+    "cover": {
+      "name": "Huatli, Dinosaur Knight",
+      "setCode": "XLN",
+      "cardNumber": "285"
+    }
+  },
+  {
+    "file": "liliana-death-wielder.dck",
+    "name": "Liliana, Death Wielder",
+    "cards": 60,
+    "cover": {
+      "name": "Liliana, Death Wielder",
+      "setCode": "AKH",
+      "cardNumber": "275"
+    }
+  },
+  {
+    "file": "nissa-genesis-mage.dck",
+    "name": "Nissa, Genesis Mage",
+    "cards": 60,
+    "cover": {
+      "name": "Nissa, Genesis Mage",
+      "setCode": "HOU",
+      "cardNumber": "200"
+    }
+  },
+  {
+    "file": "nissa-nature-s-artisan.dck",
+    "name": "Nissa, Nature's Artisan",
+    "cards": 60,
+    "cover": {
+      "name": "Nissa, Nature's Artisan",
+      "setCode": "KLD",
+      "cardNumber": "270"
+    }
+  },
+  {
+    "file": "tezzeret-master-of-metal.dck",
+    "name": "Tezzeret, Master of Metal",
+    "cards": 60,
+    "cover": {
+      "name": "Tezzeret, Master of Metal",
+      "setCode": "AER",
+      "cardNumber": "190"
+    }
+  }
+]
