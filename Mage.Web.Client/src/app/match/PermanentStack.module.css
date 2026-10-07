@@ -90,6 +90,39 @@
   box-shadow: 0 0 0 1px var(--ink-faint);
 }
 
+/* keywords down the right edge, under the cost line */
+.keywords {
+  position: absolute;
+  top: 17%;
+  right: 3%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.keyword,
+.keywordGained {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.keyword {
+  background: rgb(7 12 10 / 0.88);
+  color: var(--ink-strong);
+  box-shadow: 0 0 0 1.5px var(--ink-faint);
+}
+
+/* granted by an effect: the card's picture doesn't show it, so it prints solid ivory */
+.keywordGained {
+  background: var(--ink-strong);
+  color: var(--mat-900);
+  box-shadow: 0 0 0 2px var(--mat-900), var(--shadow-placed);
+}
+
 .markAttack {
   background: var(--oxblood);
   color: var(--ink-strong);

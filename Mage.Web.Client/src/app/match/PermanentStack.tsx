@@ -1,5 +1,9 @@
-import { Hourglass, Shield, Swords } from 'lucide-react';
-import { memo, useRef, type CSSProperties } from 'react';
+import {
+  Anvil, ArrowUpToLine, Castle, Eye, EyeOff, Feather, FlaskConical, Footprints, HeartPulse, Hourglass, Shield, ShieldCheck,
+  ShieldHalf, Skull, Sword, Swords, Users, Zap, type LucideIcon,
+} from 'lucide-react';
+import { memo, useMemo, useRef, type CSSProperties } from 'react';
+import { keywordMarks, type MarkedKeyword } from '../../core/game/keywords';
 import type { PermanentView } from '../../protocol/generated/views';
 import { CardFace } from '../ui/CardFace';
 import { stackOffsetRatio, type PermanentGroup } from './boardModel';
@@ -25,6 +29,26 @@ export interface PermanentStackProps {
 }
 
 const CARD_RATIO = 88 / 63;
+
+const KEYWORD_ICONS: Record<MarkedKeyword, LucideIcon> = {
+  Flying: Feather,
+  Reach: ArrowUpToLine,
+  Menace: Users,
+  Defender: Castle,
+  'First strike': Sword,
+  'Double strike': Swords,
+  Deathtouch: Skull,
+  Trample: Footprints,
+  Lifelink: HeartPulse,
+  Infect: FlaskConical,
+  Vigilance: Eye,
+  Haste: Zap,
+  Indestructible: Anvil,
+  Hexproof: EyeOff,
+  Shroud: EyeOff,
+  Ward: ShieldHalf,
+  Protection: ShieldCheck,
+};
 
 /** A permanent (or a stack of identical lands/tokens) placed on the mat, with its attachments tucked behind. */
 export const PermanentStack = memo(function PermanentStack(props: PermanentStackProps) {
@@ -82,6 +106,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
   const isAttacking = attacking.has(id);
   const isBlocking = blocking.has(id);
   const setZoom = useMatchUi((state) => state.setZoom);
+  const keywords = useMemo(() => keywordMarks(permanent), [permanent]);
   useFlip(permanent.cardId ?? id, ref, { rotation: tapped ? 90 : 0 });
 
   const damage = permanent.damage ?? 0;
@@ -113,7 +138,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
       style={style}
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
-      aria-label={describe(permanent, { tapped, isAttacking, isBlocking, isSelected })}
+      aria-label={describe(permanent, { tapped, isAttacking, isBlocking, isSelected, keywords: keywords.map((mark) => (mark.gained ? `${mark.name.toLowerCase()} (gained)` : mark.name.toLowerCase())) })}
       aria-pressed={isClickable ? isSelected : undefined}
       onClick={() => isClickable && onClick(id)}
       onKeyDown={(event) => {
@@ -135,6 +160,20 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
         {isAttacking && <span className={[styles.mark, styles.markAttack].join(' ')} title="Attacking"><Swords size={13} aria-hidden="true" /></span>}
         {isBlocking && <span className={styles.mark} title="Blocking"><Shield size={13} aria-hidden="true" /></span>}
       </div>
+
+      {keywords.length > 0 && (
+        // what it can do in combat, readable without the picture; granted keywords print solid
+        <div className={styles.keywords} style={{ transform: tapped ? 'rotate(-90deg)' : undefined }} aria-hidden="true">
+          {keywords.map((mark) => {
+            const Icon = KEYWORD_ICONS[mark.name as MarkedKeyword];
+            return (
+              <span key={mark.name} className={mark.gained ? styles.keywordGained : styles.keyword} title={mark.gained ? `${mark.name} (gained from an effect)` : mark.name}>
+                <Icon size={15} strokeWidth={2.4} />
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {counters.length > 0 && (
         <ul className={styles.counters} aria-label="Counters">
@@ -176,9 +215,10 @@ function ptTone(permanent: PermanentView): string {
   return '';
 }
 
-function describe(permanent: PermanentView, state: { tapped: boolean; isAttacking: boolean; isBlocking: boolean; isSelected: boolean }): string {
+function describe(permanent: PermanentView, state: { tapped: boolean; isAttacking: boolean; isBlocking: boolean; isSelected: boolean; keywords: string[] }): string {
   const parts = [permanent.name ?? 'Permanent'];
   if (permanent.power !== undefined && (permanent.cardTypes ?? []).includes('CREATURE')) parts.push(`${permanent.power}/${permanent.toughness}`);
+  parts.push(...state.keywords);
   if (state.tapped) parts.push('tapped');
   if (state.isAttacking) parts.push('attacking');
   if (state.isBlocking) parts.push('blocking');

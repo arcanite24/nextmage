@@ -2,6 +2,7 @@ import * as RadixDialog from '@radix-ui/react-dialog';
 import { Check, Info, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isStackAbility } from '../../core/game/cards';
+import { keywordMarks } from '../../core/game/keywords';
 import { explainCard, LINE_KIND_HELP, LINE_KIND_LABEL, type LineKind, type Term } from '../../core/game/glossary';
 import { stripMarkup } from '../../core/game/prompt';
 import type { CardView, GameView, PermanentView } from '../../protocol/generated/views';
@@ -46,6 +47,9 @@ function stateOf(card: PermanentView, view: GameView | null, attacking: Readonly
   if ((card.damage ?? 0) > 0) chips.push({ label: `${card.damage} damage`, tone: 'damage' });
   for (const counter of card.counters ?? []) {
     if ((counter.count ?? 0) > 0) chips.push({ label: `${counter.count} × ${counter.name}` });
+  }
+  for (const mark of keywordMarks(card)) {
+    if (mark.gained) chips.push({ label: `Gained ${mark.name.toLowerCase()}`, tone: 'good' });
   }
   if (card.isToken) chips.push({ label: 'Token' });
   if (card.copy || card.originalIsCopy) chips.push({ label: 'Copy' });
