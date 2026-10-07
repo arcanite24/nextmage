@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import type { CardView, StackAbilityView } from '../../protocol/generated/views';
+import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { useFlip } from './flip';
 import { useMatchUi } from './matchUi';
@@ -68,13 +69,7 @@ function StackItem({ item, index, total, clickable, selected, sleeve, onClick, o
       data-object-id={item.id}
       aria-label={`${ability ? 'Ability of ' : ''}${face.name}${index === 0 ? ', resolves next' : ''}`}
     >
-      <CardFace card={face} sleeve={sleeve} size="normal" />
-      {ability && (
-        <div className={styles.ability}>
-          <span className={styles.abilityTag}>Ability</span>
-          <p>{(item.rules ?? [])[0]?.replace(/<[^>]*>/g, '')}</p>
-        </div>
-      )}
+      {ability ? <AbilityCard ability={item} sleeve={sleeve} /> : <CardFace card={face} sleeve={sleeve} size="normal" />}
       {index === 0 && <span className={styles.next}>Resolving next</span>}
     </li>
   );

@@ -41,7 +41,10 @@ function isLand(permanent: PermanentView): boolean {
   return (permanent.cardTypes ?? []).includes('LAND') && !isFront(permanent);
 }
 
-/** Permanents look the same when a player could not tell them apart at a glance. */
+/**
+ * Permanents look the same when a player could not tell them apart at a glance. Tapped state is left out on
+ * purpose: tapping one land of a stack turns it in place instead of splitting the stack and reshuffling the row.
+ */
 function stackSignature(permanent: PermanentView): string | null {
   const counters = (permanent.counters ?? []).length;
   const attached = (permanent.attachments ?? []).length;
@@ -51,11 +54,9 @@ function stackSignature(permanent: PermanentView): string | null {
   return [
     permanent.name,
     permanent.expansionSetCode,
-    permanent.tapped ? 't' : 'u',
     permanent.isToken ? 'token' : 'card',
     permanent.power ?? '',
     permanent.toughness ?? '',
-    permanent.summoningSickness ? 's' : '',
   ].join('|');
 }
 
@@ -133,13 +134,19 @@ export function cardKey(card: Pick<CardView, 'id' | 'cardId'>): string {
   return card.cardId ?? card.id ?? '';
 }
 
+/** Offset between members of a stack, as a share of card width: wider once some are tapped so they stay readable. */
+export function stackOffsetRatio(group: PermanentGroup): number {
+  return group.members.some((member) => member.tapped) ? 0.3 : 0.12;
+}
+
 /** Card width (stage px) that fits a row's groups into the space available. */
 export function fitCardWidth(groups: PermanentGroup[], available: number, ideal: number, min: number): number {
   if (groups.length === 0) return ideal;
   // tapped cards take their height in width; stacks add a small offset per member
   const units = groups.reduce((sum, group) => {
-    const tapped = group.lead.tapped ? 88 / 63 : 1;
-    return sum + tapped + (group.members.length - 1) * 0.12 + group.attachments.length * 0.18;
+    const anyTapped = group.members.some((member) => member.tapped);
+    const tapped = anyTapped ? 88 / 63 : 1;
+    return sum + tapped + (group.members.length - 1) * stackOffsetRatio(group) + group.attachments.length * 0.18;
   }, 0);
   const gaps = (groups.length - 1) * 0.12;
   return Math.max(min, Math.min(ideal, available / (units + gaps)));

@@ -2,7 +2,7 @@ import { Hourglass, Shield, Swords } from 'lucide-react';
 import { memo, useRef, type CSSProperties } from 'react';
 import type { PermanentView } from '../../protocol/generated/views';
 import { CardFace } from '../ui/CardFace';
-import type { PermanentGroup } from './boardModel';
+import { stackOffsetRatio, type PermanentGroup } from './boardModel';
 import { useFlip } from './flip';
 import { useMatchUi } from './matchUi';
 import styles from './PermanentStack.module.css';
@@ -27,12 +27,13 @@ const CARD_RATIO = 88 / 63;
 /** A permanent (or a stack of identical lands/tokens) placed on the mat, with its attachments tucked behind. */
 export const PermanentStack = memo(function PermanentStack(props: PermanentStackProps) {
   const { group, width } = props;
-  const tapped = !!group.lead.tapped;
+  // members turn individually; the slot keeps room for a turned card so nothing shifts when one taps
+  const anyTapped = group.members.some((member) => member.tapped);
   const height = width * CARD_RATIO;
-  const stackOffset = width * 0.12;
+  const stackOffset = width * stackOffsetRatio(group);
   const attachOffset = width * 0.18;
-  const slotWidth = (tapped ? height : width) + (group.members.length - 1) * stackOffset + group.attachments.length * attachOffset;
-  const slotHeight = (tapped ? width : height) + group.attachments.length * attachOffset;
+  const slotWidth = (anyTapped ? height : width) + (group.members.length - 1) * stackOffset + group.attachments.length * attachOffset;
+  const slotHeight = height + group.attachments.length * attachOffset;
 
   return (
     <div className={styles.slot} style={{ width: slotWidth, height: slotHeight }}>
@@ -91,7 +92,8 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
     width,
     height,
     left: left + (tapped ? (height - width) / 2 : 0),
-    top: top + (tapped ? (width - height) / 2 : 0),
+    // turned in place around its centre, which stays at the slot middle
+    top,
     zIndex: depth + 1,
     transform: `translateY(${advance}px) rotate(${tapped ? 90 : 0}deg)`,
   };
@@ -112,7 +114,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
       aria-pressed={isClickable ? isSelected : undefined}
       onClick={() => isClickable && onClick(id)}
       onKeyDown={(event) => {
-        if (isClickable && (event.key === 'Enter' || event.key === ' ')) {
+        if (isClickable && event.key === 'Enter') {
           event.preventDefault();
           onClick(id);
         }

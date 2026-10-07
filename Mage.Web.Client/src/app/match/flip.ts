@@ -18,11 +18,21 @@ interface Placement {
 
 const placements = new Map<string, Placement>();
 const origins = new Map<string, Placement>();
-const MEMORY_MS = 4_000;
 let motionEnabled = true;
 
 export function setCardMotion(enabled: boolean) {
   motionEnabled = enabled;
+}
+
+/** Whether card motion and effects should play (the setting and the system's reduced-motion preference). */
+export function motionAllowed(): boolean {
+  return motionEnabled && !reducedMotion();
+}
+
+/** Where a card was last seen on the stage (its box, in stage pixels), e.g. a creature that just died. */
+export function lastPlacement(cardId: string): { x: number; y: number; width: number; height: number } | null {
+  const placement = placements.get(cardId);
+  return placement ? { x: placement.x, y: placement.y, width: placement.width, height: placement.height } : null;
 }
 
 function reducedMotion(): boolean {
@@ -71,8 +81,9 @@ export function useFlip(cardId: string | undefined, ref: RefObject<HTMLElement |
     const now = measure(element, stage.element, stage.scale, rotation);
     if (!now) return;
     const before = placements.get(cardId);
-    const recent = before && performance.now() - before.at < MEMORY_MS ? before : null;
-    const from = recent ?? (options.fallbackOrigin ? origins.get(options.fallbackOrigin) ?? null : null);
+    // a card seen before flies from where it was, however long ago; only a card never on screen (a draw, an
+    // opponent's spell) comes from its zone's origin. A card that hasn't moved has the same box: no flight.
+    const from = before ?? (options.fallbackOrigin ? origins.get(options.fallbackOrigin) ?? null : null);
     placements.set(cardId, now);
 
     if (!from || !motionEnabled || reducedMotion()) return;

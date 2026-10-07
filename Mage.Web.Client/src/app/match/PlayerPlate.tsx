@@ -54,7 +54,7 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, onCl
       aria-label={`${player.name}, ${life} life${targetable ? ', can be targeted' : ''}`}
       onClick={() => targetable && onClick()}
       onKeyDown={(event) => {
-        if (targetable && (event.key === 'Enter' || event.key === ' ')) {
+        if (targetable && event.key === 'Enter') {
           event.preventDefault();
           onClick();
         }

@@ -25,6 +25,9 @@ import { GameLog } from './GameLog';
 import { Hand } from './Hand';
 import { useMatchUi } from './matchUi';
 import { useGameCues } from './useGameCues';
+import { useWarmImages } from './useWarmImages';
+import { useAutoPay } from './useAutoPay';
+import { Vfx } from './Vfx';
 import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
 import { PhaseLadder } from './PhaseLadder';
@@ -75,6 +78,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const { view, interaction, playerId, mode, awaitingServer } = state;
   const navigate = useNavigate();
   const animations = useSettings((settings) => settings.settings.animations);
+  const autoPay = useSettings((settings) => settings.settings.autoPayMana);
   const viewer = useMatchUi((ui) => ui.viewer);
   const openViewer = useMatchUi((ui) => ui.openViewer);
   const sleeves = useSleeves();
@@ -103,6 +107,8 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const stack = useMemo(() => Object.values(view?.stack ?? {}), [view?.stack]);
 
   const onCommand = useCallback((command: Command) => {
+    // one answer per question: while the server works on the last one, further answers are dropped
+    if (command.type !== 'action' && session.getState().awaitingServer) return;
     if (command.type === 'action' && (command.action === 'HOLD_PRIORITY' || command.action === 'UNHOLD_PRIORITY')) {
       setHolding(command.action === 'HOLD_PRIORITY');
     }
@@ -112,6 +118,8 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
   const myId = board.me?.player.playerId ?? null;
   useGameCues(state, myId);
+  useWarmImages(view);
+  useAutoPay(session, state, board.me?.isMe ? board.me : null, autoPay && mode === 'play');
   const sleeveOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? sleeves.theirs : sleeves.mine), [myId, sleeves]);
   const originOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? `hand:${card.controllerId}` : undefined), [myId]);
 
@@ -153,7 +161,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const handHidden = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards) && !awaitingServer;
   // a choice among cards in hand (discard, reveal...): eligible cards take the decision edge
   const choosingInHand = interaction.mode === 'target' && !pickerCards && [...clickable].some((id) => handIds.has(id));
-  const deciding = mode === 'play' && interaction.mode !== 'waiting' && interaction.mode !== 'priority' && !awaitingServer && !overlayOpen;
+  const deciding = mode === 'play' && interaction.mode !== 'waiting' && interaction.mode !== 'priority' && !overlayOpen;
   const opponentArt = useMemo(() => {
     const permanent = board.opponents[0]?.front[0]?.lead ?? board.opponents[0]?.back.find((group) => !(group.lead.cardTypes ?? []).includes('LAND'))?.lead;
     return permanent?.expansionSetCode && permanent.cardNumber
@@ -168,7 +176,8 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
       <div className={styles.printTheirs}><MatPrint card={opponentArt} /></div>
       <div className={styles.printMine}><MatPrint card={sleeves.cover} /></div>
       <div className={styles.seam} aria-hidden="true" />
-      <Stitch inset={10} radius={22} />
+      {/* under the hand and the controls, over the mat */}
+      <Stitch inset={10} radius={22} zIndex={2} />
 
       {board.opponents.map((opponent, index) => (
         <OpponentSide
@@ -197,7 +206,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
               isMe={board.me.isMe}
               targetable={clickable.has(board.me.player.playerId!)}
               selected={interaction.selected.has(board.me.player.playerId!)}
-              deciding={canAct && interaction.mode !== 'waiting' && !awaitingServer}
+              deciding={canAct && interaction.mode !== 'waiting'}
               onClick={() => onClick(board.me!.player.playerId!)}
             />
           </div>
@@ -244,6 +253,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
         </div>
       )}
 
+      <Vfx view={view} myPlayerId={myId} />
       <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} />
       <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} />
       <GameMenu canConcede={canAct} onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })} onLeave={leave} />

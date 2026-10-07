@@ -6,6 +6,9 @@
 }
 
 .list {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -36,9 +39,17 @@
 }
 
 .panel {
+  /* every panel sits in the content column; inactive ones stay hidden */
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+}
+
+.panel[hidden] {
+  display: none;
 }
 
 .intro {
@@ -120,4 +131,15 @@
 
 .stops tbody th {
   font-weight: 600;
+}
+
+/* the switch columns are narrow and centred under their headings */
+.stops th:not(:first-child),
+.stops td {
+  width: 150px;
+  text-align: center;
+}
+
+.stops td > * {
+  margin: 0 auto;
 }

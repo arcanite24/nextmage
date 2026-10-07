@@ -29,9 +29,12 @@ describe('buildPlayerBoard', () => {
     expect(board.front).toHaveLength(2);
   });
 
-  it('keeps tapped and untapped lands apart', () => {
-    const board = buildPlayerBoard(player('me', [permanent('a'), permanent('b', { tapped: true })]), true);
-    expect(board.back).toHaveLength(2);
+  it('keeps a stack together when one of its lands taps, in the same order', () => {
+    const untapped = buildPlayerBoard(player('me', [permanent('a'), permanent('b')]), true);
+    const tapped = buildPlayerBoard(player('me', [permanent('a'), permanent('b', { tapped: true })]), true);
+    expect(tapped.back).toHaveLength(1);
+    expect(tapped.back[0].key).toBe(untapped.back[0].key);
+    expect(tapped.back[0].members.map((p) => p.id)).toEqual(['a', 'b']);
   });
 
   it('tucks attachments behind their host', () => {
