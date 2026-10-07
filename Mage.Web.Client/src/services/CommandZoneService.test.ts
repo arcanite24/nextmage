@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { MageObjectType } from '../types/api.js';
 import type { PlayerView } from '../types/game.js';
 import {

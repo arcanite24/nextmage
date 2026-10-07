@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import {
   ConnectionProfileService,
   DEFAULT_SERVER_URL,
@@ -77,7 +77,7 @@ test('persists auto-connect settings with the selected endpoint', () => {
   let snapshot = service.load();
 
   snapshot = service.withSelectedServer(snapshot, '127.0.0.1');
-  snapshot = service.withAutoConnect(snapshot, true, snapshot.lastServerUrl);
+  service.withAutoConnect(snapshot, true, snapshot.lastServerUrl);
 
   const restored = service.load();
   assert.equal(restored.autoConnect, true);

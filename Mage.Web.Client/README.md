@@ -114,7 +114,9 @@ npm run dev      # Start Vite dev server
 npm run dev:all  # Start the Mage server and Vite dev server together
 npm run dev:kill # Stop leftover local Mage server/WebSocket listeners
 npm run build    # TypeScript project build plus Vite production bundle
-npm test         # Node service tests plus accessibility gate
+npm test         # Vitest unit tests plus accessibility gate
+npm run test:watch # Vitest in watch mode
+npm run typecheck  # TypeScript project build (no emit)
 npm run test:visual        # Playwright visual regression screenshots
 npm run test:visual:update # Regenerate visual screenshot baselines
 npm run test:e2e -- --list # List browser workflow specs and local-server smoke flows
@@ -125,7 +127,7 @@ npm run test:e2e:local:normal-match # Add AI, start match, priority shortcut, zo
 npm run test:e2e:local:replay-watch # Sideboard/watch/finished-match opt-in fixtures; replay fixture needs saveGameActivated=true
 npm run test:e2e:local:tournament   # Constructed tournament opt-in fixture
 npm run test:e2e:local:draft        # Booster-draft first-pick and Sealed construction opt-in fixtures
-npm run lint     # ESLint
+npm run lint     # ESLint (warning budget enforced with --max-warnings)
 npm run preview  # Serve the production bundle locally
 ```
 
@@ -141,7 +143,11 @@ The visual harness also includes a selector-only promotion contract for future a
 
 ## Notes
 
-`npm run build` is the primary verification target for this client today. `npm run lint` currently reports a broad existing lint backlog across debug, deck, game, lobby, service, store, and type files; cleanups should be handled in focused follow-up work.
+CI (`.github/workflows/web-client.yml`) runs `typecheck`, `lint`, `test`, and `build` on every change under `Mage.Web.Client/`.
+
+`npm run lint` must report zero errors. `no-explicit-any`, `react-hooks/set-state-in-effect`, and `react-hooks/exhaustive-deps` are temporarily warnings owned by the protocol/state/UI rewrite; `--max-warnings` caps them at the current count, so lower the cap whenever you remove some.
+
+Playwright's bundled browsers may not match the installed `@playwright/test` version. Set `PLAYWRIGHT_CHANNEL=chrome` to run e2e and visual specs with the locally installed Google Chrome instead. Visual baselines are macOS-only and predate the UI rebuild, so they are not part of CI.
 
 ## License
 

@@ -9,8 +9,7 @@
     "dev:all": "bash scripts/dev-with-server.sh",
     "dev:kill": "bash scripts/kill-dev-servers.sh",
     "build": "tsc -b && vite build",
-    "test": "npm run test:callbacks && npm run test:a11y",
-    "test:callbacks": "tsc -p tsconfig.test.json && node --test .tmp/callback-tests/services/*.test.js",
+    "test": "vitest run && npm run test:a11y",
     "test:a11y": "node scripts/check-accessibility.mjs",
     "test:e2e": "playwright test e2e",
     "test:e2e:local": "MAGE_E2E_REQUIRE_SERVER=1 playwright test e2e/local-server-*.spec.ts --workers=1",
@@ -22,8 +21,11 @@
     "test:e2e:local:draft": "MAGE_E2E_REQUIRE_SERVER=1 playwright test e2e/local-server-draft.spec.ts --workers=1",
     "test:visual": "playwright test visual",
     "test:visual:update": "playwright test visual --update-snapshots",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "lint": "eslint . --max-warnings 114",
+    "preview": "vite preview",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
@@ -49,6 +51,7 @@
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitest": "^5.0.3"
   }
 }

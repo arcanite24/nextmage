@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { DeckSerializer } from './DeckSerializer.js';
 
 test('imports Cockatrice cod XML decks with main, sideboard, clamped counts, and deck name', () => {
@@ -140,7 +140,7 @@ test('exports picked cards as an XMage draft log that imports back through the b
 
   assert.match(content, /Event #: 8a74113b-27e5-4a29-85be-4b83f622af00/);
   assert.match(content, /Exported: 2026-07-06T12:00:00\.000Z/);
-  assert.match(content, /Players:\n    VisualMage\n    Remote Mage/);
+  assert.match(content, /Players:\n {4}VisualMage\n {4}Remote Mage/);
   assert.match(content, /------ M11 ------\n\nPack 1 pick 1:\n--> Lightning Bolt/);
   assert.match(content, /Pack 1 pick 2:\n--> Naturalize\n\nPack 1 pick 3:\n--> Naturalize/);
   assert.match(content, /------ M12 ------\n\nPack 2 pick 1:\n--> Llanowar Elves/);

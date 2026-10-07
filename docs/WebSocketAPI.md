@@ -70,7 +70,7 @@ The server pushes events to clients using `ClientCallback` objects:
 | `ping` | `[]` | `true` | Heartbeat to keep connection alive. |
 | `authRegister` | `[sessionId, userName, password, email]` | `boolean` | Register a new user account. |
 | `connectUser` | `[userName, password, sessionId, restoreSessionId?, version?, userIdStr?]` | `boolean` | Connect an existing user. Server uses its own version if not provided. |
-| `connectSetUserData` | `[userName, sessionId, userData, clientVersion, userIdStr]` | `boolean` | Set user preferences after login. `userData` is a `UserData` JSON object. |
+| `connectSetUserData` | `[userName, sessionId, userData, clientVersion, userIdStr]` | `boolean` | Set user preferences after login. `userData` is a `UserData` JSON object. `userName` is ignored (the server resolves the user from the session) and kept only for wire compatibility. |
 | `serverGetMainRoomId` | `[]` | `UUID` | Get the main lobby room ID. |
 
 ### Lobby / Room
@@ -132,7 +132,6 @@ The server pushes events to clients using `ClientCallback` objects:
 | `gameJoin` | `[gameId, sessionId]` | `true` | Join a game instance. |
 | `gameWatchStart` | `[gameId, sessionId]` | `boolean` | Start watching a game. |
 | `gameWatchStop` | `[gameId, sessionId]` | `true` | Stop watching a game. |
-| `gameGetView` | `[gameId, sessionId, playerId]` | `GameView` | Get current game state. |
 | `sendPlayerAction` | `[playerAction, gameId, sessionId, data?]` | `true` | Send a generic player action. `playerAction` is a `PlayerAction` enum string. `data` can be UUID, String, Integer, or Boolean. |
 | `sendPlayerUUID` | `[gameId, sessionId, uuidData]` | `true` | Send a UUID selection (e.g., target selection). |
 | `sendPlayerString` | `[gameId, sessionId, stringData]` | `true` | Send a string selection (e.g., mode choice). |

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { DEFAULT_DECK_GENERATOR_SETTINGS, type DeckGeneratorSettings } from './AppConfigService.js';
 import { DeckGeneratorService } from './DeckGeneratorService.js';
-import { Rarity, type CardSearchCriteria, type CardType, type ExpansionSetInfo, type ObjectColor, type SearchCardView, type SuperType } from '../types/index.js';
+import { Rarity, type CardSearchCriteria, type CardType, type ExpansionSetInfo, type ObjectColor, type SearchCardView } from '../types/index.js';
 
 function color(overrides: Partial<ObjectColor> = {}): ObjectColor {
   return {

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { resolvePlayerControlIdentityFromGameView } from './GameViewPlayerControlService.js';
 
 test('game views with myPlayerId unlock player controls after a join placeholder', () => {
