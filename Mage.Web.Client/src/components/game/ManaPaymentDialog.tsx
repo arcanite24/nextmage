@@ -16,6 +16,8 @@ import './ManaPaymentDialog.css';
 interface ManaPaymentDialogProps {
     isOpen: boolean;
     message: string;
+    /** X-mana prompt: Done finishes paying X (for normal costs any boolean cancels the spell) */
+    isXMana?: boolean;
 }
 
 const MANA_CONFIG: Array<{ type: ManaType; color: string; symbol: string; bgColor: string; key: keyof ManaPoolView }> = [
@@ -34,9 +36,16 @@ function getAvailableManaTypes(manaPool: ManaPoolView | undefined): ManaType[] {
         .map(({ type }) => type);
 }
 
-export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, message }) => {
+export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, message, isXMana = false }) => {
     const sendManaType = useGameStore(state => state.sendManaType);
     const sendBoolean = useGameStore(state => state.sendBoolean);
+    const sendString = useGameStore(state => state.sendString);
+    // e.g. "Convoke", "Delve" or "Improvise": the server pays part of the cost with a special action
+    const specialButton = useGameStore(state => {
+        const action = state.pendingAction;
+        const label = action.type !== 'none' && 'options' in action ? action.options?.specialButton : undefined;
+        return typeof label === 'string' && label.trim() ? label : null;
+    });
     const getMyPlayer = useGameStore(state => state.getMyPlayer);
     const settings = useSettingsStore(state => state.settings);
     const [isAutoPaying, setIsAutoPaying] = React.useState(false);
@@ -56,9 +65,9 @@ export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, me
         sendManaType(manaType);
     };
 
-    const handleDone = () => {
-        // Confirm payment / pass
-        sendBoolean(true);
+    // payment finishes by itself once the cost is paid; any boolean answer cancels it on the server
+    const handleSpecial = () => {
+        sendString('special');
     };
 
     const handleAutoPay = async () => {
@@ -142,9 +151,16 @@ export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, me
                     <WandSparkles size={14} aria-hidden="true" />
                     {isAutoPaying ? 'Paying' : 'Auto pay'}
                 </button>
-                <button className="mana-action-btn done" onClick={handleDone}>
-                    Done
-                </button>
+                {isXMana && (
+                    <button className="mana-action-btn done" onClick={() => sendBoolean(true)}>
+                        Done
+                    </button>
+                )}
+                {specialButton && (
+                    <button className="mana-action-btn done" onClick={handleSpecial} data-testid="mana-special-button" aria-label={`Pay with ${specialButton}`}>
+                        {specialButton}
+                    </button>
+                )}
             </div>
         </div>
     );

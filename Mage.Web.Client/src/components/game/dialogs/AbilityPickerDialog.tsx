@@ -1,6 +1,7 @@
 import React from 'react';
 import { AbilityPickerView } from '../../../types';
 import { useGameStore } from '../../../stores';
+import { isEditableEventTarget } from '../../../services/KeybindService';
 import './AbilityPickerDialog.css';
 
 interface AbilityPickerDialogProps {
@@ -44,6 +45,7 @@ export const AbilityPickerDialog: React.FC<AbilityPickerDialogProps> = ({ data }
 
     React.useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
+            if (isEditableEventTarget(event.target)) return;
             const shortcut = Number.parseInt(event.key, 10);
             if (shortcut >= 1 && shortcut <= 9 && shortcut <= choices.length) {
                 event.preventDefault();

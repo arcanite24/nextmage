@@ -304,14 +304,14 @@ export interface GameEndView {
 export interface EndGameInfo {
     additionalInfo: string;
     clientPlayer: PlayerView;
-    endTime: string;
+    endTime: string | number;
     gameInfo: string;
     loses: number;
     matchInfo: string;
     // matchView: MatchView; // avoiding circular dependency if possible, or just use any/object for now
     matchView: any;
     players: PlayerView[];
-    startTime: string;
+    startTime: string | number;
     wins: number;
     winsNeeded: number;
     won: boolean;

@@ -74,14 +74,6 @@ function extractGameView(data: unknown): GameView | null {
     return null;
 }
 
-function createRequestUuid(): UUID {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-        return crypto.randomUUID();
-    }
-
-    return '00000000-0000-4000-8000-000000000000';
-}
-
 function optionBoolean(options: Record<string, any> | undefined, keys: string[], fallback = false): boolean {
     if (!options) return fallback;
     for (const key of keys) {
@@ -165,7 +157,7 @@ export type PendingAction =
         searchEnabled?: boolean;
         manaColorChoice?: boolean;
     }
-    | { type: 'mana'; message: string; gameView: GameView }
+    | { type: 'mana'; message: string; gameView: GameView; options?: Record<string, any> }
     | { type: 'xmana'; message: string; gameView: GameView }
     | { type: 'amount'; min: number; max: number; message: string; gameView: GameView }
     | {
@@ -720,11 +712,8 @@ export const useGameStore = create<GameState & GameActions>()(
                                 const cachedGameView = firstGameViewsByGameId.get(gameId);
                                 if (cachedGameView) {
                                     console.warn('[GameStore] Recovered game data that arrived before startGame:', gameId);
+                                    // gameJoin makes the server resend the current state, no extra request needed
                                     updateGameView(cachedGameView);
-                                    const sessionId = useSessionStore.getState().sessionId;
-                                    wsService.send('sendPlayerUUID', [gameId, sessionId, createRequestUuid()]).catch(error => {
-                                        console.warn('[GameStore] Failed to request latest game data after reconnect recovery:', error);
-                                    });
                                 }
                             });
                         } else {
@@ -903,6 +892,7 @@ export const useGameStore = create<GameState & GameActions>()(
                                 type: 'mana',
                                 message: data.message || 'Pay mana',
                                 gameView: state.gameView!,
+                                options: data.options ?? undefined,
                             };
                             syncPlayerControlIdentity(state, state.gameView);
                         });

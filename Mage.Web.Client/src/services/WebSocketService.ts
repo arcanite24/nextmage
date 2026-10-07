@@ -10,7 +10,11 @@
  * - Request timeout handling (default: 30 seconds)
  */
 
-import { ClientCallback, JsonRpcRequest, JsonRpcResponse, SearchCardView, CardSearchCriteria, BasicLandSetInfo, DeckCardLists, DeckValidationResultView, ExpansionSetInfo } from '../types/index.js';
+import { RpcError } from '../types/api.js';
+import type { ClientCallback, JsonRpcRequest, JsonRpcResponse, SearchCardView, CardSearchCriteria, BasicLandSetInfo, DeckCardLists, DeckValidationResultView, ExpansionSetInfo } from '../types/index.js';
+
+/** Requests that make the server issue a new session for this connection. */
+const SESSION_START_METHODS = new Set(['connectUser', 'connectAdmin', 'authRegister', 'authSendTokenToEmail', 'authResetPassword']);
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
@@ -46,6 +50,7 @@ class WebSocketService {
     private pendingRequests = new Map<number, PendingRequest>();
     private callbackHandlers: Set<CallbackHandler> = new Set();
     private statusChangeHandlers: Set<StatusChangeHandler> = new Set();
+    private sessionStartHandlers: Set<() => void> = new Set();
     private pingInterval: ReturnType<typeof setInterval> | null = null;
     private reconnectAttempts = 0;
     private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -158,6 +163,10 @@ class WebSocketService {
             this.pendingRequests.set(id, { resolve: resolve as (value: unknown) => void, reject, timeout });
 
             try {
+                if (SESSION_START_METHODS.has(method)) {
+                    // the server starts a new session (message ids restart at 0) before it answers
+                    this.sessionStartHandlers.forEach(handler => handler());
+                }
                 this.ws!.send(JSON.stringify(request));
                 console.log('[WebSocket] Sent:', method, params);
             } catch (error) {
@@ -222,7 +231,7 @@ class WebSocketService {
                     if (response.id !== id) return;
 
                     if (response.error) {
-                        settle(() => reject(new Error(response.error)));
+                        settle(() => reject(new RpcError(response.error!)));
                     } else {
                         console.log('[WebSocket] Probe response:', response.id, response.result);
                         settle(() => resolve(response.result as T));
@@ -253,6 +262,17 @@ class WebSocketService {
         this.statusChangeHandlers.add(handler);
         return () => {
             this.statusChangeHandlers.delete(handler);
+        };
+    }
+
+    /**
+     * Register a handler for the start of a new server session (login on this connection).
+     * Server sessions are per connection, so a reconnect also starts a new session.
+     */
+    onSessionStart(handler: () => void): () => void {
+        this.sessionStartHandlers.add(handler);
+        return () => {
+            this.sessionStartHandlers.delete(handler);
         };
     }
 
@@ -317,7 +337,7 @@ class WebSocketService {
                     // Dispatch as user message so it shows in UI
                     this.handleCallback({
                         method: 'showUserMessage',
-                        data: ['Server Error', message.error],
+                        data: ['Server Error', typeof message.error === 'string' ? message.error : message.error.message],
                         messageId: 0,
                         objectId: null
                     } as any);
@@ -345,7 +365,7 @@ class WebSocketService {
 
         if (response.error) {
             console.error('[WebSocket] Server error:', response.error);
-            pending.reject(new Error(response.error));
+            pending.reject(new RpcError(response.error));
         } else {
             console.log('[WebSocket] Response:', response.id, response.result);
             pending.resolve(response.result);

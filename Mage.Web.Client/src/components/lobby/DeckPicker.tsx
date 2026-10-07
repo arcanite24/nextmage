@@ -14,6 +14,23 @@ import { cardResolverService } from '../../services';
 import { cardImageService } from '../../services/CardImageService';
 import './DeckPicker.css';
 
+
+/** "Constructed - Pauper" and "Pauper" name the same format; tables and decks use both spellings. */
+function normalizeFormatName(name: string): string {
+    return name
+        .replace(/^(Constructed|Variant Magic|Block Constructed)\s*-\s*/i, '')
+        .trim()
+        .toLowerCase();
+}
+
+function isDeckFormatCompatible(deckFormat: string | undefined, tableFormat: string | undefined): boolean {
+    if (!tableFormat || !deckFormat) return true;
+    const table = normalizeFormatName(tableFormat);
+    // freeform tables accept any deck
+    if (table.startsWith('freeform')) return true;
+    return normalizeFormatName(deckFormat) === table;
+}
+
 interface DeckPickerProps {
     /** The currently selected deck (controlled) */
     selectedDeck: DeckCardLists | null;
@@ -81,12 +98,8 @@ export const DeckPicker: React.FC<DeckPickerProps> = ({
     const loadSavedDecks = async () => {
         setIsLoadingDecks(true);
         try {
-            const decks = await deckStorage.listDecks();
-            // Filter by format if specified
-            const filtered = format
-                ? decks.filter(d => d.format === format || !d.format)
-                : decks;
-            setSavedDecks(filtered);
+            // keep every deck: decks of other formats are listed in their own section
+            setSavedDecks(await deckStorage.listDecks());
         } catch (err) {
             console.error('[DeckPicker] Failed to load decks:', err);
         } finally {
@@ -203,8 +216,8 @@ export const DeckPicker: React.FC<DeckPickerProps> = ({
         );
     };
 
-    const formatDecks = savedDecks.filter(d => !format || d.format === format || !d.format);
-    const otherDecks = savedDecks.filter(d => format && d.format && d.format !== format);
+    const formatDecks = savedDecks.filter(d => isDeckFormatCompatible(d.format, format));
+    const otherDecks = savedDecks.filter(d => !isDeckFormatCompatible(d.format, format));
 
     return (
         <div className="deck-picker">

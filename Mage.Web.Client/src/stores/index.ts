@@ -116,8 +116,12 @@ export function initializeCallbackDispatcher(): () => void {
         }
     });
 
+    // message ids are per server session; a new session must not be compared with the old one
+    const unsubscribeSessionStart = wsService.onSessionStart(() => orderingGuard.reset());
+
     const unsubscribeStatus = wsService.onStatusChange((status) => {
         if (status !== 'connected') return;
+        orderingGuard.reset();
         if (!useSettingsStore.getState().settings.reconnectRecoveryEnabled) return;
         globalThis.setTimeout(() => {
             useChatStore.getState().recoverJoinedChannels().catch((error) => {
@@ -128,6 +132,7 @@ export function initializeCallbackDispatcher(): () => void {
 
     return () => {
         unsubscribe();
+        unsubscribeSessionStart();
         unsubscribeStatus();
     };
 }

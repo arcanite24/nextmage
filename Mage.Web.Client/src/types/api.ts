@@ -258,11 +258,27 @@ export interface JsonRpcRequest {
   id: number;
 }
 
+export interface JsonRpcError {
+  code: number;
+  message: string;
+}
+
 export interface JsonRpcResponse<T = unknown> {
   jsonrpc: "2.0";
   result?: T;
-  error?: string;
+  error?: JsonRpcError | string;
   id: number;
+}
+
+/** A failed server call, with the JSON-RPC error code when the server sent one. */
+export class RpcError extends Error {
+  readonly code: number | undefined;
+
+  constructor(error: JsonRpcError | string) {
+    super(typeof error === 'string' ? error : error.message);
+    this.name = 'RpcError';
+    this.code = typeof error === 'string' ? undefined : error.code;
+  }
 }
 
 // === Player Actions ===

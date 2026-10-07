@@ -27,7 +27,7 @@ export interface TableView {
     gameType: string;
     deckType: string;
     spectatorsAllowed: boolean;
-    createTime: string;
+    createTime: string | number;
     tableState: TableState;
     tableStateText: string;
     seats: SeatView[];
@@ -53,8 +53,8 @@ export interface MatchView {
     games: UUID[];
     result: string;
     players: string;
-    startTime: string;
-    endTime: string;
+    startTime: string | number;
+    endTime: string | number;
     replayAvailable: boolean;
     isTournament: boolean;
     isRated: boolean;
@@ -262,8 +262,8 @@ export interface TournamentView {
     tournamentName: string;
     tournamentType: string;
     tournamentState: string;
-    startTime: string;
-    endTime?: string | null;
+    startTime: string | number;
+    endTime?: string | number | null;
     stepStartTime?: string | null;
     serverTime?: string | null;
     constructionTime: number;

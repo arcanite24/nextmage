@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from '../../stores';
 import { shouldCompleteSelectWithBooleanFalse } from '../../services/BattlefieldPerformanceService';
+import { isEditableEventTarget } from '../../services/KeybindService';
 import { Button } from '../common';
 import './FeedbackPanel.css';
 
@@ -32,30 +33,22 @@ export const FeedbackPanel: React.FC = React.memo(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (pendingAction.type === 'none') return;
 
-            // Bind SPACE to "Done" / Confirm
-            // We only want to trigger this for types where "Done" or positive confirmation is relevant
-            if (e.code === 'Space') {
-                e.preventDefault(); // Prevent scrolling
+            // SPACE confirms "Done"-style prompts. Yes/no questions (e.g. mulligan) need an explicit answer.
+            if (e.code !== 'Space' || isEditableEventTarget(e.target)) return;
+            if (e.target instanceof HTMLButtonElement) return; // Space already clicks the focused button
 
-                if (pendingAction.type === 'priority') {
+            if (pendingAction.type === 'priority') {
+                e.preventDefault();
+                sendBoolean(false);
+            } else if (pendingAction.type === 'target' || pendingAction.type === 'select') {
+                e.preventDefault();
+                if (shouldCompleteSelectWithBooleanFalse(pendingAction)) {
                     sendBoolean(false);
-                } else if (pendingAction.type === 'target' || pendingAction.type === 'select') {
-                    if (shouldCompleteSelectWithBooleanFalse(pendingAction)) {
-                        sendBoolean(false);
-                        return;
-                    }
-                    const min = typeof pendingAction.min === 'number' ? pendingAction.min : pendingAction.required ? 1 : 0;
-                    if (!pendingAction.required && min === 0) {
-                        sendUUID(null);
-                    }
+                    return;
                 }
-                // We could optionally allow SPACE for "Yes" in 'ask', but user specifically said "Done" button.
-                // But usually SPACE is generally "OK".
-                else if (pendingAction.type === 'ask') {
-                    // Interpreting SPACE as YES for 'ask' is common, but let's stick to "Done" context mostly.
-                    // However, if the user means the primary positive action, this is it.
-                    // safely enable for now.
-                    sendBoolean(true);
+                const min = typeof pendingAction.min === 'number' ? pendingAction.min : pendingAction.required ? 1 : 0;
+                if (!pendingAction.required && min === 0) {
+                    sendUUID(null);
                 }
             }
         };

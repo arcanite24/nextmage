@@ -241,9 +241,10 @@ function normalizeUserKey(userName: string): string {
     return userName.trim().toLowerCase();
 }
 
-function formatMatchTime(value: string): string {
-    const timestamp = Date.parse(value);
-    if (!Number.isFinite(timestamp)) return value || '-';
+function formatMatchTime(value: string | number | null | undefined): string {
+    // the server sends epoch milliseconds; older payloads and fixtures use date strings
+    const timestamp = typeof value === 'number' ? value : Date.parse(value ?? '');
+    if (!Number.isFinite(timestamp)) return value ? String(value) : '-';
     return new Intl.DateTimeFormat(undefined, {
         hour: 'numeric',
         minute: '2-digit',
