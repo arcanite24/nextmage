@@ -1,0 +1,41 @@
+.arrows {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.ink {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 2 12;
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
+  animation: march 900ms linear infinite;
+}
+
+.block {
+  stroke: var(--oxblood-ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 1 9;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
+}
+
+.live {
+  fill: none;
+  stroke: var(--decision);
+  stroke-width: 6;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px var(--decision-glow)) drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
+}
+
+@keyframes march {
+  to {
+    stroke-dashoffset: -28;
+  }
+}

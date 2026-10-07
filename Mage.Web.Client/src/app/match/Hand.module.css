@@ -1,0 +1,62 @@
+.hand {
+  position: absolute;
+  left: 50%;
+  bottom: -118px;
+  height: 236px;
+  transform: translateX(-50%);
+  z-index: 30;
+}
+
+.card {
+  position: absolute;
+  bottom: 0;
+  width: 168px;
+  transform-origin: 50% 120%;
+  transform: translateY(var(--drop, 0)) rotate(var(--rotate, 0deg));
+  transition: transform var(--dur-place) var(--ease-place);
+  cursor: default;
+  touch-action: none;
+  outline: none;
+}
+
+/* rises out of the hand: straighten, lift clear of the edge, grow */
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-120px) rotate(0deg) scale(1.22);
+  z-index: 90 !important;
+}
+
+.playable {
+  cursor: grab;
+}
+
+.playable::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px var(--ink-soft), 0 0 16px 3px rgb(233 228 214 / 0.35);
+  pointer-events: none;
+}
+
+.playable:focus-visible::after {
+  box-shadow: 0 0 0 3px var(--decision);
+}
+
+.selected {
+  transform: translateY(-60px) rotate(0deg);
+}
+
+.selected::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px var(--decision), 0 0 18px 4px var(--decision-glow);
+  pointer-events: none;
+}
+
+.dragging {
+  cursor: grabbing;
+  filter: drop-shadow(0 30px 40px rgb(0 0 0 / 0.55));
+}

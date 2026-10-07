@@ -18,6 +18,9 @@ interface PlayState {
   phase: PlayPhase;
   error: string | null;
   tableId: string | null;
+  /** the deck of the latest game against the AI (for its sleeve and for playing again) */
+  deckId: string | null;
+  lastOptions: Partial<AiOptions>;
   playVsAi(deckId: string, options?: Partial<AiOptions>): Promise<void>;
   cancel(): Promise<void>;
 }
@@ -49,11 +52,13 @@ export const usePlay = create<PlayState>((set, get) => ({
   phase: 'idle',
   error: null,
   tableId: null,
+  deckId: null,
+  lastOptions: {},
 
   async playVsAi(deckId, options = {}) {
     const { roomId, userName } = useSession.getState();
     if (!roomId) return;
-    set({ phase: 'starting', error: null });
+    set({ phase: 'starting', error: null, deckId, lastOptions: options });
     try {
       const { deck } = await useDecks.getState().loadForPlay(deckId);
       const opponentDeck = await aiDeck(options.starterFile ?? null);
