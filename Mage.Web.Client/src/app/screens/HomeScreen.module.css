@@ -55,6 +55,7 @@
 
 .deckTitle {
   position: relative;
+  container-type: inline-size;
   grid-column: 1;
   grid-row: 1 / span 2;
   align-self: end;
@@ -76,7 +77,7 @@
 /* the deck name, printed big on the mat */
 .deckName {
   max-width: 14ch;
-  font-size: clamp(2.8rem, 5.6vw, 6rem);
+  font-size: clamp(2.8rem, 9cqi, 6rem);
   line-height: 0.9;
   text-transform: uppercase;
   color: var(--ink-strong);
