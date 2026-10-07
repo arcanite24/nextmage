@@ -23,7 +23,8 @@ COPY ops/web/backup.sh /usr/local/bin/xmage-backup
 COPY ops/web/log4j-docker.properties /opt/xmage/config/log4j-docker.properties
 # config.template.xml is the shipped config; the entrypoint renders config.xml from it and the environment.
 # .build-id (written by the build stage) changes with every server build; the entrypoint then rebuilds the card database.
-RUN chmod +x /usr/local/bin/xmage-server /usr/local/bin/xmage-backup \
+RUN sed -i "s/\r$//" /usr/local/bin/xmage-server /usr/local/bin/xmage-backup \
+ && chmod +x /usr/local/bin/xmage-server /usr/local/bin/xmage-backup \
  && cp config/config.xml config/config.template.xml \
  && useradd --system --home /opt/xmage xmage \
  && mkdir -p db cards-db logs saved /backups \
