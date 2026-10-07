@@ -69,7 +69,7 @@ export function LoginScreen() {
       <SewnEdge />
 
       <header className={styles.brand}>
-        <span className={styles.mark}><Mark size={72} /></span>
+        <span className={styles.mark}><Mark size={112} /></span>
         <h1 className={styles.wordmark} aria-label={APP_NAME}>
           {/* three separations of a screen print sliding into register */}
           <span className={styles.passShadow} aria-hidden="true">{APP_NAME}</span>
