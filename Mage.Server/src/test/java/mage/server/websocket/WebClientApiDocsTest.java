@@ -32,6 +32,7 @@ public class WebClientApiDocsTest {
 
     private static final Path DOC_FILE = Paths.get("..", "docs", "WebSocketAPI.md");
     private static final Path TS_FILE = Paths.get("..", "Mage.Web.Client", "src", "protocol", "generated", "protocol.ts");
+    private static final Path API_FILE = Paths.get("..", "Mage.Web.Client", "src", "protocol", "generated", "api.ts");
     private static final String BEGIN_METHODS = "<!-- BEGIN GENERATED: methods -->";
     private static final String END_METHODS = "<!-- END GENERATED: methods -->";
     private static final String BEGIN_CALLBACKS = "<!-- BEGIN GENERATED: callbacks -->";
@@ -94,11 +95,13 @@ public class WebClientApiDocsTest {
         String expectedDoc = replaceSection(replaceSection(doc, BEGIN_METHODS, END_METHODS, methodsMarkdown(methods)),
                 BEGIN_CALLBACKS, END_CALLBACKS, callbacksMarkdown());
         String expectedTs = typescript(methods);
+        String expectedApi = apiTypescript(methods);
 
         if (Boolean.getBoolean("xmage.updateWebApiDocs")) {
             Files.write(DOC_FILE, expectedDoc.getBytes(StandardCharsets.UTF_8));
             Files.createDirectories(TS_FILE.getParent());
             Files.write(TS_FILE, expectedTs.getBytes(StandardCharsets.UTF_8));
+            Files.write(API_FILE, expectedApi.getBytes(StandardCharsets.UTF_8));
             doc = expectedDoc;
         }
 
@@ -107,6 +110,9 @@ public class WebClientApiDocsTest {
         assertThat(TS_FILE).as("generated client protocol is missing, " + hint).exists();
         assertThat(new String(Files.readAllBytes(TS_FILE), StandardCharsets.UTF_8))
                 .as("generated client protocol is stale, " + hint).isEqualTo(expectedTs);
+        assertThat(API_FILE).as("generated client api is missing, " + hint).exists();
+        assertThat(new String(Files.readAllBytes(API_FILE), StandardCharsets.UTF_8))
+                .as("generated client api is stale, " + hint).isEqualTo(expectedApi);
     }
 
     @Test
@@ -188,42 +194,190 @@ public class WebClientApiDocsTest {
         }
     }
 
-    private static String typescript(List<RpcMethod> methods) {
+    /**
+     * One function per RPC method, without the sessionId parameter: the server always uses the connection's session.
+     */
+    private static String apiTypescript(List<RpcMethod> methods) throws IOException {
+        java.util.Set<String> viewTypes = readViewTypes();
+        java.util.Set<String> usedViews = new java.util.TreeSet<>();
+        java.util.Set<String> usedOptions = new java.util.TreeSet<>();
+        StringBuilder body = new StringBuilder();
+        body.append("export interface RpcCaller {\n");
+        body.append("  call<M extends RpcMethodName>(method: M, ...params: RpcMethods[M]['params']): Promise<RpcMethods[M]['result']>;\n");
+        body.append("}\n\n");
+        body.append("/** Placeholder for the sessionId parameter, which the server replaces with the connection's session. */\n");
+        body.append("const SESSION = '';\n\n");
+        body.append("/** Every server method as a typed function. Session parameters are filled in automatically. */\n");
+        body.append("export function createApi(rpc: RpcCaller) {\n");
+        body.append("  return {\n");
+        for (RpcMethod method : methods) {
+            List<RpcParam> params = method.getParams();
+            List<RpcParam> visible = new java.util.ArrayList<>();
+            for (int i = 0; i < params.size(); i++) {
+                if (i != method.getSessionParam()) {
+                    visible.add(params.get(i));
+                }
+            }
+            StringBuilder signature = new StringBuilder();
+            for (int i = 0; i < visible.size(); i++) {
+                RpcParam p = visible.get(i);
+                boolean trailingOptional = true;
+                for (int j = i; j < visible.size(); j++) {
+                    trailingOptional &= visible.get(j).isOptional();
+                }
+                if (i > 0) {
+                    signature.append(", ");
+                }
+                String type = p.getTsType();
+                collectTypes(type, viewTypes, usedViews, usedOptions);
+                if (p.isOptional() && trailingOptional) {
+                    signature.append(p.getName()).append("?: ").append(type).append(" | null");
+                } else if (p.isOptional()) {
+                    signature.append(p.getName()).append(": ").append(type).append(" | null");
+                } else {
+                    signature.append(p.getName()).append(": ").append(type);
+                }
+            }
+            StringBuilder args = new StringBuilder("'").append(method.getName()).append("'");
+            for (int i = 0; i < params.size(); i++) {
+                args.append(", ").append(i == method.getSessionParam() ? "SESSION" : params.get(i).getName());
+            }
+            // omitted optional params travel as null, which the server treats as "not given"
+            body.append("    ").append(method.getName()).append(": (").append(signature).append(") =>\n");
+            body.append("      rpc.call(").append(args).append("),\n");
+        }
+        body.append("  };\n");
+        body.append("}\n\n");
+        body.append("export type Api = ReturnType<typeof createApi>;\n");
+
         StringBuilder sb = new StringBuilder();
         sb.append("// Generated by Mage.Server WebClientApiDocsTest from the server's RPC registry. Do not edit.\n");
         sb.append("// Regenerate: mvn -pl Mage.Server test -Dtest=WebClientApiDocsTest -Dxmage.updateWebApiDocs=true\n\n");
-        sb.append("export type RpcAccess = 'public' | 'session' | 'login';\n\n");
-        sb.append("export interface RpcParamSpec {\n  readonly name: string;\n  readonly type: string;\n  readonly optional: boolean;\n}\n\n");
-        sb.append("export interface RpcMethodSpec {\n  readonly access: RpcAccess;\n  readonly sessionParam: number;\n")
-                .append("  readonly params: readonly RpcParamSpec[];\n  readonly result: string;\n}\n\n");
-        sb.append("export const RPC_METHODS = {\n");
-        for (RpcMethod method : methods) {
-            sb.append("  ").append(method.getName()).append(": {\n");
-            sb.append("    access: '").append(accessLabel(method)).append("',\n");
-            sb.append("    sessionParam: ").append(method.getSessionParam()).append(",\n");
-            sb.append("    params: [");
-            for (int i = 0; i < method.getParams().size(); i++) {
-                RpcParam p = method.getParams().get(i);
-                sb.append(i == 0 ? "\n" : "")
-                        .append("      { name: '").append(p.getName()).append("', type: '").append(p.getTsType())
-                        .append("', optional: ").append(p.isOptional()).append(" },\n");
-            }
-            sb.append(method.getParams().isEmpty() ? "" : "    ").append("],\n");
-            sb.append("    result: '").append(method.getResultType()).append("',\n");
-            sb.append("  },\n");
+        sb.append("import type { RpcMethodName, RpcMethods, UUID } from './protocol';\n");
+        if (!usedViews.isEmpty()) {
+            sb.append("import type { ").append(String.join(", ", usedViews)).append(" } from './views';\n");
         }
-        sb.append("} as const satisfies Record<string, RpcMethodSpec>;\n\n");
-        sb.append("export type RpcMethodName = keyof typeof RPC_METHODS;\n\n");
-
-        Map<String, String> callbacks = new LinkedHashMap<>();
-        for (ClientCallbackMethod method : ClientCallbackMethod.values()) {
-            callbacks.put(method.name(), String.format("{ type: '%s', anyOrder: %s, data: '%s' }",
-                    method.getType().name(), method.getType().canComeInAnyOrder(), CALLBACK_DATA.get(method)));
+        if (!usedOptions.isEmpty()) {
+            sb.append("import type { ").append(String.join(", ", usedOptions)).append(" } from '../options';\n");
         }
-        sb.append("export const CALLBACK_METHODS = {\n");
-        callbacks.forEach((name, spec) -> sb.append("  ").append(name).append(": ").append(spec).append(",\n"));
-        sb.append("} as const;\n\n");
-        sb.append("export type CallbackMethodName = keyof typeof CALLBACK_METHODS;\n");
+        sb.append("\n").append(body);
         return sb.toString();
+    }
+
+    private static java.util.Set<String> readViewTypes() throws IOException {
+        java.util.Set<String> viewTypes = new java.util.TreeSet<>();
+        java.util.regex.Matcher exported = java.util.regex.Pattern.compile("export (?:interface|type) (\\w+)")
+                .matcher(new String(Files.readAllBytes(VIEWS_FILE), StandardCharsets.UTF_8));
+        while (exported.find()) {
+            viewTypes.add(exported.group(1));
+        }
+        return viewTypes;
+    }
+
+    private static final Path VIEWS_FILE = Paths.get("..", "Mage.Web.Client", "src", "protocol", "generated", "views.ts");
+    // request option objects that only exist on the web side, see src/protocol/options.ts
+    private static final java.util.Set<String> CLIENT_OPTION_TYPES = new java.util.HashSet<>(
+            java.util.Arrays.asList("WebMatchOptions", "WebTournamentOptions"));
+
+    private static String typescript(List<RpcMethod> methods) throws IOException {
+        java.util.Set<String> viewTypes = new java.util.TreeSet<>();
+        java.util.regex.Matcher exported = java.util.regex.Pattern.compile("export (?:interface|type) (\\w+)")
+                .matcher(new String(Files.readAllBytes(VIEWS_FILE), StandardCharsets.UTF_8));
+        while (exported.find()) {
+            viewTypes.add(exported.group(1));
+        }
+
+        java.util.Set<String> usedViews = new java.util.TreeSet<>();
+        java.util.Set<String> usedOptions = new java.util.TreeSet<>();
+        StringBuilder body = new StringBuilder();
+
+        body.append("export type UUID = string;\n\n");
+        body.append("export type RpcAccess = 'public' | 'session' | 'login';\n\n");
+        body.append("/** Parameters and result of every RPC method. */\n");
+        body.append("export interface RpcMethods {\n");
+        for (RpcMethod method : methods) {
+            List<RpcParam> params = method.getParams();
+            StringBuilder tuple = new StringBuilder();
+            for (int i = 0; i < params.size(); i++) {
+                RpcParam p = params.get(i);
+                boolean trailingOptional = true;
+                for (int j = i; j < params.size(); j++) {
+                    trailingOptional &= params.get(j).isOptional();
+                }
+                String type = p.getTsType();
+                collectTypes(type, viewTypes, usedViews, usedOptions);
+                if (i > 0) {
+                    tuple.append(", ");
+                }
+                if (p.isOptional() && trailingOptional) {
+                    tuple.append(p.getName()).append("?: ").append(type).append(" | null");
+                } else if (p.isOptional()) {
+                    tuple.append(p.getName()).append(": ").append(type).append(" | null");
+                } else {
+                    tuple.append(p.getName()).append(": ").append(type);
+                }
+            }
+            collectTypes(method.getResultType(), viewTypes, usedViews, usedOptions);
+            body.append("  ").append(method.getName()).append(": { params: [").append(tuple)
+                    .append("]; result: ").append(method.getResultType()).append(" };\n");
+        }
+        body.append("}\n\n");
+        body.append("export type RpcMethodName = keyof RpcMethods;\n\n");
+
+        body.append("/** Access rule and session parameter position of every RPC method. */\n");
+        body.append("export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: RpcAccess; readonly sessionParam: number } } = {\n");
+        for (RpcMethod method : methods) {
+            body.append("  ").append(method.getName()).append(": { access: '").append(accessLabel(method))
+                    .append("', sessionParam: ").append(method.getSessionParam()).append(" },\n");
+        }
+        body.append("};\n\n");
+
+        body.append("/** Payload (\"data\") of every server event. */\n");
+        body.append("export interface CallbackPayloads {\n");
+        for (ClientCallbackMethod method : ClientCallbackMethod.values()) {
+            String type = CALLBACK_DATA.get(method);
+            collectTypes(type, viewTypes, usedViews, usedOptions);
+            body.append("  ").append(method.name()).append(": ").append(type).append(";\n");
+        }
+        body.append("}\n\n");
+        body.append("export type CallbackMethodName = keyof CallbackPayloads;\n\n");
+        body.append("export type CallbackDeliveryType = 'TABLE_CHANGE' | 'UPDATE' | 'MESSAGE' | 'DIALOG' | 'CLIENT_SIDE_EVENT';\n\n");
+        body.append("/** Delivery type of every server event: UPDATE events may be dropped by the server when outdated. */\n");
+        body.append("export const CALLBACK_DELIVERY: { readonly [M in CallbackMethodName]: CallbackDeliveryType } = {\n");
+        for (ClientCallbackMethod method : ClientCallbackMethod.values()) {
+            body.append("  ").append(method.name()).append(": '").append(method.getType().name()).append("',\n");
+        }
+        body.append("};\n");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("// Generated by Mage.Server WebClientApiDocsTest from the server's RPC registry. Do not edit.\n");
+        sb.append("// Regenerate: mvn -pl Mage.Server test -Dtest=WebClientApiDocsTest -Dxmage.updateWebApiDocs=true\n\n");
+        if (!usedViews.isEmpty()) {
+            sb.append("import type { ").append(String.join(", ", usedViews)).append(" } from './views';\n");
+        }
+        if (!usedOptions.isEmpty()) {
+            sb.append("import type { ").append(String.join(", ", usedOptions)).append(" } from '../options';\n");
+        }
+        sb.append("\n").append(body);
+        return sb.toString();
+    }
+
+    private static void collectTypes(String tsType, java.util.Set<String> viewTypes,
+                                     java.util.Set<String> usedViews, java.util.Set<String> usedOptions) {
+        java.util.regex.Matcher names = java.util.regex.Pattern.compile("[A-Z][A-Za-z0-9]*").matcher(tsType);
+        while (names.find()) {
+            String name = names.group();
+            if (name.equals("UUID")) {
+                continue;
+            }
+            if (CLIENT_OPTION_TYPES.contains(name)) {
+                usedOptions.add(name);
+            } else if (viewTypes.contains(name)) {
+                usedViews.add(name);
+            } else {
+                throw new IllegalStateException("Unknown TypeScript type '" + name + "' in RPC registry; "
+                        + "add its Java class to the web-client-types profile in Mage.Server/pom.xml");
+            }
+        }
     }
 }

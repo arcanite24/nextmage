@@ -339,4 +339,82 @@
         <root.dir>${project.basedir}/..</root.dir>
     </properties>
 
+
+    <profiles>
+        <!-- web client: generate TypeScript types for every JSON payload of the WebSocket bridge
+             mvn -pl Mage.Server -P web-client-types process-classes -->
+        <profile>
+            <id>web-client-types</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>cz.habarta.typescript-generator</groupId>
+                        <artifactId>typescript-generator-maven-plugin</artifactId>
+                        <version>3.2.1263</version>
+                        <executions>
+                            <execution>
+                                <id>generate-web-client-types</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <jsonLibrary>gson</jsonLibrary>
+                            <outputKind>module</outputKind>
+                            <outputFileType>implementationFile</outputFileType>
+                            <outputFile>../Mage.Web.Client/src/protocol/generated/views.ts</outputFile>
+                            <mapEnum>asUnion</mapEnum>
+                            <mapDate>asNumber</mapDate>
+                            <optionalProperties>all</optionalProperties>
+                            <optionalPropertiesDeclaration>questionMark</optionalPropertiesDeclaration>
+                            <noFileComment>true</noFileComment>
+                            <sortDeclarations>true</sortDeclarations>
+                            <customTypeMappings>
+                                <mapping>java.util.UUID:string</mapping>
+                            </customTypeMappings>
+                            <classes>
+                                <class>mage.view.GameView</class>
+                                <class>mage.view.GameClientMessage</class>
+                                <class>mage.view.TableClientMessage</class>
+                                <class>mage.view.DraftClientMessage</class>
+                                <class>mage.view.TableView</class>
+                                <class>mage.view.MatchView</class>
+                                <class>mage.view.TournamentView</class>
+                                <class>mage.view.RoomUsersView</class>
+                                <class>mage.view.UserView</class>
+                                <class>mage.view.ChatMessage</class>
+                                <class>mage.view.UserRequestMessage</class>
+                                <class>mage.view.AbilityPickerView</class>
+                                <class>mage.view.GameEndView</class>
+                                <class>mage.view.DraftPickView</class>
+                                <class>mage.view.DraftView</class>
+                                <class>mage.view.DeckView</class>
+                                <class>mage.view.StackAbilityView</class>
+                                <class>mage.view.EmblemView</class>
+                                <class>mage.view.DungeonView</class>
+                                <class>mage.view.PlaneView</class>
+                                <class>mage.view.CommanderView</class>
+                                <class>mage.choices.ChoiceImpl</class>
+                                <class>mage.cards.decks.DeckCardLists</class>
+                                <class>mage.cards.repository.CardCriteria</class>
+                                <class>mage.players.net.UserData</class>
+                                <class>mage.interfaces.ServerState</class>
+                                <class>mage.constants.ManaType</class>
+                                <class>mage.constants.PlayerAction</class>
+                                <class>mage.constants.MatchTimeLimit</class>
+                                <class>mage.constants.MatchBufferTime</class>
+                                <class>mage.game.mulligan.MulliganType</class>
+                                <class>mage.game.draft.DraftOptions$TimingOption</class>
+                                <class>mage.server.websocket.service.CardSearchService$ExpansionSetInfo</class>
+                                <class>mage.server.websocket.service.CardSearchService$BasicLandSetInfo</class>
+                                <class>mage.server.websocket.service.DeckValidationService$DeckValidationResult</class>
+                            </classes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
