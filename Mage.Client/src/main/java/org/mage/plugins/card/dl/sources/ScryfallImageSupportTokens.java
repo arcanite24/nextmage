@@ -2,6 +2,7 @@ package org.mage.plugins.card.dl.sources;
 
 import mage.cards.repository.TokenRepository;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -3215,6 +3216,13 @@ public class ScryfallImageSupportTokens {
 
     public static Map<String, String> getSupportedSets() {
         return supportedSets;
+    }
+
+    /**
+     * All token links (set/token_name[/image_number] to image link), e.g. for exporting to the web client.
+     */
+    public static Map<String, String> getTokenLinks() {
+        return Collections.unmodifiableMap(supportedCards);
     }
 
     public static String findTokenLink(String setCode, String tokenName, Integer imageNumber) {

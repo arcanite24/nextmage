@@ -90,7 +90,7 @@ final class CatalogApi {
                         .handler(call -> ctx.cardSearch.basicLandSets()),
 
                 RpcMethod.named("searchCards")
-                        .params(object("criteria", "CardSearchCriteria"))
+                        .params(object("criteria", "CardCriteria"))
                         .returns("CardView[]")
                         .doc("Search the card database (paged with start/count, at most 1000 per page).")
                         .handler(call -> ctx.cardSearch.search(call.object(0, CardCriteria.class))),
