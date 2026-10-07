@@ -146,10 +146,14 @@ final class LobbyApi {
 
                 RpcMethod.named("chatSendMessage")
                         .params(of("chatId", UUID), optional("userName", STRING), of("message", STRING))
-                        .doc("Post to a chat as the logged in user. userName is ignored; the session decides the author.")
+                        .doc("Post to a chat as the logged in user, who must have joined it (chatJoin; the lobby chat is joined on login). "
+                                + "userName is ignored; the session decides the author.")
                         .handler(call -> {
                             String userName = ctx.sessions.userName(call.sessionId())
                                     .orElseThrow(() -> RpcException.notAuthorized("Log in before chatting"));
+                            if (!ctx.sessions.isChatMember(call.sessionId(), call.uuid(0))) {
+                                throw RpcException.notAuthorized("Join the chat before posting to it");
+                            }
                             ctx.server.chatSendMessage(call.uuid(0), userName, call.string(2));
                             return true;
                         }),
