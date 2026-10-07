@@ -102,7 +102,7 @@ export function EventsScreen() {
           ) : (
             <div className={styles.list}>
               {open.map((table) => (
-                <EventRow key={table.tableId} table={table} action={<Button size="sm" variant="decision" onClick={() => void join(table)}>Join</Button>} />
+                <EventRow key={table.tableId} table={table} action={<Button size="sm" variant="print" onClick={() => void join(table)}>Join</Button>} />
               ))}
             </div>
           )}

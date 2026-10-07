@@ -98,7 +98,7 @@
   background: rgb(7 12 10 / 0.88);
   box-shadow: 0 0 0 1px var(--ink-faint);
   font-family: var(--font-print);
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--ink-strong);
   white-space: nowrap;
@@ -136,7 +136,7 @@
 }
 
 .damage {
-  font-size: 13px;
+  font-size: 21px;
   color: var(--danger-text);
 }
 
@@ -156,7 +156,7 @@
   color: var(--mat-900);
   font-family: var(--font-print);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 21px;
   box-shadow: var(--shadow-placed);
 }
 

@@ -99,7 +99,7 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 50%, rgb(240 177 61 / 0.22), transparent 38%),
+    radial-gradient(circle at 50% 50%, rgb(233 228 214 / 0.14), transparent 38%),
     repeating-linear-gradient(45deg, rgb(233 228 214 / 0.06) 0 6px, transparent 6px 12px),
     repeating-linear-gradient(-45deg, rgb(233 228 214 / 0.06) 0 6px, transparent 6px 12px),
     linear-gradient(180deg, var(--mat-600), var(--mat-900));
