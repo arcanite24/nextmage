@@ -1,0 +1,38 @@
+# Web deployment: XMage server + web client behind Caddy (HTTPS).
+#   DOMAIN=play.example.com docker compose -f ops/web/docker-compose.yml up -d --build
+services:
+  xmage:
+    build:
+      context: ../..
+      dockerfile: ops/web/Dockerfile.server
+    environment:
+      XMAGE_ALLOWED_ORIGINS: https://${DOMAIN:?set DOMAIN}
+      XMAGE_MEMORY: ${XMAGE_MEMORY:-2g}
+    volumes:
+      - xmage-db:/opt/xmage/db
+      - xmage-saved:/opt/xmage/saved
+    restart: unless-stopped
+    # no published ports: only the proxy reaches the server
+
+  web:
+    build:
+      context: ../..
+      dockerfile: ops/web/Dockerfile.web
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - xmage
+    restart: unless-stopped
+
+volumes:
+  xmage-db:
+  xmage-saved:
+  caddy-data:
+  caddy-config:

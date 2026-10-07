@@ -10,6 +10,8 @@ export const api = createApi(rpc);
 export const DEFAULT_SERVER_URL = (() => {
   const configured = import.meta.env.VITE_MAGE_SERVER_URL as string | undefined;
   if (configured) return configured;
-  const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
-  return `ws://${host}:17172`;
+  if (typeof window === 'undefined' || !window.location.hostname) return 'ws://localhost:17172';
+  // served over HTTPS (a deployment behind the proxy): the game connection shares the origin, at /ws
+  if (window.location.protocol === 'https:') return `wss://${window.location.host}/ws`;
+  return `ws://${window.location.hostname}:17172`;
 })();
