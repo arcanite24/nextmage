@@ -66,12 +66,12 @@ a {
 }
 
 ::selection {
-  background: var(--decision);
-  color: var(--decision-ink);
+  background: var(--mat-400);
+  color: var(--ink-strong);
 }
 
 :focus-visible {
-  outline: 2px solid var(--decision);
+  outline: 2px solid var(--ink-strong);
   outline-offset: 2px;
 }
 

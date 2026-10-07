@@ -95,9 +95,9 @@
   gap: var(--space-4);
   padding: var(--space-5);
   border-radius: var(--radius-zone);
-  background: rgb(7 12 10 / 0.62);
-  box-shadow: inset 0 0 0 2px var(--ink-faint), var(--shadow-lifted);
-  backdrop-filter: blur(2px) saturate(0.8);
+  /* printed flat on the mat: an ivory-ink outline, lightly shaded for legibility */
+  background: rgb(7 12 10 / 0.55);
+  box-shadow: inset 0 0 0 2px var(--ink-soft);
 }
 
 .zoneLabel {

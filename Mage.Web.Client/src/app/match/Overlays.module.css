@@ -198,7 +198,7 @@
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   color: var(--ink-strong);
   font-size: 22px;
-  caret-color: var(--decision);
+  caret-color: var(--ink-strong);
 }
 
 .piles {
@@ -260,7 +260,7 @@
   font-size: 60px;
   font-weight: 700;
   text-align: center;
-  caret-color: var(--decision);
+  caret-color: var(--ink-strong);
 }
 
 .slider {

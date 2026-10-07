@@ -81,8 +81,8 @@ export function HomeScreen() {
       <section className={styles.mat} style={{ '--sleeve': sleeve } as CSSProperties}>
         <MatPrint card={selected?.cover ?? null} />
         <div className={styles.deckTitle}>
-          <p className={styles.deckKicker}>{selected?.note ?? ' '}</p>
           <h1 className={styles.deckName}>{selected?.name ?? 'Choose a deck'}</h1>
+          <p className={styles.deckKicker}>{selected?.note ?? ' '}</p>
         </div>
 
         <div className={styles.playZone} role="group" aria-labelledby="play-zone-label">

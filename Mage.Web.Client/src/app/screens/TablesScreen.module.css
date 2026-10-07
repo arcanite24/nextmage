@@ -31,7 +31,7 @@
   font-size: var(--text-sm);
   letter-spacing: var(--tracking-print-wide);
   text-transform: uppercase;
-  color: var(--decision);
+  color: var(--ink-dim);
 }
 
 .empty {

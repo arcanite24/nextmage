@@ -58,9 +58,9 @@
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-zone);
-  background: rgb(240 177 61 / 0.1);
-  box-shadow: inset 0 0 0 1.5px var(--decision);
-  color: var(--decision-strong);
+  background: rgb(233 228 214 / 0.06);
+  box-shadow: inset 0 0 0 2px var(--ink-strong);
+  color: var(--ink-strong);
 }
 
 .winner strong {
@@ -108,7 +108,7 @@
 }
 
 .meRow td {
-  background: rgb(240 177 61 / 0.07);
+  background: rgb(233 228 214 / 0.06);
 }
 
 .player {
@@ -161,7 +161,7 @@
 }
 
 .minePairing {
-  box-shadow: inset 0 0 0 1.5px var(--decision);
+  box-shadow: inset 0 0 0 2px var(--ink-soft);
 }
 
 .pairingPlayers {

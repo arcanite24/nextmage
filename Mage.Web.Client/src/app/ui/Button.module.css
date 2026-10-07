@@ -26,7 +26,14 @@
 
 .button:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
+}
+
+/* not yet: an empty ink outline, never a faded colour (a busy button keeps its colour) */
+.button:disabled:not(.busy) {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  color: var(--ink-dim);
+  text-shadow: none;
 }
 
 .sm { --btn-h: 30px; --btn-px: 12px; font-size: var(--text-md); }
