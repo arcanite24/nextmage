@@ -1,6 +1,6 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import type { SkipPrioritySteps } from '../../protocol/generated/views';
-import { DEFAULT_SETTINGS, useSettings, type PlaySettings } from '../stores/settings';
+import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import styles from './SettingsDialog.module.css';
@@ -38,6 +38,24 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
         </Tabs.List>
 
         <Tabs.Content value="play" className={styles.panel}>
+          <div className={styles.style}>
+            <span className={styles.styleLabel}>Play style</span>
+            <div className={styles.styleChoices} role="radiogroup" aria-label="Play style">
+              {([['Streamlined', STREAMLINED, 'The game moves on whenever you have nothing to decide, like Arena.'], ['Full control', FULL_CONTROL, 'Every stop and every choice is yours, like classic XMage.']] as const).map(([label, preset, detail]) => {
+                const active = Object.entries(preset).every(([key, value]) => settings[key as keyof PlaySettings] === value);
+                return (
+                  <button key={label} type="button" role="radio" aria-checked={active} className={active ? styles.styleOn : styles.styleChoice} onClick={() => update(preset)}>
+                    <strong>{label}</strong>
+                    <span>{detail}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <Row label="Pass when I have nothing to do" detail="Resolves spells and moves through steps when you have nothing to cast, play or activate. Lands that only make mana don't count.">{toggle('autoPass')}</Row>
+          <Row label="Stop for my permanents' abilities on the opponent's turn" detail="With this off, only instants and flash spells stop you during their turn.">{toggle('abilitiesOnTheirTurn')}</Row>
+          <Row label="Skip attacks and blocks when nothing can" detail="Answers for you when no creature can attack or block, and lets the rest of combat go by when nobody attacks.">{toggle('autoSkipCombat')}</Row>
+          <Row label="Resolve my spells right away" detail="After you cast a spell or activate an ability, it resolves unless the opponent responds. Turn off to keep priority and respond to your own spells.">{toggle('passAfterCasting')}</Row>
           <Row label="Pay mana automatically" detail="Taps the right lands when the payment is clear.">{toggle('autoPayMana')}</Row>
           <Row label="Only with spare mana" detail="Auto-pay never uses mana a card could need later this turn.">{toggle('autoPayRestricted')}</Row>
           <Row label="Warn before losing mana" detail="Ask before passing with mana left in your pool.">{toggle('confirmEmptyManaPool')}</Row>

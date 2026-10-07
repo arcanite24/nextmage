@@ -15,6 +15,7 @@ import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
 import { MatPrint } from '../ui/MatPrint';
 import { PromptText } from '../ui/PromptText';
+import { SettingsDialog } from '../screens/SettingsDialog';
 import { Stitch } from '../ui/Stitch';
 import { ActionCluster } from './ActionCluster';
 import { Arrows } from './Arrows';
@@ -27,6 +28,7 @@ import { useMatchUi } from './matchUi';
 import { useGameCues } from './useGameCues';
 import { useWarmImages } from './useWarmImages';
 import { useAutoPay } from './useAutoPay';
+import { useAutoPass } from './useAutoPass';
 import { Vfx } from './Vfx';
 import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
@@ -117,9 +119,11 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const onClick = useCallback((id: string) => session.click(id), [session]);
 
   const myId = board.me?.player.playerId ?? null;
-  useGameCues(state, myId);
   useWarmImages(view);
   useAutoPay(session, state, board.me?.isMe ? board.me : null, autoPay && mode === 'play');
+  // holding priority means the player wants every stop
+  const autoPassing = useAutoPass(session, state, !holding);
+  useGameCues(state, myId, !!autoPassing);
   const sleeveOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? sleeves.theirs : sleeves.mine), [myId, sleeves]);
   const originOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? `hand:${card.controllerId}` : undefined), [myId]);
 
@@ -244,6 +248,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
           canAct={canAct}
           special={!!view?.special}
           holdingPriority={holding}
+          autoPassing={!!autoPassing}
           onCommand={onCommand}
         />
       ) : (
@@ -402,6 +407,7 @@ function HiddenHand({ playerId, count, sleeve, left }: { playerId: string; count
 
 function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onConcede(): void; onLeave(): void }) {
   const [confirming, setConfirming] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   return (
     <div className={styles.menu}>
       <DropdownMenu.Root>
@@ -410,6 +416,7 @@ function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onC
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content className={styles.menuContent} align="end" sideOffset={8}>
+            <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>Settings</DropdownMenu.Item>
             {canConcede && (
               <DropdownMenu.Item className={styles.menuItem} onSelect={() => setConfirming(true)}>Concede</DropdownMenu.Item>
             )}
@@ -419,6 +426,7 @@ function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onC
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <Dialog
         open={confirming}
         onOpenChange={setConfirming}

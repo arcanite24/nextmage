@@ -16,6 +16,8 @@ export interface ActionClusterProps {
   /** server offers a special action (e.g. turning a face-down creature up) */
   special: boolean;
   holdingPriority: boolean;
+  /** the client is answering for the player (nothing to do): show that instead of a button to press */
+  autoPassing?: boolean;
   onCommand(command: Command): void;
 }
 
@@ -27,7 +29,7 @@ const PASS_AHEAD: { label: string; action: PlayerAction; key: string }[] = [
 ];
 
 /** The decision corner: what the game is asking, and the one big button that answers it. */
-export function ActionCluster({ interaction, awaiting, status, canAct, special, holdingPriority, onCommand }: ActionClusterProps) {
+export function ActionCluster({ interaction, awaiting, status, canAct, special, holdingPriority, autoPassing = false, onCommand }: ActionClusterProps) {
   const main = interaction.mainButton;
   const secondary = [...interaction.secondaryButtons];
   if (special && interaction.mode === 'priority') {
@@ -110,7 +112,9 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
         )}
-        {main && deciding ? (
+        {autoPassing ? (
+          <div className={[styles.waiting, styles.passing].join(' ')} role="status">Passing</div>
+        ) : main && deciding ? (
           <Button
             variant="decision"
             size="xl"

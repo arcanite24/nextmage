@@ -21,6 +21,14 @@ export interface PlaySettings {
   animations: boolean;
   /** opponents may ask to see your hand */
   allowHandRequests: boolean;
+  /** pass priority for the player when they have nothing to cast, play or activate (local only) */
+  autoPass: boolean;
+  /** answer "no attacks" / "no blocks" when nothing can attack or block (local only) */
+  autoSkipCombat: boolean;
+  /** stop for permanents' activated abilities during the opponent's turn (local only) */
+  abilitiesOnTheirTurn: boolean;
+  /** don't take priority back after casting a spell or activating an ability: it resolves unless the opponent responds */
+  passAfterCasting: boolean;
   /** game sounds (synthesized, local only) */
   sound: boolean;
   /** 0 to 1 */
@@ -28,6 +36,16 @@ export interface PlaySettings {
 }
 
 const SETTINGS_KEY = 'playmat.settings';
+
+/** Arena-like: the game moves on by itself whenever the player has no real decision. */
+export const STREAMLINED: Partial<PlaySettings> = {
+  autoPass: true, autoSkipCombat: true, abilitiesOnTheirTurn: false, passAfterCasting: true, autoPayMana: true, autoTargetLevel: 1, autoOrderTriggers: true,
+};
+
+/** Classic XMage: every stop and every choice is the player's. */
+export const FULL_CONTROL: Partial<PlaySettings> = {
+  autoPass: false, autoSkipCombat: false, abilitiesOnTheirTurn: true, passAfterCasting: false, autoPayMana: false, autoTargetLevel: 0, autoOrderTriggers: false,
+};
 
 export const DEFAULT_SETTINGS: PlaySettings = {
   autoPayMana: true,
@@ -37,6 +55,10 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   autoTargetLevel: 1,
   animations: true,
   allowHandRequests: true,
+  autoPass: true,
+  autoSkipCombat: true,
+  abilitiesOnTheirTurn: false,
+  passAfterCasting: true,
   sound: true,
   volume: 0.6,
   stops: {
@@ -68,8 +90,8 @@ export function toUserData(settings: PlaySettings): UserData {
     askMoveToGraveOrder: false,
     manaPoolAutomatic: settings.autoPayMana,
     manaPoolAutomaticRestricted: settings.autoPayRestricted,
-    passPriorityCast: false,
-    passPriorityActivation: false,
+    passPriorityCast: settings.passAfterCasting,
+    passPriorityActivation: settings.passAfterCasting,
     autoOrderTrigger: settings.autoOrderTriggers,
     autoTargetLevel: settings.autoTargetLevel,
     useSameSettingsForReplacementEffects: true,

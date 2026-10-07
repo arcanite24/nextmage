@@ -143,3 +143,64 @@
 .stops td > * {
   margin: 0 auto;
 }
+
+/* the two play styles: one click sets every automation together */
+.style {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--ink-ghost);
+}
+
+.styleLabel {
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+}
+
+.styleChoices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.styleChoice,
+.styleOn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(233 228 214 / 0.04);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  color: var(--ink-soft);
+  text-align: left;
+  cursor: pointer;
+}
+
+.styleChoice strong,
+.styleOn strong {
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+  color: var(--ink-strong);
+}
+
+.styleChoice span,
+.styleOn span {
+  font-size: var(--text-sm);
+}
+
+.styleChoice:hover {
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+
+.styleOn {
+  background: rgb(233 228 214 / 0.08);
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong);
+}

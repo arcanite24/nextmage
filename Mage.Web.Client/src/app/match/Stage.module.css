@@ -1,7 +1,8 @@
 .frame {
   position: fixed;
   inset: 0;
-  overflow: hidden;
+  /* clip, not hidden: a focused card near the edge must never scroll the table */
+  overflow: clip;
   background:
     radial-gradient(120% 90% at 50% 50%, var(--mat-700), var(--mat-950) 85%),
     var(--mat-900);
