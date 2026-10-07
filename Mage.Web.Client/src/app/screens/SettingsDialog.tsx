@@ -74,6 +74,20 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
 
         <Tabs.Content value="display" className={styles.panel}>
           <Row label="Card motion" detail="Cards fly between zones and settle on the mat. Your system's reduced-motion setting always wins.">{toggle('animations')}</Row>
+          <Row label="Sound" detail="Short cues for your turn, decisions, spells, damage and the result.">{toggle('sound')}</Row>
+          <Row label="Volume">
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={settings.volume}
+              disabled={!settings.sound}
+              onChange={(event) => update({ volume: Number(event.target.value) })}
+              aria-label="Sound volume"
+              style={{ accentColor: 'var(--decision)', width: 160 }}
+            />
+          </Row>
         </Tabs.Content>
       </Tabs.Root>
     </Dialog>

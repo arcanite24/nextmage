@@ -6,6 +6,9 @@ import { useSession } from './session';
 import { toWire } from '../decks/deckModel';
 import type { DeckCardLists as WireDeck } from '../../protocol/generated/views';
 
+/** the smallest deck worth a game (limited size; constructed formats are checked by the server) */
+const MIN_DECK_SIZE = 40;
+
 export type PlayPhase = 'idle' | 'starting' | 'waitingForGame';
 
 export interface AiOptions {
@@ -56,6 +59,10 @@ export const usePlay = create<PlayState>((set, get) => ({
     useEvents.setState({ currentTournamentId: null });
     try {
       const { deck } = await useDecks.getState().loadForPlay(deckId);
+      const size = deck.cards.reduce((sum, card) => sum + card.amount, 0);
+      if (size < MIN_DECK_SIZE) {
+        throw new Error(`${deck.name || 'This deck'} has ${size} ${size === 1 ? 'card' : 'cards'}. Decks need at least ${MIN_DECK_SIZE}; add more in the deck builder.`);
+      }
       const opponentDeck = await aiDeck(options.starterFile ?? null);
       const table = await api.roomCreateTable(roomId, {
         name: `${userName} vs AI`,

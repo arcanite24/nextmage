@@ -7,16 +7,12 @@ import './styles/base.css';
 import { AppShell } from './AppShell';
 import { queryClient } from './queries';
 import { DecksScreen } from './screens/DecksScreen';
-import { DeckBuilderScreen } from './decks/DeckBuilderScreen';
 import { EventsScreen } from './screens/EventsScreen';
-import { GameScreen } from './screens/GameScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
+import { RequestDialog } from './RequestDialog';
 import { RouteError } from './screens/RouteError';
 import { TablesScreen } from './screens/TablesScreen';
-import { DraftScreen } from './events/DraftScreen';
-import { BuildScreen } from './events/BuildScreen';
-import { EventScreen } from './events/EventScreen';
 import { useEvents } from './stores/events';
 import { useGames } from './stores/games';
 import { usePlay } from './stores/play';
@@ -47,7 +43,12 @@ function SignedIn() {
 
   // come back here after signing in
   if (phase !== 'signedIn') return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      <RequestDialog />
+    </>
+  );
 }
 
 const router = createBrowserRouter([
@@ -56,18 +57,19 @@ const router = createBrowserRouter([
     element: <SignedIn />,
     errorElement: <RouteError />,
     children: [
-      { path: '/game/:gameId', element: <GameScreen /> },
-      { path: '/draft/:draftId', element: <DraftScreen /> },
-      { path: '/build/:tableId', element: <BuildScreen /> },
+      // the heavier screens load when first opened
+      { path: '/game/:gameId', lazy: () => import('./screens/GameScreen').then((m) => ({ Component: m.GameScreen })) },
+      { path: '/draft/:draftId', lazy: () => import('./events/DraftScreen').then((m) => ({ Component: m.DraftScreen })) },
+      { path: '/build/:tableId', lazy: () => import('./events/BuildScreen').then((m) => ({ Component: m.BuildScreen })) },
       {
         element: <AppShell />,
         errorElement: <RouteError />,
         children: [
           { path: '/', element: <HomeScreen /> },
           { path: '/decks', element: <DecksScreen /> },
-          { path: '/decks/:deckId', element: <DeckBuilderScreen /> },
+          { path: '/decks/:deckId', lazy: () => import('./decks/DeckBuilderScreen').then((m) => ({ Component: m.DeckBuilderScreen })) },
           { path: '/events', element: <EventsScreen /> },
-          { path: '/event/:tournamentId', element: <EventScreen /> },
+          { path: '/event/:tournamentId', lazy: () => import('./events/EventScreen').then((m) => ({ Component: m.EventScreen })) },
           { path: '/tables', element: <TablesScreen /> },
         ],
       },

@@ -269,6 +269,30 @@ function MultiAmountChooser({ prompt, onCommand }: { prompt: Extract<Prompt, { k
   );
 }
 
+/** You won the roll: choose who takes the first turn. */
+export function StartingPlayerOverlay({ me, opponents, onChoose }: {
+  me: { id: string; name: string };
+  opponents: { id: string; name: string }[];
+  onChoose(playerId: string): void;
+}) {
+  return (
+    <div className={styles.scrim} role="dialog" aria-modal="true" aria-labelledby="start-title">
+      <div className={styles.center}>
+        <h2 id="start-title" className={styles.bigTitle}>You choose who starts</h2>
+        <p className={styles.subtitle}>The player who goes first skips their first draw.</p>
+        <div className={styles.buttons}>
+          {opponents.map((opponent) => (
+            <Button key={opponent.id} variant="print" size="lg" onClick={() => onChoose(opponent.id)}>
+              {opponents.length === 1 ? 'Draw first' : `${opponent.name} starts`}
+            </Button>
+          ))}
+          <Button variant="decision" size="xl" onClick={() => onChoose(me.id)} autoFocus>Play first</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** The end of a game: who won, the match score, and where to go next. */
 export function GameOverOverlay({ message, endInfo, onLeave, leaveLabel = 'Back to Play', onPlayAgain }: {
   message: string;
