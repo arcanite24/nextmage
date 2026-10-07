@@ -1,5 +1,5 @@
 import type { CardView, SimpleCardView } from '../../protocol/generated/views';
-import type { DeckCardInfo } from '../../types/models';
+import type { DeckCardInfo } from '../../core/decks/types';
 import { entryKey, groupOf } from '../decks/deckModel';
 
 /** Server card summaries carry the card name too (see the bridge's JSON codec). */

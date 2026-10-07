@@ -1,4 +1,4 @@
-import { DeckSerializer } from './DeckSerializer.js';
+import { DeckSerializer } from '../core/decks/DeckSerializer.js';
 import { cardResolverService, type CardUnresolvedReportItem, type DeckResolutionResult, type ResolvedCard } from './CardResolverService.js';
 import type { DeckCardInfo, DeckCardLists } from '../types/index.js';
 

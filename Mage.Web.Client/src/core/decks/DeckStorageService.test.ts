@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { LocalDeckStorage } from './DeckStorageService.js';
-import type { DeckCardLists } from '../types/index.js';
+import type { DeckCardLists } from './types.js';
 
 class MemoryStorage {
   private readonly data = new Map<string, string>();

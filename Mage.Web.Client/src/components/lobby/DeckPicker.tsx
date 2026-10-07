@@ -8,8 +8,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, Modal } from '../common';
 import { DeckCardLists, DeckCardInfo } from '../../types';
-import { DeckSerializer } from '../../services/DeckSerializer';
-import { deckStorage, DeckSummary } from '../../services/DeckStorageService';
+import { DeckSerializer } from '../../core/decks/DeckSerializer';
+import { deckStorage, DeckSummary } from '../../core/decks/DeckStorageService';
 import { cardResolverService } from '../../services';
 import { cardImageService } from '../../services/CardImageService';
 import './DeckPicker.css';

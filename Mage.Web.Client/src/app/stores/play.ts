@@ -5,7 +5,7 @@ import { useEvents } from './events';
 import { warmCards } from '../ui/imageCache';
 import { useSession } from './session';
 import { readJson, writeJson } from './persist';
-import { deckStorage } from '../../services/DeckStorageService';
+import { deckStorage } from '../../core/decks/DeckStorageService';
 import { toWire } from '../decks/deckModel';
 import type { DeckCardLists as WireDeck } from '../../protocol/generated/views';
 
@@ -66,7 +66,7 @@ async function aiDeck(deckId: string | null): Promise<WireDeck> {
   const response = await fetch(`/starter-decks/${encodeURIComponent(starter.file)}`);
   const text = response.ok ? await response.text() : '';
   if (!text || /^\s*</.test(text)) throw new Error(`Couldn't load the AI's deck (${starter.name}).`);
-  const { DeckSerializer } = await import('../../services/DeckSerializer');
+  const { DeckSerializer } = await import('../../core/decks/DeckSerializer');
   const deck = DeckSerializer.importDeck(text);
   deck.name = starter.name;
   return toWire(deck);
