@@ -127,7 +127,10 @@
 }
 
 .pile-hint {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     font-size: 12px;
     color: var(--color-text-muted);
     padding: var(--space-2);

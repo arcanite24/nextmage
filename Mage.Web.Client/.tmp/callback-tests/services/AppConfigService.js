@@ -1,12 +1,21 @@
 import { LOBBY_TABLE_COLUMN_KEYS, } from './LobbyTableRowsService.js';
 import { normalizeServerUrl } from './ConnectionProfileService.js';
+export const BATTLEFIELD_CARD_SIZE_MIN = 7;
+export const BATTLEFIELD_CARD_SIZE_MAX = 99;
+export const BATTLEFIELD_CARD_SIZE_DEFAULT = 14;
+export const CARD_SIZE_MIN = 8;
+export const CARD_SIZE_MAX = 160;
+export const FONT_SIZE_MIN = 10;
+export const FONT_SIZE_MAX = 28;
 const SETTINGS_KEY = 'mage.client.settings.v1';
 const LOBBY_CONFIG_KEY = 'mage.client.lobby.v1';
 const CREATE_TABLE_PRESETS_KEY = 'mage.client.createTablePresets.v1';
+const CREATE_TOURNAMENT_PRESETS_KEY = 'mage.client.createTournamentPresets.v1';
 const DECK_EDITOR_CONFIG_KEY = 'mage.client.deckEditor.v1';
 const DECK_GENERATOR_SETTINGS_KEY = 'mage.client.deckGenerator.v1';
 const DECK_FILE_HISTORY_KEY = 'mage.client.deckFileHistory.v1';
 const IGNORED_USERS_KEY = 'mage.client.ignoredUsers.v1';
+const PANEL_LAYOUT_CONFIG_KEY = 'mage.client.panelLayout.v1';
 export const MAX_IGNORED_USERS = 500;
 export const DEFAULT_SKIP_PRIORITY_STEPS = {
     upkeep: false,
@@ -27,6 +36,36 @@ export const DEFAULT_USER_SKIP_PRIORITY_STEPS = {
     stopOnAllEndPhases: true,
     stopOnStackNewObjects: true,
 };
+export const KEYBIND_ACTION_IDS = [
+    'confirm',
+    'cancelSkip',
+    'nextTurn',
+    'endStep',
+    'skipStep',
+    'mainStep',
+    'yourTurn',
+    'skipStack',
+    'priorEndStep',
+    'switchChat',
+    'toggleMacro',
+    'holdFirstMana',
+    'debugMode',
+];
+export const DEFAULT_KEYBINDS = {
+    confirm: { key: 'F2', eventType: 'keydown', ctrlOrMeta: false, altKey: false, shiftKey: false, enabled: true },
+    cancelSkip: { key: 'F3', eventType: 'keydown', ctrlOrMeta: false, altKey: false, shiftKey: false, enabled: true },
+    nextTurn: { key: 'F4', eventType: 'keydown', ctrlOrMeta: false, altKey: false, shiftKey: false, enabled: true },
+    endStep: { key: 'F5', eventType: 'keydown', ctrlOrMeta: false, altKey: false, shiftKey: false, enabled: true },
+    skipStep: { key: 'F6', eventType: 'keydown', ctrlOrMeta: false, altKey: false, shiftKey: false, enabled: true },
+    mainStep: { key: 'F7', eventType: 'keydown', ctrlOrMeta: false, altKey: false, shiftKey: false, enabled: true },
+    yourTurn: { key: 'F9', eventType: 'keydown', ctrlOrMeta: false, altKey: false, shiftKey: false, enabled: true },
+    skipStack: { key: 'F10', eventType: 'keydown', ctrlOrMeta: false, altKey: false, shiftKey: false, enabled: true },
+    priorEndStep: { key: 'F11', eventType: 'keydown', ctrlOrMeta: false, altKey: false, shiftKey: false, enabled: true },
+    switchChat: { key: 'Enter', eventType: 'keydown', ctrlOrMeta: true, altKey: false, shiftKey: false, enabled: true },
+    toggleMacro: { key: 'm', eventType: 'keydown', ctrlOrMeta: true, altKey: false, shiftKey: false, enabled: true },
+    holdFirstMana: { key: '1', eventType: 'keydown', ctrlOrMeta: false, altKey: true, shiftKey: false, enabled: true },
+    debugMode: { key: 'd', eventType: 'keydown', ctrlOrMeta: true, altKey: false, shiftKey: false, enabled: true },
+};
 export const DEFAULT_CLIENT_SETTINGS = {
     animationsEnabled: true,
     animationSpeed: 1,
@@ -34,6 +73,7 @@ export const DEFAULT_CLIENT_SETTINGS = {
     autoTapManaPayment: true,
     manaPoolAutomaticRestricted: true,
     useFirstManaAbility: false,
+    skipPrioritySteps: DEFAULT_USER_SKIP_PRIORITY_STEPS,
     avatarId: 51,
     flagName: 'world',
     allowRequestShowHandCards: true,
@@ -45,13 +85,55 @@ export const DEFAULT_CLIENT_SETTINGS = {
     autoTargetLevel: 1,
     useSameSettingsForReplacementEffects: true,
     battlefieldGrouping: 'separate',
+    battlefieldCardSize: BATTLEFIELD_CARD_SIZE_DEFAULT,
     matchSeatOrientation: 'table',
     alwaysShowPlayerNames: true,
+    displayLifeOnAvatar: true,
     showCardReminderText: true,
     showCardSetInfo: true,
     showCardHints: true,
+    tooltipDelayMs: 300,
+    showCardNames: true,
+    showCardImageSource: false,
+    handCardSize: 104,
+    editorCardSize: 96,
+    otherZoneCardSize: 86,
+    dialogFontSize: 14,
+    chatFontSize: 14,
+    playerPanelSize: 100,
+    tooltipSize: 360,
+    cardRenderingMode: 'image',
+    showAbilityIcons: true,
+    showPlayableIcons: true,
+    showAbilityTextOverlay: false,
+    showSetSymbol: true,
     cardImageFallbackMode: 'card-back',
+    preferredImageLanguage: 'en',
+    preloadVisibleCardImages: true,
     imageCacheMaxAgeDays: 30,
+    imageCacheMaxSizeMb: 100,
+    clientTheme: 'arena',
+    customLoginBackground: '',
+    battlefieldBackgroundMode: 'default',
+    customBattlefieldBackground: '',
+    gameSoundsEnabled: true,
+    draftSoundsEnabled: true,
+    skipButtonSoundsEnabled: true,
+    otherSoundsEnabled: true,
+    matchMusicEnabled: false,
+    browserAudioUnlocked: false,
+    masterVolume: 80,
+    effectsVolume: 80,
+    musicVolume: 50,
+    reducedAudioMode: false,
+    keybinds: DEFAULT_KEYBINDS,
+    reconnectRecoveryEnabled: true,
+    restoreSessionOnReconnect: true,
+    showConnectionStatusMessages: true,
+    debugModeEnabled: false,
+    debugCaptureEnabled: false,
+    persistPanelLayout: true,
+    chatProfanityFilterLevel: 0,
 };
 export const DEFAULT_LOBBY_FILTERS = {
     showWaiting: true,
@@ -95,7 +177,13 @@ export const DEFAULT_CREATE_TABLE_PRESETS = {
     config1: null,
     config2: null,
 };
+export const DEFAULT_CREATE_TOURNAMENT_PRESETS = {
+    lastUsed: null,
+    config1: null,
+    config2: null,
+};
 export const DECK_EDITOR_MODE_KEYS = ['normal', 'limited', 'sideboard', 'draft'];
+export const PANEL_LAYOUT_ACTIVITY_KINDS = ['replay', 'tournament', 'draft', 'sideboard', 'construction'];
 export const DEFAULT_DECK_SEARCH_COLORS = {
     white: false,
     blue: false,
@@ -144,6 +232,18 @@ export const DEFAULT_DECK_EDITOR_CONFIG = {
         limited: { ...DEFAULT_DECK_EDITOR_MODE_CONFIG },
         sideboard: { ...DEFAULT_DECK_EDITOR_MODE_CONFIG },
         draft: { ...DEFAULT_DECK_EDITOR_MODE_CONFIG },
+    },
+};
+export const DEFAULT_PANEL_LAYOUT_CONFIG = {
+    game: {
+        sidebarOpen: false,
+    },
+    activities: {
+        replay: { commandPanelCollapsed: false, chatCollapsed: false },
+        tournament: { commandPanelCollapsed: false, chatCollapsed: false },
+        draft: { commandPanelCollapsed: false, chatCollapsed: false },
+        sideboard: { commandPanelCollapsed: false, chatCollapsed: false },
+        construction: { commandPanelCollapsed: false, chatCollapsed: false },
     },
 };
 export const DEFAULT_DECK_GENERATOR_SETTINGS = {
@@ -198,6 +298,35 @@ export const DEFAULT_CREATE_TABLE_PRESET = {
     aiSeats: [],
     savedAt: 0,
 };
+export const DEFAULT_CREATE_TOURNAMENT_PRESET = {
+    name: 'Tournament',
+    tournamentType: 'Sealed Elimination',
+    gameType: 'Two Player Duel',
+    deckType: 'Constructed - Standard',
+    winsNeeded: 2,
+    numberRounds: 3,
+    numberOfPlayers: 2,
+    singleMultiplayerGame: false,
+    timeLimit: 'MIN__25',
+    bufferTime: 'NONE',
+    constructionTimeMinutes: 10,
+    draftTiming: 'REGULAR',
+    draftCubeName: '',
+    setCodes: [],
+    randomSetCodes: [],
+    cubeFromDeck: null,
+    jumpstartPacks: '',
+    password: '',
+    skillLevel: 'CASUAL',
+    spectatorsAllowed: true,
+    rollbackTurnsAllowed: true,
+    rated: false,
+    quitRatio: 100,
+    minimumRating: 0,
+    playerTypes: ['Human', 'Human'],
+    playerSkills: [2, 2],
+    savedAt: 0,
+};
 const browserStorage = {
     getItem: (key) => window.localStorage.getItem(key),
     setItem: (key, value) => window.localStorage.setItem(key, value),
@@ -210,18 +339,18 @@ export class AppConfigService {
     }
     loadSettings() {
         if (!this.canUseStorage()) {
-            return DEFAULT_CLIENT_SETTINGS;
+            return normalizeClientSettings({});
         }
         try {
             const raw = this.storage.getItem(SETTINGS_KEY);
             if (!raw)
-                return DEFAULT_CLIENT_SETTINGS;
+                return normalizeClientSettings({});
             const parsed = JSON.parse(raw);
             return this.normalizeSettings(parsed);
         }
         catch (error) {
             console.warn('[AppConfig] Failed to load settings, using defaults', error);
-            return DEFAULT_CLIENT_SETTINGS;
+            return normalizeClientSettings({});
         }
     }
     saveSettings(settings) {
@@ -233,7 +362,7 @@ export class AppConfigService {
         if (this.canUseStorage()) {
             this.storage.removeItem(SETTINGS_KEY);
         }
-        return DEFAULT_CLIENT_SETTINGS;
+        return normalizeClientSettings({});
     }
     loadLobbyConfig() {
         if (!this.canUseStorage()) {
@@ -295,6 +424,39 @@ export class AppConfigService {
         }
         return cloneCreateTablePresets(DEFAULT_CREATE_TABLE_PRESETS);
     }
+    loadCreateTournamentPresets() {
+        if (!this.canUseStorage()) {
+            return cloneCreateTournamentPresets(DEFAULT_CREATE_TOURNAMENT_PRESETS);
+        }
+        try {
+            const raw = this.storage.getItem(CREATE_TOURNAMENT_PRESETS_KEY);
+            if (!raw)
+                return cloneCreateTournamentPresets(DEFAULT_CREATE_TOURNAMENT_PRESETS);
+            const parsed = JSON.parse(raw);
+            return normalizeCreateTournamentPresets(parsed);
+        }
+        catch (error) {
+            console.warn('[AppConfig] Failed to load create tournament presets, using defaults', error);
+            return cloneCreateTournamentPresets(DEFAULT_CREATE_TOURNAMENT_PRESETS);
+        }
+    }
+    saveCreateTournamentPreset(slot, preset) {
+        const presets = this.loadCreateTournamentPresets();
+        presets[slot] = normalizeCreateTournamentPreset({
+            ...preset,
+            savedAt: Date.now(),
+        });
+        if (this.canUseStorage()) {
+            this.storage.setItem(CREATE_TOURNAMENT_PRESETS_KEY, JSON.stringify(presets));
+        }
+        return cloneCreateTournamentPresets(presets);
+    }
+    resetCreateTournamentPresets() {
+        if (this.canUseStorage()) {
+            this.storage.removeItem(CREATE_TOURNAMENT_PRESETS_KEY);
+        }
+        return cloneCreateTournamentPresets(DEFAULT_CREATE_TOURNAMENT_PRESETS);
+    }
     loadDeckEditorConfig() {
         if (!this.canUseStorage()) {
             return cloneDeckEditorConfig(DEFAULT_DECK_EDITOR_CONFIG);
@@ -322,6 +484,34 @@ export class AppConfigService {
             this.storage.removeItem(DECK_EDITOR_CONFIG_KEY);
         }
         return cloneDeckEditorConfig(DEFAULT_DECK_EDITOR_CONFIG);
+    }
+    loadPanelLayoutConfig() {
+        if (!this.canUseStorage()) {
+            return clonePanelLayoutConfig(DEFAULT_PANEL_LAYOUT_CONFIG);
+        }
+        try {
+            const raw = this.storage.getItem(PANEL_LAYOUT_CONFIG_KEY);
+            if (!raw)
+                return clonePanelLayoutConfig(DEFAULT_PANEL_LAYOUT_CONFIG);
+            return normalizePanelLayoutConfig(JSON.parse(raw));
+        }
+        catch (error) {
+            console.warn('[AppConfig] Failed to load panel layout config, using defaults', error);
+            return clonePanelLayoutConfig(DEFAULT_PANEL_LAYOUT_CONFIG);
+        }
+    }
+    savePanelLayoutConfig(config) {
+        const normalized = normalizePanelLayoutConfig(config);
+        if (this.canUseStorage()) {
+            this.storage.setItem(PANEL_LAYOUT_CONFIG_KEY, JSON.stringify(normalized));
+        }
+        return clonePanelLayoutConfig(normalized);
+    }
+    resetPanelLayoutConfig() {
+        if (this.canUseStorage()) {
+            this.storage.removeItem(PANEL_LAYOUT_CONFIG_KEY);
+        }
+        return clonePanelLayoutConfig(DEFAULT_PANEL_LAYOUT_CONFIG);
     }
     loadDeckGeneratorSettings() {
         if (!this.canUseStorage()) {
@@ -469,15 +659,70 @@ export function normalizeClientSettings(settings) {
     return {
         ...DEFAULT_CLIENT_SETTINGS,
         ...settings,
+        skipPrioritySteps: normalizeUserSkipPrioritySteps(settings.skipPrioritySteps),
         battlefieldGrouping,
         matchSeatOrientation,
+        animationsEnabled: normalizeBoolean(settings.animationsEnabled, DEFAULT_CLIENT_SETTINGS.animationsEnabled),
+        preloadMatchImages: normalizeBoolean(settings.preloadMatchImages, DEFAULT_CLIENT_SETTINGS.preloadMatchImages),
+        autoTapManaPayment: normalizeBoolean(settings.autoTapManaPayment, DEFAULT_CLIENT_SETTINGS.autoTapManaPayment),
+        manaPoolAutomaticRestricted: normalizeBoolean(settings.manaPoolAutomaticRestricted, DEFAULT_CLIENT_SETTINGS.manaPoolAutomaticRestricted),
+        useFirstManaAbility: normalizeBoolean(settings.useFirstManaAbility, DEFAULT_CLIENT_SETTINGS.useFirstManaAbility),
+        allowRequestShowHandCards: normalizeBoolean(settings.allowRequestShowHandCards, DEFAULT_CLIENT_SETTINGS.allowRequestShowHandCards),
+        confirmEmptyManaPool: normalizeBoolean(settings.confirmEmptyManaPool, DEFAULT_CLIENT_SETTINGS.confirmEmptyManaPool),
+        askMoveToGraveOrder: normalizeBoolean(settings.askMoveToGraveOrder, DEFAULT_CLIENT_SETTINGS.askMoveToGraveOrder),
+        passPriorityCast: normalizeBoolean(settings.passPriorityCast, DEFAULT_CLIENT_SETTINGS.passPriorityCast),
+        passPriorityActivation: normalizeBoolean(settings.passPriorityActivation, DEFAULT_CLIENT_SETTINGS.passPriorityActivation),
+        autoOrderTrigger: normalizeBoolean(settings.autoOrderTrigger, DEFAULT_CLIENT_SETTINGS.autoOrderTrigger),
+        useSameSettingsForReplacementEffects: normalizeBoolean(settings.useSameSettingsForReplacementEffects, DEFAULT_CLIENT_SETTINGS.useSameSettingsForReplacementEffects),
         alwaysShowPlayerNames: normalizeBoolean(settings.alwaysShowPlayerNames, DEFAULT_CLIENT_SETTINGS.alwaysShowPlayerNames),
+        displayLifeOnAvatar: normalizeBoolean(settings.displayLifeOnAvatar, DEFAULT_CLIENT_SETTINGS.displayLifeOnAvatar),
         showCardReminderText: normalizeBoolean(settings.showCardReminderText, DEFAULT_CLIENT_SETTINGS.showCardReminderText),
         showCardSetInfo: normalizeBoolean(settings.showCardSetInfo, DEFAULT_CLIENT_SETTINGS.showCardSetInfo),
         showCardHints: normalizeBoolean(settings.showCardHints, DEFAULT_CLIENT_SETTINGS.showCardHints),
+        showCardNames: normalizeBoolean(settings.showCardNames, DEFAULT_CLIENT_SETTINGS.showCardNames),
+        showCardImageSource: normalizeBoolean(settings.showCardImageSource, DEFAULT_CLIENT_SETTINGS.showCardImageSource),
+        showAbilityIcons: normalizeBoolean(settings.showAbilityIcons, DEFAULT_CLIENT_SETTINGS.showAbilityIcons),
+        showPlayableIcons: normalizeBoolean(settings.showPlayableIcons, DEFAULT_CLIENT_SETTINGS.showPlayableIcons),
+        showAbilityTextOverlay: normalizeBoolean(settings.showAbilityTextOverlay, DEFAULT_CLIENT_SETTINGS.showAbilityTextOverlay),
+        showSetSymbol: normalizeBoolean(settings.showSetSymbol, DEFAULT_CLIENT_SETTINGS.showSetSymbol),
+        preloadVisibleCardImages: normalizeBoolean(settings.preloadVisibleCardImages, DEFAULT_CLIENT_SETTINGS.preloadVisibleCardImages),
         cardImageFallbackMode: normalizeEnumString(settings.cardImageFallbackMode, CARD_IMAGE_FALLBACK_MODE_VALUES, DEFAULT_CLIENT_SETTINGS.cardImageFallbackMode),
+        preferredImageLanguage: normalizeImageLanguage(settings.preferredImageLanguage),
+        cardRenderingMode: normalizeEnumString(settings.cardRenderingMode, CARD_RENDERING_MODE_VALUES, DEFAULT_CLIENT_SETTINGS.cardRenderingMode),
+        battlefieldCardSize: Math.round(clampNumber(settings.battlefieldCardSize, BATTLEFIELD_CARD_SIZE_MIN, BATTLEFIELD_CARD_SIZE_MAX, DEFAULT_CLIENT_SETTINGS.battlefieldCardSize)),
+        tooltipDelayMs: Math.round(clampNumber(settings.tooltipDelayMs, 0, 3000, DEFAULT_CLIENT_SETTINGS.tooltipDelayMs)),
+        handCardSize: Math.round(clampNumber(settings.handCardSize, CARD_SIZE_MIN, CARD_SIZE_MAX, DEFAULT_CLIENT_SETTINGS.handCardSize)),
+        editorCardSize: Math.round(clampNumber(settings.editorCardSize, CARD_SIZE_MIN, CARD_SIZE_MAX, DEFAULT_CLIENT_SETTINGS.editorCardSize)),
+        otherZoneCardSize: Math.round(clampNumber(settings.otherZoneCardSize, CARD_SIZE_MIN, CARD_SIZE_MAX, DEFAULT_CLIENT_SETTINGS.otherZoneCardSize)),
+        dialogFontSize: Math.round(clampNumber(settings.dialogFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, DEFAULT_CLIENT_SETTINGS.dialogFontSize)),
+        chatFontSize: Math.round(clampNumber(settings.chatFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, DEFAULT_CLIENT_SETTINGS.chatFontSize)),
+        playerPanelSize: Math.round(clampNumber(settings.playerPanelSize, 70, 140, DEFAULT_CLIENT_SETTINGS.playerPanelSize)),
+        tooltipSize: Math.round(clampNumber(settings.tooltipSize, 220, 560, DEFAULT_CLIENT_SETTINGS.tooltipSize)),
         animationSpeed: clampNumber(settings.animationSpeed, 0.5, 2, DEFAULT_CLIENT_SETTINGS.animationSpeed),
         imageCacheMaxAgeDays: clampNumber(settings.imageCacheMaxAgeDays, 1, 365, DEFAULT_CLIENT_SETTINGS.imageCacheMaxAgeDays),
+        imageCacheMaxSizeMb: Math.round(clampNumber(settings.imageCacheMaxSizeMb, 25, 1000, DEFAULT_CLIENT_SETTINGS.imageCacheMaxSizeMb)),
+        clientTheme: normalizeEnumString(settings.clientTheme, CLIENT_THEME_VALUES, DEFAULT_CLIENT_SETTINGS.clientTheme),
+        customLoginBackground: normalizeBackgroundValue(settings.customLoginBackground),
+        battlefieldBackgroundMode: normalizeEnumString(settings.battlefieldBackgroundMode, BATTLEFIELD_BACKGROUND_MODE_VALUES, DEFAULT_CLIENT_SETTINGS.battlefieldBackgroundMode),
+        customBattlefieldBackground: normalizeBackgroundValue(settings.customBattlefieldBackground),
+        gameSoundsEnabled: normalizeBoolean(settings.gameSoundsEnabled, DEFAULT_CLIENT_SETTINGS.gameSoundsEnabled),
+        draftSoundsEnabled: normalizeBoolean(settings.draftSoundsEnabled, DEFAULT_CLIENT_SETTINGS.draftSoundsEnabled),
+        skipButtonSoundsEnabled: normalizeBoolean(settings.skipButtonSoundsEnabled, DEFAULT_CLIENT_SETTINGS.skipButtonSoundsEnabled),
+        otherSoundsEnabled: normalizeBoolean(settings.otherSoundsEnabled, DEFAULT_CLIENT_SETTINGS.otherSoundsEnabled),
+        matchMusicEnabled: normalizeBoolean(settings.matchMusicEnabled, DEFAULT_CLIENT_SETTINGS.matchMusicEnabled),
+        browserAudioUnlocked: normalizeBoolean(settings.browserAudioUnlocked, DEFAULT_CLIENT_SETTINGS.browserAudioUnlocked),
+        masterVolume: Math.round(clampNumber(settings.masterVolume, 0, 100, DEFAULT_CLIENT_SETTINGS.masterVolume)),
+        effectsVolume: Math.round(clampNumber(settings.effectsVolume, 0, 100, DEFAULT_CLIENT_SETTINGS.effectsVolume)),
+        musicVolume: Math.round(clampNumber(settings.musicVolume, 0, 100, DEFAULT_CLIENT_SETTINGS.musicVolume)),
+        reducedAudioMode: normalizeBoolean(settings.reducedAudioMode, DEFAULT_CLIENT_SETTINGS.reducedAudioMode),
+        keybinds: normalizeKeybinds(settings.keybinds),
+        reconnectRecoveryEnabled: normalizeBoolean(settings.reconnectRecoveryEnabled, DEFAULT_CLIENT_SETTINGS.reconnectRecoveryEnabled),
+        restoreSessionOnReconnect: normalizeBoolean(settings.restoreSessionOnReconnect, DEFAULT_CLIENT_SETTINGS.restoreSessionOnReconnect),
+        showConnectionStatusMessages: normalizeBoolean(settings.showConnectionStatusMessages, DEFAULT_CLIENT_SETTINGS.showConnectionStatusMessages),
+        debugModeEnabled: normalizeBoolean(settings.debugModeEnabled, DEFAULT_CLIENT_SETTINGS.debugModeEnabled),
+        debugCaptureEnabled: normalizeBoolean(settings.debugCaptureEnabled, DEFAULT_CLIENT_SETTINGS.debugCaptureEnabled),
+        persistPanelLayout: normalizeBoolean(settings.persistPanelLayout, DEFAULT_CLIENT_SETTINGS.persistPanelLayout),
+        chatProfanityFilterLevel: normalizeProfanityFilterLevel(settings.chatProfanityFilterLevel, DEFAULT_CLIENT_SETTINGS.chatProfanityFilterLevel),
         avatarId: Math.round(clampNumber(settings.avatarId, 1, 9999, DEFAULT_CLIENT_SETTINGS.avatarId)),
         flagName: normalizeFlagName(settings.flagName),
         autoTargetLevel: Math.round(clampNumber(settings.autoTargetLevel, 0, 2, DEFAULT_CLIENT_SETTINGS.autoTargetLevel)),
@@ -490,7 +735,7 @@ export function clientSettingsToUserData(settings) {
         avatarId: normalized.avatarId,
         allowRequestShowHandCards: normalized.allowRequestShowHandCards,
         confirmEmptyManaPool: normalized.confirmEmptyManaPool,
-        userSkipPrioritySteps: cloneUserSkipPrioritySteps(DEFAULT_USER_SKIP_PRIORITY_STEPS),
+        userSkipPrioritySteps: cloneUserSkipPrioritySteps(normalized.skipPrioritySteps),
         flagName: normalized.flagName,
         askMoveToGraveOrder: normalized.askMoveToGraveOrder,
         manaPoolAutomatic: normalized.autoTapManaPayment,
@@ -607,6 +852,45 @@ export function normalizeCreateTablePreset(preset) {
         savedAt: Math.round(clampNumber(preset?.savedAt, 0, Number.MAX_SAFE_INTEGER, fallback.savedAt)),
     };
 }
+export function normalizeCreateTournamentPresets(config) {
+    return {
+        lastUsed: normalizeNullableCreateTournamentPreset(config?.lastUsed),
+        config1: normalizeNullableCreateTournamentPreset(config?.config1),
+        config2: normalizeNullableCreateTournamentPreset(config?.config2),
+    };
+}
+export function normalizeCreateTournamentPreset(preset) {
+    const fallback = DEFAULT_CREATE_TOURNAMENT_PRESET;
+    return {
+        name: normalizeBoundedString(preset?.name, fallback.name, 80),
+        tournamentType: normalizeBoundedString(preset?.tournamentType, fallback.tournamentType, 160),
+        gameType: normalizeBoundedString(preset?.gameType, fallback.gameType, 120),
+        deckType: normalizeBoundedString(preset?.deckType, fallback.deckType, 160),
+        winsNeeded: Math.round(clampNumber(preset?.winsNeeded, 1, 5, fallback.winsNeeded)),
+        numberRounds: Math.round(clampNumber(preset?.numberRounds, 1, 12, fallback.numberRounds)),
+        numberOfPlayers: Math.round(clampNumber(preset?.numberOfPlayers, 1, 64, fallback.numberOfPlayers)),
+        singleMultiplayerGame: normalizeBoolean(preset?.singleMultiplayerGame, fallback.singleMultiplayerGame),
+        timeLimit: normalizeEnumString(preset?.timeLimit, MATCH_TIME_LIMIT_VALUES, fallback.timeLimit),
+        bufferTime: normalizeEnumString(preset?.bufferTime, MATCH_BUFFER_TIME_VALUES, fallback.bufferTime),
+        constructionTimeMinutes: Math.round(clampNumber(preset?.constructionTimeMinutes, 1, 120, fallback.constructionTimeMinutes)),
+        draftTiming: normalizeEnumString(preset?.draftTiming, DRAFT_TIMING_VALUES, fallback.draftTiming),
+        draftCubeName: normalizeBoundedString(preset?.draftCubeName, fallback.draftCubeName, 160),
+        setCodes: normalizeFreeSetCodes(preset?.setCodes, 36),
+        randomSetCodes: normalizeFreeSetCodes(preset?.randomSetCodes, 120),
+        cubeFromDeck: normalizeDeckCardLists(preset?.cubeFromDeck),
+        jumpstartPacks: normalizeBoundedString(preset?.jumpstartPacks, fallback.jumpstartPacks, 300000),
+        password: normalizeBoundedString(preset?.password, fallback.password, 80),
+        skillLevel: normalizeEnumString(preset?.skillLevel, SKILL_LEVEL_VALUES, fallback.skillLevel),
+        spectatorsAllowed: normalizeBoolean(preset?.spectatorsAllowed, fallback.spectatorsAllowed),
+        rollbackTurnsAllowed: normalizeBoolean(preset?.rollbackTurnsAllowed, fallback.rollbackTurnsAllowed),
+        rated: normalizeBoolean(preset?.rated, fallback.rated),
+        quitRatio: Math.round(clampNumber(preset?.quitRatio, 0, 100, fallback.quitRatio)),
+        minimumRating: Math.round(clampNumber(preset?.minimumRating, 0, 3000, fallback.minimumRating)),
+        playerTypes: normalizeCreateTablePlayerTypes(preset?.playerTypes, fallback.playerTypes),
+        playerSkills: normalizeCreateTournamentPlayerSkills(preset?.playerSkills, fallback.playerSkills),
+        savedAt: Math.round(clampNumber(preset?.savedAt, 0, Number.MAX_SAFE_INTEGER, fallback.savedAt)),
+    };
+}
 export function normalizeDeckEditorConfig(config) {
     const activeMode = normalizeEnumString(config?.activeMode, DECK_EDITOR_MODE_KEYS, DEFAULT_DECK_EDITOR_CONFIG.activeMode);
     const modes = {};
@@ -619,6 +903,21 @@ export function normalizeDeckEditorConfig(config) {
     return {
         activeMode,
         modes,
+    };
+}
+export function normalizePanelLayoutConfig(config) {
+    const activities = {};
+    const candidateActivities = config?.activities && typeof config.activities === 'object'
+        ? config.activities
+        : {};
+    for (const kind of PANEL_LAYOUT_ACTIVITY_KINDS) {
+        activities[kind] = normalizePanelLayoutActivityConfig(candidateActivities[kind], DEFAULT_PANEL_LAYOUT_CONFIG.activities[kind]);
+    }
+    return {
+        game: {
+            sidebarOpen: normalizeBoolean(config?.game?.sidebarOpen, DEFAULT_PANEL_LAYOUT_CONFIG.game.sidebarOpen),
+        },
+        activities,
     };
 }
 export function normalizeDeckGeneratorSettings(settings) {
@@ -656,6 +955,12 @@ function normalizeDeckEditorModeConfig(config, fallback) {
         deckPanelWidth: Math.round(clampNumber(config?.deckPanelWidth, 280, 520, fallback.deckPanelWidth)),
         showSideboard: normalizeBoolean(config?.showSideboard, fallback.showSideboard),
         search: normalizeDeckSearchSettings(config?.search, fallback.search),
+    };
+}
+function normalizePanelLayoutActivityConfig(config, fallback) {
+    return {
+        commandPanelCollapsed: normalizeBoolean(config?.commandPanelCollapsed, fallback.commandPanelCollapsed),
+        chatCollapsed: normalizeBoolean(config?.chatCollapsed, fallback.chatCollapsed),
     };
 }
 function normalizeDeckFileHistoryEntry(value) {
@@ -749,6 +1054,13 @@ function cloneCreateTablePresets(config) {
         config2: cloneCreateTablePreset(config.config2),
     };
 }
+function cloneCreateTournamentPresets(config) {
+    return {
+        lastUsed: cloneCreateTournamentPreset(config.lastUsed),
+        config1: cloneCreateTournamentPreset(config.config1),
+        config2: cloneCreateTournamentPreset(config.config2),
+    };
+}
 function cloneCreateTablePreset(preset) {
     return preset
         ? {
@@ -757,6 +1069,18 @@ function cloneCreateTablePreset(preset) {
             startingPlayerEmblemDeck: cloneDeckCardLists(preset.startingPlayerEmblemDeck),
             playerTypes: [...preset.playerTypes],
             aiSeats: preset.aiSeats.map(cloneCreateTableAiSeat),
+        }
+        : null;
+}
+function cloneCreateTournamentPreset(preset) {
+    return preset
+        ? {
+            ...preset,
+            setCodes: [...preset.setCodes],
+            randomSetCodes: [...preset.randomSetCodes],
+            cubeFromDeck: cloneDeckCardLists(preset.cubeFromDeck),
+            playerTypes: [...preset.playerTypes],
+            playerSkills: [...preset.playerSkills],
         }
         : null;
 }
@@ -775,6 +1099,12 @@ function cloneDeckEditorModeConfig(config) {
     return {
         ...config,
         search: cloneDeckSearchSettings(config.search),
+    };
+}
+function clonePanelLayoutConfig(config) {
+    return {
+        game: { ...config.game },
+        activities: Object.fromEntries(PANEL_LAYOUT_ACTIVITY_KINDS.map(kind => [kind, { ...config.activities[kind] }])),
     };
 }
 function cloneDeckSearchSettings(settings) {
@@ -805,6 +1135,11 @@ function normalizeNullableCreateTablePreset(value) {
     if (!value || typeof value !== 'object')
         return null;
     return normalizeCreateTablePreset(value);
+}
+function normalizeNullableCreateTournamentPreset(value) {
+    if (!value || typeof value !== 'object')
+        return null;
+    return normalizeCreateTournamentPreset(value);
 }
 function normalizeBoolean(value, fallback) {
     return typeof value === 'boolean' ? value : fallback;
@@ -866,10 +1201,85 @@ function normalizeBoundedString(value, fallback, maxLength) {
         return fallback;
     return value.trim().slice(0, maxLength);
 }
+function normalizeImageLanguage(value) {
+    if (typeof value !== 'string')
+        return DEFAULT_CLIENT_SETTINGS.preferredImageLanguage;
+    const normalized = value.trim().toLowerCase().replace(/[^a-z-]/g, '').slice(0, 8);
+    return normalized || DEFAULT_CLIENT_SETTINGS.preferredImageLanguage;
+}
 function normalizeEnumString(value, allowedValues, fallback) {
     if (typeof value !== 'string')
         return fallback;
     return allowedValues.includes(value) ? value : fallback;
+}
+function normalizeProfanityFilterLevel(value, fallback) {
+    return value === 0 || value === 1 || value === 2 ? value : fallback;
+}
+function normalizeUserSkipPrioritySteps(value) {
+    if (!value || typeof value !== 'object') {
+        return cloneUserSkipPrioritySteps(DEFAULT_USER_SKIP_PRIORITY_STEPS);
+    }
+    const steps = value;
+    return {
+        yourTurn: normalizeSkipPrioritySteps(steps.yourTurn, DEFAULT_USER_SKIP_PRIORITY_STEPS.yourTurn),
+        opponentTurn: normalizeSkipPrioritySteps(steps.opponentTurn, DEFAULT_USER_SKIP_PRIORITY_STEPS.opponentTurn),
+        stopOnDeclareAttackers: normalizeBoolean(steps.stopOnDeclareAttackers, DEFAULT_USER_SKIP_PRIORITY_STEPS.stopOnDeclareAttackers),
+        stopOnDeclareBlockersWithZeroPermanents: normalizeBoolean(steps.stopOnDeclareBlockersWithZeroPermanents, DEFAULT_USER_SKIP_PRIORITY_STEPS.stopOnDeclareBlockersWithZeroPermanents),
+        stopOnDeclareBlockersWithAnyPermanents: normalizeBoolean(steps.stopOnDeclareBlockersWithAnyPermanents, DEFAULT_USER_SKIP_PRIORITY_STEPS.stopOnDeclareBlockersWithAnyPermanents),
+        stopOnAllMainPhases: normalizeBoolean(steps.stopOnAllMainPhases, DEFAULT_USER_SKIP_PRIORITY_STEPS.stopOnAllMainPhases),
+        stopOnAllEndPhases: normalizeBoolean(steps.stopOnAllEndPhases, DEFAULT_USER_SKIP_PRIORITY_STEPS.stopOnAllEndPhases),
+        stopOnStackNewObjects: normalizeBoolean(steps.stopOnStackNewObjects, DEFAULT_USER_SKIP_PRIORITY_STEPS.stopOnStackNewObjects),
+    };
+}
+function normalizeSkipPrioritySteps(value, fallback) {
+    if (!value || typeof value !== 'object')
+        return { ...fallback };
+    const steps = value;
+    return {
+        upkeep: normalizeBoolean(steps.upkeep, fallback.upkeep),
+        draw: normalizeBoolean(steps.draw, fallback.draw),
+        main1: normalizeBoolean(steps.main1, fallback.main1),
+        beforeCombat: normalizeBoolean(steps.beforeCombat, fallback.beforeCombat),
+        endOfCombat: normalizeBoolean(steps.endOfCombat, fallback.endOfCombat),
+        main2: normalizeBoolean(steps.main2, fallback.main2),
+        endOfTurn: normalizeBoolean(steps.endOfTurn, fallback.endOfTurn),
+    };
+}
+function normalizeKeybinds(value) {
+    const result = cloneKeybinds(DEFAULT_KEYBINDS);
+    if (!value || typeof value !== 'object')
+        return result;
+    const keybinds = value;
+    for (const actionId of KEYBIND_ACTION_IDS) {
+        const candidate = keybinds[actionId];
+        if (!candidate || typeof candidate !== 'object')
+            continue;
+        result[actionId] = normalizeKeybindConfig(candidate, DEFAULT_KEYBINDS[actionId]);
+    }
+    return result;
+}
+function normalizeKeybindConfig(value, fallback) {
+    return {
+        key: normalizeBoundedString(value.key, fallback.key, 24) || fallback.key,
+        eventType: normalizeEnumString(value.eventType, KEYBIND_EVENT_TYPE_VALUES, fallback.eventType),
+        ctrlOrMeta: normalizeBoolean(value.ctrlOrMeta, fallback.ctrlOrMeta),
+        altKey: normalizeBoolean(value.altKey, fallback.altKey),
+        shiftKey: normalizeBoolean(value.shiftKey, fallback.shiftKey),
+        enabled: normalizeBoolean(value.enabled, fallback.enabled),
+    };
+}
+function cloneKeybinds(keybinds) {
+    return Object.fromEntries(KEYBIND_ACTION_IDS.map(actionId => [actionId, { ...keybinds[actionId] }]));
+}
+function normalizeBackgroundValue(value) {
+    if (typeof value !== 'string')
+        return '';
+    const trimmed = value.trim();
+    if (!trimmed)
+        return '';
+    if (/^(https?:|data:image\/)/i.test(trimmed))
+        return trimmed.slice(0, 1200);
+    return '';
 }
 function normalizeSortDirection(value, fallback) {
     return value === 'asc' || value === 'desc' ? value : fallback;
@@ -903,6 +1313,16 @@ function normalizeSetCodes(value) {
         .slice(0, 12);
     return [...new Set(normalizedValues)];
 }
+function normalizeFreeSetCodes(value, maxItems) {
+    if (!Array.isArray(value))
+        return [];
+    const normalizedValues = value
+        .filter((item) => typeof item === 'string')
+        .map(item => item.trim().toUpperCase())
+        .filter(item => /^[A-Z0-9]{2,12}$/.test(item))
+        .slice(0, maxItems);
+    return [...new Set(normalizedValues)];
+}
 function normalizeNullableInteger(value, min, max) {
     if (value === null || value === undefined || value === '')
         return null;
@@ -932,6 +1352,15 @@ function normalizeCreateTablePlayerTypes(value, fallback) {
         .map(playerType => playerType.trim().slice(0, 80))
         .slice(0, 10);
     return playerTypes.length > 0 ? playerTypes : [...fallback];
+}
+function normalizeCreateTournamentPlayerSkills(value, fallback) {
+    if (!Array.isArray(value))
+        return [...fallback];
+    const playerSkills = value
+        .filter((skill) => typeof skill === 'number' && Number.isFinite(skill))
+        .map(skill => Math.round(clampNumber(skill, 1, 10, 2)))
+        .slice(0, 64);
+    return playerSkills.length > 0 ? playerSkills : [...fallback];
 }
 function normalizeCreateTableAiSeats(value, fallback) {
     if (!Array.isArray(value))
@@ -1031,6 +1460,7 @@ const MATCH_BUFFER_TIME_VALUES = [
     'SEC__25',
     'SEC__30',
 ];
+const DRAFT_TIMING_VALUES = ['BEGINNER', 'REGULAR', 'PROFESSIONAL', 'NONE'];
 const MULLIGAN_TYPE_VALUES = [
     'GAME_DEFAULT',
     'VANCOUVER',
@@ -1043,6 +1473,10 @@ const SKILL_LEVEL_VALUES = ['BEGINNER', 'CASUAL', 'SERIOUS'];
 const RANGE_VALUES = ['ONE', 'TWO', 'ALL'];
 const ATTACK_OPTION_VALUES = ['MULTIPLE', 'LEFT', 'RIGHT'];
 const CARD_IMAGE_FALLBACK_MODE_VALUES = ['card-back', 'text-card'];
+const CARD_RENDERING_MODE_VALUES = ['image', 'hybrid', 'text-only'];
+const CLIENT_THEME_VALUES = ['arena', 'java-dark', 'java-light'];
+const BATTLEFIELD_BACKGROUND_MODE_VALUES = ['default', 'custom', 'random'];
+const KEYBIND_EVENT_TYPE_VALUES = ['keydown', 'keyup'];
 const DECK_COLLECTION_VIEW_VALUES = ['grid', 'list'];
 const DECK_COLLECTION_SORT_VALUES = ['name', 'cardType', 'manaValue', 'color', 'rarity', 'cardNumber'];
 const DECK_LIST_SORT_VALUES = ['custom', 'name', 'amount', 'set'];

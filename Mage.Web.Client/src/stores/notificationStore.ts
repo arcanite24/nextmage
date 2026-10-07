@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { appConfigService } from '../services';
 import {
     notificationService,
     getNotificationAutoDismissDelay,
@@ -48,6 +49,7 @@ export const useNotificationStore = create<NotificationState & NotificationActio
 
             enqueue: (draft) => {
                 notificationService.showBrowserNotification(draft);
+                if (draft.toast === false) return;
 
                 set((state) => {
                     const createdAt = Date.now();
@@ -79,6 +81,9 @@ export const useNotificationStore = create<NotificationState & NotificationActio
             },
 
             handleConnectionStatus: (previousStatus, nextStatus, isAuthenticated) => {
+                if (!appConfigService.loadSettings().showConnectionStatusMessages) {
+                    return;
+                }
                 const draft = notificationService.fromConnectionStatus(previousStatus, nextStatus, isAuthenticated);
                 if (draft) {
                     get().enqueue(draft);

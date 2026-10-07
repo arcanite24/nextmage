@@ -13,6 +13,7 @@ import { TableDetails } from './TableDetails';
 import { LobbyInfoPanels } from './LobbyInfoPanels';
 import { ChatPanel } from '../chat/ChatPanel';
 import { CreateTableDialog } from './CreateTableDialog';
+import { CreateTournamentDialog } from './CreateTournamentDialog';
 import { JoinTableDialog } from './JoinTableDialog';
 import { WaitingRoom } from './WaitingRoom';
 import { appConfigService, webSocketBridgeService } from '../../services';
@@ -35,6 +36,7 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
     supportMenu,
 }) => {
     const [showCreateTable, setShowCreateTable] = useState(false);
+    const [showCreateTournament, setShowCreateTournament] = useState(false);
     const [showJoinTable, setShowJoinTable] = useState(false);
     const [selectedTable, setSelectedTable] = useState<TableView | null>(null);
     const [ignoredUsers, setIgnoredUsers] = useState<string[]>(() =>
@@ -150,6 +152,20 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
         }
     };
 
+    const handleShowTournamentClick = useCallback(async (tableId: string, title: string) => {
+        try {
+            const success = await webSocketBridgeService.watchTournament(sessionId, tableId);
+            if (!success) {
+                showAlert('Tournament', 'The server did not open this tournament. Showing the local activity shell instead.');
+                onOpenTournament(tableId, title);
+            }
+        } catch (error) {
+            console.error('Failed to open tournament:', error);
+            showAlert('Tournament', error instanceof Error ? error.message : 'Failed to open the tournament.');
+            onOpenTournament(tableId, title);
+        }
+    }, [onOpenTournament, sessionId, showAlert]);
+
     const handleReplayClick = async (match: MatchView) => {
         const gameId = match.games?.[0];
         if (!gameId || !match.replayAvailable) return;
@@ -165,6 +181,11 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
     const handleTableCreated = (tableId: string) => {
         setShowCreateTable(false);
         // Select the newly created table
+        selectTable(tableId);
+    };
+
+    const handleTournamentCreated = (tableId: string) => {
+        setShowCreateTournament(false);
         selectTable(tableId);
     };
 
@@ -192,12 +213,20 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
                 <section className="lobby-tables">
                     <div className="section-header">
                         <h2>Game Tables</h2>
-                        <Button
-                            variant="primary"
-                            onClick={() => setShowCreateTable(true)}
-                        >
-                            + Create Table
-                        </Button>
+                        <div className="section-header-actions">
+                            <Button
+                                variant="secondary"
+                                onClick={() => setShowCreateTournament(true)}
+                            >
+                                + Create Tournament
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={() => setShowCreateTable(true)}
+                            >
+                                + Create Table
+                            </Button>
+                        </div>
                     </div>
 
                     <TableFilters />
@@ -216,7 +245,7 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
                             const table = filteredTables.find(t => t.tableId === tableId);
                             if (table) handleWatchClick(table);
                         }}
-                        onShowTournament={onOpenTournament}
+                        onShowTournament={handleShowTournamentClick}
                         onReplay={handleReplayClick}
                         tableLayout={tableLayout}
                         onSortChange={setTableSort}
@@ -268,6 +297,12 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
                 isOpen={showCreateTable}
                 onClose={() => setShowCreateTable(false)}
                 onTableCreated={handleTableCreated}
+            />
+
+            <CreateTournamentDialog
+                isOpen={showCreateTournament}
+                onClose={() => setShowCreateTournament(false)}
+                onTournamentCreated={handleTournamentCreated}
             />
 
             {/* Join table dialog */}

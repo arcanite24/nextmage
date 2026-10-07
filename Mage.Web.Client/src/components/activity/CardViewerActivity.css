@@ -1,0 +1,248 @@
+.card-viewer-activity {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.card-viewer-toolbar {
+    display: grid;
+    grid-template-columns: minmax(170px, 0.8fr) minmax(220px, 1.2fr) auto auto;
+    gap: var(--space-3);
+    align-items: end;
+}
+
+.card-viewer-toolbar label {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.card-viewer-toolbar span,
+.card-viewer-resource-panel span {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.card-viewer-toolbar input,
+.card-viewer-toolbar select {
+    min-height: 38px;
+    min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--radius-sm);
+    background: rgba(2, 6, 23, 0.64);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 700;
+    padding: 0 var(--space-3);
+}
+
+.card-viewer-segment {
+    min-height: 38px;
+    display: inline-flex;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--radius-sm);
+    background: rgba(2, 6, 23, 0.64);
+}
+
+.card-viewer-segment button,
+.card-viewer-page-controls button {
+    border: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: 800;
+    padding: 0 var(--space-3);
+}
+
+.card-viewer-segment button:last-child {
+    border-right: 0;
+}
+
+.card-viewer-segment button.is-active {
+    background: rgba(214, 164, 52, 0.18);
+    color: var(--color-text-primary);
+}
+
+.card-viewer-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+    gap: var(--space-4);
+    align-items: start;
+}
+
+.card-viewer-results {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-3);
+}
+
+.card-viewer-results-header,
+.card-viewer-page-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.card-viewer-results-header strong,
+.card-viewer-page-controls span {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    font-weight: 800;
+}
+
+.card-viewer-page-controls button {
+    min-height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.card-viewer-page-controls button:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+}
+
+.card-viewer-grid {
+    --card-viewer-columns: 3;
+    display: grid;
+    grid-template-columns: repeat(var(--card-viewer-columns), minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+.card-viewer-card {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-2);
+    justify-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    padding: var(--space-2);
+}
+
+.card-viewer-card[data-selected="true"] {
+    border-color: rgba(214, 164, 52, 0.72);
+    box-shadow: 0 0 0 1px rgba(214, 164, 52, 0.22);
+}
+
+.card-viewer-card .card-view {
+    width: min(100%, 150px);
+    cursor: inherit;
+}
+
+.card-viewer-card span {
+    width: 100%;
+    min-height: 2.4em;
+    overflow: hidden;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.card-viewer-preview {
+    position: sticky;
+    top: var(--space-4);
+    display: grid;
+    gap: var(--space-3);
+    justify-items: center;
+    padding: var(--space-3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.card-viewer-preview .card-view {
+    width: min(100%, 260px);
+}
+
+.card-viewer-preview div {
+    width: 100%;
+    display: grid;
+    gap: 4px;
+}
+
+.card-viewer-preview h3,
+.card-viewer-preview p,
+.card-viewer-empty {
+    margin: 0;
+}
+
+.card-viewer-preview h3 {
+    color: var(--color-text-primary);
+    font-size: var(--text-lg);
+}
+
+.card-viewer-preview p,
+.card-viewer-empty {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+}
+
+.card-viewer-resource-panel {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    gap: var(--space-2);
+    align-items: stretch;
+}
+
+.card-viewer-resource-panel div {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+    padding: var(--space-3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.card-viewer-resource-panel strong {
+    overflow: hidden;
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 960px) {
+    .card-viewer-toolbar,
+    .card-viewer-body,
+    .card-viewer-resource-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .card-viewer-results-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .card-viewer-page-controls {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 680px) {
+    .card-viewer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card-viewer-segment {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .card-viewer-segment button {
+        flex: 1 1 auto;
+        min-height: 36px;
+    }
+}

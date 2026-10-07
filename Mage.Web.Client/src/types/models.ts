@@ -173,20 +173,50 @@ export interface MatchOptions {
     bannedUsers?: string[];
 }
 
+export type DraftTimingOption = 'BEGINNER' | 'REGULAR' | 'PROFESSIONAL' | 'NONE';
+
+export interface LimitedTournamentOptions {
+    sets: string[];
+    constructionTime: number;
+    draftCubeName?: string | null;
+    cubeFromDeck?: DeckCardLists | null;
+    jumpstartPacks?: string;
+    numberBoosters?: number;
+    isRandom?: boolean;
+    isReshuffled?: boolean;
+    isRichMan?: boolean;
+    isJumpstart?: boolean;
+    timing?: DraftTimingOption;
+}
+
+export interface TournamentOptions {
+    name: string;
+    tournamentType: string;
+    matchOptions: MatchOptions;
+    playerTypes: string[];
+    playerSkills?: number[];
+    watchingAllowed: boolean;
+    planeChase?: boolean;
+    numberRounds?: number;
+    password?: string;
+    quitRatio?: number;
+    minimumRating?: number;
+    singleMultiplayerGame?: boolean;
+    limitedOptions?: LimitedTournamentOptions;
+}
+
 
 // === Draft Models ===
 
-export interface DraftPlayerView {
-    playerId: UUID;
-    name: string;
-    picks: number;
-}
-
 export interface DraftView {
     draftId: UUID;
-    players: DraftPlayerView[];
+    players: string[];
+    setNames?: string[];
+    setCodes?: string[];
     boosterNum: number;
     cardNum: number;
+    isCube?: boolean;
+    cube?: boolean;
 }
 
 export interface DraftPickView {
@@ -200,25 +230,31 @@ export interface DraftPickView {
 // === Tournament Models ===
 
 export interface TournamentGameView {
+    roundNum?: number;
     tableId: UUID;
     matchId?: UUID;
+    gameId?: UUID;
     players: string;
     state: string;
     result: string;
 }
 
 export interface RoundView {
-    roundNumber: number;
+    roundNumber?: number;
     games: TournamentGameView[];
 }
 
 export interface TournamentPlayerView {
-    playerId: UUID;
+    playerId?: UUID;
     name: string;
     state: string;
     points: number;
     results: string;
-    isQuit: boolean;
+    flagName?: string;
+    history?: string;
+    quit?: boolean;
+    hasQuit?: boolean;
+    isQuit?: boolean;
 }
 
 export interface TournamentView {
@@ -227,9 +263,9 @@ export interface TournamentView {
     tournamentType: string;
     tournamentState: string;
     startTime: string;
-    endTime?: string;
-    stepStartTime: string;
-    serverTime: string;
+    endTime?: string | null;
+    stepStartTime?: string | null;
+    serverTime?: string | null;
     constructionTime: number;
     watchingAllowed: boolean;
     rounds: RoundView[];
@@ -267,13 +303,27 @@ export interface TournamentTypeView {
     name: string;
     minPlayers: number;
     maxPlayers: number;
-    numSeats: number;
-    isElimination: boolean;
-    isLimited: boolean;
-    isDraft: boolean;
-    isSealed: boolean;
-    isCubeBooster: boolean;
-    isRandomPoolsBooster: boolean;
+    numBoosters?: number;
+    numSeats?: number;
+    isElimination?: boolean;
+    elimination?: boolean;
+    isLimited?: boolean;
+    limited?: boolean;
+    isDraft?: boolean;
+    draft?: boolean;
+    isSealed?: boolean;
+    sealed?: boolean;
+    isCubeBooster?: boolean;
+    cubeBooster?: boolean;
+    isRandomPoolsBooster?: boolean;
+    isRandom?: boolean;
+    random?: boolean;
+    isReshuffled?: boolean;
+    reshuffled?: boolean;
+    isRichMan?: boolean;
+    richMan?: boolean;
+    isJumpstart?: boolean;
+    jumpstart?: boolean;
 }
 
 export interface MageVersion {

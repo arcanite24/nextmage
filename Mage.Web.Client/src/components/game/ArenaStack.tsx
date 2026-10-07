@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Zap } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { CardsView, CardView, StackAbilityView } from '../../types';
 import { cardImageService, type CardImageFallbackMode } from '../../services/CardImageService';
@@ -142,7 +143,7 @@ const ArenaStackCard: React.FC<ArenaStackCardProps> = React.memo(({
             {/* Ability indicator overlay with text preview */}
             {isAbility && (
                 <div className="arena-stack-ability-badge">
-                    <div className="arena-stack-ability-title">⚡ {type}</div>
+                    <div className="arena-stack-ability-title"><Zap size={14} aria-hidden="true" /> {type}</div>
                 </div>
             )}
             <div className="arena-stack-index">{total - index}</div>

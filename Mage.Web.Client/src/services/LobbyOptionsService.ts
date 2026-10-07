@@ -71,7 +71,7 @@ export function normalizeLobbyServerOptions(
   const tournamentGameTypes = normalizeGameTypes(serverState?.tournamentGameTypes);
   const deckTypes = normalizeStringList(serverState?.deckTypes);
   const playerTypes = normalizePlayerTypes(serverState?.playerTypes);
-  const tournamentTypes = Array.isArray(serverState?.tournamentTypes) ? serverState.tournamentTypes : [];
+  const tournamentTypes = normalizeTournamentTypes(serverState?.tournamentTypes);
   const draftCubes = normalizeStringList(serverState?.draftCubes);
 
   return {
@@ -106,6 +106,51 @@ export function getDefaultDeckType(options: LobbyServerOptions): string {
   }
 
   return options.deckTypes[0] ?? FALLBACK_LOBBY_SERVER_OPTIONS.deckTypes[0];
+}
+
+export function getDefaultTournamentTypeName(options: LobbyServerOptions): string {
+  return options.tournamentTypes.find(type => type.name === 'Sealed Elimination')?.name
+    ?? options.tournamentTypes.find(type => isTournamentTypeLimited(type))?.name
+    ?? options.tournamentTypes[0]?.name
+    ?? '';
+}
+
+export function findTournamentType(options: LobbyServerOptions, tournamentTypeName: string): TournamentTypeView | null {
+  return options.tournamentTypes.find(type => type.name === tournamentTypeName)
+    ?? options.tournamentTypes[0]
+    ?? null;
+}
+
+export function isTournamentTypeElimination(tournamentType: TournamentTypeView | null | undefined): boolean {
+  return Boolean(tournamentType?.isElimination ?? tournamentType?.elimination);
+}
+
+export function isTournamentTypeLimited(tournamentType: TournamentTypeView | null | undefined): boolean {
+  return Boolean(tournamentType?.isLimited ?? tournamentType?.limited);
+}
+
+export function isTournamentTypeDraft(tournamentType: TournamentTypeView | null | undefined): boolean {
+  return Boolean(tournamentType?.isDraft ?? tournamentType?.draft);
+}
+
+export function isTournamentTypeCubeBooster(tournamentType: TournamentTypeView | null | undefined): boolean {
+  return Boolean(tournamentType?.isCubeBooster ?? tournamentType?.cubeBooster);
+}
+
+export function isTournamentTypeRandom(tournamentType: TournamentTypeView | null | undefined): boolean {
+  return Boolean(tournamentType?.isRandom ?? tournamentType?.random ?? tournamentType?.isRandomPoolsBooster);
+}
+
+export function isTournamentTypeReshuffled(tournamentType: TournamentTypeView | null | undefined): boolean {
+  return Boolean(tournamentType?.isReshuffled ?? tournamentType?.reshuffled);
+}
+
+export function isTournamentTypeRichMan(tournamentType: TournamentTypeView | null | undefined): boolean {
+  return Boolean(tournamentType?.isRichMan ?? tournamentType?.richMan);
+}
+
+export function isTournamentTypeJumpstart(tournamentType: TournamentTypeView | null | undefined): boolean {
+  return Boolean(tournamentType?.isJumpstart ?? tournamentType?.jumpstart);
 }
 
 export function getHumanPlayerType(options: LobbyServerOptions): string {
@@ -289,6 +334,68 @@ function normalizePlayerTypes(value: unknown): PlayerTypeOption[] {
   return options;
 }
 
+function normalizeTournamentTypes(value: unknown): TournamentTypeView[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(normalizeTournamentType).filter((type): type is TournamentTypeView => type !== null);
+}
+
+function normalizeTournamentType(value: unknown): TournamentTypeView | null {
+  if (typeof value === 'string') {
+    return {
+      name: value,
+      minPlayers: 2,
+      maxPlayers: value.toLowerCase().includes('draft') ? 8 : 2,
+      numBoosters: value.toLowerCase().includes('sealed') ? 6 : 3,
+      isElimination: value.toLowerCase().includes('elimination'),
+      isLimited: /sealed|draft|jumpstart/i.test(value),
+      isDraft: /draft/i.test(value),
+      isSealed: /sealed/i.test(value),
+      isCubeBooster: /cube/i.test(value),
+      isRandom: /random/i.test(value),
+      isRandomPoolsBooster: /random/i.test(value),
+      isReshuffled: /reshuffled/i.test(value),
+      isRichMan: /rich/i.test(value),
+      isJumpstart: /jumpstart/i.test(value),
+    };
+  }
+
+  if (!value || typeof value !== 'object') return null;
+  const candidate = value as Partial<TournamentTypeView>;
+  if (typeof candidate.name !== 'string' || !candidate.name.trim()) return null;
+
+  const isDraft = normalizeFlag(candidate.isDraft ?? candidate.draft);
+  const isCubeBooster = normalizeFlag(candidate.isCubeBooster ?? candidate.cubeBooster);
+  const isRandom = normalizeFlag(candidate.isRandom ?? candidate.random ?? candidate.isRandomPoolsBooster);
+  const isReshuffled = normalizeFlag(candidate.isReshuffled ?? candidate.reshuffled);
+  const isRichMan = normalizeFlag(candidate.isRichMan ?? candidate.richMan);
+  const isJumpstart = normalizeFlag(candidate.isJumpstart ?? candidate.jumpstart);
+  const isLimited = normalizeFlag(candidate.isLimited ?? candidate.limited)
+    || isDraft
+    || isCubeBooster
+    || isRandom
+    || isReshuffled
+    || isRichMan
+    || isJumpstart;
+
+  return {
+    name: candidate.name.trim(),
+    minPlayers: normalizeInteger(candidate.minPlayers, 2),
+    maxPlayers: normalizeInteger(candidate.maxPlayers, 2),
+    numBoosters: normalizeInteger(candidate.numBoosters, isDraft ? 3 : 6),
+    numSeats: normalizeInteger(candidate.numSeats, candidate.maxPlayers ?? 2),
+    isElimination: normalizeFlag(candidate.isElimination ?? candidate.elimination),
+    isLimited,
+    isDraft,
+    isSealed: normalizeFlag(candidate.isSealed ?? candidate.sealed) || (isLimited && !isDraft && !isJumpstart),
+    isCubeBooster,
+    isRandomPoolsBooster: isRandom,
+    isRandom,
+    isReshuffled,
+    isRichMan,
+    isJumpstart,
+  };
+}
+
 function normalizePlayerType(value: unknown): PlayerTypeOption | null {
   if (typeof value !== 'string' || !value.trim()) return null;
 
@@ -306,6 +413,10 @@ function normalizePlayerType(value: unknown): PlayerTypeOption | null {
     isAI,
     isWorkablePlayer: !rawValue.toLowerCase().includes('draftbot'),
   };
+}
+
+function normalizeFlag(value: unknown): boolean {
+  return value === true || value === 'true' || value === 1;
 }
 
 function toPlayerTypeOption(known: KnownPlayerType, rawValue = known.enumName): PlayerTypeOption {

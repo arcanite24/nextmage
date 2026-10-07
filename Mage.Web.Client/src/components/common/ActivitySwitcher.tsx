@@ -160,6 +160,12 @@ export const ActivitySwitcher: React.FC<ActivitySwitcherProps> = ({
                                             onClick={() => openActivity(activity)}
                                             aria-pressed={isActive}
                                             title={`${activity.title} - ${getStatusLabel(activity)}`}
+                                            data-testid="activity-chip"
+                                            data-activity-kind={activity.kind}
+                                            data-activity-status={activity.status}
+                                            data-activity-id={activity.id}
+                                            data-activity-object-id={activity.objectId ?? 'none'}
+                                            data-activity-last-callback={activity.lastCallbackMethod}
                                         >
                                             <span className="activity-chip-kind">{getActivityKindLabel(activity.kind)}</span>
                                             <span className="activity-chip-title">{activity.title}</span>

@@ -201,6 +201,19 @@ test.describe('game prompt dialog parity', () => {
       expect.objectContaining({ method: 'sendPlayerManaType' }),
     ]));
 
+    await gotoPrompt(page, 'mana');
+    await page.getByTestId('mana-auto-pay-button').click();
+    await expect.poll(async () => {
+      const sends = await readVisualSends(page);
+      return sends
+        .filter(send => send.method === 'sendPlayerManaType')
+        .map(send => send.params.at(-1));
+    }).toEqual(['RED', 'GREEN']);
+    await expect.poll(async () => {
+      const sends = await readVisualSends(page);
+      return sends.some(send => send.method === 'sendPlayerBoolean');
+    }).toBe(false);
+
     await gotoPrompt(page, 'xmana');
     await page.getByRole('button', { name: 'Done' }).click();
     await expectLastSend(page, 'sendPlayerBoolean', true);

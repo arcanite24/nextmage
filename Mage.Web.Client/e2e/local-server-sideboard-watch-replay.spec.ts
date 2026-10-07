@@ -106,7 +106,7 @@ test.describe('local Mage server sideboard, watch, and replay smoke', () => {
         await expect(page.getByTestId('deck-analytics-stat-side')).toContainText('15/15');
         await expectLiveServerLegality(page.getByTestId('deck-legality-panel'), 'Standard', 'Constructed - Standard');
 
-        await page.getByRole('button', { name: 'Reset' }).click();
+        await page.getByRole('button', { name: 'Reset', exact: true }).click();
         await page.getByTestId('deck-editor-collection-list-button').click();
         await page.getByTestId('deck-editor-set-code-filter').fill('M11');
         await page.getByTestId('deck-editor-color-filter-red').click();

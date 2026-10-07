@@ -280,6 +280,21 @@ select.input {
     min-width: 0;
 }
 
+.limited-pack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+.create-tournament-textarea {
+    min-height: 112px;
+    resize: vertical;
+}
+
+.tournament-seat-row {
+    grid-template-columns: minmax(76px, 0.35fr) minmax(0, 1fr) minmax(88px, 0.22fr);
+}
+
 /* Responsive */
 @media (max-width: 720px) {
     .preset-toolbar {
@@ -301,6 +316,10 @@ select.input {
 
     .emblem-deck-grid {
         grid-template-columns: 1fr;
+    }
+
+    .limited-pack-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -337,11 +356,19 @@ select.input {
         grid-template-columns: 1fr;
     }
 
+    .tournament-seat-row {
+        grid-template-columns: 1fr;
+    }
+
     .seat-ai-settings {
         grid-column: auto;
     }
 
     .seat-ai-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .limited-pack-grid {
         grid-template-columns: 1fr;
     }
 }

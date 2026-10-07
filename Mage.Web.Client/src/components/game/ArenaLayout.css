@@ -20,6 +20,22 @@
     overflow-y: auto;
 }
 
+:root[data-battlefield-background='custom'] .arena-layout {
+    background:
+        linear-gradient(180deg, rgba(13, 17, 23, 0.86), rgba(13, 17, 23, 0.78)),
+        var(--mage-battlefield-background-image, none),
+        linear-gradient(180deg, #0d1117 0%, #161b22 30%, #1a1f28 70%, #0d1117 100%);
+    background-position: center;
+    background-size: auto, cover, auto;
+}
+
+:root[data-battlefield-background='random'] .arena-layout {
+    background:
+        linear-gradient(120deg, rgba(251, 191, 36, 0.12), transparent 36%, rgba(14, 165, 233, 0.12)),
+        linear-gradient(180deg, rgba(13, 17, 23, 0.9), rgba(26, 31, 40, 0.92)),
+        linear-gradient(180deg, #0d1117 0%, #161b22 30%, #1a1f28 70%, #0d1117 100%);
+}
+
 /* ===================================================================
    BATTLEFIELDS (Opponent Top, Player Bottom)
    =================================================================== */
@@ -134,6 +150,8 @@
     position: fixed;
     left: 16px;
     bottom: 16px;
+    transform: scale(var(--mage-player-panel-scale, 1));
+    transform-origin: bottom left;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -387,12 +405,13 @@ button.match-hud-meter:hover {
     position: fixed;
     bottom: 170px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) scale(var(--mage-player-panel-scale, 1));
+    transform-origin: bottom center;
     display: flex;
     flex-direction: column;
     align-items: center;
     z-index: 80;
-    pointer-events: auto;
+    pointer-events: none;
 }
 
 .arena-avatar {
@@ -409,6 +428,7 @@ button.match-hud-meter:hover {
     justify-content: center;
     overflow: hidden;
     transition: all 0.3s ease;
+    pointer-events: auto;
 }
 
 .arena-avatar:hover {
@@ -438,6 +458,7 @@ button.match-hud-meter:hover {
 
 .arena-life-display {
     margin-top: 4px;
+    pointer-events: auto;
     padding: 6px 16px;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.95));
     border-radius: 20px;
@@ -714,6 +735,13 @@ button.arena-mana-pip:disabled {
     gap: 2px;
 }
 
+.arena-stack-ability-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
 .arena-stack-ability-text {
     font-size: 9px;
     font-weight: 400;
@@ -753,6 +781,8 @@ button.arena-mana-pip:disabled {
     flex-direction: column;
     align-items: center;
     width: min(330px, calc(100% - 20px));
+    transform: scale(var(--mage-player-panel-scale, 1));
+    transform-origin: top center;
 }
 
 .arena-opponent-avatar {
@@ -952,6 +982,9 @@ button.arena-mana-pip:disabled {
 /* Reusable clickable styles */
 .clickable-stat {
     appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     border: 0;
     background: transparent;
     font: inherit;
@@ -1051,6 +1084,10 @@ button.arena-mana-pip:disabled {
         padding-inline: 8px;
     }
 
+    .arena-player-area .battlefield {
+        padding-right: 104px;
+    }
+
     .arena-opponent-info {
         left: 12px;
     }
@@ -1067,6 +1104,32 @@ button.arena-mana-pip:disabled {
 
     .match-hud-details-player {
         width: min(330px, calc(100vw - 28px));
+        align-items: flex-end;
+    }
+
+    .arena-avatar-container {
+        right: 10px;
+        bottom: 14px;
+        left: auto;
+        transform: none;
+        align-items: flex-end;
+        z-index: 78;
+    }
+
+    .arena-avatar {
+        width: 44px;
+        height: 44px;
+        border-width: 2px;
+    }
+
+    .arena-life-display {
+        margin-top: 2px;
+        min-width: 38px;
+        padding: 3px 10px;
+    }
+
+    .arena-life-value {
+        font-size: 15px;
     }
 
     .match-hud-chip,
@@ -1080,17 +1143,19 @@ button.arena-mana-pip:disabled {
     }
 
     .arena-stack-container {
+        right: 8px;
         bottom: 300px;
         top: auto;
         transform: none;
+        max-width: 86px;
     }
 
     .arena-stack-card {
-        width: 100px;
+        width: 72px;
     }
 
     .arena-stack-card:not(:first-child) {
-        margin-left: -70px;
+        margin-left: -52px;
     }
 
     .match-hover-preview {

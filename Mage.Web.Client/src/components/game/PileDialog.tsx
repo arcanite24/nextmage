@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { Lightbulb } from 'lucide-react';
 import { Modal, Button } from '../common';
 import { useGameStore } from '../../stores';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -141,7 +142,8 @@ export const PileDialog: React.FC<PileDialogProps> = ({
                 </div>
 
                 <div className="pile-hint">
-                    💡 Click on a pile or its button to select
+                    <Lightbulb size={14} aria-hidden="true" />
+                    Click on a pile or its button to select
                 </div>
             </div>
         </Modal>

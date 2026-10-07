@@ -16,12 +16,14 @@ test('notifies when a match starts', () => {
     assert.equal(notification?.kind, 'game');
     assert.equal(notification?.browser, true);
 });
-test('notifies for game priority prompts', () => {
+test('keeps game priority prompts out of the in-app toast stack', () => {
     const notification = service.fromCallback(callback('gameTarget', { message: 'Choose a target' }));
     assert.equal(notification?.title, 'Priority needed');
     assert.equal(notification?.message, 'Choose a target');
     assert.equal(notification?.tone, 'warning');
     assert.equal(notification?.browser, true);
+    assert.equal(notification?.toast, false);
+    assert.equal(notification?.dedupeKey, 'priority:00000000-0000-0000-0000-000000000001:gameTarget');
 });
 test('notifies when a draft pick is ready', () => {
     const notification = service.fromCallback(callback('draftPick', { message: 'Pick one card' }));

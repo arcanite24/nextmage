@@ -1,4 +1,5 @@
 import React from 'react';
+import { BookOpen, Hand, Heart, Skull, Sparkles } from 'lucide-react';
 import { PlayerView } from '../../types';
 import { cardImageService } from '../../services/CardImageService';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -12,7 +13,7 @@ interface PlayerPanelProps {
     onShowZone?: (zone: 'graveyard' | 'exile' | 'library' | 'sideboard', playerId: string) => void;
 }
 
-export const PlayerPanel: React.FC<PlayerPanelProps> = ({ player, isMe, isOpponent, onClick, onShowZone }) => {
+export const PlayerPanel: React.FC<PlayerPanelProps> = ({ player, isMe, onClick, onShowZone }) => {
     const cardImageFallbackMode = useSettingsStore(state => state.settings.cardImageFallbackMode);
 
     return (
@@ -53,22 +54,22 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({ player, isMe, isOppone
                     {player.hasPriority && <span className="priority-indicator">Priority</span>}
                 </div>
                 <div className="player-stats">
-                    <span className="stat-life">❤️ {player.life}</span>
-                    <span className="stat-hand">✋ {player.handCount}</span>
-                    <span className="stat-library">📚 {player.libraryCount}</span>
+                    <span className="stat-life"><Heart size={14} aria-hidden="true" /> {player.life}</span>
+                    <span className="stat-hand"><Hand size={14} aria-hidden="true" /> {player.handCount}</span>
+                    <span className="stat-library"><BookOpen size={14} aria-hidden="true" /> {player.libraryCount}</span>
                     <span
                         className="stat-graveyard clickable-stat"
-                        onClick={(e) => { e.stopPropagation(); onShowZone && onShowZone('graveyard', player.playerId); }}
+                        onClick={(e) => { e.stopPropagation(); onShowZone?.('graveyard', player.playerId); }}
                         title="View Graveyard"
                     >
-                        💀 {Object.keys(player.graveyard).length}
+                        <Skull size={14} aria-hidden="true" /> {Object.keys(player.graveyard).length}
                     </span>
                     <span
                         className="stat-exile clickable-stat"
-                        onClick={(e) => { e.stopPropagation(); onShowZone && onShowZone('exile', player.playerId); }}
+                        onClick={(e) => { e.stopPropagation(); onShowZone?.('exile', player.playerId); }}
                         title="View Exile"
                     >
-                        🌌 {Object.keys(player.exile).length}
+                        <Sparkles size={14} aria-hidden="true" /> {Object.keys(player.exile).length}
                     </span>
                 </div>
                 <div className="player-mana">

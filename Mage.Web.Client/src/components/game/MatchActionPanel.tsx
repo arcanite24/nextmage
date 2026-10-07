@@ -4,6 +4,7 @@ import { PlayerAction, PlayerView } from '../../types';
 import { useGameStore } from '../../stores';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { BATTLEFIELD_CARD_SIZE_MAX, BATTLEFIELD_CARD_SIZE_MIN } from '../../services/AppConfigService';
 import './MatchActionPanel.css';
 
 interface MatchActionPanelProps {
@@ -235,10 +236,20 @@ export const MatchActionPanel: React.FC<MatchActionPanelProps> = React.memo(({
                     <button type="button" disabled={isWatching} onClick={() => sendPlayerAction('REVOKE_PERMISSIONS_TO_SEE_HAND_CARDS')}>
                         Revoke
                     </button>
-                    <button type="button" disabled={isWatching || !hasTargetPlayer} onClick={() => sendPlayerAction('VIEW_LIMITED_DECK', targetPlayerId)}>
+                    <button
+                        type="button"
+                        disabled={isWatching || !hasTargetPlayer}
+                        onClick={() => sendPlayerAction('VIEW_LIMITED_DECK', targetPlayerId)}
+                        data-testid="match-view-limited-deck-button"
+                    >
                         Limited Deck
                     </button>
-                    <button type="button" disabled={isWatching || !hasTargetPlayer} onClick={() => sendPlayerAction('VIEW_SIDEBOARD', targetPlayerId)}>
+                    <button
+                        type="button"
+                        disabled={isWatching || !hasTargetPlayer}
+                        onClick={() => sendPlayerAction('VIEW_SIDEBOARD', targetPlayerId)}
+                        data-testid="match-view-sideboard-button"
+                    >
                         Sideboard
                     </button>
                 </div>
@@ -292,6 +303,22 @@ export const MatchActionPanel: React.FC<MatchActionPanelProps> = React.memo(({
                     </select>
                 </label>
                 <label className="match-action-field">
+                    <span className="match-action-field-label">
+                        <span>Permanent size</span>
+                        <strong>{settings.battlefieldCardSize}</strong>
+                    </span>
+                    <input
+                        type="range"
+                        min={BATTLEFIELD_CARD_SIZE_MIN}
+                        max={BATTLEFIELD_CARD_SIZE_MAX}
+                        step="1"
+                        value={settings.battlefieldCardSize}
+                        onChange={(event) => setSetting('battlefieldCardSize', Number(event.target.value))}
+                        aria-label="Battlefield permanent size"
+                        data-testid="match-battlefield-card-size"
+                    />
+                </label>
+                <label className="match-action-field">
                     <span>Seat order</span>
                     <select
                         value={settings.matchSeatOrientation}
@@ -332,6 +359,15 @@ export const MatchActionPanel: React.FC<MatchActionPanelProps> = React.memo(({
                         data-testid="match-player-names-toggle"
                     />
                     Always show names
+                </label>
+                <label className="match-action-toggle">
+                    <input
+                        type="checkbox"
+                        checked={settings.displayLifeOnAvatar}
+                        onChange={(event) => setSetting('displayLifeOnAvatar', event.target.checked)}
+                        data-testid="match-life-on-avatar-toggle"
+                    />
+                    Life on avatar
                 </label>
             </section>
 

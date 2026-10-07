@@ -120,3 +120,39 @@ test('imports XMage draft logs from selected pick lines with the current set cod
   ]);
   assert.deepEqual(deck.sideboard, []);
 });
+
+test('exports picked cards as an XMage draft log that imports back through the browser parser', () => {
+  const content = DeckSerializer.exportDraftLog({
+    name: 'Browser Draft Picks',
+    cards: [
+      { amount: 1, cardName: 'Lightning Bolt', setCode: 'M11', cardNumber: '149' },
+      { amount: 2, cardName: 'Naturalize', setCode: 'M11', cardNumber: '190' },
+      { amount: 1, cardName: 'Llanowar Elves', setCode: 'M12', cardNumber: '182' },
+    ],
+    sideboard: [
+      { amount: 1, cardName: 'Forest', setCode: 'M11', cardNumber: '246' },
+    ],
+  }, {
+    draftId: '8a74113b-27e5-4a29-85be-4b83f622af00',
+    exportedAt: '2026-07-06T12:00:00.000Z',
+    players: ['VisualMage', 'Remote Mage'],
+  });
+
+  assert.match(content, /Event #: 8a74113b-27e5-4a29-85be-4b83f622af00/);
+  assert.match(content, /Exported: 2026-07-06T12:00:00\.000Z/);
+  assert.match(content, /Players:\n    VisualMage\n    Remote Mage/);
+  assert.match(content, /------ M11 ------\n\nPack 1 pick 1:\n--> Lightning Bolt/);
+  assert.match(content, /Pack 1 pick 2:\n--> Naturalize\n\nPack 1 pick 3:\n--> Naturalize/);
+  assert.match(content, /------ M12 ------\n\nPack 2 pick 1:\n--> Llanowar Elves/);
+  assert.doesNotMatch(content, /Forest/);
+
+  const imported = DeckSerializer.importDeck(content);
+  assert.equal(imported.name, 'Imported Draft Log');
+  assert.deepEqual(imported.cards, [
+    { amount: 1, cardName: 'Lightning Bolt', setCode: 'M11', cardNumber: null },
+    { amount: 1, cardName: 'Naturalize', setCode: 'M11', cardNumber: null },
+    { amount: 1, cardName: 'Naturalize', setCode: 'M11', cardNumber: null },
+    { amount: 1, cardName: 'Llanowar Elves', setCode: 'M12', cardNumber: null },
+  ]);
+  assert.deepEqual(imported.sideboard, []);
+});

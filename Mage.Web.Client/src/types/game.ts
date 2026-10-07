@@ -20,6 +20,19 @@ export interface PlayableObjectStats {
     playableAmount: number;
 }
 
+export interface CardIconView {
+    iconType?: string | {
+        name?: string;
+        category?: string;
+        resourceName?: string;
+        sortOrder?: number;
+    };
+    text?: string;
+    hint?: string;
+    combinedInfo?: string;
+    canBeCombined?: boolean;
+}
+
 export interface SimpleCardView {
     id: UUID;
     expansionSetCode: string;
@@ -95,7 +108,7 @@ export interface CardView extends SimpleCardView {
     canAttack: boolean;
     canBlock: boolean;
     inViewerOnly: boolean;
-    cardIcons?: unknown[];
+    cardIcons?: CardIconView[];
     originalPower?: unknown;
     originalToughness?: unknown;
     originalColorIdentity?: string | null;
@@ -123,6 +136,8 @@ export interface PermanentView extends CardView {
     manifested: boolean;
     disguised: boolean;
     cloaked: boolean;
+    mutateView?: MutateView;
+    mutated?: boolean;
 }
 
 export interface StackAbilityView extends CardView {
@@ -181,6 +196,12 @@ export interface CommandObjectView {
 export type CardsView = Record<UUID, CardView>;
 export type SimpleCardsView = Record<UUID, SimpleCardView>;
 export type PermanentsView = Record<UUID, PermanentView>;
+
+export interface MutateView {
+    id?: UUID;
+    name?: string;
+    [cardId: string]: CardView | UUID | undefined;
+}
 
 // === Player View ===
 

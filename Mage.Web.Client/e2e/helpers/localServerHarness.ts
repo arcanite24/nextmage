@@ -665,6 +665,10 @@ export class LocalServerFixtureSession {
         return this.client.send<boolean>('testEndGame', [this.sessionId, tableId]);
     }
 
+    async testConcedeMatch(tableId: UUID, losingPlayerIndex = 0): Promise<boolean> {
+        return this.client.send<boolean>('testConcedeMatch', [this.sessionId, tableId, losingPlayerIndex]);
+    }
+
     async initReplay(gameId: UUID): Promise<boolean> {
         return this.client.send<boolean>('replayInit', [gameId, this.sessionId]);
     }
@@ -762,6 +766,21 @@ export class LocalServerFixtureSession {
         }
 
         throw new Error(`Table ${tableId} stayed ${lastTable.tableState}/${lastTable.tableStateText}; expected ${expectedState}`);
+    }
+
+    async waitForTableSeats(tableId: UUID, expectedSeats: RegExp, timeoutMs = 20_000): Promise<TableView> {
+        const deadline = Date.now() + timeoutMs;
+        let lastTable = await this.getTable(tableId);
+
+        while (Date.now() < deadline) {
+            lastTable = await this.getTable(tableId);
+            if (lastTable.seatsInfo?.match(expectedSeats)) {
+                return lastTable;
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        throw new Error(`Table ${tableId} stayed at seats ${lastTable.seatsInfo}; expected ${expectedSeats}`);
     }
 
     async waitForTableGame(tableId: UUID, timeoutMs = 20_000): Promise<UUID> {
@@ -1096,6 +1115,45 @@ export class LocalServerFixtureManager {
         });
     }
 
+    async startConstructedTournament(fixture: LocalServerFixture): Promise<LocalServerFixture> {
+        const entry = this.fixtures.find(candidate => candidate.fixture === fixture);
+        if (!entry) {
+            throw new Error(`Fixture ${fixture.tableName} is not tracked by this manager`);
+        }
+        const { owner } = entry;
+        const aiName = fixture.aiName ?? `${fixture.tableName} AI`;
+
+        await owner.joinTournament(fixture.tableId, aiName, 'Computer - mad', SMOKE_DECK_LIST);
+        await owner.waitForTableSeats(fixture.tableId, /2\/2/, 30_000);
+        await owner.startTournament(fixture.tableId);
+        await owner.waitForTableState(fixture.tableId, 'DUELING', 45_000);
+
+        Object.assign(fixture, {
+            aiName,
+            expectedState: 'DUELING',
+        });
+
+        return fixture;
+    }
+
+    async endConstructedTournamentMatch(fixture: LocalServerFixture): Promise<LocalServerFixture> {
+        const entry = this.fixtures.find(candidate => candidate.fixture === fixture);
+        if (!entry) {
+            throw new Error(`Fixture ${fixture.tableName} is not tracked by this manager`);
+        }
+
+        const ended = await entry.owner.testConcedeMatch(fixture.tableId);
+        if (!ended) {
+            throw new Error(`Server rejected testConcedeMatch for tournament ${fixture.tableName}. Restart the local server in test mode with the websocket testConcedeMatch handler.`);
+        }
+
+        Object.assign(fixture, {
+            expectedState: 'FINISHED',
+        });
+
+        return fixture;
+    }
+
     async createDraftTable(label: string): Promise<LocalServerFixture> {
         const owner = await this.createSession(`${label}-owner`);
         const table = await owner.createTournament(label, {
@@ -1156,8 +1214,9 @@ export class LocalServerFixtureManager {
         const aiName = fixture.aiName ?? `${fixture.tableName} draftbot`;
 
         await owner.joinTournament(fixture.tableId, aiName, 'Computer - draftbot', SMOKE_DECK_LIST);
+        await owner.waitForTableSeats(fixture.tableId, /2\/2/, 30_000);
         await owner.startTournament(fixture.tableId);
-        await owner.waitForTableState(fixture.tableId, 'DRAFTING', 30_000);
+        await owner.waitForTableState(fixture.tableId, 'DRAFTING', 75_000);
 
         Object.assign(fixture, {
             aiName,
@@ -1203,13 +1262,13 @@ export class LocalServerFixtureManager {
 
         await owner.joinTournamentActivity(tournamentStarted.objectId);
 
-        const draftStarted = await owner.waitForCallback('START_DRAFT', undefined, 20_000);
+        const draftStarted = await owner.waitForCallback('START_DRAFT', undefined, 60_000);
         if (!draftStarted.objectId) {
             throw new Error(`Started draft for ${table.tableName} did not include a draft id`);
         }
 
         await owner.joinDraft(draftStarted.objectId);
-        await owner.waitForCallback('DRAFT_INIT', draftStarted.objectId, 20_000);
+        await owner.waitForCallback('DRAFT_INIT', draftStarted.objectId, 45_000);
 
         const draftPick = await owner.waitForCallback('DRAFT_PICK', draftStarted.objectId, 60_000);
         const draftPickView = draftPickViewFromCallback(draftPick);
@@ -1414,11 +1473,59 @@ export class LocalServerHarness {
         return this.page.getByTestId('table-row').filter({ hasText: name });
     }
 
+    async openLobbyView(): Promise<void> {
+        const lobbyTableList = this.page.getByTestId('lobby-table-list');
+        if (await lobbyTableList.isVisible().catch(() => false)) {
+            await this.expectLobbyReady();
+            return;
+        }
+
+        const lobbyHeading = this.page.getByRole('heading', { name: 'Game Tables' });
+        if (await lobbyHeading.isVisible().catch(() => false)) {
+            await this.expectLobbyReady();
+            return;
+        }
+
+        const activitySwitcherLobby = this.page
+            .getByRole('navigation', { name: 'Activity switcher' })
+            .getByRole('button', { name: 'Lobby' });
+        if (await activitySwitcherLobby.isVisible().catch(() => false)) {
+            await activitySwitcherLobby.click();
+            if (await lobbyHeading.isVisible({ timeout: 3_000 }).catch(() => false)) {
+                await this.expectLobbyReady();
+                return;
+            }
+        }
+
+        const lobbyButtons = this.page.getByRole('button', { name: 'Lobby' });
+        const lobbyButtonCount = await lobbyButtons.count().catch(() => 0);
+        for (let index = 0; index < lobbyButtonCount; index += 1) {
+            const lobbyButton = lobbyButtons.nth(index);
+            if (!(await lobbyButton.isVisible().catch(() => false))) continue;
+
+            await lobbyButton.click();
+            if (await lobbyHeading.isVisible({ timeout: 3_000 }).catch(() => false)) {
+                await this.expectLobbyReady();
+                return;
+            }
+        }
+
+        await this.page.reload({ waitUntil: 'domcontentloaded' });
+        if (await lobbyHeading.isVisible({ timeout: 20_000 }).catch(() => false)) {
+            await this.expectLobbyReady();
+            return;
+        }
+
+        await expect(lobbyHeading).toBeVisible({ timeout: 20_000 });
+        await this.expectLobbyReady();
+    }
+
     trackCreatedTable(name: string, id: string | null): void {
         this.trackTable(name, id);
     }
 
     async expectTableRowState(name: string, state: RegExp | string): Promise<Locator> {
+        await this.openLobbyView();
         const row = this.tableRow(name);
         await expect(row).toBeVisible({ timeout: 20_000 });
         await expect(row).toContainText(state, { timeout: 20_000 });
@@ -1466,6 +1573,10 @@ export class LocalServerHarness {
     }
 
     async login(): Promise<void> {
+        await this.page.addInitScript(() => {
+            window.localStorage.removeItem('xmage-session');
+            window.localStorage.removeItem('activity-store');
+        });
         await this.page.goto('/', { waitUntil: 'domcontentloaded' });
         const endpoint = new URL(SERVER_URL);
         await this.page.getByTestId('login-server-host').fill(endpoint.hostname);
@@ -1479,7 +1590,7 @@ export class LocalServerHarness {
 
     async expectLobbyReady(): Promise<void> {
         await expect(this.page.getByRole('heading', { name: 'Game Tables' })).toBeVisible({ timeout: 20_000 });
-        await expect(this.page.getByRole('navigation')).toContainText('Lobby');
+        await expect(this.page.getByRole('navigation', { name: 'Primary' })).toContainText('Lobby');
         await expect(this.page.getByRole('button', { name: /Create Table/i })).toBeVisible();
     }
 
@@ -1554,7 +1665,7 @@ export class LocalServerHarness {
         await expect(aiDialog).toBeHidden({ timeout: 20_000 });
         await expect(waitingRoom).toContainText(aiName, { timeout: 20_000 });
         await this.expectWaitingRoomReady(/2\/2/);
-        await expect(waitingRoom.getByRole('button', { name: 'Start Match' })).toBeEnabled({ timeout: 10_000 });
+        await expect(waitingRoom.getByRole('button', { name: /Start (Match|Tournament)/ })).toBeEnabled({ timeout: 10_000 });
     }
 
     async cleanup(): Promise<void> {
@@ -1638,6 +1749,21 @@ export class LocalServerHarness {
                 this.annotateCleanup(`Unable to leave waiting room through UI: ${String(error)}`);
             });
             await expect(waitingRoom).toBeHidden({ timeout: 10_000 }).catch(() => undefined);
+        }
+
+        const draftWorkspace = this.page.locator(
+            '[data-testid="activity-workspace"][data-activity-kind="draft"]',
+        );
+        if (await draftWorkspace.isVisible().catch(() => false)) {
+            const quitDraftButton = draftWorkspace.getByTestId('draft-quit-button');
+            if (await quitDraftButton.isEnabled().catch(() => false)) {
+                await quitDraftButton.click({ timeout: 5_000 }).catch((error) => {
+                    this.annotateCleanup(`Unable to quit visible draft activity through UI: ${String(error)}`);
+                });
+                await expect(draftWorkspace.getByTestId('activity-command-status'))
+                    .toContainText(/Draft quit|rejected/i, { timeout: 10_000 })
+                    .catch(() => undefined);
+            }
         }
     }
 

@@ -23,6 +23,7 @@ import mage.players.PlayerType;
 import mage.players.net.UserData;
 import mage.remote.MageVersionException;
 import mage.server.draft.CubeFactory;
+import mage.server.draft.DraftController;
 import mage.server.game.GameFactory;
 import mage.server.game.GamesRoom;
 import mage.server.game.PlayerFactory;
@@ -809,9 +810,14 @@ public class MageServerImpl implements MageServer {
                                     managerFactory.sessionManager().getSession(sessionId).ifPresent(
                                             session -> {
                                                 UUID userId = session.getUserId();
-                                                UUID tableId = managerFactory.draftManager().getControllerByDraftId(draftId).getTableId();
+                                                DraftController draftController = managerFactory.draftManager().getControllerByDraftId(draftId);
+                                                if (draftController == null) {
+                                                    logger.debug("Ignoring draft quit for removed draft controller: " + draftId);
+                                                    return;
+                                                }
+                                                UUID tableId = draftController.getTableId();
                                                 Table table = managerFactory.tableManager().getTable(tableId);
-                                                if (table.isTournament()) {
+                                                if (table != null && table.isTournament()) {
                                                     UUID tournamentId = table.getTournament().getId();
                                                     managerFactory.tournamentManager().quit(tournamentId, userId);
                                                 }

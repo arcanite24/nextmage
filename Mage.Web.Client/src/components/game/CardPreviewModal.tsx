@@ -2,6 +2,8 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { CardView, PermanentView, StackAbilityView } from '../../types';
 import { cardImageService } from '../../services/CardImageService';
+import { getCardIconSummary } from '../../services/CardIconService';
+import { hasCardType } from '../../services/BattlefieldLayoutService';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useGameStore } from '../../stores';
 import { ManaCost } from '../common/ManaSymbols';
@@ -9,6 +11,7 @@ import './CardPreviewModal.css';
 
 interface CardPreviewModalProps {
     card: CardView | PermanentView;
+    initialFace?: 'front' | 'back';
     onClose: () => void;
 }
 
@@ -114,7 +117,14 @@ const getSetSymbolGlyph = (rarity: unknown): string => {
     }
 };
 
-export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClose }) => {
+const getMutateCards = (card: PermanentView | null): CardView[] => {
+    if (!card?.mutateView) return [];
+    return Object.entries(card.mutateView)
+        .filter(([key, value]) => key !== 'id' && key !== 'name' && typeof value === 'object' && value !== null)
+        .map(([, value]) => value as CardView);
+};
+
+export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, initialFace, onClose }) => {
     const { showCardReminderText, showCardSetInfo, showCardHints, cardImageFallbackMode } = useSettingsStore(useShallow(state => ({
         showCardReminderText: state.settings.showCardReminderText,
         showCardSetInfo: state.settings.showCardSetInfo,
@@ -130,7 +140,7 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
     const [imageUrl, setImageUrl] = useState<string>(cardImageService.getCardBackUrl());
     const [imageFailed, setImageFailed] = useState(false);
     const [selectedFace, setSelectedFace] = useState<'front' | 'back'>(
-        sourceDisplayCard.transformed ? 'back' : 'front'
+        initialFace ?? (sourceDisplayCard.transformed ? 'back' : 'front')
     );
     const overlayRef = useRef<HTMLDivElement | null>(null);
     const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -139,6 +149,10 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
     const displayCard = selectedFace === 'back' && sourceDisplayCard.secondCardFace
         ? sourceDisplayCard.secondCardFace
         : sourceDisplayCard;
+
+    useEffect(() => {
+        setSelectedFace(initialFace ?? (sourceDisplayCard.transformed ? 'back' : 'front'));
+    }, [initialFace, sourceDisplayCard.id, sourceDisplayCard.transformed]);
 
     // Load image using cache-aware preload (always resolves, returns placeholder on error)
     useEffect(() => {
@@ -220,13 +234,15 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
     const isPermanent = 'tapped' in displayCard;
     const permanentCard = isPermanent ? (displayCard as PermanentView) : null;
     const originalCard = permanentCard?.original;
+    const mutateCards = getMutateCards(permanentCard);
+    const isMutated = Boolean(permanentCard?.mutated || mutateCards.length > 0);
     const hasSplitDetails = displayCard.isSplitCard && (
         displayCard.leftSplitName ||
         displayCard.leftSplitRules?.length ||
         displayCard.rightSplitName ||
         displayCard.rightSplitRules?.length
     );
-    const cardIconCount = Array.isArray(displayCard.cardIcons) ? displayCard.cardIcons.length : 0;
+    const cardIconSummary = getCardIconSummary(displayCard.cardIcons);
     const rarityClassName = String(displayCard.rarity || 'common').toLowerCase();
     const setSymbolLabel = [
         displayCard.expansionSetCode || 'Unknown set',
@@ -273,6 +289,7 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
         displayCard.isChoosable ? 'Choosable' : null,
         displayCard.playableStats?.playableAmount > 0 ? 'Playable' : null,
         permanentCard?.copy ? 'Copy' : null,
+        isMutated ? 'Mutated' : null,
         permanentCard?.tapped ? 'Tapped' : null,
         permanentCard?.canAttack ? 'Can attack' : null,
         permanentCard?.canBlock ? 'Can block' : null,
@@ -286,7 +303,7 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
         { label: 'Target links', value: displayCard.targets?.length },
         { label: 'Paired card', value: displayCard.pairedCard },
         { label: 'Band members', value: displayCard.bandedCards?.length },
-        { label: 'Ability icons', value: cardIconCount > 0 ? cardIconCount : '' },
+        { label: 'Card icons', value: cardIconSummary },
         { label: 'Image file', value: displayCard.imageFileName },
         { label: 'Art rect', value: displayCard.artRect },
         { label: 'Original power', value: displayCard.originalPower },
@@ -467,7 +484,7 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
                     )}
 
                     {/* P/T for creatures */}
-                    {displayCard.cardTypes?.includes('Creature') && (
+                    {hasCardType(displayCard, 'Creature') && (
                         <div className="card-info-pt">
                             <span className="pt-value">
                                 {displayCard.power}/{displayCard.toughness}
@@ -479,7 +496,7 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
                     )}
 
                     {/* Loyalty for planeswalkers */}
-                    {displayCard.cardTypes?.includes('Planeswalker') && displayCard.loyalty && (
+                    {hasCardType(displayCard, 'Planeswalker') && displayCard.loyalty && (
                         <div className="card-info-loyalty">
                             Loyalty: <span className="loyalty-value">
                                 {displayCard.loyalty}
@@ -500,8 +517,30 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClos
                             {originalCard && (
                                 <CardStateItem label="Original" value={originalCard.name} />
                             )}
-                            {cardIconCount > 0 && (
-                                <CardStateItem label="Ability icons" value={String(cardIconCount)} />
+                            {cardIconSummary && (
+                                <CardStateItem label="Card icons" value={cardIconSummary} />
+                            )}
+                        </div>
+                    )}
+
+                    {isMutated && (
+                        <div className="card-info-mutate" data-testid="card-preview-mutate-stack">
+                            <div className="card-info-mutate-title">Mutate Stack</div>
+                            {mutateCards.length > 0 ? (
+                                <div className="card-info-mutate-list">
+                                    {mutateCards.map((mutateCard) => (
+                                        <div className="card-info-mutate-card" key={mutateCard.id}>
+                                            <span>{mutateCard.name}</span>
+                                            {mutateCard.cardTypes?.length > 0 && (
+                                                <small>{mutateCard.cardTypes.join(' ')}</small>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="card-info-mutate-empty">
+                                    Mutate details are not included in this server payload.
+                                </div>
                             )}
                         </div>
                     )}

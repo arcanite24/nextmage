@@ -92,6 +92,9 @@
 }
 
 .chat-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
     padding: var(--space-1) var(--space-3);
     font-size: var(--text-xs);
     font-weight: 500;
@@ -112,6 +115,24 @@
 .chat-tab.active {
     color: var(--color-text-primary);
     background: var(--color-bg-elevated);
+}
+
+.chat-tab[data-joined="false"] {
+    opacity: 0.65;
+}
+
+.chat-tab-unread {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    color: white;
+    background: var(--color-accent-primary);
+    border-radius: var(--radius-full);
+    font-size: 10px;
+    font-weight: 700;
 }
 
 /* Messages */
@@ -135,17 +156,34 @@
 }
 
 .chat-message {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: var(--space-2);
+    row-gap: 2px;
     padding: var(--space-2);
     border-radius: var(--radius-sm);
-    font-size: var(--text-sm);
+    font-size: var(--mage-chat-font-size, var(--text-sm));
     line-height: 1.4;
 }
 
 .chat-message:hover {
     background: var(--color-bg-hover);
+}
+
+.message-meta {
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 44px;
+    color: var(--color-text-muted);
+    font-size: 10px;
+    line-height: 1.2;
+    text-align: right;
+}
+
+.message-turn {
+    color: var(--color-text-secondary);
 }
 
 .message-author {
@@ -156,12 +194,41 @@
 .message-text {
     color: var(--color-text-primary);
     word-break: break-word;
+    min-width: 0;
 }
 
-.message-time {
-    margin-left: auto;
-    font-size: var(--text-xs);
-    color: var(--color-text-muted);
+.message-text a {
+    color: var(--color-accent-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.chat-card-ref {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 4px;
+    border: 1px solid color-mix(in srgb, var(--color-accent-warning), transparent 35%);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-accent-warning), transparent 85%);
+    color: var(--color-text-primary);
+    font-weight: 600;
+    cursor: help;
+}
+
+.chat-mana-symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin: 0 1px;
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-full);
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    font-size: 10px;
+    font-weight: 700;
+    vertical-align: text-bottom;
 }
 
 /* Message types */
@@ -176,6 +243,26 @@
 
 .message-status .message-text {
     color: var(--color-accent-success);
+}
+
+.message-game .message-text {
+    color: var(--color-accent-warning);
+}
+
+.message-personal .message-text {
+    color: var(--color-accent-primary);
+}
+
+.message-whisper-from,
+.message-whisper-to {
+    background: color-mix(in srgb, var(--color-accent-warning), transparent 88%);
+}
+
+.message-whisper-from .message-author,
+.message-whisper-to .message-author,
+.message-whisper-from .message-text,
+.message-whisper-to .message-text {
+    color: var(--color-accent-warning);
 }
 
 .message-error .message-text {
@@ -193,7 +280,7 @@
 .chat-input {
     flex: 1;
     padding: var(--space-2) var(--space-3);
-    font-size: var(--text-sm);
+    font-size: var(--mage-chat-font-size, var(--text-sm));
     color: var(--color-text-primary);
     background: var(--color-bg-dark);
     border: 1px solid var(--color-glass-border);

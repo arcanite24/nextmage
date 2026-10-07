@@ -18,6 +18,16 @@ function readNumber(value) {
 function readBoolean(value) {
     return typeof value === 'boolean' ? value : null;
 }
+function readTournamentTableId(data) {
+    return readRecordString(data, 'currentTableId')
+        ?? readRecordString(data, 'tableId')
+        ?? readRecordString(data, 'parentTableId');
+}
+function readStringArray(value) {
+    if (!Array.isArray(value))
+        return [];
+    return value.filter((item) => typeof item === 'string' && item.length > 0);
+}
 function readGameView(value) {
     return isRecord(value) && Array.isArray(value.players) && 'turn' in value
         ? value
@@ -63,6 +73,133 @@ function replayPayloadFromCallback(callback) {
             return null;
     }
 }
+function formatTournamentDate(value) {
+    if (typeof value === 'string' && value.trim())
+        return value;
+    if (typeof value === 'number' && Number.isFinite(value))
+        return new Date(value).toISOString();
+    return null;
+}
+function readTournamentPlayer(value) {
+    if (!isRecord(value))
+        return null;
+    const name = readString(value.name);
+    if (!name)
+        return null;
+    return {
+        name,
+        state: readString(value.state) ?? '',
+        points: readNumber(value.points) ?? 0,
+        results: readString(value.results) ?? '',
+        flagName: readString(value.flagName),
+        history: readString(value.history),
+        quit: readBoolean(value.quit)
+            ?? readBoolean(value.isQuit)
+            ?? readBoolean(value.hasQuit)
+            ?? false,
+    };
+}
+function readTournamentMatch(value, fallbackRoundNumber, watchingAllowed) {
+    if (!isRecord(value))
+        return null;
+    const state = readString(value.state) ?? '';
+    return {
+        roundNumber: readNumber(value.roundNum) ?? readNumber(value.roundNumber) ?? fallbackRoundNumber,
+        tableId: readString(value.tableId),
+        matchId: readString(value.matchId),
+        gameId: readString(value.gameId),
+        players: readString(value.players) ?? '',
+        state,
+        result: readString(value.result) ?? '',
+        canWatch: watchingAllowed && state.startsWith('Dueling') && Boolean(readString(value.tableId)),
+    };
+}
+function flattenTournamentMatches(rounds, watchingAllowed) {
+    if (!Array.isArray(rounds))
+        return [];
+    return rounds.flatMap((round, roundIndex) => {
+        if (!isRecord(round) || !Array.isArray(round.games))
+            return [];
+        const fallbackRoundNumber = readNumber(round.roundNumber) ?? roundIndex + 1;
+        return round.games
+            .map(game => readTournamentMatch(game, fallbackRoundNumber, watchingAllowed))
+            .filter((game) => game !== null);
+    });
+}
+function tournamentPayloadFromCallback(callback) {
+    const tournamentId = callback.objectId;
+    if (!tournamentId)
+        return null;
+    const data = isRecord(callback.data) ? callback.data : {};
+    const tableId = readTournamentTableId(data);
+    if (callback.method === 'startTournament' || callback.method === 'showTournament') {
+        return {
+            tournamentId,
+            tableId,
+            name: 'Tournament',
+            type: '',
+            state: callback.method === 'startTournament' ? 'Starting' : 'Showing',
+            startTime: null,
+            endTime: null,
+            stepStartTime: null,
+            serverTime: null,
+            constructionTime: 0,
+            watchingAllowed: false,
+            runningInfo: '',
+            players: [],
+            matches: [],
+            message: null,
+        };
+    }
+    if (callback.method === 'tournamentOver') {
+        return {
+            tournamentId,
+            tableId,
+            name: 'Tournament',
+            type: '',
+            state: 'Completed',
+            startTime: null,
+            endTime: null,
+            stepStartTime: null,
+            serverTime: null,
+            constructionTime: 0,
+            watchingAllowed: false,
+            runningInfo: '',
+            players: [],
+            matches: [],
+            message: readString(callback.data),
+        };
+    }
+    const tournament = callback.data;
+    if (!isRecord(tournament))
+        return null;
+    const tournamentRecord = tournament;
+    const watchingAllowed = readBoolean(tournamentRecord.watchingAllowed)
+        ?? readBoolean(tournamentRecord.isWatchingAllowed)
+        ?? false;
+    const name = readString(tournamentRecord.tournamentName) ?? 'Tournament';
+    return {
+        tournamentId,
+        tableId,
+        name,
+        type: readString(tournamentRecord.tournamentType) ?? '',
+        state: readString(tournamentRecord.tournamentState) ?? '',
+        startTime: formatTournamentDate(tournamentRecord.startTime),
+        endTime: formatTournamentDate(tournamentRecord.endTime),
+        stepStartTime: formatTournamentDate(tournamentRecord.stepStartTime),
+        serverTime: formatTournamentDate(tournamentRecord.serverTime),
+        constructionTime: readNumber(tournamentRecord.constructionTime) ?? 0,
+        watchingAllowed,
+        runningInfo: readString(tournamentRecord.runningInfo) ?? '',
+        players: Array.isArray(tournamentRecord.players)
+            ? tournamentRecord.players
+                .map(readTournamentPlayer)
+                .filter((player) => player !== null)
+            : [],
+        matches: flattenTournamentMatches(tournamentRecord.rounds, watchingAllowed),
+        message: null,
+    };
+}
 function readDraftPickPayload(data) {
     const candidate = data.draftPickView;
     if (!isRecord(candidate) || !isRecord(candidate.booster) || !isRecord(candidate.picks))
@@ -73,6 +210,21 @@ function readDraftPickPayload(data) {
         picking: candidate.picking === true,
         timeout: readNumber(candidate.timeout) ?? undefined,
         message: readString(candidate.message) ?? undefined,
+    };
+}
+function readDraftPayload(data, draftId) {
+    const candidate = data.draftView;
+    if (!isRecord(candidate))
+        return null;
+    return {
+        draftId,
+        tableId: readRecordString(data, 'currentTableId') ?? readRecordString(data, 'tableId'),
+        setNames: readStringArray(candidate.setNames),
+        setCodes: readStringArray(candidate.setCodes),
+        boosterNum: readNumber(candidate.boosterNum) ?? 0,
+        cardNum: readNumber(candidate.cardNum) ?? 0,
+        isCube: readBoolean(candidate.isCube) ?? readBoolean(candidate.cube) ?? false,
+        players: readStringArray(candidate.players),
     };
 }
 function readCardName(record) {
@@ -176,6 +328,22 @@ function mergeDraftPickPayload(previous, next) {
         message: next.message ?? previous.message,
     };
 }
+function mergeDraftPayload(previous, next) {
+    if (!previous)
+        return next ?? null;
+    if (!next)
+        return previous;
+    return {
+        draftId: next.draftId,
+        tableId: next.tableId ?? previous.tableId,
+        setNames: next.setNames.length > 0 ? next.setNames : previous.setNames,
+        setCodes: next.setCodes.length > 0 ? next.setCodes : previous.setCodes,
+        boosterNum: next.boosterNum || previous.boosterNum,
+        cardNum: next.cardNum || previous.cardNum,
+        isCube: next.isCube || previous.isCube,
+        players: next.players.length > 0 ? next.players : previous.players,
+    };
+}
 function deckFromActivityData(data) {
     const deck = data.deck;
     if (!deck || typeof deck !== 'object')
@@ -203,6 +371,29 @@ function constructionDeckWithDraftFallback(incomingDeck, fallbackDeck) {
         format: readString(incomingDeck.format) ?? fallbackDeck.format,
         cards: fallbackDeck.cards.map(card => ({ ...card })),
         sideboard: fallbackDeck.sideboard.map(card => ({ ...card })),
+    };
+}
+function mergeTournamentPayload(previous, next) {
+    if (!previous)
+        return next ?? null;
+    if (!next)
+        return previous;
+    return {
+        tournamentId: next.tournamentId,
+        tableId: next.tableId ?? previous.tableId,
+        name: next.name && next.name !== 'Tournament' ? next.name : previous.name,
+        type: next.type || previous.type,
+        state: next.state || previous.state,
+        startTime: next.startTime ?? previous.startTime,
+        endTime: next.endTime ?? previous.endTime,
+        stepStartTime: next.stepStartTime ?? previous.stepStartTime,
+        serverTime: next.serverTime ?? previous.serverTime,
+        constructionTime: next.constructionTime || previous.constructionTime,
+        watchingAllowed: next.watchingAllowed || previous.watchingAllowed,
+        runningInfo: next.runningInfo || previous.runningInfo,
+        players: next.players.length > 0 ? next.players : previous.players,
+        matches: next.matches.length > 0 ? next.matches : previous.matches,
+        message: next.message ?? previous.message,
     };
 }
 function shouldFocusActivity(activity) {
@@ -319,16 +510,20 @@ function activityFromCallback(callback) {
         case 'showTournament':
         case 'tournamentInit':
         case 'tournamentUpdate':
-        case 'tournamentOver':
+        case 'tournamentOver': {
             if (!objectId)
                 return null;
+            const tournament = tournamentPayloadFromCallback(callback);
             return {
                 id: `tournament:${objectId}`,
                 kind: 'tournament',
-                title: titleFor('tournament', readRecordString(data, 'tournamentName')),
+                title: titleFor('tournament', tournament?.name ?? readRecordString(data, 'tournamentName')),
                 objectId,
                 status: callback.method === 'tournamentOver' ? 'completed' : 'active',
+                tournament,
+                tableId: tournament?.tableId ?? readTournamentTableId(data),
             };
+        }
         case 'startDraft':
         case 'draftInit':
         case 'draftPick':
@@ -337,6 +532,7 @@ function activityFromCallback(callback) {
             if (!objectId)
                 return null;
             const draftPick = readDraftPickPayload(data);
+            const draft = readDraftPayload(data, objectId);
             return {
                 id: `draft:${objectId}`,
                 kind: 'draft',
@@ -344,6 +540,7 @@ function activityFromCallback(callback) {
                 objectId,
                 status: callback.method === 'draftOver' ? 'completed' : 'active',
                 deck: deckFromActivityData(data),
+                draft,
                 draftPick,
                 time: readNumber(data.time) ?? draftPick?.timeout ?? undefined,
             };
@@ -404,6 +601,7 @@ export const useActivityStore = create()(devtools(immer((set) => ({
         set((state) => {
             const existing = state.activities.find(item => item.id === activity.id);
             const draftPick = mergeDraftPickPayload(existing?.draftPick, activity.draftPick);
+            const draft = mergeDraftPayload(existing?.draft, activity.draft);
             const incomingDeck = activity.kind === 'draft'
                 ? deckFromDraftPick(draftPick) ?? activity.deck ?? existing?.deck ?? null
                 : activity.deck ?? existing?.deck ?? null;
@@ -420,9 +618,12 @@ export const useActivityStore = create()(devtools(immer((set) => ({
                 lastMessageId: callback.messageId,
                 updatedAt: Date.now(),
                 deck,
+                draft,
                 draftPick,
                 replay: activity.replay ?? existing?.replay ?? null,
+                tournament: mergeTournamentPayload(existing?.tournament, activity.tournament),
                 limitedSideboard: activity.limitedSideboard ?? existing?.limitedSideboard ?? false,
+                tableId: activity.tableId ?? existing?.tableId ?? null,
                 time: activity.time ?? draftPick?.timeout ?? existing?.time,
             };
             if (existing) {
@@ -477,6 +678,7 @@ export const useActivityStore = create()(devtools(immer((set) => ({
             lastCallbackMethod: 'clientActivity',
             lastMessageId: 0,
             updatedAt: Date.now(),
+            tableId: kind === 'tournament' ? options.objectId ?? null : undefined,
         };
         set((state) => {
             const existing = state.activities.find(item => item.id === id);
@@ -537,6 +739,7 @@ export const useActivityStore = create()(devtools(immer((set) => ({
                 lastMessageId: 0,
                 updatedAt: Date.now(),
                 deck,
+                draft: null,
                 draftPick: mergedDraftPick,
                 time: mergedDraftPick?.timeout,
             });

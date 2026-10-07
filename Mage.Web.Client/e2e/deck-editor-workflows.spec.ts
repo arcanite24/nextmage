@@ -811,7 +811,7 @@ test.describe('deck editor browser workflows', () => {
     await page.getByRole('button', { name: 'Search cards' }).click();
     await expect(collectionCards(page)).toHaveCount(1);
 
-    await page.getByRole('button', { name: 'Reset' }).click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
     await page.getByTestId('deck-editor-card-name-filter').fill('');
     await page.getByRole('button', { name: 'Search cards' }).click();
     await expect(collectionCard(page, 'Lightning Bolt')).toBeVisible();
@@ -1781,6 +1781,54 @@ test.describe('deck editor browser workflows', () => {
     await expect(workspace.getByTestId('activity-deck-main-count')).toHaveText('60');
     await expect(workspace.getByTestId('activity-deck-analytics').getByTestId('deck-analytics-stat-main')).toContainText('60/40');
     await expect(workspace.getByTestId('activity-deck-legality').getByTestId('deck-legality-panel')).toBeVisible();
+  });
+
+  test('renders standalone card viewer activity with search, layout, preview, and preload controls', async ({ page }) => {
+    const pixel = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/l9Q8WQAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    await page.route('https://api.scryfall.com/**', async route => {
+      await new Promise(resolve => setTimeout(resolve, 80));
+      await route.fulfill({ status: 200, contentType: 'image/png', body: pixel });
+    });
+
+    await gotoVisual(page, '/visual.html?scenario=card-viewer-tool');
+    await expect(page.locator('body')).toHaveAttribute('data-visual-ready', 'true');
+
+    const workspace = page.getByTestId('activity-workspace');
+    await expect(workspace).toHaveAttribute('data-activity-kind', 'card-viewer');
+    await expect(workspace.getByTestId('activity-workspace-title')).toHaveText('Card viewer');
+    await expect(workspace.getByTestId('activity-command-panel')).toHaveAttribute('data-command-count', '0');
+    await expect(workspace.getByTestId('activity-command-panel')).toHaveAttribute('data-deck-read-only', 'true');
+
+    const viewer = workspace.getByTestId('card-viewer-activity');
+    await expect(viewer).toBeVisible();
+    await expect(viewer.getByTestId('card-viewer-format-select')).toContainText('Standard');
+    await expect(viewer.getByTestId('card-viewer-result-count')).toContainText(/result/);
+    await expect(viewer.getByTestId('card-viewer-card')).not.toHaveCount(0);
+    await expect(viewer.getByTestId('card-viewer-page-label')).toContainText('Page 1 /');
+
+    await viewer.getByTestId('card-viewer-layout-4x4').click();
+    await expect(viewer).toHaveAttribute('data-layout', '4x4');
+    await viewer.getByTestId('card-viewer-kind-tokens').click();
+    await expect(viewer).toHaveAttribute('data-card-kind', 'tokens');
+    await viewer.getByTestId('card-viewer-kind-cards').click();
+
+    const firstCard = viewer.getByTestId('card-viewer-card').first();
+    await firstCard.click();
+    await expect(viewer.getByTestId('card-viewer-preview')).toContainText(await firstCard.getAttribute('data-card-name') ?? '');
+    await viewer.getByRole('button', { name: 'Big Preview' }).click();
+    await expect(page.getByTestId('card-preview-modal')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('card-preview-modal')).toHaveCount(0);
+
+    await viewer.getByTestId('card-viewer-preload-page').click();
+    await expect(viewer.getByTestId('card-viewer-cancel-preload')).toBeVisible();
+    await expect(viewer.getByTestId('card-viewer-preload-progress')).toContainText('/');
+    await viewer.getByTestId('card-viewer-cancel-preload').click();
+    await expect(viewer.getByTestId('card-viewer-preload-page')).toBeVisible();
+    await expect(viewer.getByTestId('card-viewer-missing-count')).toHaveText('0');
   });
 
   test('renders viewed sideboard callbacks as read-only sideboard deck views', async ({ page }) => {

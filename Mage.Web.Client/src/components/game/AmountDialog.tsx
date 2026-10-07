@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Lightbulb } from 'lucide-react';
 import { Modal, Button } from '../common';
 import { useGameStore } from '../../stores';
 import './AmountDialog.css';
@@ -148,7 +149,8 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
                 </Button>
 
                 <div className="amount-hint">
-                    💡 Use ↑/↓ arrows or Enter to confirm
+                    <Lightbulb size={14} aria-hidden="true" />
+                    Use ↑/↓ arrows or Enter to confirm
                 </div>
             </div>
         </Modal>

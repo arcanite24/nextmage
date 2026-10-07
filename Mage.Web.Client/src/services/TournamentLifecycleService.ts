@@ -46,7 +46,10 @@ export function createTournamentLifecycleHandler(options: TournamentLifecycleOpt
                 return;
             }
 
-            if (callback.method !== 'startTournament' || !callback.objectId) {
+            if (
+                (callback.method !== 'startTournament' && callback.method !== 'showTournament')
+                || !callback.objectId
+            ) {
                 return;
             }
 

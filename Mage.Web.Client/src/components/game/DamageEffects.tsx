@@ -23,16 +23,29 @@ interface DamageEffect {
     timestamp: number;
 }
 
+interface CounterEffect {
+    id: string;
+    playerId: UUID;
+    counterName: string;
+    amount: number;
+    type: 'counterGain' | 'counterLoss';
+    previousValue: number;
+    currentValue: number;
+    timestamp: number;
+}
+
 export const DamageEffects: React.FC = React.memo(() => {
-    const { activeDamageEffects } = useAnimationStore(
+    const { activeDamageEffects, activePlayerCounterEffects } = useAnimationStore(
         useShallow((state) => ({
             activeDamageEffects: state.activeDamageEffects,
+            activePlayerCounterEffects: state.activePlayerCounterEffects,
         }))
     );
 
     const myPlayerId = useGameStore((state) => state.gameView?.myPlayerId);
 
     const [effects, setEffects] = useState<DamageEffect[]>([]);
+    const [counterEffects, setCounterEffects] = useState<CounterEffect[]>([]);
 
     // Convert store damage effects to renderable effects
     useEffect(() => {
@@ -47,6 +60,20 @@ export const DamageEffects: React.FC = React.memo(() => {
         setEffects(newEffects);
     }, [activeDamageEffects, myPlayerId]);
 
+    useEffect(() => {
+        const newCounterEffects: CounterEffect[] = activePlayerCounterEffects.map((effect) => ({
+            id: effect.id,
+            playerId: effect.targetId,
+            counterName: effect.counterName,
+            amount: effect.amount,
+            type: effect.type,
+            previousValue: effect.previousValue,
+            currentValue: effect.currentValue,
+            timestamp: effect.timestamp,
+        }));
+        setCounterEffects(newCounterEffects);
+    }, [activePlayerCounterEffects]);
+
     // Get position for damage number
     const getDamagePosition = (playerId: UUID): { x: number; y: number } | null => {
         // Try player avatar
@@ -59,7 +86,7 @@ export const DamageEffects: React.FC = React.memo(() => {
         };
     };
 
-    if (effects.length === 0) return null;
+    if (effects.length === 0 && counterEffects.length === 0) return null;
 
     return (
         <>
@@ -87,6 +114,33 @@ export const DamageEffects: React.FC = React.memo(() => {
                         data-testid={effect.type === 'lifeGain' ? 'life-gain-number' : 'damage-number'}
                     >
                         {effect.type === 'lifeGain' ? `+${effect.amount}` : `-${effect.amount}`}
+                    </div>
+                );
+            })}
+
+            {/* Floating player counter-change chips */}
+            {counterEffects.map((effect, index) => {
+                const pos = getDamagePosition(effect.playerId);
+                if (!pos) return null;
+                const signedAmount = effect.type === 'counterGain' ? `+${effect.amount}` : `-${effect.amount}`;
+
+                return (
+                    <div
+                        key={`counter-${effect.id}`}
+                        className={`player-counter-effect ${effect.type === 'counterGain' ? 'counter-gain' : 'counter-loss'}`}
+                        style={{
+                            left: pos.x,
+                            top: pos.y + 34 + index * 26,
+                        }}
+                        data-testid="player-counter-effect"
+                        data-player-id={effect.playerId}
+                        data-counter-name={effect.counterName}
+                        data-effect-type={effect.type}
+                        data-previous-value={effect.previousValue}
+                        data-current-value={effect.currentValue}
+                    >
+                        <span className="player-counter-effect-delta">{signedAmount}</span>
+                        <span className="player-counter-effect-name">{effect.counterName}</span>
                     </div>
                 );
             })}

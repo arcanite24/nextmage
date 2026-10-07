@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AppConfigService, DEFAULT_CLIENT_SETTINGS, DEFAULT_CREATE_TABLE_PRESET, DEFAULT_CREATE_TABLE_PRESETS, DEFAULT_DECK_EDITOR_CONFIG, DEFAULT_DECK_FILE_HISTORY, DEFAULT_DECK_GENERATOR_SETTINGS, DEFAULT_DECK_SEARCH_SETTINGS, DEFAULT_LOBBY_CONFIG, DEFAULT_LOBBY_FILTERS, MAX_IGNORED_USERS, clientSettingsToUserData, normalizeClientSettings, normalizeCreateTablePreset, normalizeDeckEditorConfig, normalizeDeckFileHistory, normalizeDeckGeneratorSettings, normalizeDeckSearchSettings, normalizeLobbyConfig, } from './AppConfigService.js';
+import { AppConfigService, DEFAULT_CLIENT_SETTINGS, DEFAULT_CREATE_TABLE_PRESET, DEFAULT_CREATE_TABLE_PRESETS, DEFAULT_CREATE_TOURNAMENT_PRESET, DEFAULT_CREATE_TOURNAMENT_PRESETS, DEFAULT_DECK_EDITOR_CONFIG, DEFAULT_DECK_FILE_HISTORY, DEFAULT_DECK_GENERATOR_SETTINGS, DEFAULT_DECK_SEARCH_SETTINGS, DEFAULT_KEYBINDS, DEFAULT_LOBBY_CONFIG, DEFAULT_LOBBY_FILTERS, DEFAULT_PANEL_LAYOUT_CONFIG, MAX_IGNORED_USERS, clientSettingsToUserData, normalizeClientSettings, normalizeCreateTablePreset, normalizeCreateTournamentPreset, normalizeDeckEditorConfig, normalizeDeckFileHistory, normalizeDeckGeneratorSettings, normalizeDeckSearchSettings, normalizeLobbyConfig, normalizePanelLayoutConfig, } from './AppConfigService.js';
 test('maps client settings to the Java connectSetUserData payload defaults', () => {
     assert.deepEqual(clientSettingsToUserData(DEFAULT_CLIENT_SETTINGS), {
         groupId: 0,
@@ -52,9 +52,47 @@ test('normalizes persisted profile settings before building user data', () => {
         autoTargetLevel: 99,
         imageCacheMaxAgeDays: -5,
         battlefieldGrouping: 'invalid-grouping',
+        battlefieldCardSize: 400,
         matchSeatOrientation: 'sideways',
         alwaysShowPlayerNames: false,
+        displayLifeOnAvatar: false,
         cardImageFallbackMode: 'text-card',
+        chatProfanityFilterLevel: 2,
+        skipPrioritySteps: {
+            yourTurn: {
+                draw: true,
+            },
+            stopOnAllEndPhases: false,
+        },
+        tooltipDelayMs: -100,
+        handCardSize: 999,
+        dialogFontSize: 3,
+        chatFontSize: 40,
+        masterVolume: 200,
+        effectsVolume: -1,
+        cardRenderingMode: 'text-only',
+        clientTheme: 'java-light',
+        battlefieldBackgroundMode: 'custom',
+        customBattlefieldBackground: '  https://example.test/battlefield.jpg  ',
+        keybinds: {
+            confirm: {
+                key: 'Enter',
+                eventType: 'keyup',
+                ctrlOrMeta: true,
+                altKey: false,
+                shiftKey: true,
+                enabled: true,
+            },
+            toggleMacro: {
+                key: '',
+                eventType: 'keyup',
+                ctrlOrMeta: true,
+                altKey: true,
+                shiftKey: true,
+                enabled: false,
+            },
+        },
+        restoreSessionOnReconnect: false,
     });
     const userData = clientSettingsToUserData(settings);
     assert.equal(settings.avatarId, 9999);
@@ -62,13 +100,62 @@ test('normalizes persisted profile settings before building user data', () => {
     assert.equal(settings.autoTargetLevel, 2);
     assert.equal(settings.imageCacheMaxAgeDays, 1);
     assert.equal(settings.battlefieldGrouping, DEFAULT_CLIENT_SETTINGS.battlefieldGrouping);
+    assert.equal(settings.battlefieldCardSize, 99);
+    assert.equal(normalizeClientSettings({ battlefieldCardSize: 2 }).battlefieldCardSize, 7);
     assert.equal(settings.matchSeatOrientation, DEFAULT_CLIENT_SETTINGS.matchSeatOrientation);
     assert.equal(settings.alwaysShowPlayerNames, false);
+    assert.equal(settings.displayLifeOnAvatar, false);
     assert.equal(settings.cardImageFallbackMode, 'text-card');
+    assert.equal(settings.chatProfanityFilterLevel, 2);
+    assert.equal(settings.skipPrioritySteps.yourTurn.draw, true);
+    assert.equal(settings.skipPrioritySteps.yourTurn.main1, true);
+    assert.equal(settings.skipPrioritySteps.opponentTurn.draw, false);
+    assert.equal(settings.skipPrioritySteps.stopOnAllEndPhases, false);
+    assert.equal(settings.tooltipDelayMs, 0);
+    assert.equal(settings.handCardSize, 160);
+    assert.equal(settings.dialogFontSize, 10);
+    assert.equal(settings.chatFontSize, 28);
+    assert.equal(settings.masterVolume, 100);
+    assert.equal(settings.effectsVolume, 0);
+    assert.equal(settings.cardRenderingMode, 'text-only');
+    assert.equal(settings.clientTheme, 'java-light');
+    assert.equal(settings.battlefieldBackgroundMode, 'custom');
+    assert.equal(settings.customBattlefieldBackground, 'https://example.test/battlefield.jpg');
+    assert.deepEqual(settings.keybinds.confirm, {
+        key: 'Enter',
+        eventType: 'keyup',
+        ctrlOrMeta: true,
+        altKey: false,
+        shiftKey: true,
+        enabled: true,
+    });
+    assert.deepEqual(settings.keybinds.toggleMacro, {
+        ...DEFAULT_KEYBINDS.toggleMacro,
+        eventType: 'keyup',
+        ctrlOrMeta: true,
+        altKey: true,
+        shiftKey: true,
+        enabled: false,
+    });
+    assert.equal(settings.restoreSessionOnReconnect, false);
+    assert.equal(normalizeClientSettings({ chatProfanityFilterLevel: 9 }).chatProfanityFilterLevel, DEFAULT_CLIENT_SETTINGS.chatProfanityFilterLevel);
     assert.equal(normalizeClientSettings({ cardImageFallbackMode: 'binder-page' }).cardImageFallbackMode, DEFAULT_CLIENT_SETTINGS.cardImageFallbackMode);
     assert.equal(userData.avatarId, 9999);
     assert.equal(userData.flagName, 'mx');
     assert.equal(userData.autoTargetLevel, 2);
+    assert.equal(userData.userSkipPrioritySteps.yourTurn.draw, true);
+    assert.equal(userData.userSkipPrioritySteps.stopOnAllEndPhases, false);
+});
+test('loads and resets cloned default client settings', () => {
+    const storage = new MemoryStorage();
+    const service = new AppConfigService(storage);
+    const loaded = service.loadSettings();
+    const reset = service.resetSettings();
+    assert.deepEqual(loaded, DEFAULT_CLIENT_SETTINGS);
+    assert.deepEqual(reset, DEFAULT_CLIENT_SETTINGS);
+    assert.notEqual(loaded, DEFAULT_CLIENT_SETTINGS);
+    assert.notEqual(loaded.keybinds, DEFAULT_CLIENT_SETTINGS.keybinds);
+    assert.notEqual(loaded.skipPrioritySteps, DEFAULT_CLIENT_SETTINGS.skipPrioritySteps);
 });
 test('normalizes lobby config with durable filters, selected table, sort, and column layout', () => {
     const config = normalizeLobbyConfig({
@@ -279,6 +366,111 @@ test('persists create table presets in last used and named config slots', () => 
     assert.deepEqual(reset, DEFAULT_CREATE_TABLE_PRESETS);
     assert.deepEqual(service.loadCreateTablePresets(), DEFAULT_CREATE_TABLE_PRESETS);
 });
+test('normalizes create tournament presets with limited setup and player data', () => {
+    const preset = normalizeCreateTournamentPreset({
+        name: '  Friday Limited  ',
+        tournamentType: 'Booster Draft Swiss',
+        gameType: 'Two Player Duel',
+        deckType: 'Limited',
+        winsNeeded: 99,
+        numberRounds: -5,
+        numberOfPlayers: 99,
+        singleMultiplayerGame: true,
+        timeLimit: 'MIN__60',
+        bufferTime: 'SEC__10',
+        constructionTimeMinutes: 999,
+        draftTiming: 'PROFESSIONAL',
+        draftCubeName: '  Modern Cube  ',
+        setCodes: [' m11 ', 'zen', 'not valid!'],
+        randomSetCodes: ['m11', 'zen', 'm11'],
+        cubeFromDeck: {
+            name: '  Cube  ',
+            cards: [{ amount: 1, cardName: 'Lightning Bolt', setCode: 'M11', cardNumber: '149' }],
+            sideboard: [],
+        },
+        jumpstartPacks: '  # Pack\n1 JMP 236 Ghoulcaller Gisa  ',
+        password: '  secret  ',
+        skillLevel: 'SERIOUS',
+        spectatorsAllowed: false,
+        rollbackTurnsAllowed: false,
+        rated: true,
+        quitRatio: 101,
+        minimumRating: 4000,
+        playerTypes: ['Human', 'Computer - mad', ''],
+        playerSkills: [0, 4.4, 99],
+        savedAt: 123,
+    });
+    assert.equal(preset.name, 'Friday Limited');
+    assert.equal(preset.winsNeeded, 5);
+    assert.equal(preset.numberRounds, 1);
+    assert.equal(preset.numberOfPlayers, 64);
+    assert.equal(preset.singleMultiplayerGame, true);
+    assert.equal(preset.timeLimit, 'MIN__60');
+    assert.equal(preset.bufferTime, 'SEC__10');
+    assert.equal(preset.constructionTimeMinutes, 120);
+    assert.equal(preset.draftTiming, 'PROFESSIONAL');
+    assert.equal(preset.draftCubeName, 'Modern Cube');
+    assert.deepEqual(preset.setCodes, ['M11', 'ZEN']);
+    assert.deepEqual(preset.randomSetCodes, ['M11', 'ZEN']);
+    assert.equal(preset.cubeFromDeck?.name, 'Cube');
+    assert.equal(preset.jumpstartPacks, '# Pack\n1 JMP 236 Ghoulcaller Gisa');
+    assert.equal(preset.password, 'secret');
+    assert.equal(preset.skillLevel, 'SERIOUS');
+    assert.equal(preset.spectatorsAllowed, false);
+    assert.equal(preset.rollbackTurnsAllowed, false);
+    assert.equal(preset.rated, true);
+    assert.equal(preset.quitRatio, 100);
+    assert.equal(preset.minimumRating, 3000);
+    assert.deepEqual(preset.playerTypes, ['Human', 'Computer - mad']);
+    assert.deepEqual(preset.playerSkills, [1, 4, 10]);
+    assert.equal(preset.savedAt, 123);
+    const fallback = normalizeCreateTournamentPreset({
+        timeLimit: 'BOGUS',
+        draftTiming: 'BOGUS',
+        playerTypes: [],
+        playerSkills: [],
+    });
+    assert.equal(fallback.timeLimit, DEFAULT_CREATE_TOURNAMENT_PRESET.timeLimit);
+    assert.equal(fallback.draftTiming, DEFAULT_CREATE_TOURNAMENT_PRESET.draftTiming);
+    assert.deepEqual(fallback.playerTypes, DEFAULT_CREATE_TOURNAMENT_PRESET.playerTypes);
+    assert.deepEqual(fallback.playerSkills, DEFAULT_CREATE_TOURNAMENT_PRESET.playerSkills);
+});
+test('persists create tournament presets in last used and named config slots', () => {
+    const storage = new MemoryStorage();
+    const service = new AppConfigService(storage);
+    const config1 = service.saveCreateTournamentPreset('config1', {
+        ...DEFAULT_CREATE_TOURNAMENT_PRESET,
+        name: 'Draft Config',
+        tournamentType: 'Booster Draft Swiss',
+        draftCubeName: 'Cube From Deck',
+        cubeFromDeck: {
+            name: 'Local Cube',
+            cards: [{ amount: 1, cardName: 'Lightning Bolt', setCode: 'M11', cardNumber: '149' }],
+            sideboard: [],
+        },
+        playerTypes: ['Human', 'Computer - mad'],
+        playerSkills: [2, 6],
+        savedAt: 1,
+    });
+    assert.equal(config1.config1?.name, 'Draft Config');
+    assert.equal(config1.config1?.draftCubeName, 'Cube From Deck');
+    assert.equal(config1.config1?.cubeFromDeck?.cards[0].cardName, 'Lightning Bolt');
+    assert.deepEqual(config1.config1?.playerSkills, [2, 6]);
+    assert.equal(config1.lastUsed, null);
+    service.saveCreateTournamentPreset('lastUsed', {
+        ...DEFAULT_CREATE_TOURNAMENT_PRESET,
+        name: 'Last Tournament',
+        numberRounds: 4,
+    });
+    const loaded = service.loadCreateTournamentPresets();
+    assert.equal(loaded.config1?.name, 'Draft Config');
+    assert.equal(loaded.lastUsed?.name, 'Last Tournament');
+    assert.equal(loaded.lastUsed?.numberRounds, 4);
+    assert.equal(loaded.config2, null);
+    const reset = service.resetCreateTournamentPresets();
+    assert.deepEqual(reset, DEFAULT_CREATE_TOURNAMENT_PRESETS);
+    assert.deepEqual(service.loadCreateTournamentPresets(), DEFAULT_CREATE_TOURNAMENT_PRESETS);
+});
 test('normalizes deck editor layout and sort settings by editor mode', () => {
     const config = normalizeDeckEditorConfig({
         activeMode: 'draft',
@@ -442,6 +634,62 @@ test('persists deck editor config through the app config service storage adapter
     assert.deepEqual(loaded, saved);
     assert.deepEqual(service.resetDeckEditorConfig(), DEFAULT_DECK_EDITOR_CONFIG);
     assert.deepEqual(service.loadDeckEditorConfig(), DEFAULT_DECK_EDITOR_CONFIG);
+});
+test('normalizes panel layout config for game and activity panels', () => {
+    const config = normalizePanelLayoutConfig({
+        game: {
+            sidebarOpen: true,
+        },
+        activities: {
+            tournament: {
+                commandPanelCollapsed: true,
+                chatCollapsed: true,
+            },
+            draft: {
+                commandPanelCollapsed: 'yes',
+                chatCollapsed: false,
+            },
+            replay: {
+                commandPanelCollapsed: false,
+            },
+        },
+    });
+    assert.equal(config.game.sidebarOpen, true);
+    assert.deepEqual(config.activities.tournament, {
+        commandPanelCollapsed: true,
+        chatCollapsed: true,
+    });
+    assert.deepEqual(config.activities.draft, {
+        commandPanelCollapsed: DEFAULT_PANEL_LAYOUT_CONFIG.activities.draft.commandPanelCollapsed,
+        chatCollapsed: false,
+    });
+    assert.deepEqual(config.activities.sideboard, DEFAULT_PANEL_LAYOUT_CONFIG.activities.sideboard);
+    assert.notEqual(config.activities.tournament, DEFAULT_PANEL_LAYOUT_CONFIG.activities.tournament);
+});
+test('persists panel layout config through the app config service storage adapter', () => {
+    const storage = new MemoryStorage();
+    const service = new AppConfigService(storage);
+    const saved = service.savePanelLayoutConfig({
+        game: {
+            sidebarOpen: true,
+        },
+        activities: {
+            tournament: {
+                commandPanelCollapsed: true,
+            },
+            construction: {
+                chatCollapsed: true,
+            },
+        },
+    });
+    assert.equal(saved.game.sidebarOpen, true);
+    assert.equal(saved.activities.tournament.commandPanelCollapsed, true);
+    assert.equal(saved.activities.tournament.chatCollapsed, false);
+    assert.equal(saved.activities.construction.commandPanelCollapsed, false);
+    assert.equal(saved.activities.construction.chatCollapsed, true);
+    assert.deepEqual(service.loadPanelLayoutConfig(), saved);
+    assert.deepEqual(service.resetPanelLayoutConfig(), DEFAULT_PANEL_LAYOUT_CONFIG);
+    assert.deepEqual(service.loadPanelLayoutConfig(), DEFAULT_PANEL_LAYOUT_CONFIG);
 });
 test('normalizes deck file history for browser-equivalent import and export context', () => {
     const config = normalizeDeckFileHistory({

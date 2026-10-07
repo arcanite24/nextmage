@@ -1,24 +1,27 @@
 import React from 'react';
+import { AlertTriangle, DraftingCompass, MessageSquare, RotateCcw, Swords, Trophy, Wifi, WifiOff, X } from 'lucide-react';
 import { useNotificationStore, type ClientNotification } from '../../stores/notificationStore';
 import { sanitizeServerHtml } from '../../services/ServerHtmlService';
 import './NotificationToastHost.css';
 
 const MAX_VISIBLE_NOTIFICATIONS = 3;
 
-function iconFor(notification: ClientNotification): string {
+function iconFor(notification: ClientNotification): React.ReactNode {
+    const iconProps = { size: 16, 'aria-hidden': true };
+
     switch (notification.kind) {
         case 'connection':
-            return notification.tone === 'danger' ? '!' : '~';
+            return notification.tone === 'danger' ? <WifiOff {...iconProps} /> : <Wifi {...iconProps} />;
         case 'draft':
-            return 'D';
+            return <DraftingCompass {...iconProps} />;
         case 'game':
-            return 'G';
+            return notification.tone === 'danger' ? <AlertTriangle {...iconProps} /> : <Swords {...iconProps} />;
         case 'message':
-            return 'M';
+            return <MessageSquare {...iconProps} />;
         case 'replay':
-            return 'R';
+            return <RotateCcw {...iconProps} />;
         case 'tournament':
-            return 'T';
+            return <Trophy {...iconProps} />;
     }
 }
 
@@ -62,7 +65,7 @@ export const NotificationToastHost: React.FC = () => {
                         onClick={() => dismiss(notification.id)}
                         aria-label={`Dismiss ${notification.title}`}
                     >
-                        x
+                        <X size={14} aria-hidden="true" />
                     </button>
                 </article>
             ))}

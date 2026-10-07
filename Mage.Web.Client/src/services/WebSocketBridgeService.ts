@@ -290,7 +290,7 @@ export class WebSocketBridgeService {
         return this.sendRequest<DraftPickView>('sendDraftCardPick', [draftId, sessionId, cardId, hiddenCards]);
     }
 
-    markDraftCard(draftId: UUID, sessionId: string, cardId: UUID): Promise<boolean> {
+    markDraftCard(draftId: UUID, sessionId: string, cardId: UUID | null): Promise<boolean> {
         return this.sendRequest<boolean>('sendDraftCardMark', [draftId, sessionId, cardId]);
     }
 

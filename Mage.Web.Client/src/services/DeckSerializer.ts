@@ -1,6 +1,13 @@
 
 import { DeckCardLists, DeckCardInfo } from '../types/index.js';
 
+export interface DraftLogExportOptions {
+    draftId?: string | null;
+    players?: readonly string[] | null;
+    exportedAt?: Date | string | number | null;
+    sourceName?: string | null;
+}
+
 export class DeckSerializer {
     private static readonly IGNORE_HEADERS = new Set([
         "lands", "creatures", "planeswalkers", "other spells", "sideboard cards",
@@ -60,6 +67,22 @@ export class DeckSerializer {
         }
 
         return false;
+    }
+
+    private static normalizeDraftLogSetCode(setCode: string | null | undefined): string {
+        const normalized = (setCode ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        return normalized || 'UNK';
+    }
+
+    private static normalizeDraftLogLine(value: string): string {
+        return this.normalizeName(value).replace(/\s+/g, ' ').trim();
+    }
+
+    private static formatDraftLogExportTime(value: Date | string | number | null | undefined): string {
+        if (value instanceof Date) return value.toISOString();
+        if (typeof value === 'number') return new Date(value).toISOString();
+        if (typeof value === 'string' && value.trim()) return value.trim();
+        return new Date().toISOString();
     }
 
     /**
@@ -562,5 +585,58 @@ export class DeckSerializer {
         }
 
         return content;
+    }
+
+    /**
+     * Serialize picked draft cards into an XMage-style .draft log that this
+     * browser importer can read back through importDeck.
+     */
+    public static exportDraftLog(deck: DeckCardLists, options: DraftLogExportOptions = {}): string {
+        const lines: string[] = [];
+        const draftId = options.draftId?.trim() || 'browser-draft';
+        const sourceName = options.sourceName?.trim() || deck.name?.trim() || 'Draft Picks';
+        const players = (options.players ?? [])
+            .map(player => player.trim())
+            .filter(Boolean);
+
+        lines.push(`Event #: ${draftId}`);
+        lines.push(`Exported: ${this.formatDraftLogExportTime(options.exportedAt)}`);
+        lines.push(`Deck: ${sourceName}`);
+
+        if (players.length > 0) {
+            lines.push('Players:');
+            for (const player of players) {
+                lines.push(`    ${player.replace(/\s+/g, ' ')}`);
+            }
+        }
+
+        let currentSet: string | null = null;
+        let packNumber = 0;
+        let pickNumber = 0;
+
+        for (const card of deck.cards) {
+            const cardName = this.normalizeDraftLogLine(card.cardName);
+            if (!cardName) continue;
+
+            const amount = Number.isFinite(card.amount) ? Math.max(0, Math.floor(card.amount)) : 0;
+            const setCode = this.normalizeDraftLogSetCode(card.setCode);
+            for (let copy = 0; copy < amount; copy += 1) {
+                if (setCode !== currentSet) {
+                    currentSet = setCode;
+                    packNumber += 1;
+                    pickNumber = 0;
+                    lines.push('');
+                    lines.push(`------ ${setCode} ------`);
+                    lines.push('');
+                }
+
+                pickNumber += 1;
+                lines.push(`Pack ${packNumber} pick ${pickNumber}:`);
+                lines.push(`--> ${cardName}`);
+                lines.push('');
+            }
+        }
+
+        return `${lines.join('\n').trimEnd()}\n`;
     }
 }

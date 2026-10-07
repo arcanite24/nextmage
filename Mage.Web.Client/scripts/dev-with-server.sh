@@ -4,73 +4,14 @@ set -euo pipefail
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 CLIENT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 REPO_DIR=$(CDPATH= cd -- "$CLIENT_DIR/.." && pwd)
-SHELL_PGID=$(ps -o pgid= -p $$ | tr -d ' ')
+
+source "$SCRIPT_DIR/dev-server-cleanup.sh"
 
 server_pid=""
 client_pid=""
 cleanup_started=0
 
 set -m 2>/dev/null || true
-
-is_running() {
-  local pid="${1:-}"
-  [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
-}
-
-kill_process_group() {
-  local pid="${1:-}"
-  local signal="${2:-TERM}"
-  local pgid=""
-
-  if ! is_running "$pid"; then
-    return 0
-  fi
-
-  pgid=$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ')
-  if [ -n "$pgid" ] && [ "$pgid" != "$SHELL_PGID" ]; then
-    kill "-$signal" "-$pgid" 2>/dev/null || true
-  fi
-}
-
-kill_process_tree() {
-  local pid="${1:-}"
-  local signal="${2:-TERM}"
-  local children=""
-  local child=""
-
-  if ! is_running "$pid"; then
-    return 0
-  fi
-
-  if command -v pgrep >/dev/null 2>&1; then
-    children=$(pgrep -P "$pid" 2>/dev/null || true)
-    for child in $children; do
-      kill_process_tree "$child" "$signal"
-    done
-  fi
-
-  kill_process_group "$pid" "$signal"
-  kill "-$signal" "$pid" 2>/dev/null || true
-}
-
-matching_server_pids() {
-  ps -axo pid=,comm=,command= | awk -v repo="$REPO_DIR" '
-    $2 == "java" && index($0, repo) && index($0, "exec.mainClass=mage.server.Main") {
-      print $1
-    }
-  '
-}
-
-terminate_stale_server_processes() {
-  local signal="$1"
-  local pid=""
-
-  while read -r pid; do
-    if [ -n "$pid" ] && [ "$pid" != "$$" ] && is_running "$pid"; then
-      kill_process_tree "$pid" "$signal"
-    fi
-  done < <(matching_server_pids)
-}
 
 terminate_dev_processes() {
   local signal="$1"

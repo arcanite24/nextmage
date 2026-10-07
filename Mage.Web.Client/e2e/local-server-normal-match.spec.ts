@@ -101,19 +101,41 @@ test.describe('local Mage server normal match smoke', () => {
         await waitingRoom.getByRole('button', { name: 'Start Match' }).click();
 
         await harness.expectNormalGameReady(aiName);
+        await expect(page.getByTestId('arena-battlefield')).toBeVisible();
+        const liveBattlefields = page.locator(
+            '[data-testid="battlefield"][data-player-id][data-visible-permanent-count][data-hidden-phased-count][data-root-permanent-count][data-attached-permanent-count]'
+        );
+        await expect(liveBattlefields).toHaveCount(2, { timeout: 20_000 });
+        const battlefieldSelectorState = await liveBattlefields.evaluateAll((elements) => elements.map((element) => ({
+            playerId: element.getAttribute('data-player-id'),
+            visiblePermanents: element.getAttribute('data-visible-permanent-count'),
+            hiddenPhased: element.getAttribute('data-hidden-phased-count'),
+            rootPermanents: element.getAttribute('data-root-permanent-count'),
+            attachedPermanents: element.getAttribute('data-attached-permanent-count'),
+            rowCount: element.querySelectorAll('.battlefield-row[data-row-role]').length,
+        })));
+        for (const battlefield of battlefieldSelectorState) {
+            expect(battlefield.playerId).toBeTruthy();
+            expect(Number.isFinite(Number(battlefield.visiblePermanents))).toBe(true);
+            expect(Number.isFinite(Number(battlefield.hiddenPhased))).toBe(true);
+            expect(Number.isFinite(Number(battlefield.rootPermanents))).toBe(true);
+            expect(Number.isFinite(Number(battlefield.attachedPermanents))).toBe(true);
+            expect(battlefield.rowCount).toBeGreaterThan(0);
+        }
 
         await page.keyboard.press('F2');
         await expect(page.getByTestId('game-page')).toBeVisible();
 
         await page.getByTestId('player-zone-library').click();
-        const libraryDialog = await harness.expectZoneDialogReady(/Library/);
+        const libraryDialog = await harness.expectZoneDialogReady(/library/i);
         await expect(libraryDialog.getByText('No cards to display')).toBeVisible();
-        await libraryDialog.getByRole('button', { name: 'Cancel' }).click();
+        await libraryDialog.getByRole('button', { name: /^Close$/ }).click();
         await expect(libraryDialog).toBeHidden();
 
         await page.getByTestId('game-sidebar-toggle').click();
-        await expect(page.getByRole('button', { name: 'Concede Game' })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Concede / Leave' })).toBeVisible();
-        await page.getByRole('button', { name: 'Concede / Leave' }).click();
+        await expect(page.getByTestId('game-concede-game-button')).toBeVisible();
+        const sidebarLeaveButton = page.locator('.sidebar-footer').getByRole('button', { name: 'Concede / Leave' });
+        await expect(sidebarLeaveButton).toBeVisible();
+        await sidebarLeaveButton.click();
     });
 });

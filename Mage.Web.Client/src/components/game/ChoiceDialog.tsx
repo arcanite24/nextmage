@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Lightbulb } from 'lucide-react';
 import { Modal } from '../common';
 import { useGameStore } from '../../stores';
 import './ChoiceDialog.css';
@@ -240,7 +241,8 @@ export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
 
                 {filteredOptions.length > 0 && filteredOptions.length <= 9 && (
                     <div className="choice-shortcut-hint">
-                        💡 Tip: Press number key (1-{Math.min(filteredOptions.length, 9)}) to select
+                        <Lightbulb size={14} aria-hidden="true" />
+                        Tip: Press number key (1-{Math.min(filteredOptions.length, 9)}) to select
                     </div>
                 )}
 

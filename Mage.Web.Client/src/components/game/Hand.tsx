@@ -191,7 +191,7 @@ const HandCard: React.FC<HandCardProps> = React.memo(({
                 onCardInspect?.(card.id);
             }}
             style={{
-                width: CARD.WIDTH,
+                width: `var(--mage-hand-card-size, ${CARD.WIDTH}px)`,
                 aspectRatio: `${CARD.ASPECT_RATIO}`,
                 bottom: HAND_LAYOUT.BOTTOM_OFFSET,
             }}

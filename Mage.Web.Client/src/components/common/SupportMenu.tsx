@@ -316,7 +316,8 @@ export const SupportMenu: React.FC<SupportMenuProps> = ({
                 <div className="support-dialog">
                     <p>
                         Card images and symbols load through browser caching instead of a desktop download pack.
-                        Use settings to trim or clear the image cache, and use debug exports when reporting missing assets.
+                        Use settings for source language, fallback mode, cache size and age limits, trimming, clearing,
+                        and missing-image diagnostics.
                     </p>
                     <div className="support-actions">
                         <Button
@@ -332,7 +333,7 @@ export const SupportMenu: React.FC<SupportMenuProps> = ({
                             variant="ghost"
                             onClick={() => {
                                 setDialog(null);
-                                showAlert('Resources', 'Desktop symbol and image download actions are replaced by browser cache loading in the web client.');
+                                showAlert('Resources', 'Desktop symbol downloads are replaced by bundled web symbol assets. Desktop card-image downloads are replaced by Scryfall image loading into the browser cache with visible-card preload, progress, cancel, and cache diagnostics in the card viewer and settings.');
                             }}
                         >
                             Resource Info

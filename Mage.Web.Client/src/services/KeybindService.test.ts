@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { KeybindService } from './KeybindService.js';
+import { applyClientKeybind, KeybindService } from './KeybindService.js';
 
 type KeyboardEventInit = Partial<Pick<
   KeyboardEvent,
@@ -121,4 +121,54 @@ test('ignores shortcuts when typing into editable controls', () => {
   } finally {
     globalThis.HTMLInputElement = originalInputElement;
   }
+});
+
+test('applies persisted client keybind overrides', () => {
+  const definition = applyClientKeybind({
+    id: 'confirm-request',
+    actionId: 'confirm',
+    label: 'Confirm current request',
+    key: 'F2',
+    handler: () => {},
+  }, {
+    key: 'Enter',
+    eventType: 'keyup',
+    ctrlOrMeta: true,
+    altKey: false,
+    shiftKey: true,
+    enabled: true,
+  });
+
+  assert.deepEqual(definition && {
+    key: definition.key,
+    eventType: definition.eventType,
+    ctrlOrMeta: definition.ctrlOrMeta,
+    altKey: definition.altKey,
+    shiftKey: definition.shiftKey,
+  }, {
+    key: 'Enter',
+    eventType: 'keyup',
+    ctrlOrMeta: true,
+    altKey: false,
+    shiftKey: true,
+  });
+});
+
+test('disables keybinds from client settings', () => {
+  const definition = applyClientKeybind({
+    id: 'toggle-macro',
+    actionId: 'toggleMacro',
+    label: 'Toggle macro recording',
+    key: 'm',
+    handler: () => {},
+  }, {
+    key: 'm',
+    eventType: 'keydown',
+    ctrlOrMeta: true,
+    altKey: false,
+    shiftKey: false,
+    enabled: false,
+  });
+
+  assert.equal(definition, null);
 });

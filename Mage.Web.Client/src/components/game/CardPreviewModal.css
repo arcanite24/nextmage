@@ -273,6 +273,54 @@
     opacity: 0.45;
 }
 
+.card-info-mutate {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(15, 118, 110, 0.18);
+    border: 1px solid rgba(45, 212, 191, 0.24);
+}
+
+.card-info-mutate-title {
+    color: #99f6e4;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.card-info-mutate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.card-info-mutate-card {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 7px 8px;
+    border-radius: 6px;
+    background: rgba(2, 6, 23, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.card-info-mutate-card span {
+    color: #f8fafc;
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.card-info-mutate-card small,
+.card-info-mutate-empty {
+    color: #99f6e4;
+    font-size: 0.72rem;
+    line-height: 1.25;
+}
+
 .card-info-rules {
     display: flex;
     flex-direction: column;

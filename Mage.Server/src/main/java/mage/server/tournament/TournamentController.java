@@ -264,6 +264,7 @@ public class TournamentController {
                 pair.setMatchAndTable(match, table.getId());
                 player1.setState(TournamentPlayerState.DUELING);
                 player2.setState(TournamentPlayerState.DUELING);
+                updateTournamentSessions();
             });
         } catch (GameException ex) {
             logger.fatal("TournamentController startMatch error", ex);
@@ -293,6 +294,7 @@ public class TournamentController {
                     for (TournamentPlayer player : round.getAllPlayers()) {
                         player.setState(TournamentPlayerState.DUELING);
                     }
+                    updateTournamentSessions();
                 });
             } else {
                 logger.error("tourney - startMultiplayerMatch can't start due disconnected players");
@@ -425,6 +427,13 @@ public class TournamentController {
             tournament.quit(playerId);
             tournamentSession.quit();
             managerFactory.chatManager().broadcast(chatId, "", tournamentPlayer.getPlayer().getLogName() + " has quit the tournament", MessageColor.BLACK, true, null, MessageType.STATUS, SoundToPlay.PlayerQuitTournament);
+            updateTournamentSessions();
+        }
+    }
+
+    private void updateTournamentSessions() {
+        for (final TournamentSession tournamentSession : tournamentSessions.values()) {
+            tournamentSession.update();
         }
     }
 

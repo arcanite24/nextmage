@@ -1,7 +1,15 @@
 import React from 'react';
-import { useActivityStore, useSessionStore } from '../../stores';
-import type { ClientActivity, DraftPickPayload } from '../../stores/activityStore';
+import { useActivityStore, useChatStore, useSessionStore, useSettingsStore } from '../../stores';
+import type { ClientActivity, DraftPayload, DraftPickPayload, TournamentMatchPayload, TournamentPayload } from '../../stores/activityStore';
 import { getActivityKindLabel, getActivityDestination } from '../../services/ActivityShellService';
+import { DeckSerializer } from '../../services/DeckSerializer';
+import { deckStorage } from '../../services/DeckStorageService';
+import {
+    buildLimitedDeckAutosaveDeck,
+    shouldAutosaveLimitedDeck,
+    type LimitedDeckAutosaveKind,
+} from '../../services/LimitedDeckAutosaveService';
+import { getLimitedDeckSubmitValidationError } from '../../services/LimitedDeckSubmitValidationService';
 import { moveDeckCard, setDeckCardAmount, type DeckCardZone } from '../../services/DeckCardListService';
 import {
     appConfigService,
@@ -19,6 +27,9 @@ import type {
     DeckEditorModeKey,
     DeckListSortKey,
     DeckSortDirection,
+    PanelLayoutActivityConfig,
+    PanelLayoutActivityKind,
+    PanelLayoutConfig,
 } from '../../services/AppConfigService';
 import type { DeckCardInfo, DeckCardLists } from '../../types';
 import { DeckAddLandsDialog } from '../deck/DeckAddLandsDialog';
@@ -26,6 +37,8 @@ import { AddLandsResultDetails, type AddLandsResultDetailsData } from '../deck/A
 import { DeckAnalyticsPanel } from '../deck/DeckAnalyticsPanel';
 import { DeckLegalityPanel } from '../deck/DeckLegalityPanel';
 import { CardPreviewModal } from '../game/CardPreviewModal';
+import { ChatPanel } from '../chat/ChatPanel';
+import { CardViewerActivity } from './CardViewerActivity';
 import './ActivityWorkspace.css';
 
 interface ActivityWorkspaceProps {
@@ -72,6 +85,7 @@ type ActivityDeckSelectionSource = 'legality' | 'analytics' | null;
 
 const ACTIVITY_DECK_ROW_DRAG_MIME = 'application/x-mage-activity-deck-row';
 const ACTIVITY_DECK_ROW_CLICK_COMMIT_DELAY_MS = 220;
+const ACTIVITY_DRAFT_CLICK_PROTECTION_MS = 1500;
 
 function activityCommands(activity: ClientActivity | null): ActivityCommand[] {
     switch (activity?.kind) {
@@ -86,8 +100,8 @@ function activityCommands(activity: ClientActivity | null): ActivityCommand[] {
         case 'tournament':
             return [
                 { key: 'join', label: 'Join Event', testId: 'tournament-join-button', reason: 'Tournament actions need an attached tournament session.' },
-                { key: 'watch', label: 'Watch Event', testId: 'tournament-watch-button', reason: 'Tournament actions need an attached tournament session.' },
-                { key: 'quit', label: 'Quit Event', testId: 'tournament-quit-button', reason: 'Tournament actions need an attached tournament session.' },
+                { key: 'quit', label: 'Quit Tournament', testId: 'tournament-quit-button', reason: 'You must still be active in this tournament to quit.' },
+                { key: 'close', label: 'Close Window', testId: 'tournament-close-button', reason: 'Close this tournament window.' },
             ];
         case 'draft':
             return [
@@ -112,6 +126,19 @@ function activityCommands(activity: ClientActivity | null): ActivityCommand[] {
             ];
         default:
             return [];
+    }
+}
+
+function panelLayoutActivityKind(activity: ClientActivity | null): PanelLayoutActivityKind | null {
+    switch (activity?.kind) {
+        case 'replay':
+        case 'tournament':
+        case 'draft':
+        case 'sideboard':
+        case 'construction':
+            return activity.kind;
+        default:
+            return null;
     }
 }
 
@@ -193,6 +220,76 @@ function getTimerRemainingSeconds(activity: ClientActivity | null, now: number):
     return Math.max(0, activity.time - elapsed);
 }
 
+function parseActivityDateTime(value: string | null | undefined): number | null {
+    if (!value) return null;
+    const timestamp = Date.parse(value);
+    return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function formatTournamentDate(value: string | null | undefined): string {
+    const timestamp = parseActivityDateTime(value);
+    if (timestamp === null) return value || 'Unknown';
+    return new Date(timestamp).toLocaleString([], {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
+function getTournamentStepSeconds(tournament: TournamentPayload | null, now: number): number | null {
+    if (!tournament?.stepStartTime) return null;
+
+    const stepStartTime = parseActivityDateTime(tournament.stepStartTime);
+    const serverTime = parseActivityDateTime(tournament.serverTime) ?? now;
+    if (stepStartTime === null || serverTime < stepStartTime) return null;
+
+    return Math.floor((serverTime - stepStartTime) / 1000);
+}
+
+function getTournamentTimerLabel(tournament: TournamentPayload | null, now: number): string {
+    if (!tournament) return 'Waiting';
+
+    const stepSeconds = getTournamentStepSeconds(tournament, now);
+    if (stepSeconds === null) return 'Untimed';
+
+    if (tournament.state === 'Constructing') {
+        return formatDeckTimer(Math.max(0, tournament.constructionTime - stepSeconds));
+    }
+
+    if (tournament.state === 'Drafting' || tournament.state === 'Dueling') {
+        return formatDeckTimer(stepSeconds);
+    }
+
+    return 'Untimed';
+}
+
+function getTournamentTimerKind(tournament: TournamentPayload | null): 'none' | 'remaining' | 'elapsed' {
+    if (!tournament?.stepStartTime) return 'none';
+    if (tournament.state === 'Constructing') return 'remaining';
+    if (tournament.state === 'Drafting' || tournament.state === 'Dueling') return 'elapsed';
+    return 'none';
+}
+
+function getTournamentStateLabel(tournament: TournamentPayload | null, now: number): string {
+    if (!tournament) return 'Waiting for tournament payload';
+
+    const timerKind = getTournamentTimerKind(tournament);
+    const timerLabel = getTournamentTimerLabel(tournament, now);
+    const timerText = timerKind === 'none' ? '' : ` (${timerLabel})`;
+    const runningInfo = tournament.runningInfo ? `, ${tournament.runningInfo}` : '';
+    return `${tournament.state || 'Unknown'}${timerText}${runningInfo}`;
+}
+
+function canCurrentUserQuitTournament(tournament: TournamentPayload | null, userName: string | null | undefined): boolean {
+    if (!tournament || tournament.endTime || !userName) return false;
+
+    return tournament.players.some(player =>
+        player.name.localeCompare(userName, undefined, { sensitivity: 'accent' }) === 0
+        && !player.quit
+    );
+}
+
 function activityDeckEditorMode(activity: ClientActivity | null): DeckEditorModeKey {
     if (activity?.kind === 'sideboard') return 'sideboard';
     if (activity?.kind === 'construction') return 'limited';
@@ -226,9 +323,85 @@ function deckPayloadKind(activity: ClientActivity | null): 'sideboard' | 'constr
     return null;
 }
 
-function firstBoosterCardId(draftPick: DraftPickPayload | null | undefined): string | null {
-    if (!draftPick) return null;
-    return Object.keys(draftPick.booster)[0] ?? null;
+interface DraftCardEntry {
+    id: string;
+    name: string;
+    setCode: string | null;
+    cardNumber: string | null;
+    marked: boolean;
+    hidden: boolean;
+}
+
+function isDraftCardRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readDraftCardString(value: unknown): string | null {
+    return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
+function draftCardsFromRecord(
+    cards: Record<string, unknown>,
+    markedIds: ReadonlySet<string>,
+    hiddenIds: ReadonlySet<string>,
+): DraftCardEntry[] {
+    return Object.entries(cards).map(([id, rawCard]) => {
+        const card = isDraftCardRecord(rawCard) ? rawCard : {};
+        return {
+            id,
+            name: readDraftCardString(card.displayName)
+                ?? readDraftCardString(card.cardName)
+                ?? readDraftCardString(card.name)
+                ?? 'Unknown Card',
+            setCode: readDraftCardString(card.setCode) ?? readDraftCardString(card.expansionSetCode),
+            cardNumber: readDraftCardString(card.cardNumber),
+            marked: markedIds.has(id),
+            hidden: hiddenIds.has(id),
+        };
+    });
+}
+
+function draftCardSubtitle(card: DraftCardEntry): string {
+    return [card.setCode, card.cardNumber].filter(Boolean).join(' ') || 'Unknown printing';
+}
+
+function buildDraftLogDeck(title: string, pickedCards: DraftCardEntry[]): DeckCardLists {
+    return {
+        name: title,
+        cards: pickedCards.map(card => ({
+            amount: 1,
+            cardName: card.name,
+            setCode: card.setCode,
+            cardNumber: card.cardNumber,
+        })),
+        sideboard: [],
+    };
+}
+
+function sanitizeDraftLogFilePart(value: string | null | undefined): string {
+    const sanitized = (value ?? '')
+        .trim()
+        .toLocaleLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    return sanitized || 'activity';
+}
+
+function draftLogFileName(activity: ClientActivity): string {
+    return `mage-draft-${sanitizeDraftLogFilePart(activity.objectId ?? activity.title)}.draft`;
+}
+
+function draftSetLabel(draft: DraftPayload | null, index: number): string {
+    const setName = draft?.setNames[index];
+    const setCode = draft?.setCodes[index];
+    if (!setName && !setCode) return 'Random Boosters';
+    if (draft?.isCube) return setName ?? setCode ?? 'Cube';
+    return [setCode, setName].filter(Boolean).join(' - ');
+}
+
+function draftPassDirection(draft: DraftPayload | null): 'left' | 'right' | 'unknown' {
+    if (!draft?.boosterNum) return 'unknown';
+    return draft.boosterNum % 2 === 1 ? 'left' : 'right';
 }
 
 function sortDeckCards(
@@ -272,12 +445,18 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
     onOpenDeckEditor,
 }) => {
     const sessionId = useSessionStore(state => state.sessionId);
+    const userName = useSessionStore(state => state.userName);
     const showLocalUserRequest = useSessionStore(state => state.showLocalUserRequest);
     const updateDraftPick = useActivityStore(state => state.updateDraftPick);
+    const removeActivity = useActivityStore(state => state.removeActivity);
+    const tournamentChatChannelId = useChatStore(state => state.tournamentChannelId);
+    const joinTournamentChat = useChatStore(state => state.joinTournamentChat);
+    const persistPanelLayout = useSettingsStore(state => state.settings.persistPanelLayout);
     const [submitStatus, setSubmitStatus] = React.useState<string | null>(null);
     const [isSubmittingDeck, setIsSubmittingDeck] = React.useState(false);
     const [isDraftCommandBusy, setIsDraftCommandBusy] = React.useState(false);
     const [isReplayCommandBusy, setIsReplayCommandBusy] = React.useState(false);
+    const [isTournamentCommandBusy, setIsTournamentCommandBusy] = React.useState(false);
     const [isAddLandsOpen, setIsAddLandsOpen] = React.useState(false);
     const [isAddingLands, setIsAddingLands] = React.useState(false);
     const [addLandsError, setAddLandsError] = React.useState<string | null>(null);
@@ -287,29 +466,115 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
     const [activeLegalityProblemCardNames, setActiveLegalityProblemCardNames] = React.useState<string[]>([]);
     const [previewCard, setPreviewCard] = React.useState<DeckCardInfo | null>(null);
     const [deckEditorConfig, setDeckEditorConfig] = React.useState<DeckEditorConfig>(() => appConfigService.loadDeckEditorConfig());
+    const [panelLayoutConfig, setPanelLayoutConfig] = React.useState<PanelLayoutConfig>(() => appConfigService.loadPanelLayoutConfig());
     const [dragOverZone, setDragOverZone] = React.useState<DeckCardZone | null>(null);
     const [draggingDeckCardKey, setDraggingDeckCardKey] = React.useState<string | null>(null);
+    const [selectedDraftCardId, setSelectedDraftCardId] = React.useState<string | null>(null);
+    const [hiddenDraftPickIds, setHiddenDraftPickIds] = React.useState<Set<string>>(() => new Set());
+    const [markedDraftCardId, setMarkedDraftCardId] = React.useState<string | null>(null);
+    const [isDraftPickProtected, setIsDraftPickProtected] = React.useState(false);
     const [timerNow, setTimerNow] = React.useState(() => Date.now());
+    const [limitedDeckAutosaveState, setLimitedDeckAutosaveState] = React.useState<'idle' | 'pending' | 'saved' | 'error'>('idle');
+    const [limitedDeckAutosaveMessage, setLimitedDeckAutosaveMessage] = React.useState<string | null>(null);
     const deckRowClickTimerRef = React.useRef<number | null>(null);
+    const draftProtectionTimerRef = React.useRef<number | null>(null);
+    const limitedDeckAutosaveTimerRef = React.useRef<number | null>(null);
     const destination = activity ? getActivityDestination(activity.kind) : 'activity-workspace';
     const commands = activityCommands(activity);
+    const activePanelLayoutKind = panelLayoutActivityKind(activity);
+    const activePanelLayout = activePanelLayoutKind ? panelLayoutConfig.activities[activePanelLayoutKind] : null;
+    const isCommandPanelCollapsed = activePanelLayout?.commandPanelCollapsed ?? false;
+    const isTournamentChatCollapsed = activity?.kind === 'tournament' && activePanelLayout?.chatCollapsed === true;
     const activeDeckPayloadKind = deckPayloadKind(activity);
     const activityEditorMode = activityDeckEditorMode(activity);
     const activityModeConfig = deckEditorConfig.modes[activityEditorMode];
     const isReadOnlyDeck = activity?.kind === 'card-viewer';
     const canUseLimitedAddLands = activity?.kind === 'construction' || (activity?.kind === 'sideboard' && activity.limitedSideboard === true);
+    const limitedDeckAutosaveKind: LimitedDeckAutosaveKind | null = activity?.kind === 'construction'
+        ? 'construction'
+        : activity?.kind === 'sideboard' && activity.limitedSideboard === true ? 'sideboard' : null;
     const deckPayload = activeDeckPayloadKind ? activity?.deck ?? null : null;
-    const draftCardId = firstBoosterCardId(activity?.draftPick);
+    const markedDraftCardIdSet = React.useMemo(() => (
+        markedDraftCardId ? new Set([markedDraftCardId]) : new Set<string>()
+    ), [markedDraftCardId]);
+    const hiddenDraftPickIdSet = React.useMemo(() => hiddenDraftPickIds, [hiddenDraftPickIds]);
+    const draftBoosterCards = React.useMemo(
+        () => draftCardsFromRecord(activity?.draftPick?.booster ?? {}, markedDraftCardIdSet, new Set()),
+        [activity?.draftPick?.booster, markedDraftCardIdSet],
+    );
+    const draftBoosterCardIds = React.useMemo(
+        () => Object.keys(activity?.draftPick?.booster ?? {}),
+        [activity?.draftPick?.booster],
+    );
+    const draftPickedCards = React.useMemo(
+        () => draftCardsFromRecord(activity?.draftPick?.picks ?? {}, markedDraftCardIdSet, hiddenDraftPickIdSet),
+        [activity?.draftPick?.picks, markedDraftCardIdSet, hiddenDraftPickIdSet],
+    );
+    const activeDraftCardId = (
+        selectedDraftCardId && draftBoosterCards.some(card => card.id === selectedDraftCardId)
+            ? selectedDraftCardId
+            : draftBoosterCardIds[0] ?? null
+    );
+    const activeDraftCard = draftBoosterCards.find(card => card.id === activeDraftCardId) ?? null;
+    const draftPayload = activity?.kind === 'draft' ? activity.draft ?? null : null;
+    const draftPass = draftPassDirection(draftPayload);
+    const draftPackLabels = React.useMemo(() => (
+        Array.from({ length: Math.max(3, draftPayload?.setNames.length ?? 0) }, (_, index) => draftSetLabel(draftPayload, index))
+    ), [draftPayload]);
+    const visibleDraftPickedCards = draftPickedCards.filter(card => !card.hidden);
+    const hiddenDraftPickCount = draftPickedCards.length - visibleDraftPickedCards.length;
+    const draftMessage = activity?.kind === 'draft'
+        ? activity.status === 'completed'
+            ? 'Draft complete'
+            : activity.draftPick?.message
+                ?? (activity.draftPick?.picking === false ? 'Waiting for other players' : 'Pick a card')
+        : '';
+    const tournamentPayload = activity?.kind === 'tournament' ? activity.tournament ?? null : null;
+    const canRunTournamentCommand = Boolean(activity?.kind === 'tournament' && activity.objectId && sessionId);
+    const canQuitTournament = canRunTournamentCommand && canCurrentUserQuitTournament(tournamentPayload, userName);
+    const tournamentStateLabel = getTournamentStateLabel(tournamentPayload, timerNow);
+    const tournamentTimerLabel = getTournamentTimerLabel(tournamentPayload, timerNow);
+    const tournamentTimerKind = getTournamentTimerKind(tournamentPayload);
     const canQuitDraft = Boolean(activity?.kind === 'draft' && activity.objectId && sessionId);
     const isDraftPicking = activity?.draftPick?.picking !== false;
-    const draftPickCount = Object.keys(activity?.draftPick?.picks ?? {}).length;
-    const draftBoosterCount = Object.keys(activity?.draftPick?.booster ?? {}).length;
-    const canRunDraftCommand = Boolean(canQuitDraft && draftCardId && isDraftPicking);
+    const draftPickCount = draftPickedCards.length;
+    const draftBoosterCount = draftBoosterCards.length;
+    const canExportDraftLog = Boolean(activity?.kind === 'draft' && draftPickCount > 0);
+    const canPickDraftCard = Boolean(canQuitDraft && activeDraftCardId && isDraftPicking && !isDraftPickProtected);
+    const canMarkDraftCard = Boolean(canQuitDraft && activeDraftCardId && isDraftPicking);
+    const isActiveDraftCardMarked = Boolean(activeDraftCardId && markedDraftCardId === activeDraftCardId);
     const replayPayload = activity?.kind === 'replay' ? activity.replay ?? null : null;
     const canRunReplayCommand = Boolean(activity?.kind === 'replay' && activity.objectId && sessionId && activity.status !== 'completed');
+
+    React.useEffect(() => {
+        if (activity?.kind !== 'tournament' || !activity.objectId) return;
+        void joinTournamentChat(activity.objectId);
+    }, [activity?.kind, activity?.objectId, joinTournamentChat]);
+
+    const updateActivePanelLayout = React.useCallback((patch: Partial<PanelLayoutActivityConfig>) => {
+        if (!activePanelLayoutKind) return;
+
+        setPanelLayoutConfig((currentLayout) => {
+            const nextLayout: PanelLayoutConfig = {
+                ...currentLayout,
+                activities: {
+                    ...currentLayout.activities,
+                    [activePanelLayoutKind]: {
+                        ...currentLayout.activities[activePanelLayoutKind],
+                        ...patch,
+                    },
+                },
+            };
+            if (persistPanelLayout) {
+                appConfigService.savePanelLayoutConfig(nextLayout);
+            }
+            return nextLayout;
+        });
+    }, [activePanelLayoutKind, persistPanelLayout]);
     const [editableDeck, setEditableDeck] = React.useState<DeckCardLists | null>(() => (
         deckPayload ? cloneDeck(deckPayload) : null
     ));
+    const isStandaloneCardViewer = activity?.kind === 'card-viewer' && !editableDeck;
     const [submittedDeckBaseline, setSubmittedDeckBaseline] = React.useState<DeckCardLists | null>(null);
     const deckBaseline = submittedDeckBaseline ?? deckPayload;
     const canSubmitDeck = Boolean(
@@ -339,6 +604,7 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
     const sortedSideboard = editableDeck
         ? sortDeckCards(editableDeck.sideboard, activityModeConfig.deckSortBy, activityModeConfig.deckSortDirection)
         : [];
+    const canAutosaveLimitedDeck = Boolean(limitedDeckAutosaveKind && shouldAutosaveLimitedDeck(editableDeck));
 
     React.useEffect(() => {
         setEditableDeck(deckPayload ? cloneDeck(deckPayload) : null);
@@ -352,7 +618,56 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
         setActiveLegalityProblemCardNames([]);
         setDragOverZone(null);
         setDraggingDeckCardKey(null);
+        setIsTournamentCommandBusy(false);
+        setLimitedDeckAutosaveState('idle');
+        setLimitedDeckAutosaveMessage(null);
+        if (limitedDeckAutosaveTimerRef.current !== null) {
+            window.clearTimeout(limitedDeckAutosaveTimerRef.current);
+            limitedDeckAutosaveTimerRef.current = null;
+        }
     }, [activity?.id, deckPayload]);
+
+    React.useEffect(() => {
+        setSelectedDraftCardId(null);
+        setHiddenDraftPickIds(new Set());
+        setMarkedDraftCardId(null);
+        setIsDraftPickProtected(false);
+        if (draftProtectionTimerRef.current !== null) {
+            window.clearTimeout(draftProtectionTimerRef.current);
+            draftProtectionTimerRef.current = null;
+        }
+    }, [activity?.id]);
+
+    React.useEffect(() => {
+        if (activity?.kind !== 'draft') return;
+
+        setSelectedDraftCardId(current => (
+            current && draftBoosterCardIds.includes(current)
+                ? current
+                : draftBoosterCardIds[0] ?? null
+        ));
+
+        if (draftBoosterCardIds.length === 0 || !isDraftPicking) {
+            setIsDraftPickProtected(false);
+            return;
+        }
+
+        setIsDraftPickProtected(true);
+        if (draftProtectionTimerRef.current !== null) {
+            window.clearTimeout(draftProtectionTimerRef.current);
+        }
+        draftProtectionTimerRef.current = window.setTimeout(() => {
+            draftProtectionTimerRef.current = null;
+            setIsDraftPickProtected(false);
+        }, ACTIVITY_DRAFT_CLICK_PROTECTION_MS);
+
+        return () => {
+            if (draftProtectionTimerRef.current !== null) {
+                window.clearTimeout(draftProtectionTimerRef.current);
+                draftProtectionTimerRef.current = null;
+            }
+        };
+    }, [activity?.kind, draftBoosterCardIds, isDraftPicking]);
 
     React.useEffect(() => {
         const prunedCardNames = pruneSelectedDeckCardNames(editableDeck, selectedLegalityCardNames);
@@ -365,20 +680,77 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
     }, [editableDeck, selectedLegalityCardNames]);
 
     React.useEffect(() => {
-        if (!activity?.time || activity.time <= 0) return;
+        if ((!activity?.time || activity.time <= 0) && !(activity?.kind === 'tournament' && activity.tournament?.stepStartTime)) return;
 
         setTimerNow(Date.now());
         const intervalId = window.setInterval(() => setTimerNow(Date.now()), 1000);
         return () => window.clearInterval(intervalId);
-    }, [activity?.id, activity?.time, activity?.updatedAt]);
+    }, [activity?.id, activity?.kind, activity?.time, activity?.tournament?.stepStartTime, activity?.updatedAt]);
 
     React.useEffect(() => {
         return () => {
             if (deckRowClickTimerRef.current !== null) {
                 window.clearTimeout(deckRowClickTimerRef.current);
             }
+            if (draftProtectionTimerRef.current !== null) {
+                window.clearTimeout(draftProtectionTimerRef.current);
+            }
+            if (limitedDeckAutosaveTimerRef.current !== null) {
+                window.clearTimeout(limitedDeckAutosaveTimerRef.current);
+            }
         };
     }, []);
+
+    React.useEffect(() => {
+        if (limitedDeckAutosaveTimerRef.current !== null) {
+            window.clearTimeout(limitedDeckAutosaveTimerRef.current);
+            limitedDeckAutosaveTimerRef.current = null;
+        }
+
+        if (!activity || !editableDeck || !limitedDeckAutosaveKind || !shouldAutosaveLimitedDeck(editableDeck)) {
+            setLimitedDeckAutosaveState('idle');
+            setLimitedDeckAutosaveMessage(null);
+            return;
+        }
+
+        let cancelled = false;
+        const snapshot = cloneDeck(editableDeck);
+        setLimitedDeckAutosaveState('pending');
+        setLimitedDeckAutosaveMessage('Autosave pending.');
+        limitedDeckAutosaveTimerRef.current = window.setTimeout(() => {
+            limitedDeckAutosaveTimerRef.current = null;
+            const autosaveDeck = buildLimitedDeckAutosaveDeck(snapshot, {
+                kind: limitedDeckAutosaveKind,
+                activityId: activity.objectId ?? activity.id,
+                title: activity.title,
+                limitedSideboard: activity.limitedSideboard,
+            });
+            deckStorage.saveDeck(autosaveDeck)
+                .then(() => {
+                    if (cancelled) return;
+                    setLimitedDeckAutosaveState('saved');
+                    setLimitedDeckAutosaveMessage(`Autosaved as ${autosaveDeck.name}.`);
+                })
+                .catch((error) => {
+                    if (cancelled) return;
+                    console.error('[ActivityWorkspace] Failed to autosave limited deck:', error);
+                    setLimitedDeckAutosaveState('error');
+                    setLimitedDeckAutosaveMessage(error instanceof Error ? error.message : 'Limited deck autosave failed.');
+                });
+        }, 750);
+
+        return () => {
+            cancelled = true;
+            if (limitedDeckAutosaveTimerRef.current !== null) {
+                window.clearTimeout(limitedDeckAutosaveTimerRef.current);
+                limitedDeckAutosaveTimerRef.current = null;
+            }
+        };
+    }, [
+        activity,
+        editableDeck,
+        limitedDeckAutosaveKind,
+    ]);
 
     const clearPendingDeckRowClick = React.useCallback(() => {
         if (deckRowClickTimerRef.current !== null) {
@@ -616,8 +988,17 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
     const handleSubmitDeck = async () => {
         if (!activity?.objectId || !editableDeck || !onSubmitDeck) return;
 
-        setIsSubmittingDeck(true);
         setSubmitStatus(null);
+        const validationError = getLimitedDeckSubmitValidationError(editableDeck, {
+            kind: activity.kind === 'construction' ? 'construction' : 'sideboard',
+            limitedSideboard: activity.kind === 'sideboard' ? activity.limitedSideboard : false,
+        });
+        if (validationError) {
+            setSubmitStatus(validationError);
+            return;
+        }
+
+        setIsSubmittingDeck(true);
         try {
             const submitted = await onSubmitDeck(activity.objectId, editableDeck);
             if (submitted) {
@@ -631,6 +1012,103 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
         }
     };
 
+    const handleTournamentCommand = React.useCallback(async (command: 'join' | 'quit' | 'close') => {
+        if (activity?.kind !== 'tournament') return;
+
+        if (command === 'close') {
+            removeActivity(activity.id);
+            return;
+        }
+
+        if (!activity.objectId) return;
+
+        setIsTournamentCommandBusy(true);
+        setSubmitStatus(null);
+        try {
+            if (command === 'join') {
+                const joined = await webSocketBridgeService.joinTournament(activity.objectId, sessionId);
+                setSubmitStatus(joined ? 'Tournament joined.' : 'Tournament join was rejected.');
+                return;
+            }
+
+            const confirmed = await showLocalUserRequest({
+                title: 'Confirm quit tournament',
+                message: 'Are you sure you want to quit the tournament?',
+                tournamentId: activity.objectId,
+                button1Text: 'No',
+                button1Action: null,
+                button2Text: 'Yes',
+                button2Action: 'CLIENT_QUIT_TOURNAMENT',
+            });
+            if (confirmed !== 2) {
+                setSubmitStatus('Tournament quit cancelled.');
+                return;
+            }
+            const quit = await webSocketBridgeService.quitTournament(activity.objectId, sessionId);
+            setSubmitStatus(quit ? 'Tournament quit requested.' : 'Tournament quit was rejected.');
+        } catch (error) {
+            setSubmitStatus(error instanceof Error ? error.message : 'Tournament command failed.');
+        } finally {
+            setIsTournamentCommandBusy(false);
+        }
+    }, [activity, removeActivity, sessionId, showLocalUserRequest]);
+
+    const handleTournamentMatchWatch = React.useCallback(async (match: TournamentMatchPayload) => {
+        if (!sessionId || !match.tableId) return;
+
+        setIsTournamentCommandBusy(true);
+        setSubmitStatus(null);
+        try {
+            const watching = await webSocketBridgeService.watchTournament(sessionId, match.tableId);
+            setSubmitStatus(watching ? 'Tournament table watch requested.' : 'Tournament table watch was rejected.');
+        } catch (error) {
+            setSubmitStatus(error instanceof Error ? error.message : 'Tournament table watch failed.');
+        } finally {
+            setIsTournamentCommandBusy(false);
+        }
+    }, [sessionId]);
+
+    const handleToggleDraftPickHidden = React.useCallback((cardId: string) => {
+        setHiddenDraftPickIds((current) => {
+            const next = new Set(current);
+            if (next.has(cardId)) {
+                next.delete(cardId);
+            } else {
+                next.add(cardId);
+            }
+            return next;
+        });
+    }, []);
+
+    const handleShowAllDraftPicks = React.useCallback(() => {
+        setHiddenDraftPickIds(new Set());
+    }, []);
+
+    const handleDraftLogExport = React.useCallback(() => {
+        if (activity?.kind !== 'draft' || draftPickedCards.length === 0) return;
+
+        try {
+            const draftLogDeck = buildDraftLogDeck(`${activity.title || 'Draft'} Picks`, draftPickedCards);
+            const content = DeckSerializer.exportDraftLog(draftLogDeck, {
+                draftId: activity.objectId,
+                players: draftPayload?.players ?? [],
+                sourceName: activity.title,
+            });
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = draftLogFileName(activity);
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            URL.revokeObjectURL(url);
+            setSubmitStatus('Draft log exported.');
+        } catch (error) {
+            setSubmitStatus(error instanceof Error ? error.message : 'Draft log export failed.');
+        }
+    }, [activity, draftPayload?.players, draftPickedCards]);
+
     const handleDraftCommand = React.useCallback(async (command: 'pick' | 'mark' | 'booster-loaded' | 'quit') => {
         if (activity?.kind !== 'draft' || !activity.objectId) return;
 
@@ -643,11 +1121,17 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                 return;
             }
 
-            if (!draftCardId) return;
+            if (!activeDraftCardId) return;
 
             if (command === 'mark') {
-                const marked = await webSocketBridgeService.markDraftCard(activity.objectId, sessionId, draftCardId);
-                setSubmitStatus(marked ? 'Draft card marked.' : 'Draft card mark was rejected.');
+                const nextMarkedDraftCardId = isActiveDraftCardMarked ? null : activeDraftCardId;
+                const marked = await webSocketBridgeService.markDraftCard(activity.objectId, sessionId, nextMarkedDraftCardId);
+                if (marked) {
+                    setMarkedDraftCardId(nextMarkedDraftCardId);
+                }
+                setSubmitStatus(marked
+                    ? nextMarkedDraftCardId ? 'Draft card marked.' : 'Draft card unmarked.'
+                    : 'Draft card mark was rejected.');
                 return;
             }
 
@@ -657,7 +1141,7 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                 return;
             }
 
-            const pick = await webSocketBridgeService.pickDraftCard(activity.objectId, sessionId, draftCardId, []);
+            const pick = await webSocketBridgeService.pickDraftCard(activity.objectId, sessionId, activeDraftCardId, [...hiddenDraftPickIds]);
             updateDraftPick(activity.objectId, {
                 booster: pick.booster,
                 picks: pick.picks,
@@ -671,7 +1155,7 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
         } finally {
             setIsDraftCommandBusy(false);
         }
-    }, [activity, draftCardId, sessionId, updateDraftPick]);
+    }, [activity, activeDraftCardId, hiddenDraftPickIds, isActiveDraftCardMarked, sessionId, updateDraftPick]);
 
     const handleReplayCommand = React.useCallback(async (command: 'previous' | 'next' | 'skip-forward' | 'autoplay' | 'stop') => {
         if (activity?.kind !== 'replay' || !activity.objectId) return;
@@ -923,17 +1407,401 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                 </div>
             </section>
 
-            {activity && (commands.length > 0 || editableDeck) && (
+            {activity?.kind === 'draft' && (
                 <section
-                    className="activity-command-panel"
-                    aria-label={`${getActivityKindLabel(activity.kind)} ${commands.length > 0 ? 'controls' : 'deck view'}`}
+                    className="activity-draft-panel"
+                    aria-label="Draft activity"
+                    data-testid="activity-draft-panel"
+                    data-draft-picking={String(isDraftPicking)}
+                    data-draft-click-protected={String(isDraftPickProtected)}
+                    data-draft-pack-number={draftPayload?.boosterNum ?? 0}
+                    data-draft-pick-number={draftPayload?.cardNum ?? 0}
+                    data-draft-pass-direction={draftPass}
+                    data-draft-booster-count={draftBoosterCount}
+                    data-draft-picked-count={draftPickCount}
+                    data-draft-hidden-count={hiddenDraftPickCount}
+                    data-draft-log-ready={String(canExportDraftLog)}
+                >
+                    <div className="activity-panel-header">
+                        <h2>Draft Status</h2>
+                        <span className="activity-draft-message" data-testid="draft-message">
+                            {draftMessage}
+                        </span>
+                    </div>
+
+                    <div className="activity-draft-summary" data-testid="draft-summary">
+                        <div>
+                            <span>Countdown</span>
+                            <strong
+                                data-testid="draft-countdown"
+                                data-timer-state={timerState}
+                            >
+                                {timerLabel}
+                            </strong>
+                        </div>
+                        <div>
+                            <span>Pack / Pick</span>
+                            <strong data-testid="draft-pack-pick">
+                                {draftPayload?.boosterNum || '-'} / {draftPayload?.cardNum || '-'}
+                            </strong>
+                        </div>
+                        <div>
+                            <span>Pass</span>
+                            <strong data-testid="draft-pass-direction">
+                                {draftPass === 'left' ? 'Pass left' : draftPass === 'right' ? 'Pass right' : 'Unknown'}
+                            </strong>
+                        </div>
+                        <div>
+                            <span>Booster</span>
+                            <strong data-testid="draft-booster-count">{draftBoosterCount}</strong>
+                        </div>
+                        <div>
+                            <span>Picked</span>
+                            <strong data-testid="draft-picked-count">{visibleDraftPickedCards.length}</strong>
+                        </div>
+                        <div>
+                            <span>Hidden</span>
+                            <strong data-testid="draft-hidden-count">{hiddenDraftPickCount}</strong>
+                        </div>
+                    </div>
+
+                    <div className="activity-draft-layout">
+                        <aside className="activity-draft-sidebar" aria-label="Draft packs and table">
+                            <section className="activity-draft-pack-list" data-testid="draft-pack-list">
+                                {draftPackLabels.map((label, index) => (
+                                    <div
+                                        key={`${label}:${index}`}
+                                        className="activity-draft-pack"
+                                        data-testid="draft-pack-row"
+                                        data-pack-active={String((draftPayload?.boosterNum ?? 0) === index + 1)}
+                                        data-pack-complete={String((draftPayload?.boosterNum ?? 0) > index + 1)}
+                                    >
+                                        <span>Pack {index + 1}</span>
+                                        <strong>{label}</strong>
+                                    </div>
+                                ))}
+                            </section>
+
+                            <section
+                                className="activity-draft-table"
+                                aria-label="Draft table"
+                                data-testid="draft-table-visualization"
+                                data-pass-direction={draftPass}
+                            >
+                                <div className="activity-draft-table-arrow" aria-hidden="true">
+                                    {draftPass === 'left' ? '<' : draftPass === 'right' ? '>' : '-'}
+                                </div>
+                                <div className="activity-draft-player-list">
+                                    {draftPayload?.players.length ? draftPayload.players.map((playerName, index) => (
+                                        <span
+                                            key={`${playerName}:${index}`}
+                                            data-testid="draft-player"
+                                            data-player-index={index + 1}
+                                        >
+                                            {playerName}
+                                        </span>
+                                    )) : (
+                                        <span data-testid="draft-player">Waiting for players</span>
+                                    )}
+                                </div>
+                            </section>
+                        </aside>
+
+                        <section className="activity-draft-main" aria-label="Booster">
+                            <div className="activity-draft-section-header">
+                                <h3>Booster</h3>
+                                <span data-testid="draft-selected-card">
+                                    {activeDraftCard ? activeDraftCard.name : 'No card selected'}
+                                </span>
+                            </div>
+                            <div className="activity-draft-booster-grid" data-testid="draft-booster-grid">
+                                {draftBoosterCards.length ? draftBoosterCards.map(card => (
+                                    <button
+                                        key={card.id}
+                                        type="button"
+                                        className="activity-draft-card"
+                                        data-testid="draft-booster-card"
+                                        data-card-id={card.id}
+                                        data-card-name={card.name}
+                                        data-selected={String(card.id === activeDraftCardId)}
+                                        data-marked={String(card.marked)}
+                                        onClick={() => setSelectedDraftCardId(card.id)}
+                                    >
+                                        <strong>{card.name}</strong>
+                                        <span>{draftCardSubtitle(card)}</span>
+                                        {card.marked && <em>Marked</em>}
+                                    </button>
+                                )) : (
+                                    <p className="activity-draft-empty" data-testid="draft-booster-empty">
+                                        {isDraftPicking ? 'Waiting for booster' : 'Waiting for other players'}
+                                    </p>
+                                )}
+                            </div>
+                            {isDraftPickProtected && draftBoosterCards.length > 0 && (
+                                <p className="activity-draft-protection" data-testid="draft-click-protection">
+                                    Pick protection active
+                                </p>
+                            )}
+                        </section>
+
+                        <section className="activity-draft-picked" aria-label="Picked cards">
+                            <div className="activity-draft-section-header">
+                                <h3>Picked Cards</h3>
+                                <button
+                                    type="button"
+                                    className="activity-table-action"
+                                    onClick={handleDraftLogExport}
+                                    disabled={!canExportDraftLog}
+                                    title={canExportDraftLog ? 'Download this draft log.' : 'Pick a card before exporting a draft log.'}
+                                    data-testid="draft-log-export-button"
+                                >
+                                    Export Log
+                                </button>
+                                <button
+                                    type="button"
+                                    className="activity-table-action"
+                                    onClick={handleShowAllDraftPicks}
+                                    disabled={hiddenDraftPickCount === 0}
+                                    data-testid="draft-show-hidden-button"
+                                >
+                                    Show Hidden
+                                </button>
+                            </div>
+                            <div className="activity-draft-picked-list" data-testid="draft-picked-cards">
+                                {draftPickedCards.length ? draftPickedCards.map(card => (
+                                    <label
+                                        key={card.id}
+                                        className="activity-draft-picked-card"
+                                        data-testid="draft-picked-card"
+                                        data-card-id={card.id}
+                                        data-card-name={card.name}
+                                        data-hidden={String(card.hidden)}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={card.hidden}
+                                            onChange={() => handleToggleDraftPickHidden(card.id)}
+                                            data-testid="draft-picked-hidden-toggle"
+                                        />
+                                        <span>
+                                            <strong>{card.name}</strong>
+                                            <small>{draftCardSubtitle(card)}</small>
+                                        </span>
+                                    </label>
+                                )) : (
+                                    <p className="activity-draft-empty">No picked cards yet</p>
+                                )}
+                            </div>
+                        </section>
+                    </div>
+                </section>
+            )}
+
+            {activity?.kind === 'tournament' && (
+                <section
+                    className="activity-tournament-panel"
+                    aria-label="Tournament activity"
+                    data-testid="activity-tournament-panel"
+                    data-tournament-state={tournamentPayload?.state ?? 'waiting'}
+                    data-tournament-watching-allowed={String(tournamentPayload?.watchingAllowed ?? false)}
+                    data-tournament-player-count={tournamentPayload?.players.length ?? 0}
+                    data-tournament-match-count={tournamentPayload?.matches.length ?? 0}
+                    data-tournament-timer-kind={tournamentTimerKind}
+                >
+                    <div className="activity-panel-header">
+                        <h2>Tournament Status</h2>
+                        <span
+                            className="activity-tournament-state"
+                            data-testid="tournament-state-header"
+                            data-timer-kind={tournamentTimerKind}
+                        >
+                            {tournamentStateLabel}
+                        </span>
+                    </div>
+
+                    <div className="activity-tournament-summary" data-testid="tournament-summary">
+                        <div>
+                            <span>Name</span>
+                            <strong data-testid="tournament-name">{tournamentPayload?.name ?? activity.title}</strong>
+                        </div>
+                        <div>
+                            <span>Type</span>
+                            <strong data-testid="tournament-type">{tournamentPayload?.type || '-'}</strong>
+                        </div>
+                        <div>
+                            <span>Start</span>
+                            <strong data-testid="tournament-start-time">{formatTournamentDate(tournamentPayload?.startTime)}</strong>
+                        </div>
+                        <div>
+                            <span>End</span>
+                            <strong data-testid="tournament-end-time">
+                                {tournamentPayload?.endTime ? formatTournamentDate(tournamentPayload.endTime) : 'running...'}
+                            </strong>
+                        </div>
+                        <div>
+                            <span>{tournamentTimerKind === 'remaining' ? 'Remaining' : tournamentTimerKind === 'elapsed' ? 'Elapsed' : 'Timer'}</span>
+                            <strong data-testid="tournament-step-timer">{tournamentTimerLabel}</strong>
+                        </div>
+                        <div>
+                            <span>Running</span>
+                            <strong data-testid="tournament-running-info">{tournamentPayload?.runningInfo || '-'}</strong>
+                        </div>
+                    </div>
+
+                    {tournamentPayload?.message && (
+                        <div className="activity-command-status" role="status" data-testid="tournament-over-message">
+                            {tournamentPayload.message}
+                        </div>
+                    )}
+
+                    <div className="activity-tournament-tables">
+                        <section className="activity-tournament-table-section" aria-label="Tournament standings">
+                            <h3>Standings</h3>
+                            <div className="activity-table-scroll">
+                                <table className="activity-tournament-table" data-testid="tournament-standings-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Loc</th>
+                                            <th scope="col">Player</th>
+                                            <th scope="col">State</th>
+                                            <th scope="col">Pts</th>
+                                            <th scope="col">Results</th>
+                                            <th scope="col">History</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {tournamentPayload?.players.length ? tournamentPayload.players.map(player => (
+                                            <tr
+                                                key={`${player.name}:${player.history ?? ''}`}
+                                                data-testid="tournament-standing-row"
+                                                data-player-quit={String(player.quit)}
+                                            >
+                                                <td>{player.flagName || '-'}</td>
+                                                <td>{player.name}</td>
+                                                <td>{player.state}</td>
+                                                <td>{player.points}</td>
+                                                <td>{player.results || '-'}</td>
+                                                <td>{player.history || '-'}</td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan={6}>Waiting for standings</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <section className="activity-tournament-table-section" aria-label="Tournament matches">
+                            <h3>Matches</h3>
+                            <div className="activity-table-scroll">
+                                <table className="activity-tournament-table" data-testid="tournament-match-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Round</th>
+                                            <th scope="col">Players</th>
+                                            <th scope="col">State</th>
+                                            <th scope="col">Result</th>
+                                            <th scope="col">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {tournamentPayload?.matches.length ? tournamentPayload.matches.map((match, index) => (
+                                            <tr
+                                                key={`${match.tableId ?? 'table'}:${match.gameId ?? index}`}
+                                                data-testid="tournament-match-row"
+                                                data-table-id={match.tableId ?? ''}
+                                                data-game-id={match.gameId ?? ''}
+                                                data-can-watch={String(match.canWatch)}
+                                            >
+                                                <td>{match.roundNumber}</td>
+                                                <td>{match.players || '-'}</td>
+                                                <td>{match.state || '-'}</td>
+                                                <td>{match.result || '-'}</td>
+                                                <td>
+                                                    {match.canWatch ? (
+                                                        <button
+                                                            type="button"
+                                                            className="activity-table-action"
+                                                            data-testid="tournament-match-watch-button"
+                                                            disabled={isTournamentCommandBusy || !sessionId}
+                                                            onClick={() => void handleTournamentMatchWatch(match)}
+                                                        >
+                                                            Watch
+                                                        </button>
+                                                    ) : (
+                                                        <span className="table-status-text">-</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan={5}>Waiting for match pairings</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+                </section>
+            )}
+
+            {activity?.kind === 'tournament' && (
+                <section
+                    className={`activity-chat-panel ${isTournamentChatCollapsed ? 'is-collapsed' : ''}`}
+                    aria-label="Tournament chat"
+                    data-testid="activity-tournament-chat"
+                    data-panel-collapsed={String(isTournamentChatCollapsed)}
+                >
+                    <div className="activity-panel-header">
+                        <h2>Tournament Chat</h2>
+                        <button
+                            type="button"
+                            className="activity-panel-toggle"
+                            onClick={() => updateActivePanelLayout({ chatCollapsed: !isTournamentChatCollapsed })}
+                            aria-expanded={!isTournamentChatCollapsed}
+                            data-testid="activity-tournament-chat-toggle"
+                        >
+                            {isTournamentChatCollapsed ? 'Expand' : 'Collapse'}
+                        </button>
+                    </div>
+                    {!isTournamentChatCollapsed && (
+                        <ChatPanel
+                            channelId={tournamentChatChannelId}
+                            title="Tournament chat"
+                            showTabs={false}
+                            collapsible={false}
+                            emptyMessage="No tournament messages yet"
+                        />
+                    )}
+                </section>
+            )}
+
+            {activity && (commands.length > 0 || editableDeck || isStandaloneCardViewer) && (
+                <section
+                    className={`activity-command-panel ${isCommandPanelCollapsed ? 'is-collapsed' : ''}`}
+                    aria-label={`${getActivityKindLabel(activity.kind)} ${commands.length > 0 ? 'controls' : isStandaloneCardViewer ? 'viewer' : 'deck view'}`}
                     data-testid="activity-command-panel"
                     data-activity-command-kind={activity.kind}
                     data-command-count={commands.length}
-                    data-controls-ready={canSubmitDeck || canRunReplayCommand ? 'true' : 'false'}
+                    data-controls-ready={canSubmitDeck || canRunReplayCommand || canRunTournamentCommand ? 'true' : 'false'}
                     data-deck-read-only={isReadOnlyDeck ? 'true' : 'false'}
+                    data-command-panel-collapsed={String(isCommandPanelCollapsed)}
                 >
-                    <h2>{getActivityKindLabel(activity.kind)} {commands.length > 0 ? 'Controls' : 'Deck View'}</h2>
+                    <div className="activity-panel-header">
+                        <h2>{getActivityKindLabel(activity.kind)} {commands.length > 0 ? 'Controls' : isStandaloneCardViewer ? 'Viewer' : 'Deck View'}</h2>
+                        <button
+                            type="button"
+                            className="activity-panel-toggle"
+                            onClick={() => updateActivePanelLayout({ commandPanelCollapsed: !isCommandPanelCollapsed })}
+                            aria-expanded={!isCommandPanelCollapsed}
+                            data-testid="activity-command-panel-toggle"
+                        >
+                            {isCommandPanelCollapsed ? 'Expand' : 'Collapse'}
+                        </button>
+                    </div>
                     {activity.kind === 'replay' && (
                         <div
                             className="activity-replay-payload"
@@ -962,6 +1830,9 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                             </div>
                         </div>
                     )}
+                    {isStandaloneCardViewer && (
+                        <CardViewerActivity />
+                    )}
                     {editableDeck && (
                         <div
                             className="activity-deck-payload"
@@ -985,6 +1856,7 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                             data-time-remaining={timerRemainingSeconds ?? 0}
                             data-submit-ready={String(canSubmitDeck)}
                             data-read-only={isReadOnlyDeck ? 'true' : 'false'}
+                            data-limited-autosave-state={limitedDeckAutosaveState}
                         >
                             <div>
                                 <span>Deck</span>
@@ -1028,6 +1900,17 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                                     {submitReadinessLabel}
                                 </strong>
                             </div>
+                            {canAutosaveLimitedDeck && (
+                                <div>
+                                    <span>Autosave</span>
+                                    <strong
+                                        data-testid="activity-deck-autosave-state"
+                                        data-autosave-state={limitedDeckAutosaveState}
+                                    >
+                                        {limitedDeckAutosaveMessage ?? 'Autosave ready'}
+                                    </strong>
+                                </div>
+                            )}
                         </div>
                     )}
                     {editableDeck && (
@@ -1136,8 +2019,22 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                                 disabled={
                                     activity.kind === 'replay'
                                         ? isReplayCommandBusy || !canRunReplayCommand
+                                    : activity.kind === 'tournament'
+                                        ? isTournamentCommandBusy || (
+                                            command.key === 'close'
+                                                ? false
+                                                : !canRunTournamentCommand || (command.key === 'quit' && !canQuitTournament)
+                                        )
                                     : activity.kind === 'draft'
-                                        ? isDraftCommandBusy || (command.key === 'quit' ? !canQuitDraft : !canRunDraftCommand)
+                                        ? isDraftCommandBusy || (
+                                            command.key === 'quit'
+                                                ? !canQuitDraft
+                                                : command.key === 'booster-loaded'
+                                                    ? !canQuitDraft || draftBoosterCount === 0
+                                                : command.key === 'mark'
+                                                    ? !canMarkDraftCard
+                                                : !canPickDraftCard
+                                        )
                                         : isSubmittingDeck || (
                                         command.key === 'reset-sideboard'
                                             ? !editableDeck
@@ -1150,8 +2047,22 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                                 title={
                                     activity.kind === 'replay' && canRunReplayCommand
                                         ? 'Run this replay command against the live replay session.'
-                                    : activity.kind === 'draft' && (command.key === 'quit' ? canQuitDraft : canRunDraftCommand)
-                                        ? 'Run this draft command against the live booster payload.'
+                                    : activity.kind === 'tournament' && command.key === 'close'
+                                        ? 'Close this tournament window.'
+                                    : activity.kind === 'tournament' && command.key === 'join' && canRunTournamentCommand
+                                        ? 'Join or refresh the live tournament activity session.'
+                                    : activity.kind === 'tournament' && command.key === 'quit' && canQuitTournament
+                                        ? 'Ask the server to quit this tournament after confirmation.'
+                                    : activity.kind === 'draft' && command.key === 'pick' && isDraftPickProtected
+                                        ? 'Pick protection is active for the newly loaded booster.'
+                                    : activity.kind === 'draft' && command.key === 'pick' && canPickDraftCard
+                                        ? 'Pick the selected card and send hidden picked-card ids to the server.'
+                                    : activity.kind === 'draft' && command.key === 'mark' && canMarkDraftCard
+                                        ? isActiveDraftCardMarked ? 'Clear the selected draft card mark.' : 'Mark the selected draft card.'
+                                    : activity.kind === 'draft' && command.key === 'booster-loaded' && draftBoosterCount > 0
+                                        ? 'Confirm the booster payload loaded successfully.'
+                                    : activity.kind === 'draft' && command.key === 'quit' && canQuitDraft
+                                        ? 'Quit this draft activity.'
                                     :
                                     canSubmitDeck && (command.key === 'submit-sideboard' || command.key === 'submit-deck')
                                         ? 'Submit the current deck payload to the server.'
@@ -1168,12 +2079,18 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                                             ? handleResetDeck
                                         : command.key === 'add-lands'
                                             ? () => setIsAddLandsOpen(true)
+                                        : command.key === 'join'
+                                            ? () => void handleTournamentCommand('join')
+                                        : command.key === 'close'
+                                            ? () => void handleTournamentCommand('close')
                                         : command.key === 'pick'
                                             ? () => void handleDraftCommand('pick')
                                         : command.key === 'mark'
                                             ? () => void handleDraftCommand('mark')
                                         : command.key === 'booster-loaded'
                                             ? () => void handleDraftCommand('booster-loaded')
+                                        : command.key === 'quit' && activity.kind === 'tournament'
+                                            ? () => void handleTournamentCommand('quit')
                                         : command.key === 'quit'
                                             ? () => void handleDraftCommand('quit')
                                         : command.key === 'previous'
@@ -1191,6 +2108,12 @@ export const ActivityWorkspace: React.FC<ActivityWorkspaceProps> = ({
                             >
                                 {isSubmittingDeck && (command.key === 'submit-sideboard' || command.key === 'submit-deck')
                                     ? 'Submitting'
+                                    : isTournamentCommandBusy && activity.kind === 'tournament' && command.key !== 'close'
+                                        ? 'Working'
+                                    : isDraftCommandBusy && activity.kind === 'draft'
+                                        ? 'Working'
+                                    : activity.kind === 'draft' && command.key === 'mark' && isActiveDraftCardMarked
+                                        ? 'Unmark Card'
                                     : command.label}
                             </button>
                             ))}

@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { Copy, Eye, Layers3, RotateCwSquare } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { PermanentView, PlayerView } from '../../types';
 import { useGameStore } from '../../stores';
@@ -10,80 +11,53 @@ import {
     createValidTargetLookup,
     getVisibleStackCards,
 } from '../../services/BattlefieldPerformanceService';
+import {
+    buildBattlefieldLayout,
+    createBattlefieldSignature,
+    hasCardType,
+    type BattlefieldAttachment,
+    type BattlefieldStackGroup,
+    type BattlefieldZone,
+} from '../../services/BattlefieldLayoutService';
+import {
+    createBattlefieldFeedbackSnapshot,
+    diffBattlefieldFeedbackSnapshots,
+    type BattlefieldFeedbackEvent,
+    type BattlefieldFeedbackKind,
+    type BattlefieldFeedbackSnapshot,
+} from '../../services/BattlefieldFeedbackService';
+import {
+    createCardIconSignature,
+    normalizeCardIcons,
+} from '../../services/CardIconService';
 import { ManaCost } from '../common/ManaSymbols';
 import './GamePage.css';
 
 interface BattlefieldProps {
     player: PlayerView;
     isMe?: boolean;
-    onCardClick?: (cardId: string) => void;
-    onCardInspect?: (cardId: string) => void;
+    onCardClick?: (cardId: string, options?: BattlefieldCardClickOptions) => void;
+    onCardInspect?: (cardId: string, mode?: BattlefieldInspectMode) => void;
     onCardHover?: (cardId: string | null) => void;
 }
 
+export type BattlefieldInspectMode = 'normal' | 'alternate' | 'copy' | 'mutate';
 
-const ZONE_ORDER = {
-    CREATURES: 0,
-    LANDS: 0,
-    ARTIFACTS: 1,
-    ENCHANTMENTS: 2,
-    PLANESWALKERS: 3,
-    BATTLES: 4,
-    OTHER: 5
-};
-
-type ZoneType = keyof typeof ZONE_ORDER;
-type BattlefieldZoneKey = ZoneType | 'NONLANDS';
-
-const zoneLabels: Record<BattlefieldZoneKey, string> = {
-    CREATURES: 'Creatures',
-    NONLANDS: 'Nonlands',
-    LANDS: 'Lands',
-    ARTIFACTS: 'Artifacts',
-    ENCHANTMENTS: 'Enchantments',
-    PLANESWALKERS: 'Planeswalkers',
-    BATTLES: 'Battles',
-    OTHER: 'Other',
-};
-
-interface StackedGroup {
-    key: string;
-    cards: PermanentView[];
+export interface BattlefieldCardClickOptions {
+    holdPriority?: boolean;
 }
 
-const getBattlefieldSignature = (player: PlayerView): string => {
-    const battlefield = player.battlefield ? Object.values(player.battlefield) : [];
-    return battlefield
-        .map((card) => [
-            card.id,
-            card.name,
-            card.tapped,
-            card.transformed,
-            card.summoningSickness,
-            card.power,
-            card.toughness,
-            card.loyalty,
-            card.defense,
-            card.damage,
-            card.isToken,
-            card.copy,
-            card.canAttack,
-            card.canBlock,
-            card.attachments?.join(',') ?? '',
-            card.attachedTo ?? '',
-            card.attachedToPermanent,
-            card.attachedControllerDiffers,
-            card.cardTypes.join(','),
-            card.counters
-                ? [...card.counters]
-                    .sort((first, second) => first.name.localeCompare(second.name))
-                    .map((counter) => `${counter.name}:${counter.count}`)
-                    .join(',')
-                : '',
-        ].join(':'))
-        .sort()
-        .join('|');
-};
+const SINGLE_CLICK_DELAY_MS = 220;
+
+interface BattlefieldEventMessage {
+    id: string;
+    kind: 'left' | 'died';
+    text: string;
+}
+
+function isDepartureFeedbackEvent(event: BattlefieldFeedbackEvent): event is BattlefieldFeedbackEvent & { kind: 'left' | 'died' } {
+    return event.kind === 'left' || event.kind === 'died';
+}
 
 const areBattlefieldPropsEqual = (prev: BattlefieldProps, next: BattlefieldProps) => {
     return (
@@ -92,33 +66,36 @@ const areBattlefieldPropsEqual = (prev: BattlefieldProps, next: BattlefieldProps
         prev.onCardClick === next.onCardClick &&
         prev.onCardInspect === next.onCardInspect &&
         prev.onCardHover === next.onCardHover &&
-        getBattlefieldSignature(prev.player) === getBattlefieldSignature(next.player)
+        createBattlefieldSignature(prev.player) === createBattlefieldSignature(next.player)
     );
 };
 
 export const Battlefield: React.FC<BattlefieldProps> = React.memo(({ player, isMe, onCardClick, onCardInspect, onCardHover }) => {
-    const permanents = useMemo(
-        () => player.battlefield ? Object.values(player.battlefield) : [],
-        [player.battlefield]
-    );
-
     // Use shallow selectors to avoid unnecessary re-renders when other parts of store change
     const { pendingAction, combat, selectedCardId } = useGameStore(useShallow(state => ({
         pendingAction: state.pendingAction,
         combat: state.gameView?.combat,
         selectedCardId: state.selectedCardId,
     })));
-    const { battlefieldGrouping, cardImageFallbackMode } = useSettingsStore(useShallow(state => ({
+    const { battlefieldGrouping, battlefieldCardSize, cardImageFallbackMode, animationsEnabled, animationSpeed } = useSettingsStore(useShallow(state => ({
         battlefieldGrouping: state.settings.battlefieldGrouping,
+        battlefieldCardSize: state.settings.battlefieldCardSize,
         cardImageFallbackMode: state.settings.cardImageFallbackMode,
+        animationsEnabled: state.settings.animationsEnabled,
+        animationSpeed: state.settings.animationSpeed,
     })));
 
     const [expandedStacks, setExpandedStacks] = useState<Record<string, boolean>>({});
+    const [feedbackByCardId, setFeedbackByCardId] = useState<Record<string, BattlefieldFeedbackKind>>({});
+    const [eventMessages, setEventMessages] = useState<BattlefieldEventMessage[]>([]);
+    const previousFeedbackSnapshotRef = useRef<BattlefieldFeedbackSnapshot | null>(null);
+    const feedbackTimersRef = useRef<Record<string, number>>({});
+    const eventTimersRef = useRef<Record<string, number>>({});
     const isValidTargetByCardId = useMemo(() => createValidTargetLookup(pendingAction), [pendingAction]);
     const combatStateByCardId = useMemo(() => createCombatStateLookup(combat), [combat]);
 
-    const handleCardClick = useCallback((cardId: string) => {
-        if (onCardClick) onCardClick(cardId);
+    const handleCardClick = useCallback((cardId: string, options?: BattlefieldCardClickOptions) => {
+        if (onCardClick) onCardClick(cardId, options);
     }, [onCardClick]);
 
     const toggleStack = useCallback((stackKey: string, e: React.MouseEvent) => {
@@ -132,88 +109,96 @@ export const Battlefield: React.FC<BattlefieldProps> = React.memo(({ player, isM
         return (cardId: string) => (stats[cardId]?.playableAmount ?? 0) > 0;
     }, [playableObjectStats]);
 
-    // Group cards by configured battlefield preference.
-    const zones = useMemo(() => {
-        const z: Record<BattlefieldZoneKey, PermanentView[]> = {
-            CREATURES: [] as PermanentView[],
-            NONLANDS: [] as PermanentView[],
-            LANDS: [] as PermanentView[],
-            ARTIFACTS: [] as PermanentView[],
-            ENCHANTMENTS: [] as PermanentView[],
-            PLANESWALKERS: [] as PermanentView[],
-            BATTLES: [] as PermanentView[],
-            OTHER: [] as PermanentView[],
-        };
+    const layout = useMemo(
+        () => buildBattlefieldLayout(player, battlefieldGrouping),
+        [battlefieldGrouping, player]
+    );
+    const feedbackDurationMs = Math.round(760 / Math.max(0.5, Math.min(animationSpeed, 2)));
+    const battlefieldStyle = {
+        '--battlefield-feedback-duration': `${feedbackDurationMs}ms`,
+        '--battlefield-card-size-scale': String(battlefieldCardSize / 14),
+    } as React.CSSProperties;
 
-        const getZoneForPermanent = (perm: PermanentView): BattlefieldZoneKey => {
-            if (battlefieldGrouping === 'nonlands') {
-                return perm.cardTypes.includes('Land') ? 'LANDS' : 'NONLANDS';
-            }
+    useEffect(() => {
+        const currentSnapshot = createBattlefieldFeedbackSnapshot(player, combatStateByCardId);
+        const previousSnapshot = previousFeedbackSnapshotRef.current;
+        previousFeedbackSnapshotRef.current = currentSnapshot;
 
-            if (battlefieldGrouping === 'creature-land-other') {
-                if (perm.cardTypes.includes('Creature')) return 'CREATURES';
-                if (perm.cardTypes.includes('Land')) return 'LANDS';
-                return 'OTHER';
-            }
+        if (!animationsEnabled || !previousSnapshot) {
+            return;
+        }
 
-            if (perm.cardTypes.includes('Creature')) return 'CREATURES';
-            if (perm.cardTypes.includes('Land')) return 'LANDS';
-            if (perm.cardTypes.includes('Planeswalker')) return 'PLANESWALKERS';
-            if (perm.cardTypes.includes('Battle')) return 'BATTLES';
-            if (perm.cardTypes.includes('Enchantment')) return 'ENCHANTMENTS';
-            if (perm.cardTypes.includes('Artifact')) return 'ARTIFACTS';
-            return 'OTHER';
-        };
+        const events = diffBattlefieldFeedbackSnapshots(previousSnapshot, currentSnapshot);
+        if (events.length === 0) {
+            return;
+        }
 
-        permanents.forEach(p => {
-            const zone = getZoneForPermanent(p);
-            if (z[zone]) z[zone].push(p);
-        });
-        return z;
-    }, [battlefieldGrouping, permanents]);
+        const currentCardEvents = events.filter(event => !isDepartureFeedbackEvent(event) && currentSnapshot[event.cardId]);
+        const departingEvents = events.filter(isDepartureFeedbackEvent);
 
-    // Group stackable cards
-    const zoneStacks = useMemo(() => {
-        const groupStacks = (cards: PermanentView[]): StackedGroup[] => {
-            const groups: Record<string, PermanentView[]> = {};
-
-            // Sorting
-            const sortedCards = [...cards].sort((a, b) => {
-                const nameCompare = a.name.localeCompare(b.name);
-                if (nameCompare !== 0) return nameCompare;
-                return a.tapped === b.tapped ? 0 : a.tapped ? 1 : -1;
+        if (currentCardEvents.length > 0) {
+            setFeedbackByCardId(previous => {
+                const next = { ...previous };
+                for (const event of currentCardEvents) {
+                    next[event.cardId] = event.kind;
+                }
+                return next;
             });
+        }
 
-            sortedCards.forEach(card => {
-                const combatStateKey = combatStateByCardId.get(card.id) ?? '';
-
-                const countersKey = card.counters
-                    ? [...card.counters].sort((a, b) => a.name.localeCompare(b.name))
-                        .map(c => `${c.name}:${c.count}`)
-                        .join('|')
-                    : '';
-
-                const key = `${card.name}-${card.tapped}-${combatStateKey}-${card.summoningSickness}-${countersKey}`;
-
-                if (!groups[key]) groups[key] = [];
-                groups[key].push(card);
-            });
-
-            return Object.entries(groups).map(([key, groupCards]) => ({
-                key,
-                cards: groupCards
+        if (departingEvents.length > 0) {
+            const messages = departingEvents.map(event => ({
+                id: `${event.cardId}:${event.kind}:${Date.now()}`,
+                kind: event.kind,
+                text: formatBattlefieldEventMessage(event),
             }));
+
+            setEventMessages(previous => [...previous, ...messages].slice(-3));
+
+            for (const message of messages) {
+                eventTimersRef.current[message.id] = window.setTimeout(() => {
+                    setEventMessages(previous => previous.filter(item => item.id !== message.id));
+                    delete eventTimersRef.current[message.id];
+                }, feedbackDurationMs * 2);
+            }
+        }
+
+        for (const event of currentCardEvents) {
+            if (feedbackTimersRef.current[event.cardId]) {
+                window.clearTimeout(feedbackTimersRef.current[event.cardId]);
+            }
+            feedbackTimersRef.current[event.cardId] = window.setTimeout(() => {
+                setFeedbackByCardId(previous => {
+                    if (previous[event.cardId] !== event.kind) {
+                        return previous;
+                    }
+                    const next = { ...previous };
+                    delete next[event.cardId];
+                    return next;
+                });
+                delete feedbackTimersRef.current[event.cardId];
+            }, feedbackDurationMs);
+        }
+    }, [animationsEnabled, combatStateByCardId, feedbackDurationMs, player]);
+
+    useEffect(() => {
+        if (animationsEnabled) {
+            return;
+        }
+        Object.values(feedbackTimersRef.current).forEach(timerId => window.clearTimeout(timerId));
+        Object.values(eventTimersRef.current).forEach(timerId => window.clearTimeout(timerId));
+        feedbackTimersRef.current = {};
+        eventTimersRef.current = {};
+        setFeedbackByCardId({});
+        setEventMessages([]);
+    }, [animationsEnabled]);
+
+    useEffect(() => {
+        return () => {
+            Object.values(feedbackTimersRef.current).forEach(timerId => window.clearTimeout(timerId));
+            Object.values(eventTimersRef.current).forEach(timerId => window.clearTimeout(timerId));
         };
-
-        const res: Record<string, StackedGroup[]> = {};
-        (Object.keys(zones) as Array<keyof typeof zones>).forEach(key => {
-            res[key] = groupStacks(zones[key]);
-        });
-        return res;
-    }, [zones, combatStateByCardId]);
-
-    // Note: renderCounters moved effectively outside (or to bottom)
-
+    }, []);
 
     const renderCard = useCallback((
         card: PermanentView,
@@ -222,7 +207,9 @@ export const Battlefield: React.FC<BattlefieldProps> = React.memo(({ player, isM
         isStacked: boolean,
         stackKey: string,
         stackSize: number,
-        isStackTop: boolean
+        isStackTop: boolean,
+        attachment?: BattlefieldAttachment,
+        isAttachmentHost = false
     ) => {
         return (
             <BattlefieldCard
@@ -235,6 +222,10 @@ export const Battlefield: React.FC<BattlefieldProps> = React.memo(({ player, isM
                 stackSize={stackSize}
                 isStackTop={isStackTop}
                 isStackExpanded={!!expandedStacks[stackKey]}
+                isAttachedCard={!!attachment}
+                isAttachmentHost={isAttachmentHost}
+                attachmentDepth={attachment?.depth ?? 0}
+                feedbackKind={feedbackByCardId[card.id] ?? null}
                 combatState={combatStateByCardId.get(card.id) ?? null}
                 isValidTarget={isValidTargetByCardId(card.id)}
                 isChosenTarget={pendingAction.type === 'target' && selectedCardId === card.id}
@@ -246,18 +237,70 @@ export const Battlefield: React.FC<BattlefieldProps> = React.memo(({ player, isM
                 onToggleStack={toggleStack}
             />
         );
-    }, [cardImageFallbackMode, combatStateByCardId, expandedStacks, handleCardClick, isPlayableByCardId, isValidTargetByCardId, onCardHover, onCardInspect, pendingAction.type, selectedCardId, toggleStack]);
+    }, [cardImageFallbackMode, combatStateByCardId, expandedStacks, feedbackByCardId, handleCardClick, isPlayableByCardId, isValidTargetByCardId, onCardHover, onCardInspect, pendingAction.type, selectedCardId, toggleStack]);
 
-    const renderStack = (stack: StackedGroup) => {
+    const renderAttachments = (stack: BattlefieldStackGroup) => {
+        if (stack.attachedCards.length === 0) return null;
+
+        return (
+            <div
+                className={`battlefield-attachments ${stack.hasControllerMismatch ? 'controller-mismatch' : ''}`}
+                data-testid="battlefield-attachments"
+                data-attachment-count={stack.attachmentCount}
+                data-attachment-columns={stack.attachmentColumns}
+            >
+                {stack.attachedCards.map((attachment, index) => renderCard(
+                    attachment.card,
+                    index,
+                    stack.attachedCards.length,
+                    false,
+                    `${stack.key}:attachments`,
+                    stack.attachedCards.length,
+                    true,
+                    attachment
+                ))}
+            </div>
+        );
+    };
+
+    const renderStack = (stack: BattlefieldStackGroup) => {
         const isExpanded = expandedStacks[stack.key];
+        const stackStyle = {
+            '--attachment-columns': stack.attachmentColumns,
+        } as React.CSSProperties;
+        const stackClassName = [
+            'card-stack',
+            isExpanded ? 'expanded' : '',
+            stack.attachmentCount > 0 ? 'has-attachments' : '',
+            stack.hasControllerMismatch ? 'controller-mismatch' : '',
+        ].filter(Boolean).join(' ');
 
         if (isExpanded) {
             return (
-                <div key={stack.key} className="stack-expanded-wrapper">
-                    <div className="stack-controls" onClick={(e) => toggleStack(stack.key, e)} title="Collapse">
-                        ◀
+                <div
+                    key={stack.key}
+                    className={`stack-expanded-wrapper ${stackClassName}`}
+                    style={stackStyle}
+                    data-stack-size={stack.cards.length}
+                    data-attachment-count={stack.attachmentCount}
+                >
+                    <button className="stack-controls" onClick={(e) => toggleStack(stack.key, e)} title="Collapse" aria-label="Collapse stack">
+                        &lt;
+                    </button>
+                    <div className="stack-expanded-cards">
+                        {stack.cards.map((card, i) => renderCard(
+                            card,
+                            i,
+                            stack.cards.length,
+                            false,
+                            stack.key,
+                            stack.cards.length,
+                            i === stack.cards.length - 1,
+                            undefined,
+                            stack.attachmentCount > 0
+                        ))}
                     </div>
-                    {stack.cards.map((card, i) => renderCard(card, i, stack.cards.length, false, stack.key, stack.cards.length, i === stack.cards.length - 1))}
+                    {renderAttachments(stack)}
                 </div>
             );
         }
@@ -265,11 +308,18 @@ export const Battlefield: React.FC<BattlefieldProps> = React.memo(({ player, isM
         const visibleCards = getVisibleStackCards(stack.cards, false);
 
         return (
-            <div key={stack.key} className="card-stack" onClick={(e) => {
-                if (stack.cards.length > 1) {
-                    toggleStack(stack.key, e);
-                }
-            }}>
+            <div
+                key={stack.key}
+                className={stackClassName}
+                style={stackStyle}
+                onClick={(e) => {
+                    if (stack.cards.length > 1) {
+                        toggleStack(stack.key, e);
+                    }
+                }}
+                data-stack-size={stack.cards.length}
+                data-attachment-count={stack.attachmentCount}
+            >
                 {visibleCards.map((card, i) => renderCard(
                     card,
                     i,
@@ -277,54 +327,68 @@ export const Battlefield: React.FC<BattlefieldProps> = React.memo(({ player, isM
                     true,
                     stack.key,
                     stack.cards.length,
-                    i === visibleCards.length - 1
+                    i === visibleCards.length - 1,
+                    undefined,
+                    stack.attachmentCount > 0
                 ))}
+                {renderAttachments(stack)}
             </div>
         );
     };
 
-    const renderZone = (zoneKey: BattlefieldZoneKey) => {
-        const stacks = zoneStacks[zoneKey];
-        if (!stacks || stacks.length === 0) return null;
-
+    const renderZone = (zone: BattlefieldZone) => {
         return (
-            <div className={`battlefield-zone zone-${zoneKey.toLowerCase()}`} key={zoneKey}>
-                <div className="battlefield-zone-label">{zoneLabels[zoneKey]}</div>
-                {stacks.map(stack => renderStack(stack))}
+            <div
+                className={`battlefield-zone zone-${zone.zoneKey.toLowerCase()} align-${zone.alignment} ${zone.startsAlignmentGroup ? 'starts-alignment-group' : ''}`}
+                key={zone.zoneKey}
+                data-zone-key={zone.zoneKey}
+                data-zone-alignment={zone.alignment}
+                data-zone-starts-alignment-group={zone.startsAlignmentGroup ? 'true' : 'false'}
+                data-stack-count={zone.stacks.length}
+            >
+                <div className="battlefield-zone-label">{zone.label}</div>
+                {zone.stacks.map(stack => renderStack(stack))}
             </div>
         );
     };
 
-    const rowConfig = battlefieldGrouping === 'nonlands'
-        ? { front: ['NONLANDS'] as BattlefieldZoneKey[], back: ['LANDS'] as BattlefieldZoneKey[] }
-        : battlefieldGrouping === 'creature-land-other'
-            ? { front: ['CREATURES'] as BattlefieldZoneKey[], back: ['LANDS', 'OTHER'] as BattlefieldZoneKey[] }
-            : { front: ['CREATURES'] as BattlefieldZoneKey[], back: ['LANDS', 'ARTIFACTS', 'ENCHANTMENTS', 'PLANESWALKERS', 'BATTLES', 'OTHER'] as BattlefieldZoneKey[] };
-
-    const backRowContent = (
-        <div className="battlefield-row back-row">
-            {rowConfig.back.map(z => renderZone(z))}
-        </div>
-    );
-
-    const frontRowWrapper = (
-        <div className="battlefield-row front-row">
-            {rowConfig.front.map(z => renderZone(z))}
-        </div>
-    );
+    const rows = isMe ? layout.rows : [...layout.rows].reverse();
 
     return (
-        <div className={`battlefield ${isMe ? 'me' : 'opponent'} grouping-${battlefieldGrouping}`}>
-            {isMe ? (
-                <>
-                    {frontRowWrapper}
-                    {backRowContent}
-                </>
-            ) : (
-                <>
-                    {backRowContent}
-                    {frontRowWrapper}
-                </>
+        <div
+            className={`battlefield ${isMe ? 'me' : 'opponent'} grouping-${battlefieldGrouping}`}
+            style={battlefieldStyle}
+            data-testid="battlefield"
+            data-player-id={player.playerId}
+            data-battlefield-card-size={battlefieldCardSize}
+            data-visible-permanent-count={layout.visiblePermanentCount}
+            data-hidden-phased-count={layout.hiddenPhasedCount}
+            data-root-permanent-count={layout.rootPermanentCount}
+            data-attached-permanent-count={layout.attachedPermanentCount}
+        >
+            {rows.map(row => (
+                <div
+                    className={`battlefield-row ${row.role}-row`}
+                    key={row.key}
+                    data-row-role={row.role}
+                    data-zone-count={row.zones.length}
+                >
+                    {row.zones.map(renderZone)}
+                </div>
+            ))}
+            {eventMessages.length > 0 && (
+                <div className="battlefield-event-feed" role="status" aria-live="polite">
+                    {eventMessages.map(message => (
+                        <div
+                            key={message.id}
+                            className={`battlefield-event-message event-${message.kind}`}
+                            data-testid="battlefield-event-message"
+                            data-event-kind={message.kind}
+                        >
+                            {message.text}
+                        </div>
+                    ))}
+                </div>
             )}
         </div>
     );
@@ -342,13 +406,17 @@ interface BattlefieldCardProps {
     stackSize: number;
     isStackTop: boolean;
     isStackExpanded: boolean;
+    isAttachedCard: boolean;
+    isAttachmentHost: boolean;
+    attachmentDepth: number;
+    feedbackKind: BattlefieldFeedbackKind | null;
     combatState: string | null;
     isValidTarget: boolean;
     isChosenTarget: boolean;
     isPlayable: boolean;
     cardImageFallbackMode: CardImageFallbackMode;
-    onCardClick: (id: string) => void;
-    onCardInspect?: (id: string) => void;
+    onCardClick: (id: string, options?: BattlefieldCardClickOptions) => void;
+    onCardInspect?: (id: string, mode?: BattlefieldInspectMode) => void;
     onCardHover?: (id: string | null) => void;
     onToggleStack: (key: string, e: React.MouseEvent) => void;
 }
@@ -388,6 +456,15 @@ const renderCounters = (card: PermanentView) => {
     );
 };
 
+const getMutateViewSignature = (card: PermanentView): string => {
+    if (!card.mutateView) return '';
+    return Object.entries(card.mutateView)
+        .filter(([key, value]) => key !== 'id' && key !== 'name' && typeof value === 'object' && value !== null)
+        .map(([key, value]) => `${key}:${(value as { name?: unknown }).name ?? ''}`)
+        .sort()
+        .join('|');
+};
+
 const arePropsEqual = (prev: BattlefieldCardProps, next: BattlefieldCardProps) => {
     // Stable props check
     if (prev.index !== next.index) return false;
@@ -397,6 +474,10 @@ const arePropsEqual = (prev: BattlefieldCardProps, next: BattlefieldCardProps) =
     if (prev.stackSize !== next.stackSize) return false;
     if (prev.isStackTop !== next.isStackTop) return false;
     if (prev.isStackExpanded !== next.isStackExpanded) return false;
+    if (prev.isAttachedCard !== next.isAttachedCard) return false;
+    if (prev.isAttachmentHost !== next.isAttachmentHost) return false;
+    if (prev.attachmentDepth !== next.attachmentDepth) return false;
+    if (prev.feedbackKind !== next.feedbackKind) return false;
     if (prev.combatState !== next.combatState) return false;
     if (prev.isValidTarget !== next.isValidTarget) return false;
     if (prev.isChosenTarget !== next.isChosenTarget) return false;
@@ -413,7 +494,16 @@ const arePropsEqual = (prev: BattlefieldCardProps, next: BattlefieldCardProps) =
     const c2 = next.card;
     if (c1.id !== c2.id) return false;
     if (c1.name !== c2.name) return false;
+    if (c1.displayName !== c2.displayName) return false;
     if (c1.tapped !== c2.tapped) return false;
+    if (c1.flipped !== c2.flipped) return false;
+    if (c1.phasedIn !== c2.phasedIn) return false;
+    if (c1.faceDown !== c2.faceDown) return false;
+    if (c1.morphed !== c2.morphed) return false;
+    if (c1.manifested !== c2.manifested) return false;
+    if (c1.disguised !== c2.disguised) return false;
+    if (c1.cloaked !== c2.cloaked) return false;
+    if (c1.mutated !== c2.mutated) return false;
     if (c1.summoningSickness !== c2.summoningSickness) return false;
     if (c1.power !== c2.power) return false;
     if (c1.toughness !== c2.toughness) return false;
@@ -423,12 +513,24 @@ const arePropsEqual = (prev: BattlefieldCardProps, next: BattlefieldCardProps) =
     if (c1.transformed !== c2.transformed) return false;
     if (c1.isToken !== c2.isToken) return false;
     if (c1.copy !== c2.copy) return false;
+    if (c1.isSelected !== c2.isSelected) return false;
+    if (c1.isChoosable !== c2.isChoosable) return false;
+    if ((c1.playableStats?.playableAmount ?? 0) !== (c2.playableStats?.playableAmount ?? 0)) return false;
+    if (c1.nameOwner !== c2.nameOwner) return false;
+    if (c1.nameController !== c2.nameController) return false;
     if (c1.canAttack !== c2.canAttack) return false;
     if (c1.canBlock !== c2.canBlock) return false;
     if (c1.attachments?.join(',') !== c2.attachments?.join(',')) return false;
     if (c1.attachedTo !== c2.attachedTo) return false;
     if (c1.attachedToPermanent !== c2.attachedToPermanent) return false;
     if (c1.attachedControllerDiffers !== c2.attachedControllerDiffers) return false;
+    if (c1.cardTypes.join(',') !== c2.cardTypes.join(',')) return false;
+    if (c1.subTypes.join(',') !== c2.subTypes.join(',')) return false;
+    if (c1.rules.join('\n') !== c2.rules.join('\n')) return false;
+    if (createCardIconSignature(c1.cardIcons) !== createCardIconSignature(c2.cardIcons)) return false;
+    if (c1.original?.id !== c2.original?.id) return false;
+    if (c1.original?.name !== c2.original?.name) return false;
+    if (getMutateViewSignature(c1) !== getMutateViewSignature(c2)) return false;
 
     if (!areCountersEqual(c1.counters, c2.counters)) return false;
 
@@ -440,46 +542,202 @@ const parseStat = (value: string): number | null => {
     return Number.isFinite(parsed) ? parsed : null;
 };
 
+const getFaceDownStatus = (card: PermanentView): { label: string; code: string } | null => {
+    if (card.morphed) return { label: 'Morph', code: 'Mo' };
+    if (card.manifested) return { label: 'Manifest', code: 'Mf' };
+    if (card.disguised) return { label: 'Disguise', code: 'Dg' };
+    if (card.cloaked) return { label: 'Cloak', code: 'Cl' };
+    if (card.faceDown) return { label: 'Face down', code: 'FD' };
+    return null;
+};
+
+const formatBattlefieldEventMessage = (event: BattlefieldFeedbackEvent): string => {
+    if (event.kind === 'died') {
+        return `${event.cardName} died`;
+    }
+    return `${event.cardName} left`;
+};
+
+const hasMutateCards = (card: PermanentView): boolean => {
+    if (card.mutated) return true;
+    if (!card.mutateView) return false;
+    return Object.entries(card.mutateView)
+        .some(([key, value]) => key !== 'id' && key !== 'name' && typeof value === 'object' && value !== null);
+};
+
+const getWheelInspectMode = (card: PermanentView, deltaY: number): BattlefieldInspectMode => {
+    if (deltaY < 0) {
+        return 'normal';
+    }
+
+    if (card.copy && card.original) {
+        return 'copy';
+    }
+
+    if (hasMutateCards(card)) {
+        return 'mutate';
+    }
+
+    if (card.isDoubleFacedCard || card.secondCardFace || card.transformable || card.alternateName) {
+        return 'alternate';
+    }
+
+    return 'normal';
+};
+
 const BattlefieldCard: React.FC<BattlefieldCardProps> = React.memo(({
-    card, index, total, isStacked, stackKey, stackSize, isStackTop, isStackExpanded, combatState, isValidTarget, isChosenTarget, isPlayable,
+    card, index, total, isStacked, stackKey, stackSize, isStackTop, isStackExpanded, isAttachedCard, isAttachmentHost, attachmentDepth, feedbackKind, combatState, isValidTarget, isChosenTarget, isPlayable,
     cardImageFallbackMode, onCardClick, onCardInspect, onCardHover, onToggleStack
 }) => {
     const [imageFailed, setImageFailed] = React.useState(false);
-    const isCreature = card.cardTypes.includes('Creature');
-    const isPlaneswalker = card.cardTypes.includes('Planeswalker');
-    const isBattle = card.cardTypes.includes('Battle');
+    const clickTimerRef = useRef<number | null>(null);
+    const isCreature = hasCardType(card, 'Creature');
+    const isPlaneswalker = hasCardType(card, 'Planeswalker');
+    const isBattle = hasCardType(card, 'Battle');
     const attachmentCount = card.attachments?.length ?? 0;
     const toughness = parseStat(card.toughness);
     const remainingToughness = toughness === null ? null : Math.max(0, toughness - (card.damage || 0));
     const manaCost = card.manaCostRightStr?.length ? card.manaCostRightStr : card.manaCostLeftStr;
+    const faceDownStatus = getFaceDownStatus(card);
+    const cardIcons = normalizeCardIcons(card.cardIcons);
+    const visibleCardIcons = cardIcons.slice(0, 4);
+    const hiddenCardIconCount = Math.max(0, cardIcons.length - visibleCardIcons.length);
+    const copyTitle = card.original?.name ? `Copy of ${card.original.name}` : 'Copy';
+    const isMutated = hasMutateCards(card);
+    const hasAlternateInspect = card.isDoubleFacedCard || card.secondCardFace || card.transformable || card.alternateName;
+    const isServerSelected = card.isSelected === true;
+    const isServerChoosable = card.isChoosable === true;
+    const playableAmount = Math.max(card.playableStats?.playableAmount ?? 0, isPlayable ? 1 : 0);
+    const isPlayableState = playableAmount > 0;
+    const className = [
+        'permanent',
+        card.tapped ? 'tapped' : '',
+        card.flipped ? 'flipped' : '',
+        card.isAbility ? 'ability' : '',
+        isMutated ? 'mutated' : '',
+        isStacked ? 'stacked-card' : '',
+        isAttachedCard ? 'attached-card' : '',
+        isAttachmentHost ? 'attachment-host' : '',
+        card.attachedControllerDiffers ? 'controller-mismatch' : '',
+        feedbackKind ? `battlefield-feedback-${feedbackKind}` : '',
+        faceDownStatus ? 'face-down' : '',
+        combatState ? combatState : '',
+        isValidTarget ? 'valid-target' : '',
+        isChosenTarget ? 'chosen-target' : '',
+        isServerSelected ? 'selected-permanent' : '',
+        isServerChoosable ? 'choosable-permanent' : '',
+        isPlayableState ? 'playable-permanent' : '',
+    ].filter(Boolean).join(' ');
+    const style = {
+        zIndex: isAttachmentHost ? 80 + index : isAttachedCard ? Math.max(20, 44 - attachmentDepth - index) : index,
+        marginLeft: isAttachedCard ? `${Math.max(0, attachmentDepth - 1) * 10}px` : undefined,
+        '--stack-index': isStacked ? index : 0,
+        '--attachment-depth': attachmentDepth,
+    } as React.CSSProperties;
 
-    const style: React.CSSProperties = isStacked ? {
-        marginTop: `${index * -110}px`, // Large negative margin for tight overlap
-        marginLeft: `${index * 0}px`,
-        zIndex: index,
-        position: 'relative' // relative flow but overlapped
-    } : {};
+    useEffect(() => {
+        return () => {
+            if (clickTimerRef.current !== null) {
+                window.clearTimeout(clickTimerRef.current);
+            }
+        };
+    }, []);
 
     const handleClick = (e: React.MouseEvent) => {
+        const target = e.target instanceof Element ? e.target : null;
+        if (target?.closest('button')) {
+            return;
+        }
+
         if (isStacked && !isStackTop && !isStackExpanded) {
             onToggleStack(stackKey, e);
-        } else {
-            onCardClick(card.id);
+            return;
         }
+
+        if (clickTimerRef.current !== null) {
+            window.clearTimeout(clickTimerRef.current);
+        }
+
+        const holdPriority = e.ctrlKey || e.metaKey;
+        clickTimerRef.current = window.setTimeout(() => {
+            onCardClick(card.id, { holdPriority });
+            clickTimerRef.current = null;
+        }, SINGLE_CLICK_DELAY_MS);
+    };
+
+    const handleDoubleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (clickTimerRef.current !== null) {
+            window.clearTimeout(clickTimerRef.current);
+            clickTimerRef.current = null;
+        }
+        onCardInspect?.(card.id, 'normal');
     };
 
     const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
-        if (onCardInspect) onCardInspect(card.id);
+        if (onCardInspect) onCardInspect(card.id, 'normal');
     };
+
+    const handleWheel = (e: React.WheelEvent) => {
+        if (!onCardInspect) {
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        onCardInspect(card.id, getWheelInspectMode(card, e.deltaY));
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key !== 'Enter' && e.key !== ' ') {
+            return;
+        }
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
+            onCardClick(card.id, { holdPriority: true });
+            return;
+        }
+        onCardClick(card.id);
+    };
+
+    const inspectMode = (mode: BattlefieldInspectMode) => (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onCardInspect?.(card.id, mode);
+    };
+    const cardSource = [card.expansionSetCode, card.cardNumber].filter(Boolean).join(' #');
 
     return (
         <div
             id={`card-${card.id}`}
-            className={`permanent ${card.tapped ? 'tapped' : ''} ${card.isAbility ? 'ability' : ''} ${combatState ? combatState : ''} ${isValidTarget ? 'valid-target' : ''} ${isChosenTarget ? 'chosen-target' : ''} ${isPlayable ? 'playable-permanent' : ''}`}
-            style={isStacked && index > 0 ? style : { zIndex: index }}
+            className={className}
+            style={style}
+            role="button"
+            tabIndex={0}
+            aria-label={`${card.name}${isAttachedCard ? ' attached permanent' : ''}${total > 1 ? ` ${index + 1} of ${total}` : ''}`}
+            data-testid="battlefield-card"
+            data-card-id={card.id}
+            data-card-name={card.name}
+            data-stack-key={stackKey}
+            data-stack-size={stackSize}
+            data-flipped-state={card.flipped ? 'true' : 'false'}
+            data-transformed-state={card.transformed ? 'true' : 'false'}
+            data-attached-card={isAttachedCard ? 'true' : 'false'}
+            data-attachment-host={isAttachmentHost ? 'true' : 'false'}
+            data-attachment-depth={attachmentDepth}
+            data-face-down-state={faceDownStatus?.label ?? ''}
+            data-controller-differs={card.attachedControllerDiffers ? 'true' : 'false'}
+            data-mutated={isMutated ? 'true' : 'false'}
+            data-feedback-kind={feedbackKind ?? ''}
+            data-selected-state={isServerSelected ? 'true' : 'false'}
+            data-choosable-state={isServerChoosable ? 'true' : 'false'}
+            data-playable-amount={playableAmount}
             onClick={handleClick}
+            onDoubleClick={handleDoubleClick}
+            onKeyDown={handleKeyDown}
             onContextMenu={handleContextMenu}
+            onWheel={handleWheel}
             onMouseEnter={() => onCardHover?.(card.id)}
             onMouseLeave={() => onCardHover?.(null)}
         >
@@ -500,6 +758,11 @@ const BattlefieldCard: React.FC<BattlefieldCardProps> = React.memo(({
                 </div>
             )}
 
+            <div className="permanent-card-name" aria-hidden="true">{card.name}</div>
+            {cardSource && (
+                <div className="permanent-card-source" aria-hidden="true">{cardSource}</div>
+            )}
+
             {manaCost && (
                 <div className="permanent-mana-cost">
                     <ManaCost cost={manaCost} size="sm" />
@@ -511,13 +774,57 @@ const BattlefieldCard: React.FC<BattlefieldCardProps> = React.memo(({
                     <div className="status-icon token" title="Token">T</div>
                 )}
                 {card.copy && (
-                    <div className="status-icon copy" title="Copy">C</div>
+                    <div className="status-icon copy" title={copyTitle}>C</div>
+                )}
+                {isMutated && (
+                    <div className="status-icon mutated" title="Mutated">Mu</div>
                 )}
                 {card.isDoubleFacedCard && (
-                    <div className="status-icon double-faced" title="Double-faced card">{card.transformed ? 'B' : 'F'}</div>
+                    <div className="status-icon double-faced" title="Double-faced card" data-testid="battlefield-double-faced-badge">{card.transformed ? 'B' : 'F'}</div>
                 )}
-                {isPlayable && (
-                    <div className="status-icon playable" title="Playable or activatable">P</div>
+                {card.flipped && (
+                    <div className="status-icon flipped" title="Flipped" data-testid="battlefield-flipped-badge">FL</div>
+                )}
+                {faceDownStatus && (
+                    <div className="status-icon face-down" title={faceDownStatus.label} data-testid="battlefield-facedown-badge">{faceDownStatus.code}</div>
+                )}
+                {visibleCardIcons.map(icon => (
+                    <div
+                        key={icon.key}
+                        className={`status-icon card-icon-chip card-icon-${icon.category}`}
+                        title={icon.title}
+                        aria-label={icon.title}
+                        data-testid="battlefield-card-icon"
+                        data-card-icon-type={icon.type}
+                        data-card-icon-category={icon.category}
+                    >
+                        {icon.label}
+                    </div>
+                ))}
+                {hiddenCardIconCount > 0 && (
+                    <div
+                        className="status-icon card-icon-chip card-icon-system"
+                        title={`${hiddenCardIconCount} additional card icons`}
+                        aria-label={`${hiddenCardIconCount} additional card icons`}
+                        data-testid="battlefield-card-icon-overflow"
+                    >
+                        +{hiddenCardIconCount}
+                    </div>
+                )}
+                {isServerSelected && !isChosenTarget && (
+                    <div className="status-icon selected" title="Selected" data-testid="battlefield-selected-badge">Sel</div>
+                )}
+                {isServerChoosable && !isValidTarget && (
+                    <div className="status-icon choosable" title="Choosable" data-testid="battlefield-choosable-badge">Ch</div>
+                )}
+                {isPlayableState && (
+                    <div
+                        className="status-icon playable"
+                        title={playableAmount > 1 ? `${playableAmount} playable actions` : 'Playable or activatable'}
+                        data-testid="battlefield-playable-badge"
+                    >
+                        {playableAmount > 1 ? `P${playableAmount}` : 'P'}
+                    </div>
                 )}
                 {isValidTarget && (
                     <div
@@ -571,6 +878,55 @@ const BattlefieldCard: React.FC<BattlefieldCardProps> = React.memo(({
             {isBattle && card.defense !== "" && (
                 <div className="defense-badge">{card.defense}</div>
             )}
+
+            <div className="permanent-action-strip" aria-label="Card inspection actions">
+                <button
+                    type="button"
+                    className="permanent-action-button"
+                    title="Inspect card"
+                    aria-label={`Inspect ${card.name}`}
+                    onClick={inspectMode('normal')}
+                    data-testid="battlefield-inspect-button"
+                >
+                    <Eye size={12} aria-hidden="true" />
+                </button>
+                {hasAlternateInspect && (
+                    <button
+                        type="button"
+                        className="permanent-action-button"
+                        title="Inspect alternate face"
+                        aria-label={`Inspect alternate face of ${card.name}`}
+                        onClick={inspectMode('alternate')}
+                        data-testid="battlefield-alternate-button"
+                    >
+                        <RotateCwSquare size={12} aria-hidden="true" />
+                    </button>
+                )}
+                {card.copy && card.original && (
+                    <button
+                        type="button"
+                        className="permanent-action-button"
+                        title={copyTitle}
+                        aria-label={copyTitle}
+                        onClick={inspectMode('copy')}
+                        data-testid="battlefield-copy-source-button"
+                    >
+                        <Copy size={12} aria-hidden="true" />
+                    </button>
+                )}
+                {isMutated && (
+                    <button
+                        type="button"
+                        className="permanent-action-button"
+                        title="Inspect mutate stack"
+                        aria-label={`Inspect mutate stack for ${card.name}`}
+                        onClick={inspectMode('mutate')}
+                        data-testid="battlefield-mutate-button"
+                    >
+                        <Layers3 size={12} aria-hidden="true" />
+                    </button>
+                )}
+            </div>
 
             {/* Stack Count Badge (only on top (last) card of collapsed stack) */}
             {isStacked && isStackTop && !isStackExpanded && stackSize > 1 && (

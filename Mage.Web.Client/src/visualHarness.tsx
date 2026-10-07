@@ -71,6 +71,7 @@ type VisualScenario =
   | 'tournament'
   | 'settings'
   | 'card-viewer'
+  | 'card-viewer-tool'
   | 'view-sideboard'
   | 'notifications'
   | 'user-request';
@@ -108,6 +109,26 @@ function isVisualWatchMatch(): boolean {
 
 function isVisualTargetPrompt(): boolean {
   return new URLSearchParams(window.location.search).get('target') === '1';
+}
+
+function isVisualBattlefieldDepartureFeedback(): boolean {
+  return new URLSearchParams(window.location.search).get('feedback') === 'departure';
+}
+
+function isVisualPlayerStateFeedback(): boolean {
+  return new URLSearchParams(window.location.search).get('feedback') === 'player-state';
+}
+
+function isVisualBattlefieldStateFeedback(): boolean {
+  return new URLSearchParams(window.location.search).get('feedback') === 'state-change';
+}
+
+function isVisualJavaCardTypePayload(): boolean {
+  return new URLSearchParams(window.location.search).get('cardTypes') === 'java';
+}
+
+function isVisualLargeCommanderBoard(): boolean {
+  return new URLSearchParams(window.location.search).get('board') === 'large-commander';
 }
 
 function getVisualPromptMode(): VisualPromptMode | null {
@@ -357,6 +378,7 @@ function makePermanent(
     manaCostLeftStr: ['{1}', '{G}'],
     canAttack: true,
     canBlock: true,
+    playableStats: overrides.playableStats ?? { playableAmount: 0 },
     ...overrides,
   });
 
@@ -378,8 +400,116 @@ function makePermanent(
     manifested: false,
     disguised: false,
     cloaked: false,
+    mutated: false,
     ...overrides,
   };
+}
+
+function visualPermanentId(sequence: number): UUID {
+  return `00000000-0000-0000-0000-${String(sequence).padStart(12, '0')}`;
+}
+
+function makeLargeCommanderBattlefield(): Record<UUID, PermanentView> {
+  const commanderCreatures = Array.from({ length: 18 }, (_, index) => makePermanent(
+    visualPermanentId(700 + index),
+    `Commander Creature ${index + 1}`,
+    {
+      power: String(1 + (index % 5)),
+      toughness: String(2 + (index % 6)),
+      manaCostLeftStr: ['{2}', '{G}'],
+      counters: index % 4 === 0 ? [{ name: '+1/+1', count: 1 + (index % 3) }] : [],
+      summoningSickness: index % 3 === 0,
+      rules: ['Large Commander battlefield creature fixture.'],
+    }
+  ));
+  const manaRocks = Array.from({ length: 10 }, (_, index) => makePermanent(
+    visualPermanentId(720 + index),
+    `Commander Mana Rock ${index + 1}`,
+    {
+      cardTypes: ['Artifact'],
+      power: '',
+      toughness: '',
+      color: COLORLESS,
+      frameColor: COLORLESS,
+      manaCostLeftStr: ['{2}'],
+      tapped: index % 3 === 0,
+      canAttack: false,
+      canBlock: false,
+      rules: ['{T}: Add one mana of any color.'],
+    }
+  ));
+  const enchantments = Array.from({ length: 8 }, (_, index) => makePermanent(
+    visualPermanentId(740 + index),
+    `Commander Enchantment ${index + 1}`,
+    {
+      cardTypes: ['Enchantment'],
+      power: '',
+      toughness: '',
+      color: WHITE,
+      frameColor: WHITE,
+      manaCostLeftStr: ['{1}', '{W}'],
+      canAttack: false,
+      canBlock: false,
+      rules: ['Large Commander battlefield enchantment fixture.'],
+    }
+  ));
+  const planeswalkers = Array.from({ length: 4 }, (_, index) => makePermanent(
+    visualPermanentId(760 + index),
+    `Commander Planeswalker ${index + 1}`,
+    {
+      cardTypes: ['Planeswalker'],
+      power: '',
+      toughness: '',
+      loyalty: String(3 + index),
+      color: BLUE,
+      frameColor: BLUE,
+      manaCostLeftStr: ['{3}', '{U}'],
+      canAttack: false,
+      canBlock: false,
+      rules: ['+1: Draw a card.'],
+    }
+  ));
+  const battles = Array.from({ length: 4 }, (_, index) => makePermanent(
+    visualPermanentId(770 + index),
+    `Commander Battle ${index + 1}`,
+    {
+      cardTypes: ['Battle'],
+      power: '',
+      toughness: '',
+      defense: String(4 + index),
+      color: RED,
+      frameColor: RED,
+      manaCostLeftStr: ['{2}', '{R}'],
+      canAttack: false,
+      canBlock: false,
+      rules: ['When this battle enters, it deals damage.'],
+    }
+  ));
+  const lands = Array.from({ length: 18 }, (_, index) => makePermanent(
+    visualPermanentId(780 + index),
+    `Commander Land ${index + 1}`,
+    {
+      cardTypes: ['Land'],
+      power: '',
+      toughness: '',
+      color: COLORLESS,
+      frameColor: index % 2 === 0 ? GREEN : BLUE,
+      manaCostLeftStr: [],
+      tapped: index % 4 === 0,
+      canAttack: false,
+      canBlock: false,
+      rules: ['{T}: Add one mana.'],
+    }
+  ));
+
+  return Object.fromEntries([
+    ...commanderCreatures,
+    ...manaRocks,
+    ...enchantments,
+    ...planeswalkers,
+    ...battles,
+    ...lands,
+  ].map(card => [card.id, card]));
 }
 
 function makePlayer(
@@ -430,12 +560,25 @@ function makePlayer(
 }
 
 function makeGameView(playerCount = 2): GameView {
+  const auraId = '00000000-0000-0000-0000-000000000304';
+  const equipmentId = '00000000-0000-0000-0000-000000000306';
+  const mountainId = '00000000-0000-0000-0000-000000000303';
+  const fortificationId = '00000000-0000-0000-0000-000000000335';
   const attacker = makePermanent('00000000-0000-0000-0000-000000000301', 'Llanowar Elves', {
     tapped: true,
     power: '1',
     toughness: '1',
     summoningSickness: true,
+    isSelected: true,
+    isChoosable: true,
+    playableStats: { playableAmount: 2 },
     counters: [{ name: '+1/+1', count: 1 }],
+    attachments: [auraId],
+    cardIcons: [
+      { iconType: 'ABILITY_TRAMPLE', hint: 'Trample' },
+      { iconType: 'ABILITY_DEATHTOUCH', hint: 'Deathtouch' },
+      { iconType: 'COMMANDER', hint: 'Card is commander' },
+    ],
   });
   const blocker = makePermanent('00000000-0000-0000-0000-000000000302', 'Runeclaw Bear', {
     nameOwner: 'Nissa',
@@ -443,7 +586,7 @@ function makeGameView(playerCount = 2): GameView {
     power: '2',
     toughness: '2',
   });
-  const aura = makePermanent('00000000-0000-0000-0000-000000000304', 'Rancor', {
+  const aura = makePermanent(auraId, 'Rancor', {
     cardTypes: ['Enchantment'],
     subTypes: ['Aura'],
     power: '',
@@ -452,31 +595,191 @@ function makeGameView(playerCount = 2): GameView {
     frameColor: GREEN,
     attachedTo: attacker.id,
     attachedToPermanent: true,
+    attachments: [equipmentId],
     canAttack: false,
     canBlock: false,
+  });
+  const equipment = makePermanent(equipmentId, 'Runechanter Pike', {
+    cardTypes: ['Artifact'],
+    subTypes: ['Equipment'],
+    power: '',
+    toughness: '',
+    color: COLORLESS,
+    frameColor: COLORLESS,
+    attachedTo: aura.id,
+    attachedToPermanent: true,
+    attachedControllerDiffers: true,
+    nameOwner: 'VisualMage',
+    nameController: 'Nissa',
+    controlled: false,
+    canAttack: false,
+    canBlock: false,
+  });
+  const fortifiedLand = makePermanent(mountainId, 'Mountain', {
+    cardTypes: ['Land'],
+    power: '',
+    toughness: '',
+    color: COLORLESS,
+    frameColor: RED,
+    manaCostLeftStr: [],
+    tapped: false,
+    attachments: [fortificationId],
+    canAttack: false,
+    canBlock: false,
+  });
+  const fortification = makePermanent(fortificationId, 'Darksteel Garrison', {
+    cardTypes: ['Artifact'],
+    subTypes: ['Fortification'],
+    power: '',
+    toughness: '',
+    color: COLORLESS,
+    frameColor: COLORLESS,
+    manaCostLeftStr: ['{2}'],
+    attachedTo: fortifiedLand.id,
+    attachedToPermanent: true,
+    canAttack: false,
+    canBlock: false,
+    rules: ['Fortified land has indestructible.'],
   });
   const tokenCopy = makePermanent('00000000-0000-0000-0000-000000000305', 'Wolf Token', {
     isToken: true,
     copy: true,
     power: '2',
     toughness: '2',
-    attachments: [aura.id],
+    original: makeCard('00000000-0000-0000-0000-000000000309', 'Runeclaw Bear', {
+      power: '2',
+      toughness: '2',
+    }),
+  });
+  const stackedForests = Array.from({ length: 7 }, (_, index) => makePermanent(`00000000-0000-0000-0000-00000000031${index}`, 'Forest', {
+    cardTypes: ['Land'],
+    power: '',
+    toughness: '',
+    color: COLORLESS,
+    frameColor: GREEN,
+    manaCostLeftStr: [],
+    canAttack: false,
+    canBlock: false,
+  }));
+  const stackedSaprolings = Array.from({ length: 7 }, (_, index) => makePermanent(`00000000-0000-0000-0000-00000000034${index + 2}`, 'Saproling Token', {
+    cardTypes: ['Creature'],
+    subTypes: ['Saproling'],
+    power: '1',
+    toughness: '1',
+    rules: ['A small green Saproling creature token.'],
+    isToken: true,
+    color: GREEN,
+    frameColor: GREEN,
+  }));
+  const phasedOut = makePermanent('00000000-0000-0000-0000-000000000307', 'Phased Out Soldier', {
+    phasedIn: false,
+    power: '3',
+    toughness: '3',
+  });
+  const faceDown = makePermanent('00000000-0000-0000-0000-000000000308', 'Face-down creature', {
+    displayName: 'Face-down creature',
+    displayFullName: 'Face-down creature',
+    faceDown: true,
+    morphed: true,
+    power: '2',
+    toughness: '2',
+    rules: ['You may turn this creature face up.'],
+  });
+  const manifestedPermanent = makePermanent('00000000-0000-0000-0000-000000000336', 'Manifested creature', {
+    displayName: 'Manifested creature',
+    displayFullName: 'Manifested creature',
+    faceDown: true,
+    manifested: true,
+    power: '2',
+    toughness: '2',
+    rules: ['You may turn this card face up if it is a creature card.'],
+  });
+  const disguisedPermanent = makePermanent('00000000-0000-0000-0000-000000000337', 'Disguised creature', {
+    displayName: 'Disguised creature',
+    displayFullName: 'Disguised creature',
+    faceDown: true,
+    disguised: true,
+    power: '2',
+    toughness: '2',
+    rules: ['Disguise {3}. Ward {2}.'],
+  });
+  const cloakedPermanent = makePermanent('00000000-0000-0000-0000-000000000338', 'Cloaked creature', {
+    displayName: 'Cloaked creature',
+    displayFullName: 'Cloaked creature',
+    faceDown: true,
+    cloaked: true,
+    power: '2',
+    toughness: '2',
+    rules: ['Cloak. Ward {2}.'],
+  });
+  const mutateUnder = makeCard('00000000-0000-0000-0000-000000000330', 'Auspicious Starrix', {
+    cardTypes: ['Creature'],
+    subTypes: ['Elk', 'Beast'],
+    power: '6',
+    toughness: '6',
+    rules: ['Mutate {5}{G}. Whenever this creature mutates, reveal cards from the top of your library.'],
+  });
+  const mutatedPermanent = makePermanent('00000000-0000-0000-0000-000000000331', 'Migratory Greathorn', {
+    power: '3',
+    toughness: '4',
+    mutated: true,
+    mutateView: {
+      id: '00000000-0000-0000-0000-000000000331',
+      name: 'Migratory Greathorn',
+      [mutateUnder.id]: mutateUnder,
+    },
+  });
+  const backFace = makeCard('00000000-0000-0000-0000-000000000333', 'Insectile Aberration', {
+    cardTypes: ['Creature'],
+    subTypes: ['Human', 'Insect'],
+    power: '3',
+    toughness: '2',
+    rules: ['Flying'],
+  });
+  const doubleFaced = makePermanent('00000000-0000-0000-0000-000000000332', 'Delver of Secrets', {
+    power: '1',
+    toughness: '1',
+    transformable: true,
+    transformed: true,
+    isDoubleFacedCard: true,
+    secondCardFace: backFace,
+  });
+  const flippedPermanent = makePermanent('00000000-0000-0000-0000-000000000349', 'Akki Lavarunner', {
+    flipped: true,
+    power: '1',
+    toughness: '1',
+    rules: ['Haste'],
+  });
+  const artifactPermanent = makePermanent('00000000-0000-0000-0000-000000000334', 'Sol Ring', {
+    cardTypes: ['Artifact'],
+    power: '',
+    toughness: '',
+    color: COLORLESS,
+    frameColor: COLORLESS,
+    manaCostLeftStr: ['{1}'],
+    rules: ['{T}: Add {C}{C}.'],
+    canAttack: false,
+    canBlock: false,
   });
   const myBattlefield = {
     [attacker.id]: attacker,
-    '00000000-0000-0000-0000-000000000303': makePermanent('00000000-0000-0000-0000-000000000303', 'Mountain', {
-      cardTypes: ['Land'],
-      power: '',
-      toughness: '',
-      color: COLORLESS,
-      frameColor: RED,
-      manaCostLeftStr: [],
-      tapped: false,
-      canAttack: false,
-      canBlock: false,
-    }),
+    [fortifiedLand.id]: fortifiedLand,
     [aura.id]: aura,
+    [equipment.id]: equipment,
+    [fortification.id]: fortification,
     [tokenCopy.id]: tokenCopy,
+    [phasedOut.id]: phasedOut,
+    [faceDown.id]: faceDown,
+    [manifestedPermanent.id]: manifestedPermanent,
+    [disguisedPermanent.id]: disguisedPermanent,
+    [cloakedPermanent.id]: cloakedPermanent,
+    [mutatedPermanent.id]: mutatedPermanent,
+    [doubleFaced.id]: doubleFaced,
+    [flippedPermanent.id]: flippedPermanent,
+    [artifactPermanent.id]: artifactPermanent,
+    ...Object.fromEntries(stackedForests.map(card => [card.id, card])),
+    ...Object.fromEntries(stackedSaprolings.map(card => [card.id, card])),
+    ...(isVisualLargeCommanderBoard() ? makeLargeCommanderBattlefield() : {}),
   };
   const opponentBattlefield = {
     [blocker.id]: blocker,
@@ -671,6 +974,24 @@ function makeGameView(playerCount = 2): GameView {
     totalErrorsCount: 0,
     totalEffectsCount: 7,
     gameCycle: 12,
+  };
+}
+
+function withJavaBattlefieldCardTypes(gameView: GameView): GameView {
+  return {
+    ...gameView,
+    players: gameView.players.map(player => ({
+      ...player,
+      battlefield: Object.fromEntries(
+        Object.entries(player.battlefield ?? {}).map(([cardId, card]) => [
+          cardId,
+          {
+            ...card,
+            cardTypes: card.cardTypes.map(cardType => cardType.toUpperCase()),
+          },
+        ])
+      ),
+    })),
   };
 }
 
@@ -1288,6 +1609,7 @@ type VisualActivityScenario =
   | 'draft'
   | 'tournament'
   | 'card-viewer'
+  | 'card-viewer-tool'
   | 'view-sideboard';
 
 const ACTIVITY_SCENARIOS: Record<VisualActivityScenario, ClientActivity> = {
@@ -1393,6 +1715,16 @@ const ACTIVITY_SCENARIOS: Record<VisualActivityScenario, ClientActivity> = {
     lastMessageId: 13,
     updatedAt: VISUAL_ACTIVITY_UPDATED_AT,
     deck: VISUAL_LIMITED_DECK,
+  },
+  'card-viewer-tool': {
+    id: 'card-viewer:main',
+    kind: 'card-viewer',
+    title: 'Card viewer',
+    objectId: null,
+    status: 'active',
+    lastCallbackMethod: 'clientActivity',
+    lastMessageId: 0,
+    updatedAt: VISUAL_ACTIVITY_UPDATED_AT,
   },
   'view-sideboard': {
     id: 'card-viewer:sideboard:visual',
@@ -1641,6 +1973,10 @@ function resetStores(scenario: VisualScenario) {
       userName: 'System',
       message: 'Declare attackers step.',
       type: 'status' as const,
+      turnInfo: 'Turn 3',
+      color: 'ORANGE',
+      messageType: 'GAME',
+      soundToPlay: null,
     },
     {
       id: 'visual-game-chat-user',
@@ -1648,6 +1984,10 @@ function resetStores(scenario: VisualScenario) {
       userName: 'Nissa',
       message: 'Blocks with Runeclaw Bear.',
       type: 'user' as const,
+      turnInfo: null,
+      color: 'BLUE',
+      messageType: 'TALK',
+      soundToPlay: null,
     },
   ];
   const gameChatChannels = (scenario === 'game' || scenario === 'multi-opponent-game')
@@ -1655,7 +1995,10 @@ function resetStores(scenario: VisualScenario) {
       [GAME_ID]: {
         id: GAME_ID,
         name: 'Game chat',
+        kind: 'game' as const,
         isJoined: true,
+        unreadCount: 0,
+        joinedAt: Date.now(),
         messages: gameChatMessages,
       },
     }
@@ -1675,6 +2018,10 @@ function resetStores(scenario: VisualScenario) {
               userName: 'System',
               message: 'VisualMage joined the table.',
               type: 'status',
+              turnInfo: null,
+              color: 'BLUE',
+              messageType: 'STATUS',
+              soundToPlay: null,
             },
             {
               id: 'visual-table-chat-ready',
@@ -1682,8 +2029,15 @@ function resetStores(scenario: VisualScenario) {
               userName: 'Computer',
               message: 'Ready when you are.',
               type: 'user',
+              turnInfo: null,
+              color: 'BLUE',
+              messageType: 'TALK',
+              soundToPlay: null,
             },
           ],
+          kind: 'table' as const,
+          unreadCount: 0,
+          joinedAt: Date.now(),
         },
       }
       : gameChatChannels,
@@ -1693,6 +2047,7 @@ function resetStores(scenario: VisualScenario) {
     lobbyChannelId: null,
     gameChannelId: (scenario === 'game' || scenario === 'multi-opponent-game') ? GAME_ID : null,
     tableChannelId: scenario === 'waiting-room' ? TABLE_CHAT_ID : null,
+    tournamentChannelId: null,
   });
 
   useDeckStore.setState({
@@ -1720,7 +2075,10 @@ function resetStores(scenario: VisualScenario) {
     const isWatching = isVisualWatchMatch();
     const promptMode = scenario === 'game' && !isWatching ? getVisualPromptMode() : null;
     const showTargetPrompt = scenario === 'game' && !isWatching && isVisualTargetPrompt();
-    const gameView = makeGameView(scenario === 'multi-opponent-game' ? 4 : 2);
+    let gameView = makeGameView(scenario === 'multi-opponent-game' ? 4 : 2);
+    if (scenario === 'multi-opponent-game' && isVisualJavaCardTypePayload()) {
+      gameView = withJavaBattlefieldCardTypes(gameView);
+    }
     const promptFixture = makePromptFixture(promptMode, gameView);
     if (scenario === 'multi-opponent-game') {
       gameView.activePlayerId = SECOND_OPPONENT_ID;
@@ -1769,6 +2127,124 @@ function resetStores(scenario: VisualScenario) {
         ? 'Watching VisualMage versus Nissa.'
         : scenario === 'game' ? 'Choose how to assign combat damage.' : 'Nissa declares a blocker.',
     });
+
+    if (scenario === 'multi-opponent-game' && isVisualBattlefieldDepartureFeedback()) {
+      window.setTimeout(() => {
+        const currentGameView = useGameStore.getState().gameView;
+        if (!currentGameView) return;
+
+        const removedPermanentId = '00000000-0000-0000-0000-000000000301';
+        useGameStore.setState({
+          gameView: {
+            ...currentGameView,
+            combat: [],
+            players: currentGameView.players.map(player => {
+              if (player.playerId !== PLAYER_ID) {
+                return player;
+              }
+
+              const { [removedPermanentId]: _removed, ...battlefield } = player.battlefield;
+              return {
+                ...player,
+                battlefield,
+              };
+            }),
+          },
+          lastMessage: 'Llanowar Elves died.',
+        });
+      }, 150);
+    }
+
+    if (scenario === 'multi-opponent-game' && isVisualPlayerStateFeedback()) {
+      window.setTimeout(() => {
+        const currentGameView = useGameStore.getState().gameView;
+        if (!currentGameView) return;
+
+        useGameStore.setState({
+          gameView: {
+            ...currentGameView,
+            players: currentGameView.players.map(player => {
+              if (player.playerId === PLAYER_ID) {
+                return {
+                  ...player,
+                  life: player.life - 3,
+                  counters: [
+                    ...player.counters.filter(counter => counter.name !== 'poison'),
+                    { name: 'poison', count: 3 },
+                  ],
+                };
+              }
+              if (player.playerId === OPPONENT_ID) {
+                return {
+                  ...player,
+                  counters: player.counters
+                    .map(counter => counter.name === 'poison' ? { ...counter, count: Math.max(0, counter.count - 1) } : counter)
+                    .filter(counter => counter.count > 0),
+                };
+              }
+              return player;
+            }),
+          },
+          lastMessage: 'VisualMage loses 3 life and gains poison counters.',
+        });
+      }, 150);
+    }
+
+    if (scenario === 'multi-opponent-game' && isVisualBattlefieldStateFeedback()) {
+      window.setTimeout(() => {
+        const currentGameView = useGameStore.getState().gameView;
+        if (!currentGameView) return;
+
+        const attackerId = '00000000-0000-0000-0000-000000000301';
+        const landId = '00000000-0000-0000-0000-000000000303';
+        const tokenId = '00000000-0000-0000-0000-000000000305';
+        const blockerId = '00000000-0000-0000-0000-000000000302';
+        const doubleFacedId = '00000000-0000-0000-0000-000000000332';
+        const flippedId = '00000000-0000-0000-0000-000000000349';
+        const entered = makePermanent('00000000-0000-0000-0000-000000000350', 'Elvish Mystic', {
+          power: '1',
+          toughness: '1',
+          rules: ['{T}: Add {G}.'],
+        });
+
+        useGameStore.setState({
+          gameView: {
+            ...currentGameView,
+            combat: currentGameView.combat.map(combat => ({
+              ...combat,
+              blockers: Object.fromEntries(
+                Object.entries(combat.blockers ?? {}).filter(([cardId]) => cardId !== blockerId)
+              ),
+              isBlocked: false,
+            })),
+            players: currentGameView.players.map(player => {
+              if (player.playerId !== PLAYER_ID) {
+                return player;
+              }
+
+              const battlefield = { ...player.battlefield };
+              const attacker = battlefield[attackerId];
+              if (attacker) battlefield[attackerId] = { ...attacker, tapped: false };
+              const land = battlefield[landId];
+              if (land) battlefield[landId] = { ...land, attachments: [] };
+              const token = battlefield[tokenId];
+              if (token) battlefield[tokenId] = { ...token, damage: 1 };
+              const doubleFaced = battlefield[doubleFacedId];
+              if (doubleFaced) battlefield[doubleFacedId] = { ...doubleFaced, transformed: false };
+              const flipped = battlefield[flippedId];
+              if (flipped) battlefield[flippedId] = { ...flipped, flipped: false };
+              battlefield[entered.id] = entered;
+
+              return {
+                ...player,
+                battlefield,
+              };
+            }),
+          },
+          lastMessage: 'Battlefield state feedback fixture updated.',
+        });
+      }, 150);
+    }
   } else {
     useGameStore.setState({
       gameId: null,
@@ -2028,6 +2504,7 @@ function VisualApp({ scenario }: { scenario: VisualScenario }) {
     case 'draft':
     case 'tournament':
     case 'card-viewer':
+    case 'card-viewer-tool':
     case 'view-sideboard':
       return <VisualActivity scenario={scenario} />;
   }

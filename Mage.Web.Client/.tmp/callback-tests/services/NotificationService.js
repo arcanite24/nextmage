@@ -163,7 +163,8 @@ class NotificationService {
                 title: 'Priority needed',
                 message: readMessage(callback.data) ?? 'A game prompt is waiting for your response.',
                 browser: true,
-                dedupeKey: `priority:${readCallbackObject(callback)}:${callback.method}:${callback.messageId}`,
+                toast: false,
+                dedupeKey: `priority:${readCallbackObject(callback)}:${callback.method}`,
                 sourceMethod: callback.method,
             };
         }
