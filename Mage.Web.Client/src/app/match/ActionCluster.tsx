@@ -3,7 +3,7 @@ import { ChevronUp } from 'lucide-react';
 import { useEffect } from 'react';
 import type { Command, Interaction } from '../../core/game/interaction';
 import type { PlayerAction } from '../../protocol/generated/views';
-import { isEditableEventTarget } from '../../services/KeybindService';
+import { isEditableEventTarget } from '../ui/keys';
 import { Button } from '../ui/Button';
 import { PromptText } from '../ui/PromptText';
 import styles from './ActionCluster.module.css';

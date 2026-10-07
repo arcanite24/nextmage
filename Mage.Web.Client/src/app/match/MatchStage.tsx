@@ -21,7 +21,8 @@ import { setCardMotion, useFlipOrigin } from './flip';
 import { GameLog } from './GameLog';
 import { Hand } from './Hand';
 import { useMatchUi } from './matchUi';
-import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, ZoneViewer } from './Overlays';
+import { useGameCues } from './useGameCues';
+import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
 import { PhaseLadder } from './PhaseLadder';
 import { Piles } from './Piles';
@@ -107,6 +108,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const onClick = useCallback((id: string) => session.click(id), [session]);
 
   const myId = board.me?.player.playerId ?? null;
+  useGameCues(state, myId);
   const sleeveOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? sleeves.theirs : sleeves.mine), [myId, sleeves]);
   const originOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? `hand:${card.controllerId}` : undefined), [myId]);
 
@@ -140,6 +142,9 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
     ? Object.values(prompt.cards)
     : choosingFromHand ? hand : null;
   const canAct = mode === 'play' && !state.gameOver;
+  // before the first turn, a choice among exactly the players is "who starts"
+  const choosingStarter = interaction.mode === 'target' && pregame && clickable.size > 0
+    && [...clickable].every((id) => board.players.has(id));
 
   return (
     <Stage>
@@ -221,6 +226,13 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
       {interaction.mode === 'mulligan' && !awaitingServer && (
         <MulliganOverlay hand={hand} interaction={interaction} sleeve={sleeves.mine} onCommand={onCommand} />
+      )}
+      {choosingStarter && board.me && !awaitingServer && (
+        <StartingPlayerOverlay
+          me={{ id: board.me.player.playerId!, name: board.me.player.name ?? 'You' }}
+          opponents={board.opponents.map((opponent) => ({ id: opponent.player.playerId!, name: opponent.player.name ?? 'Opponent' }))}
+          onChoose={onClick}
+        />
       )}
       {pickerCards && !awaitingServer && (
         <CardPicker

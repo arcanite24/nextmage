@@ -21,6 +21,10 @@ export interface PlaySettings {
   animations: boolean;
   /** opponents may ask to see your hand */
   allowHandRequests: boolean;
+  /** game sounds (synthesized, local only) */
+  sound: boolean;
+  /** 0 to 1 */
+  volume: number;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -33,6 +37,8 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   autoTargetLevel: 1,
   animations: true,
   allowHandRequests: true,
+  sound: true,
+  volume: 0.6,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },

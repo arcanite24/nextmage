@@ -1,7 +1,7 @@
 import { ArrowLeft, ArrowRight, LogOut } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { isEditableEventTarget } from '../../services/KeybindService';
+import { isEditableEventTarget } from '../ui/keys';
 import { api } from '../connection';
 import { useCardInfo } from '../decks/cardInfo';
 import { useEvents } from '../stores/events';
