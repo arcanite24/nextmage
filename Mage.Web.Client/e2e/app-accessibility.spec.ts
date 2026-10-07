@@ -27,7 +27,7 @@ test.describe('app accessibility', () => {
     expect(await serious(page)).toEqual([]);
 
     await page.getByLabel('Player name').fill(`axe${Date.now() % 100000}`);
-    await page.getByRole('button', { name: /sign in|play/i }).first().click();
+    await page.getByRole('button', { name: 'Sit down' }).click();
     await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 20_000 });
     await page.waitForLoadState('networkidle');
     expect(await serious(page), 'Play').toEqual([]);

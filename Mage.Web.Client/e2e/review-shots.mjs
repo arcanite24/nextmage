@@ -24,7 +24,7 @@ const shot = async (name) => {
 await page.goto(`${base}/login`);
 await shot('01-login');
 await page.getByLabel('Player name').fill(`rev${Date.now() % 10000}`);
-await page.getByRole('button', { name: 'Sign in' }).click();
+await page.getByRole('button', { name: 'Sit down' }).click();
 await page.waitForURL((url) => !url.pathname.startsWith('/login'));
 await shot('02-play');
 await page.goto(`${base}/decks`);
