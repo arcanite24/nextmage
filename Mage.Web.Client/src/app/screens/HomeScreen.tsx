@@ -1,4 +1,4 @@
-import { Bot, Swords, Trophy, Users } from 'lucide-react';
+import { Bot, SlidersHorizontal, Swords, Trophy, Users } from 'lucide-react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rosterOf, sleeveFor, useDecks } from '../stores/decks';
@@ -6,6 +6,8 @@ import { usePlay } from '../stores/play';
 import { Button } from '../ui/Button';
 import { DeckBox } from '../ui/DeckBox';
 import { MatPrint } from '../ui/MatPrint';
+import { AiSettingsDialog } from './AiSettingsDialog';
+import { describeAi } from './aiSetup';
 import styles from './HomeScreen.module.css';
 
 type Mode = 'ai' | 'friend' | 'table' | 'event';
@@ -23,6 +25,7 @@ export function HomeScreen() {
   const decks = useDecks();
   const play = usePlay();
   const [mode, setMode] = useState<Mode>('ai');
+  const [aiOpen, setAiOpen] = useState(false);
   const roster = useMemo(() => rosterOf(decks), [decks]);
   const selected = roster.find((deck) => deck.id === decks.selectedId) ?? roster[0] ?? null;
   const sleeve = sleeveFor(decks.sleeves, selected);
@@ -107,6 +110,13 @@ export function HomeScreen() {
               );
             })}
           </div>
+          {mode === 'ai' && (
+            <button type="button" className={styles.aiSetup} onClick={() => setAiOpen(true)} disabled={busy}>
+              <SlidersHorizontal size={16} aria-hidden="true" />
+              <span>{describeAi(play.aiOptions, roster.find((deck) => deck.id === play.aiOptions.opponentDeckId)?.name ?? null)}</span>
+              <span className={styles.aiSetupAction}>Change</span>
+            </button>
+          )}
           {play.error && <p className={styles.error} role="alert">{play.error}</p>}
           <div className={styles.playRow}>
             {busy && (
@@ -125,6 +135,7 @@ export function HomeScreen() {
           </div>
         </div>
       </section>
+      <AiSettingsDialog open={aiOpen} onOpenChange={setAiOpen} />
     </div>
   );
 }
