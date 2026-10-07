@@ -1,12 +1,13 @@
 import { Fragment } from 'react';
 import { manaClass } from './mana';
+import { cleanText } from './text';
 
 /**
  * Server text with its mana symbols drawn ("Pay {G}{1}") and internal object ids ("[32a]") removed.
  * Expects text already stripped of markup.
  */
 export function PromptText({ text }: { text: string }) {
-  const clean = text.replace(/\s*\[[0-9a-f]{3,}\]/gi, '').replace(/\s{2,}/g, ' ').trim();
+  const clean = cleanText(text);
   const parts = clean.split(/(\{[^}]+\})/g).filter(Boolean);
   return (
     <>
