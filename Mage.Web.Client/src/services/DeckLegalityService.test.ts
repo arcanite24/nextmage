@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { DECK_LEGALITY_FORMATS, DeckLegalityService, serverDeckTypeForValidation, type DeckLegalityFormat } from './DeckLegalityService.js';
 import { Rarity, type CardSearchCriteria, type DeckCardLists, type SearchCardView } from '../types/index.js';
 

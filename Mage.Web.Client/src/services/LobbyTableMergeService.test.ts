@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { mergeTablesWithPendingCreated } from './LobbyTableMergeService.js';
 
 test('keeps a newly created table visible while the server table list lags', () => {

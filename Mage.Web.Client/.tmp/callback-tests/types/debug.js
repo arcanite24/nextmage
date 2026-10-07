@@ -1,4 +1,0 @@
-/**
- * Debug Interface Types
- */
-export {};

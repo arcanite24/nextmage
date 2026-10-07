@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { DeckAnalyticsService } from './DeckAnalyticsService.js';
 import { Rarity, type CardSearchCriteria, type CardType, type DeckCardLists, type ObjectColor, type SearchCardView } from '../types/index.js';
 

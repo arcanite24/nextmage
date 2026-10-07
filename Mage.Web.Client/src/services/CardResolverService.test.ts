@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { CardResolverService, type ResolvedCard } from './CardResolverService.js';
 import { Rarity, type CardSearchCriteria, type SearchCardView } from '../types/index.js';
 

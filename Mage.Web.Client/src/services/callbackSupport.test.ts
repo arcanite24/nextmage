@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import {
     JAVA_CALLBACK_METHODS,
     createCallbackOrderingGuard,

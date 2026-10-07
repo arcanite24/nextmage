@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import {
     P0_BRIDGE_METHODS,
     P1_LOBBY_BRIDGE_METHODS,

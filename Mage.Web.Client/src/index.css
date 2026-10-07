@@ -140,6 +140,8 @@
   --color-accent-primary: #9a6a12;
   --color-accent-secondary: #5b6472;
   --gradient-button: linear-gradient(135deg, #9a6a12 0%, #5b6472 100%);
+  --color-accent-warning: #b45309;
+  --color-accent-danger: #b91c1c;
 }
 
 /* === Base Styles === */
