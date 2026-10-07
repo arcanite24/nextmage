@@ -1,0 +1,78 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.label {
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+}
+
+.detail {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+/* a row of printed choices; the chosen one is outlined in ivory ink */
+.segmented {
+  display: flex;
+  gap: 6px;
+}
+
+.segment,
+.segmentOn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: rgb(233 228 214 / 0.04);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  color: var(--ink-soft);
+  font-family: var(--font-print);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.segment:hover {
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink);
+}
+
+.segmentOn {
+  background: rgb(233 228 214 / 0.08);
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong);
+  color: var(--ink-strong);
+}
+
+.select {
+  height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: rgb(7 12 10 / 0.6);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink-strong);
+  font-size: var(--text-md);
+}
