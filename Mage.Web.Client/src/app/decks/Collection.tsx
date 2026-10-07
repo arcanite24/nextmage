@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Search, X } from 'lucide-react';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { CardCriteria, CardType, CardView, Rarity } from '../../protocol/generated/views';
@@ -51,9 +51,13 @@ const RARITIES: { value: Rarity | ''; label: string }[] = [
   { value: 'MYTHIC', label: 'Mythic' },
 ];
 
-function toCriteria(filters: CollectionFilters, format: string, start: number): CardCriteria {
+/** Sets most players don't build with: joke sets, unofficial sets, and Arena-only digital cards. */
+const SIDELINED_SET_TYPES = new Set(['JOKE_SET', 'CUSTOM_SET', 'MAGIC_ARENA']);
+
+function toCriteria(filters: CollectionFilters, format: string, start: number, ignoreSets: string[]): CardCriteria {
   const text = filters.text.trim();
   return {
+    ignoreSetCodes: ignoreSets,
     nameContains: text && !filters.anyText ? text : undefined,
     searchText: text && filters.anyText ? text : undefined,
     searchNames: true,
@@ -90,14 +94,22 @@ export function Collection({ format, counts, limitOf, onAdd, onRemove, onPreview
   limitOf(card: CardView): number;
   onAdd(card: CardView): void;
   onRemove(card: CardView): void;
-  onPreview(card: CardView | null, x?: number, y?: number): void;
+  onPreview(card: CardView | null, anchor?: DOMRect): void;
 }) {
   const [filters, setFilters] = useState<CollectionFilters>(EMPTY_FILTERS);
+  const [allSets, setAllSets] = useState(false);
   const query = useDebounced(filters, 250);
   const remember = useCardInfoStore((state) => state.remember);
+  const sets = useQuery({ queryKey: ['expansionSets'], queryFn: () => api.getExpansionSets(), staleTime: Infinity });
+  const ignoreSets = useMemo(
+    () => (allSets ? [] : (sets.data ?? []).filter((set) => SIDELINED_SET_TYPES.has(set.type ?? '')).map((set) => set.setCode!).filter(Boolean)),
+    [allSets, sets.data],
+  );
   const results = useInfiniteQuery({
-    queryKey: ['collection', query, format],
-    queryFn: ({ pageParam }) => api.searchCards(toCriteria(query, format, pageParam)),
+    queryKey: ['collection', query, format, ignoreSets],
+    queryFn: ({ pageParam }) => api.searchCards(toCriteria(query, format, pageParam, ignoreSets)),
+    // wait for the set list so the first page already leaves the sidelined sets out
+    enabled: allSets || !sets.isPending,
     initialPageParam: 0,
     getNextPageParam: (last, pages) => (last.length < PAGE ? undefined : pages.length * PAGE),
     staleTime: 5 * 60_000,
@@ -138,6 +150,10 @@ export function Collection({ format, counts, limitOf, onAdd, onRemove, onPreview
         <label className={styles.toggle}>
           <input type="checkbox" checked={filters.anyText} onChange={(event) => set({ anyText: event.target.checked })} />
           Rules text
+        </label>
+        <label className={styles.toggle} title="Joke sets, unofficial sets and Arena-only cards">
+          <input type="checkbox" checked={allSets} onChange={(event) => setAllSets(event.target.checked)} />
+          Joke &amp; digital sets
         </label>
         <div className={styles.pips} role="group" aria-label="Colors">
           {COLORS.map((color) => {
@@ -218,7 +234,7 @@ const CollectionCard = memo(function CollectionCard({ card, count, limit, onAdd,
   limit: number;
   onAdd(card: CardView): void;
   onRemove(card: CardView): void;
-  onPreview(card: CardView | null, x?: number, y?: number): void;
+  onPreview(card: CardView | null, anchor?: DOMRect): void;
 }) {
   const full = count >= limit;
   return (
@@ -230,7 +246,7 @@ const CollectionCard = memo(function CollectionCard({ card, count, limit, onAdd,
         event.preventDefault();
         if (count > 0) onRemove(card);
       }}
-      onPointerEnter={(event) => onPreview(card, event.clientX, event.clientY)}
+      onPointerEnter={(event) => onPreview(card, event.currentTarget.getBoundingClientRect())}
       onPointerLeave={() => onPreview(null)}
       aria-label={`${card.name}${count > 0 ? `, ${count} in deck` : ''}. Click to add, right-click to remove.`}
     >

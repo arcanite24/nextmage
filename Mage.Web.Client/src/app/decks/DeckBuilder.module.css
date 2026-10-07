@@ -502,19 +502,26 @@
   min-height: 0;
 }
 
-.barFill {
+.barTrack {
   position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.barFill {
+  position: absolute;
+  inset: 0;
   min-height: 2px;
   border-radius: 4px 4px 1px 1px;
   background: var(--ink-faint);
-  transition: height var(--dur-place) var(--ease-place);
+  transform-origin: bottom;
+  transition: transform var(--dur-place) var(--ease-place);
 }
 
-.barFill b {
+.barValue {
   position: absolute;
   left: 0;
   right: 0;
-  top: -17px;
   font-size: 12px;
   font-weight: 600;
   color: var(--ink-soft);
