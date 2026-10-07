@@ -1,5 +1,5 @@
 
-import { DeckCardLists, DeckCardInfo } from '../types/index.js';
+import type { DeckCardLists, DeckCardInfo } from './types.js';
 
 export interface DraftLogExportOptions {
     draftId?: string | null;

@@ -1,4 +1,4 @@
-import type { DeckCardLists } from "../types/index.js";
+import type { DeckCardLists } from "./types.js";
 import { DeckSerializer } from "./DeckSerializer.js";
 
 export interface DeckSummary {

@@ -3,7 +3,8 @@
 .scrim {
   position: absolute;
   inset: 0;
-  z-index: 400;
+  /* a dialog laid over the stage: it portals into the stage, so it tops every stage layer but stays under app dialogs and toasts */
+  z-index: var(--z-dialog);
   background: rgb(4 7 6 / 0.74);
   animation: fade var(--dur-place) var(--ease-place);
 }
@@ -11,7 +12,7 @@
 /* a printed zone laid over the mat; the card on it is a placed object and casts the held shadow */
 .sheet {
   position: absolute;
-  z-index: 401;
+  z-index: calc(var(--z-dialog) + 1);
   left: 50%;
   top: 50%;
   translate: -50% -50%;

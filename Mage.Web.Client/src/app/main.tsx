@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation, useNavigate } from 'react-router-dom';
 import './styles/base.css';
+import { installGlobalErrorHandlers } from '../core/telemetry/reporter';
 import { AppShell } from './AppShell';
 import { queryClient } from './queries';
 import { DecksScreen } from './screens/DecksScreen';
@@ -50,6 +51,9 @@ function SignedIn() {
     </>
   );
 }
+
+// uncaught errors and unhandled rejections are reported (to the console by default) and kept for debugging
+installGlobalErrorHandlers();
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginScreen /> },

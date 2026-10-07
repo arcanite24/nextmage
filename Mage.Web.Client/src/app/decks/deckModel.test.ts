@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CardView } from '../../protocol/generated/views';
-import type { DeckCardLists } from '../../types/models';
+import type { DeckCardLists } from '../../core/decks/types';
 import { addCard, copiesByName, copyLimit, countZone, entryKey, groupDeck, manaCurve, moveCard, removeCard } from './deckModel';
 
 const empty: DeckCardLists = { name: 'Test', cards: [], sideboard: [] };
