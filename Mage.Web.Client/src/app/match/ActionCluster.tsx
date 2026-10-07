@@ -66,9 +66,8 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
 
   // the answered prompt stays up while the server works (see the session's hold), so nothing blinks between decisions
   const deciding = interaction.mode !== 'waiting';
-  // other decisions are printed across the table; the corner keeps the priority and waiting lines
-  const centred = deciding && interaction.mode !== 'priority';
-  const headline = centred ? '' : deciding ? interaction.headline : status ?? interaction.headline;
+  // every decision is asked here, next to its buttons, so the question never covers the cards it is about
+  const headline = deciding ? interaction.headline : status ?? interaction.headline;
   const passAhead = canAct && (interaction.mode === 'priority' || interaction.mode === 'waiting');
 
   return (

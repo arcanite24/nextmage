@@ -14,7 +14,6 @@ import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
 import { MatPrint } from '../ui/MatPrint';
-import { PromptText } from '../ui/PromptText';
 import { SettingsDialog } from '../screens/SettingsDialog';
 import { Stitch } from '../ui/Stitch';
 import { ActionCluster } from './ActionCluster';
@@ -124,7 +123,12 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
     }
     void session.respond(command).catch(() => undefined);
   }, [session]);
-  const onClick = useCallback((id: string) => session.click(id), [session]);
+  // the blocker just chosen: the server's follow-up question ("Select attacker to block") doesn't say which it is
+  const [lastBlocker, setLastBlocker] = useState<string | null>(null);
+  const onClick = useCallback((id: string) => {
+    if (session.getState().interaction.mode === 'declareBlockers') setLastBlocker(id);
+    session.click(id);
+  }, [session]);
 
   const myId = board.me?.player.playerId ?? null;
   useWarmImages(view);
@@ -157,6 +161,13 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   }, [choosingTargets, interaction.selected, stack]);
 
   const prompt = interaction.prompt;
+  const targeting = interaction.mode === 'target' && !awaitingServer;
+  // the decision corner names the blocker when the server asks which attacker it blocks
+  const cornerInteraction = useMemo(() => {
+    if (interaction.mode !== 'target' || !/attacker to block/i.test(prompt?.text ?? '') || !lastBlocker) return interaction;
+    const blocker = board.me?.front.flatMap((group) => group.members).find((card) => card.id === lastBlocker);
+    return blocker ? { ...interaction, headline: `Which attacker does ${blocker.name} block?` } : interaction;
+  }, [interaction, prompt, board.me, lastBlocker]);
   const pregame = !view?.step;
   const handIds = useMemo(() => new Set(hand.map((card) => card.id!)), [hand]);
   // London mulligan: choose cards from the opening hand to put on the bottom
@@ -173,7 +184,6 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const handHidden = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards) && !awaitingServer;
   // a choice among cards in hand (discard, reveal...): eligible cards take the decision edge
   const choosingInHand = interaction.mode === 'target' && !pickerCards && [...clickable].some((id) => handIds.has(id));
-  const deciding = mode === 'play' && interaction.mode !== 'waiting' && interaction.mode !== 'priority' && !overlayOpen;
   const opponentArt = useMemo(() => {
     const permanent = board.opponents[0]?.front[0]?.lead ?? board.opponents[0]?.back.find((group) => !(group.lead.cardTypes ?? []).includes('LAND'))?.lead;
     return permanent?.expansionSetCode && permanent.cardNumber
@@ -207,6 +217,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                 selected={interaction.selected}
                 quiet={EMPTY}
                 attacking={attacking}
+                targeting={targeting}
                 blocking={blocking}
                 onClick={onClick}
                 deciding={!!opponent.player.hasPriority && interaction.mode === 'waiting'}
@@ -216,7 +227,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
             {board.me && (
               <>
-                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} onClick={onClick} left={FIELD_LEFT} width={fieldWidth} frontTop={556} backTop={778} />
+                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} left={FIELD_LEFT} width={fieldWidth} frontTop={556} backTop={778} />
                 <div className={styles.myPlate}>
                   <PlayerPlate
                     player={board.me.player}
@@ -250,13 +261,9 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
               />
             )}
 
-            {deciding && (
-              <p className={styles.prompt} aria-hidden="true"><PromptText text={interaction.headline} /></p>
-            )}
-
             {mode === 'play' ? (
               !overlayOpen && <ActionCluster
-                interaction={interaction}
+                interaction={cornerInteraction}
                 awaiting={awaitingServer}
                 status={state.status}
                 canAct={canAct}
@@ -323,6 +330,7 @@ interface RowProps {
   quiet: ReadonlySet<string>;
   attacking: ReadonlySet<string>;
   blocking: ReadonlySet<string>;
+  targeting: boolean;
   onClick(id: string): void;
 }
 

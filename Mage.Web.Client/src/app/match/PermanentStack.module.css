@@ -39,6 +39,21 @@
   box-shadow: 0 0 0 3px var(--ink-strong), 0 0 0 6px rgb(233 228 214 / 0.25);
 }
 
+/* a candidate while choosing a target: a heavy ink ring with a printed halo, lifted above its row */
+.target {
+  z-index: 55 !important;
+}
+
+.target::after {
+  inset: -6px;
+  border-radius: 11px;
+  box-shadow: 0 0 0 3px var(--ink-strong), 0 0 0 9px rgb(233 228 214 / 0.18);
+}
+
+.target:hover::after {
+  box-shadow: 0 0 0 4px var(--ink-strong), 0 0 0 11px rgb(233 228 214 / 0.26);
+}
+
 /* chosen in the current decision: amber, steady */
 .selected::after {
   content: '';

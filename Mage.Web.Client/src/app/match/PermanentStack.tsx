@@ -19,6 +19,8 @@ export interface PermanentStackProps {
   blocking: ReadonlySet<string>;
   /** opponents' attackers slide toward the player, ours toward the opponent */
   forward: 1 | -1;
+  /** a target is being chosen: the candidates stand out from merely playable cards */
+  targeting?: boolean;
   onClick(id: string): void;
 }
 
@@ -70,7 +72,7 @@ interface PlacedCardProps extends PermanentStackProps {
   count?: number;
 }
 
-function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, attacking, blocking, forward, onClick, left, top, depth, count }: PlacedCardProps) {
+function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, attacking, blocking, forward, targeting, onClick, left, top, depth, count }: PlacedCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = permanent.id!;
   const tapped = !!permanent.tapped;
@@ -104,6 +106,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
       className={[
         styles.card,
         isClickable && !quiet?.has(id) ? styles.clickable : '',
+        isClickable && targeting && !isSelected ? styles.target : '',
         isSelected ? styles.selected : '',
         isAttacking ? styles.attacking : '',
       ].join(' ')}
