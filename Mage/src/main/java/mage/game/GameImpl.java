@@ -45,7 +45,6 @@ import mage.filter.predicate.permanent.LegendRuleAppliesPredicate;
 import mage.game.combat.Combat;
 import mage.game.combat.CombatGroup;
 import mage.game.command.*;
-import mage.game.command.dungeons.UndercityDungeon;
 import mage.game.command.emblems.EmblemOfCard;
 import mage.game.command.emblems.RadiationEmblem;
 import mage.game.command.emblems.TheRingEmblem;
@@ -56,6 +55,7 @@ import mage.game.mulligan.Mulligan;
 import mage.game.permanent.Battlefield;
 import mage.game.permanent.Permanent;
 import mage.game.permanent.PermanentCard;
+import mage.game.permanent.PermanentToken;
 import mage.game.stack.Spell;
 import mage.game.stack.SpellStack;
 import mage.game.stack.StackAbility;
@@ -96,6 +96,7 @@ import java.util.stream.Collectors;
 public abstract class GameImpl implements Game {
 
     private final static AtomicInteger GLOBAL_INDEX = new AtomicInteger();
+    public final static AtomicInteger COPIED_COUNT = new AtomicInteger();
 
     private static final int ROLLBACK_TURNS_MAX = 4;
     private static final String UNIT_TESTS_ERROR_TEXT = "Error in unit tests";
@@ -188,6 +189,8 @@ public abstract class GameImpl implements Game {
     }
 
     protected GameImpl(final GameImpl game) {
+        COPIED_COUNT.incrementAndGet();
+
         //this.customData = game.customData; // temporary data, no need on game copy
         //this.losingPlayer = game.losingPlayer; // temporary data, no need on game copy
         this.aiGame = game.aiGame;
@@ -258,6 +261,16 @@ public abstract class GameImpl implements Game {
     @Override
     public Integer getGameIndex() {
         return this.gameIndex;
+    }
+
+    @Override
+    public Integer getCreatedCount() {
+        return GLOBAL_INDEX.get();
+    }
+
+    @Override
+    public Integer getCopiedCount() {
+        return COPIED_COUNT.get();
     }
 
     @Override
@@ -570,7 +583,7 @@ public abstract class GameImpl implements Game {
             return dungeon;
         }
         removeDungeon(dungeon);
-        return this.addDungeon(undercity ? new UndercityDungeon() : Dungeon.selectDungeon(playerId, this), playerId);
+        return this.addDungeon(undercity ? Dungeon.createDungeon("Undercity", true) : Dungeon.selectDungeon(playerId, this), playerId);
     }
 
     @Override
@@ -710,20 +723,36 @@ public abstract class GameImpl implements Game {
         return state.getStack().getSpell(spellId);
     }
 
+    @Override
+    public Spell getSpellOrLKIStack(MageObject object) {
+        if (object instanceof PermanentToken && object.getCopyFrom() != null) {
+            // copied card generate tokens on battlefield so lookup to 
+            // original spell ability, not token's (see Baron Helmut Zemo and test_Boast_CastWithEtb)
+            // main logic: copied card -> spell on stack -> resolve to token -> lookup
+            return getSpellOrLKIStack(object.getCopyFrom().getId());
+        } else {
+            return getSpellOrLKIStack(object.getId());
+        }
+    }
+
     /**
      * Given the UUID of a spell, this method returns the spell object. If the current game
      * state does not contain a spell with the given UUID, this method checks the last known
-     * information on the stack to look for the spell.
+     * information on the stack to look for the spell (it's search it by direct uuid or by 
+     * source object)
      *
-     * @param spellId - The UUID of a spell to retrieve from the current game state
-     * @return - The spell object with the given UUID, or null if no spell with the given UUID
+     * @param spellOrSourceId - The UUID of the actual spell or object id like permanent
+     * @return - The spell that was used to cast source object or null on non-cast
      * is found
      */
     @Override
-    public Spell getSpellOrLKIStack(UUID spellId) {
-        Spell spell = state.getStack().getSpell(spellId);
+    public Spell getSpellOrLKIStack(UUID spellOrSourceId) {
+        // by spell
+        Spell spell = getSpell(spellOrSourceId);
+
         if (spell == null) {
-            MageObject obj = this.getLastKnownInformation(spellId, Zone.STACK);
+            // by source id
+            MageObject obj = this.getLastKnownInformation(spellOrSourceId, Zone.STACK);
             // Copied activated abilities may also be retrieved from the stack here.
             // This check that obj is instanceof Spell is necessary to avoid throwing
             // a ClassCastException, as a StackAbility cannot be cast to Spell. See
@@ -1198,7 +1227,7 @@ public abstract class GameImpl implements Game {
         boolean wasPaused = state.isPaused();
         state.resume();
         if (!checkIfGameIsOver()) {
-            fireInformEvent("Turn " + state.getTurnNum());
+            informPlayers("Turn " + state.getTurnNum());
             if (checkStopOnTurnOption()) {
                 return;
             }
@@ -1347,6 +1376,7 @@ public abstract class GameImpl implements Game {
         //20091005 - 103.3
         for (UUID playerId : state.getPlayerList(startingPlayerId)) {
             Player player = getPlayer(playerId);
+            player.initStartingDeckSize();
             if (!gameOptions.testMode || player.getLife() == 0) {
                 player.initLife(this.getStartingLife());
             }
@@ -1548,7 +1578,7 @@ public abstract class GameImpl implements Game {
             playerId = players[RandomUtil.nextInt(players.length)]; // test game
             Player player = getPlayer(playerId);
             if (player != null && player.canRespond()) {
-                fireInformEvent(state.getPlayer(playerId).getLogName() + " won the toss");
+                informPlayers(state.getPlayer(playerId).getLogName() + " won the toss");
                 return player.getId();
             }
         }
@@ -1568,6 +1598,7 @@ public abstract class GameImpl implements Game {
 
     @Override
     public void end() {
+        // it's real game end, do not use any game dialogs/rules/events here
         if (!state.isGameOver()) {
             logger.debug("END of gameId: " + this.getId());
             endTime = new Date();
@@ -1598,6 +1629,78 @@ public abstract class GameImpl implements Game {
                     .forEach(this::informPlayers);
 
             DataCollectorServices.getInstance().onGameEnd(this);
+        }
+    }
+
+    /**
+     * End game on critical error with the winner
+     * Despite mtg's paper rules (MTR), we need a real winner to continue match/tourney without infinite games loop
+     * Winner: highest life, then most priority time left, then random.
+     */
+    @Override
+    public void endWithTechnicalWinner(String reason) {
+        if (state.isGameOver()) {
+            return;
+        }
+
+        // find a winner
+        List<Player> candidates = state.getPlayers().values().stream()
+                .filter(Player::isInGame)
+                .collect(Collectors.toList());
+        String decidedBy;
+        if (candidates.isEmpty()) {
+            candidates = new ArrayList<>(state.getPlayers().values());
+            decidedBy = "random from all players, nobody is in game";
+        } else if (candidates.size() == 1) {
+            decidedBy = "last player in game";
+        } else {
+            // find by life
+            int maxLife = candidates.stream().mapToInt(Player::getLife).max().orElse(0);
+            candidates = candidates.stream()
+                    .filter(player -> player.getLife() == maxLife)
+                    .collect(Collectors.toList());
+            decidedBy = "life";
+
+            // find by time left
+            if (candidates.size() > 1 && getPriorityTime() > 0) {
+                int maxTimeLeft = candidates.stream().mapToInt(Player::getPriorityTimeLeft).max().orElse(0);
+                candidates = candidates.stream()
+                        .filter(player -> player.getPriorityTimeLeft() == maxTimeLeft)
+                        .collect(Collectors.toList());
+                decidedBy = "priority time left";
+            }
+
+            // find by random
+            if (candidates.size() > 1) {
+                decidedBy = "random";
+            }
+        }
+        Player winner = candidates.isEmpty() ? null : candidates.get(RandomUtil.nextInt(candidates.size()));
+
+        // skip game events, e.g. replacement effects
+        if (winner != null) {
+            for (Player player : state.getPlayers().values()) {
+                player.setTechnicalResult(player.getId().equals(winner.getId()));
+            }
+            winnerId = winner.getId();
+        }
+
+        // use try/catch to make sure it's really finish all the work
+
+        String message = String.format("Game stopped due critical error, technical winner: %s (decided by %s). Reason: %s",
+                (winner == null ? "none" : winner.getName()), decidedBy, reason);
+        logger.error(message + " - game " + getId());
+
+        try {
+            end();
+        } catch (Throwable e) {
+            logger.fatal("Can't finish game after critical error: " + getId(), e);
+        }
+
+        try {
+            informPlayers(message);
+        } catch (Throwable e) {
+            logger.error("Can't inform players about technical winner: " + getId(), e);
         }
     }
 
@@ -1646,7 +1749,7 @@ public abstract class GameImpl implements Game {
         Player player = state.getPlayer(playerId);
         if (player != null && !player.hasLost()) {
             logger.debug("Player " + player.getName() + " concedes game " + this.getId());
-            fireInformEvent(player.getLogName() + " has conceded.");
+            informPlayers(player.getLogName() + " has conceded.");
             player.concede(this);
         }
     }
@@ -1810,7 +1913,7 @@ public abstract class GameImpl implements Game {
                             continue;
                         } else {
                             // tests - try to fail fast
-                            throw new MageException(UNIT_TESTS_ERROR_TEXT);
+                            throw new MageException(UNIT_TESTS_ERROR_TEXT + ": " + e.getMessage(), e);
                         }
                     }
                     state.getPlayerList().getNext();
@@ -1820,12 +1923,16 @@ public abstract class GameImpl implements Game {
             // OUTER error - game must end (too many errors also come here)
             this.totalErrorsCount.incrementAndGet();
             logger.fatal("Game end on critical error: " + e, e);
-            this.fireErrorEvent("Game end on critical error: " + e, e);
-            this.end();
+            try {
+                this.fireErrorEvent("Game end on critical error: " + e, e);
+            } catch (Throwable ex) {
+                logger.error("Can't send critical error to players: " + getId(), ex);
+            }
+            this.endWithTechnicalWinner(String.valueOf(e));
 
             // re-raise error in unit tests, so framework can catch it (example: errors in AI simulations)
-            if (UNIT_TESTS_ERROR_TEXT.equals(e.getMessage())) {
-                throw new IllegalStateException(UNIT_TESTS_ERROR_TEXT);
+            if (e.getMessage() != null && e.getMessage().contains(UNIT_TESTS_ERROR_TEXT)) {
+                throw new IllegalStateException(e.getMessage(), e);
             }
         } finally {
             resetLKI();
@@ -1836,10 +1943,11 @@ public abstract class GameImpl implements Game {
     protected void resolve() {
         StackObject top = null;
         boolean wasError = false;
+        boolean applied = false;
         try {
             top = state.getStack().peek();
-            DataCollectorServices.getInstance().onTestsStackResolve(this);
-            top.resolve(this);
+            DataCollectorServices.getInstance().onTestsStackResolveStart(this, top);
+            applied = top.resolve(this);
             resetControlAfterSpellResolve(top.getId());
         } catch (Throwable e) {
             // workaround to show real error in tests instead checkInfiniteLoop
@@ -1857,6 +1965,7 @@ public abstract class GameImpl implements Game {
                     }
                 }
             }
+            DataCollectorServices.getInstance().onTestsStackResolveEnd(this, top, applied);
         }
     }
 
@@ -2372,11 +2481,20 @@ public abstract class GameImpl implements Game {
 
         //20091005 - 704.5a/704.5b/704.5c
         for (Player player : state.getPlayers().values()) {
-            if (!player.hasLost()
-                    && ((player.getLife() <= 0 && player.canLoseByZeroOrLessLife())
-                    || player.getLibrary().isEmptyDraw()
-                    || player.getCountersCount(CounterType.POISON) >= 10)) {
-                player.lost(this);
+            if (!player.hasLost()) {
+                String lostReason = "";
+                if (player.getLife() <= 0 && player.canLoseByZeroOrLessLife()) {
+                    lostReason = "to having 0 or less life";
+                }
+                if (player.getLibrary().isEmptyDraw()) {
+                    lostReason = "drawing from an empty library";
+                }
+                if (player.getCountersCount(CounterType.POISON) >= 10) {
+                    lostReason = "to having 10 or more poison counters";
+                }
+                if (!lostReason.isEmpty() && player.lost(this)) {
+                    this.informPlayers(player.getLogName() + " lost the game due " + lostReason);
+                }
             }
         }
 
@@ -2467,6 +2585,15 @@ public abstract class GameImpl implements Game {
         );
         Set<Card> copiedCardsToRemove = new HashSet<>();
         for (Card copiedCard : allCopiedCards) {
+            UUID copiedCardId = copiedCard.getMainCard().getId();
+            UUID persistentCopySource = state.getPersistentCardCopySource(copiedCardId);
+            if (persistentCopySource != null) {
+                // Persistent copies opt out of 704.5e only while their registered source remains.
+                if (getPermanent(persistentCopySource) != null) {
+                    continue;
+                }
+                state.stopKeepingCardCopy(copiedCardId);
+            }
             // 1. Zone must be checked from main card only cause mdf parts can have different zones
             //    (one side on battlefield, another side on outside)
             // 2. Copied card creates in OUTSIDE zone and put to stack manually in the same code,
@@ -2555,7 +2682,7 @@ public abstract class GameImpl implements Game {
             if (perm.isCreature(this)) {
                 //20091005 - 704.5f
                 if (perm.getToughness().getValue() <= 0) {
-                    if (movePermanentToGraveyardWithInfo(perm)) {
+                    if (movePermanentToGraveyardWithInfo(perm, "SBA: creature has toughness 0 or less")) {
                         somethingHappened = true;
                         continue;
                     }
@@ -2622,7 +2749,7 @@ public abstract class GameImpl implements Game {
             if (perm.isPlaneswalker(this)) {
                 //20091005 - 704.5i
                 if (perm.getCounters(this).getCount(CounterType.LOYALTY) == 0) {
-                    if (movePermanentToGraveyardWithInfo(perm)) {
+                    if (movePermanentToGraveyardWithInfo(perm, "SBA: planeswalker has loyalty 0")) {
                         somethingHappened = true;
                         continue;
                     }
@@ -2635,7 +2762,7 @@ public abstract class GameImpl implements Game {
                 //20091005 - 704.5n, 702.14c
                 if (perm.getAttachedTo() == null) {
                     if (!perm.isCreature(this) && !perm.getAbilities(this).containsClass(BestowAbility.class)) {
-                        if (movePermanentToGraveyardWithInfo(perm)) {
+                        if (movePermanentToGraveyardWithInfo(perm, "SBA: aura can be attached to creature only")) {
                             somethingHappened = true;
                         }
                     }
@@ -2667,9 +2794,9 @@ public abstract class GameImpl implements Game {
                                 // handle bestow unattachment
                                 if (perm.getAbilities().stream().anyMatch(x -> x instanceof BestowAbility)) {
                                     UUID wasAttachedTo = perm.getAttachedTo();
-                                    perm.unattach(this);
+                                    perm.unattach(this); // TODO: add reason to the log?
                                     fireEvent(new UnattachedEvent(wasAttachedTo, perm.getId(), perm, null));
-                                } else if (movePermanentToGraveyardWithInfo(perm)) {
+                                } else if (movePermanentToGraveyardWithInfo(perm, "SBA: aura doesn't attached")) {
                                     somethingHappened = true;
                                 }
                             } else {
@@ -2681,7 +2808,7 @@ public abstract class GameImpl implements Game {
                                             UUID wasAttachedTo = perm.getAttachedTo();
                                             perm.unattach(this);
                                             fireEvent(new UnattachedEvent(wasAttachedTo, perm.getId(), perm, null));
-                                        } else if (movePermanentToGraveyardWithInfo(perm)) {
+                                        } else if (movePermanentToGraveyardWithInfo(perm, "SBA: aura can't be attached to that permanent")) {
                                             somethingHappened = true;
                                         }
                                     }
@@ -2691,7 +2818,7 @@ public abstract class GameImpl implements Game {
                                         UUID wasAttachedTo = perm.getAttachedTo();
                                         perm.unattach(this);
                                         fireEvent(new UnattachedEvent(wasAttachedTo, perm.getId(), perm, null));
-                                    } else if (movePermanentToGraveyardWithInfo(perm)) {
+                                    } else if (movePermanentToGraveyardWithInfo(perm, "SBA: aura can't be attached to that permanent")) {
                                         somethingHappened = true;
                                     }
                                 }
@@ -2699,13 +2826,13 @@ public abstract class GameImpl implements Game {
                         } else if (target instanceof TargetPlayer) {
                             Player attachedToPlayer = getPlayer(perm.getAttachedTo());
                             if (attachedToPlayer == null || attachedToPlayer.hasLost()) {
-                                if (movePermanentToGraveyardWithInfo(perm)) {
+                                if (movePermanentToGraveyardWithInfo(perm, "SBA: aura doesn't attached to that player")) {
                                     somethingHappened = true;
                                 }
                             } else {
                                 Filter auraFilter = spellAbility.getTargets().get(0).getFilter();
                                 if (!auraFilter.match(attachedToPlayer, this) || attachedToPlayer.hasProtectionFrom(perm, this)) {
-                                    if (movePermanentToGraveyardWithInfo(perm)) {
+                                    if (movePermanentToGraveyardWithInfo(perm, "SBA: aura can't be attached to player")) {
                                         somethingHappened = true;
                                     }
                                 }
@@ -2714,7 +2841,7 @@ public abstract class GameImpl implements Game {
                             Card attachedTo = getCard(perm.getAttachedTo());
                             if (attachedTo == null
                                     || !(spellAbility.getTargets().get(0)).canTarget(perm.getControllerId(), perm.getAttachedTo(), spellAbility, this)) {
-                                if (movePermanentToGraveyardWithInfo(perm)) {
+                                if (movePermanentToGraveyardWithInfo(perm, "SBA: aura can't be attached to that card")) {
                                     if (attachedTo != null) {
                                         attachedTo.removeAttachment(perm.getId(), null, this);
                                     }
@@ -2759,7 +2886,7 @@ public abstract class GameImpl implements Game {
                         .noneMatch(perm.getId()::equals);
                 if (sacSaga) {
                     // After the last chapter ability has left the stack, you'll sacrifice the Saga
-                    perm.sacrifice(null, this);
+                    perm.sacrifice(null, this); // TODO: add reason to the logs?
                     somethingHappened = true;
                 }
             }
@@ -2780,7 +2907,7 @@ public abstract class GameImpl implements Game {
                         .filter(TriggeredAbility.class::isInstance)
                         .map(Ability::getSourceId)
                         .noneMatch(perm.getId()::equals)) {
-                    if (movePermanentToGraveyardWithInfo(perm)) {
+                    if (movePermanentToGraveyardWithInfo(perm, "SBA: battle with 0 defense")) {
                         somethingHappened = true;
                     }
                 } else if (this
@@ -2794,7 +2921,8 @@ public abstract class GameImpl implements Game {
                         || perm.isControlledBy(perm.getProtectorId())) {
                     perm.chooseProtector(this, null);
                     if (this.getPlayer(perm.getProtectorId()) == null) {
-                        movePermanentToGraveyardWithInfo(perm);
+                        logger.error("Something wrong, battle without protector: " + perm + ", " + this);
+                        movePermanentToGraveyardWithInfo(perm, "SBA: something wrong, battle wthout protector");
                     }
                     somethingHappened = true;
                 }
@@ -2819,7 +2947,7 @@ public abstract class GameImpl implements Game {
                     }
                     if (attachedTo == null || !attachedTo.getAttachments().contains(perm.getId())) {
                         UUID wasAttachedTo = perm.getAttachedTo();
-                        perm.attachTo(null, null, this);
+                        perm.attachTo(null, null, this); // TODO: add reason of the unattach?
                         fireEvent(new UnattachedEvent(wasAttachedTo, perm.getId(), perm, null));
                     } else if (!attachedTo.isCreature(this) || attachedTo.hasProtectionFrom(perm, this)) {
                         if (attachedTo.removeAttachment(perm.getId(), null, this)) {
@@ -2917,7 +3045,7 @@ public abstract class GameImpl implements Game {
                 controller.choose(Outcome.Benefit, targetLegendaryToKeep, null, this);
                 for (Permanent dupLegend : getBattlefield().getActivePermanents(filterLegendName, legend.getControllerId(), this)) {
                     if (!targetLegendaryToKeep.getTargets().contains(dupLegend.getId())) {
-                        movePermanentToGraveyardWithInfo(dupLegend);
+                        movePermanentToGraveyardWithInfo(dupLegend, "SBA: legendary rule to keep only one");
                     }
                 }
                 return true;
@@ -2952,7 +3080,7 @@ public abstract class GameImpl implements Game {
                 for (Permanent permanent : worldEnchantment) {
                     if (newestPermanentControllerRange.contains(permanent.getControllerId())
                             && !Objects.equals(newestPermanent, permanent)) {
-                        movePermanentToGraveyardWithInfo(permanent);
+                        movePermanentToGraveyardWithInfo(permanent, "SBA: world rule to keep only one");
                         somethingHappened = true;
                     }
                 }
@@ -2975,7 +3103,7 @@ public abstract class GameImpl implements Game {
                             .orElse(-1);
                     roleSet.removeIf(permanent -> permanent.getCreateOrder() == newest);
                     for (Permanent permanent : roleSet) {
-                        movePermanentToGraveyardWithInfo(permanent);
+                        movePermanentToGraveyardWithInfo(permanent, "SBA: role rule to keep only one");
                         somethingHappened = true;
                     }
                 }
@@ -2988,6 +3116,7 @@ public abstract class GameImpl implements Game {
             for (Permanent permanent : getBattlefield().getAllActivePermanents()) {
                 if ((permanent.getAbilities(this).containsClass(DayboundAbility.class) && !state.isDaytime())
                         || (permanent.getAbilities(this).containsClass(NightboundAbility.class) && state.isDaytime())) {
+                    // TODO: add transform reason?
                     somethingHappened = permanent.transform(null, this, true) || somethingHappened;
                 }
             }
@@ -2997,11 +3126,11 @@ public abstract class GameImpl implements Game {
         return somethingHappened;
     }
 
-    private boolean movePermanentToGraveyardWithInfo(Permanent permanent) {
+    private boolean movePermanentToGraveyardWithInfo(Permanent permanent, String reason) {
         boolean result = false;
         if (permanent.moveToZone(Zone.GRAVEYARD, null, this, false)) {
             if (!this.isSimulation()) {
-                this.informPlayers(permanent.getLogName() + " is put into graveyard from battlefield");
+                this.informPlayers(permanent.getLogName() + " is put into graveyard from battlefield" + (reason.isEmpty() ? "" : " (" + reason + ")"));
             }
             result = true;
         }
@@ -3182,26 +3311,17 @@ public abstract class GameImpl implements Game {
     public void informPlayers(String message) {
         DataCollectorServices.getInstance().onGameLog(this, message);
 
-        // Uncomment to print game messages
-        // System.out.println(message.replaceAll("\\<.*?\\>", ""));
         if (simulation) {
             return;
         }
-        fireInformEvent(message);
+
+        makeSureCalledOutsideLayerEffects();
+        tableEventSource.fireTableEvent(EventType.INFO, message, this);
     }
 
     @Override
     public void debugMessage(String message) {
         logger.warn(message);
-    }
-
-    @Override
-    public void fireInformEvent(String message) {
-        if (simulation) {
-            return;
-        }
-        makeSureCalledOutsideLayerEffects();
-        tableEventSource.fireTableEvent(EventType.INFO, message, this);
     }
 
     @Override
@@ -3410,6 +3530,7 @@ public abstract class GameImpl implements Game {
         }
         // Then, if that player controlled any objects on the stack not represented by cards, those objects cease to exist.
         this.getState().getContinuousEffects().removeInactiveEffects(this);
+        // TODO: need copy tests, see #12911
         getStack().removeIf(object -> object.isControlledBy(playerId));
         // Then, if there are any objects still controlled by that player, those objects are exiled.
         applyEffects(); // to remove control from effects removed meanwhile

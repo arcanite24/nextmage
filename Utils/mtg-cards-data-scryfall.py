@@ -50,6 +50,11 @@ def extract_collector_number(card_json):
     except KeyError:
         return 0
 
+def is_basic_land(card):
+    if card.get('type_line', '').startswith('Basic Land'):
+        return True
+    return any(face.get('type_line', '').startswith('Basic Land') for face in card.get('card_faces', []))
+
 # Function to replace accented characters with ASCII equivalents
 def replace_accented_chars(text):
     """
@@ -75,6 +80,7 @@ def create_face_line(set_name, collector_number, rarity, card, power, toughness)
         .replace('\n', '$')
         .replace('—', '--')
         .replace('•', '*')
+        .replace(' | ', '$')
         .strip()
     )
     oracle_text = re.sub(r" \([^\)]*\)", "", oracle_text)
@@ -84,6 +90,10 @@ def create_face_line(set_name, collector_number, rarity, card, power, toughness)
     if card.get('loyalty'):
         toughness = card.get('loyalty', '')
         return f"{name}|{set_name}|{collector_number}|{rarity}|{mana_cost}|{type_line}|{toughness}|{oracle_text}|\n"
+    if 'Spacecraft' in card.get('type_line', ''):
+        station_pattern = r"(\d+\+)"
+        oracle_text = re.sub(station_pattern, r"STATION \1", oracle_text)
+        return f"{name}|{set_name}|{collector_number}|{rarity}|{mana_cost}|{type_line}|||{oracle_text}${power}/{toughness}|\n"
     else:
         return f"{name}|{set_name}|{collector_number}|{rarity}|{mana_cost}|{type_line}|{power}|{toughness}|{oracle_text}|\n"
 
@@ -116,9 +126,10 @@ def parse_set_codes(argv):
     return set_codes
 
 # Loop through each set
+data_dir = os.path.join(os.path.dirname(__file__), "data")
 sets_data = parse_set_codes(sys.argv)
 for set_code in sets_data:
-    file_path = set_code.upper() + "-scryfall.json"
+    file_path = os.path.join(data_dir, set_code.upper() + "-scryfall.json")
 
     # Check if file doesn't exist or is stale (older than 24 hours)
     if is_file_stale(file_path, 24):
@@ -140,12 +151,17 @@ for set_code in sets_data:
     # cards_data.sort(key=extract_collector_number)
     # cards_data_sorted = sorted(cards_data['data'], key=lambda x: int(x['collector_number']))
     for card in cards_data:
+        if is_basic_land(card):
+            continue
         rarity = rarity_map.get(card['rarity'].lower(), 'C')
         p = card.get('power', '')
         t = card.get('toughness', '')
         if 'card_faces' in card:
-            for face in card['card_faces']:
-                output += create_face_line(card['set_name'], card['collector_number'], rarity, face, p, t)
+            if card['layout'] == 'prepare':
+                output += create_face_line(card['set_name'], card['collector_number'], rarity, card['card_faces'][0], p, t)
+            else:
+                for face in card['card_faces']:
+                    output += create_face_line(card['set_name'], card['collector_number'], rarity, face, p, t)
         else:
             output += create_card_line(card['set_name'], card['collector_number'], rarity, card)
 

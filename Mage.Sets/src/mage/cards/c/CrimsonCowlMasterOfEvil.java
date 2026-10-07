@@ -1,18 +1,16 @@
 package mage.cards.c;
 
-import java.util.UUID;
 import mage.MageInt;
-import mage.abilities.common.AttacksWithCreaturesTriggeredAbility;
+import mage.abilities.common.AttacksPlayerWithCreaturesTriggeredAbility;
 import mage.abilities.effects.common.CreateTokenEffect;
-import mage.constants.SubType;
-import mage.constants.SuperType;
-import mage.constants.TargetController;
+import mage.cards.CardImpl;
+import mage.cards.CardSetInfo;
+import mage.constants.*;
 import mage.filter.common.FilterCreaturePermanent;
 import mage.filter.predicate.permanent.TokenPredicate;
 import mage.game.permanent.token.VillainToken;
-import mage.cards.CardImpl;
-import mage.cards.CardSetInfo;
-import mage.constants.CardType;
+
+import java.util.UUID;
 
 /**
  *
@@ -38,10 +36,10 @@ public final class CrimsonCowlMasterOfEvil extends CardImpl {
         this.toughness = new MageInt(3);
 
         // Whenever one or more nontoken Villains you control attack a player, you create a 2/1 black Villain creature token with menace.
-        this.addAbility(new AttacksWithCreaturesTriggeredAbility(
-            new CreateTokenEffect(new VillainToken()),
-            1, filter
-        ).setTriggerPhrase("Whenever one more nontoken Villains you control attack a player, "));
+        this.addAbility(new AttacksPlayerWithCreaturesTriggeredAbility(
+            new CreateTokenEffect(new VillainToken()).setText("you create a 2/1 black Villain creature token with menace"),
+            filter, SetTargetPointer.NONE
+        ).setTriggerPhrase("Whenever one or more nontoken Villains you control attack a player, "));
     }
 
     private CrimsonCowlMasterOfEvil(final CrimsonCowlMasterOfEvil card) {

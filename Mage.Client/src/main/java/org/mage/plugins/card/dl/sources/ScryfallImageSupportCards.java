@@ -519,6 +519,7 @@ public class ScryfallImageSupportCards {
             add("PLG22"); // Love Your LGS 2022
             add("2X2"); // Double Masters 2022
             add("SCH"); // Store Championships
+            add("PH21"); // 2021 Heroes of the Realm
             add("DMU"); // Dominaria United
             add("DMC"); // Dominaria United Commander
             add("YDMU"); // Alchemy: Dominaria
@@ -560,6 +561,7 @@ public class ScryfallImageSupportCards {
             add("WOE"); // Wilds of Eldraine
             add("WOT"); // Wilds of Eldraine: Enchanting Tales
             add("WOC"); // Wilds of Eldraine Commander
+            add("YWOE"); // Alchemy: Wilds of Eldraine
             add("LCI"); // The Lost Caverns of Ixalan
             add("LCC"); // The The Lost Caverns of Ixalan Commander
             add("REX"); // Jurassic World Collection
@@ -572,6 +574,7 @@ public class ScryfallImageSupportCards {
             add("MKM"); // Murders at Karlov Manor
             add("MKC"); // Murders at Karlov Manor Commander
             add("PSS4"); // MKM Standard Showdown
+            add("YMKM"); // Alchemy: Murders at Karlov Manor
             add("CLU"); // Ravnica: Clue Edition
             add("OTJ"); // Outlaws of Thunder Junction
             add("OTC"); // Outlaws of Thunder Junction Commander
@@ -589,6 +592,7 @@ public class ScryfallImageSupportCards {
             add("DSK"); // Duskmourn: House of Horror
             add("DSC"); // Duskmourn: House of Horror Commander
             add("FDN"); // Foundations
+            add("FDC"); // Foundations Commander
             add("J25"); // Foundations Jumpstart
             add("PIO"); // Pioneer Masters
             add("PW25"); // Wizards Play Network 2025
@@ -629,8 +633,15 @@ public class ScryfallImageSupportCards {
             add("MSH"); // Marvel Super Heroes
             add("MSC"); // Marvel Super Heroes Commander
             add("HOB"); // The Hobbit
-            add("HOC"); // The Hobbit Commander
+            add("HOC"); // The Hobbit Eternal
+            add("MBC"); // Mystery Booster Commander Edition
+            add("SLZ"); // The Zeta Set
             add("FRA"); // Reality Fracture
+            add("FRC"); // Reality Fracture Commander
+            add("TRK"); // Star Trek
+            add("TRC"); // Star Trek Commander
+            add("SDS"); // Stardates
+            add("PF27"); // MagicFest 2027
 
             // Custom sets using Scryfall images - must provide a direct link for each card in directDownloadLinks
             add("CALC"); // Custom Alchemized versions of existing cards

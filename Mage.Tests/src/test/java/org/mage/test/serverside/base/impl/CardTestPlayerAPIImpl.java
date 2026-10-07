@@ -331,6 +331,14 @@ public abstract class CardTestPlayerAPIImpl extends MageTestPlayerBase implement
 
         assertAllCommandsUsed();
 
+        // workaround for test games - call end game manually instead GameImpl
+        // TODO: remove after refactor execute usage to one per test/run
+        if (!currentGame.hasEnded()) {
+            // no needs in second call (after game really ended)
+            DataCollectorServices.getInstance().onGameEnd(currentGame);
+        }
+        DataCollectorServices.getInstance().onGameEndResult(currentGame); // tests don't hava GameController, so call it here
+
         //assertNoDuplicatedEffects();
     }
 
@@ -1478,7 +1486,7 @@ public abstract class CardTestPlayerAPIImpl extends MageTestPlayerBase implement
         cardName = EmptyNames.replaceTestCommandByObjectName(cardName);
 
         int actual;
-        if (cardName.contains("//")) { // special logic for checked split cards, because in game logic of card name filtering is different from in test
+        if (cardName.contains(" // ")) { // special logic for checked split cards, because in game logic of card name filtering is different from in test
             actual = 0;
             for (Card card : currentGame.getPlayer(player.getId()).getHand().getCards(currentGame)) {
                 if (CardUtil.haveSameNames(card.getName(), cardName, true)) {
@@ -2290,6 +2298,7 @@ public abstract class CardTestPlayerAPIImpl extends MageTestPlayerBase implement
     /**
      * Declare non target choice. You can use multiple choices in one line like setChoice(name1^name2)
      * Also support "up to" choices, e.g. choose 2 of 3 cards by setChoice(card1^card2) + setChoice(TestPlayer.CHOICE_SKIP)
+     * Replecemnt effects support setChoice(object*ability) choice notation to skip object id inside the choice
      */
     public void setChoice(TestPlayer player, String choice) {
         setChoice(player, choice, 1);
@@ -2529,7 +2538,7 @@ public abstract class CardTestPlayerAPIImpl extends MageTestPlayerBase implement
 
     public void assertHasNotWonTheGame(Player player) {
 
-        Assert.assertFalse(player.getName() + " has won the game.", player.hasWon());
+        Assert.assertFalse(player.getName() + " has won the game", player.hasWon());
     }
 
     public void assertLostTheGame(Player player) {
@@ -2539,7 +2548,7 @@ public abstract class CardTestPlayerAPIImpl extends MageTestPlayerBase implement
 
     public void assertHasNotLostTheGame(Player player) {
 
-        Assert.assertFalse(player.getName() + " has lost the game.", player.hasLost());
+        Assert.assertFalse(player.getName() + " has lost the game", player.hasLost());
     }
 
     /**
