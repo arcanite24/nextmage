@@ -71,10 +71,6 @@
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.4), 0 0 0 2px var(--ink);
 }
 
-.soon {
-  font-size: var(--text-sm);
-  color: var(--ink-dim);
-}
 
 .importForm {
   display: flex;

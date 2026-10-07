@@ -2,6 +2,7 @@ package mage.server.websocket.service;
 
 import mage.ObjectColor;
 import mage.cards.decks.Constructed;
+import mage.cards.decks.DeckCardInfo;
 import mage.cards.decks.DeckValidator;
 import mage.cards.decks.DeckValidatorFactory;
 import mage.cards.repository.CardCriteria;
@@ -12,6 +13,7 @@ import mage.cards.repository.ExpansionRepository;
 import mage.filter.predicate.card.CardTextPredicate;
 import mage.view.CardView;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -52,6 +54,13 @@ public final class CardSearchService {
             }
         }
 
+        // the database only matches mana value exactly; ranges are applied below
+        Integer manaValue = criteria.getManaValue();
+        String manaValueOperator = criteria.getManaValueOperator();
+        if (manaValue != null && manaValueOperator != null && !manaValueOperator.equals("eq")) {
+            criteria.manaValue(null);
+        }
+
         Stream<CardInfo> cards = CardRepository.instance.findCards(criteria).stream();
         if (textSearch) {
             CardTextPredicate textPredicate = new CardTextPredicate(
@@ -64,9 +73,48 @@ public final class CardSearchService {
             cards = cards.filter(info -> textPredicate.apply(info.createMockCard(), null));
         }
         if (refinements) {
-            cards = cards.filter(info -> matchesRefinements(info, criteria)).skip(start).limit(count);
+            cards = cards.filter(info -> matchesRefinements(info, criteria)
+                    && matchesManaValue(info, manaValue, manaValueOperator));
+            if (criteria.isUniqueNames()) {
+                // one printing per card name: the first the database returns
+                Set<String> seen = new HashSet<>();
+                cards = cards.filter(info -> seen.add(info.getName()));
+            }
+            cards = cards.skip(start).limit(count);
         }
         return cards.map(info -> new CardView(info.createMockCard())).collect(Collectors.toList());
+    }
+
+    private static final int MAX_LOOKUP = 500;
+
+    /** Card details for deck entries, in order; null where the card is unknown. */
+    public List<CardView> lookup(DeckCardInfo[] entries) {
+        List<CardView> result = new ArrayList<>();
+        if (entries == null) {
+            return result;
+        }
+        for (int i = 0; i < Math.min(entries.length, MAX_LOOKUP); i++) {
+            DeckCardInfo entry = entries[i];
+            CardInfo info = entry == null ? null : findEntry(entry);
+            result.add(info == null ? null : new CardView(info.createMockCard()));
+        }
+        return result;
+    }
+
+    private static CardInfo findEntry(DeckCardInfo entry) {
+        String setCode = entry.getSetCode();
+        String number = entry.getCardNumber();
+        if (setCode != null && !setCode.isEmpty() && number != null && !number.isEmpty()) {
+            CardInfo exact = CardRepository.instance.findCard(setCode, number);
+            if (exact != null) {
+                return exact;
+            }
+        }
+        String name = entry.getCardName();
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+        return CardRepository.instance.findPreferredCoreExpansionCard(name, setCode);
     }
 
     public List<ExpansionSetInfo> expansionSets() {
@@ -87,7 +135,8 @@ public final class CardSearchService {
     }
 
     private static boolean hasRefinements(CardCriteria criteria) {
-        return !criteria.getWebColors().isEmpty()
+        return criteria.isUniqueNames()
+                || !criteria.getWebColors().isEmpty()
                 || !criteria.getWebExcludedColors().isEmpty()
                 || !criteria.getExcludedRarities().isEmpty()
                 || (criteria.getManaValue() != null && criteria.getManaValueOperator() != null
@@ -98,8 +147,7 @@ public final class CardSearchService {
         Set<String> cardColors = colorsOf(info);
         return matchesColors(cardColors, criteria.getWebColors(), criteria.getColorMatch())
                 && !matchesAnyColor(cardColors, criteria.getWebExcludedColors())
-                && !criteria.getExcludedRarities().contains(info.getRarity())
-                && matchesManaValue(info, criteria.getManaValue(), criteria.getManaValueOperator());
+                && !criteria.getExcludedRarities().contains(info.getRarity());
     }
 
     private static boolean matchesManaValue(CardInfo info, Integer manaValue, String operator) {

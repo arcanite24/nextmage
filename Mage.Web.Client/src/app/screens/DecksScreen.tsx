@@ -1,5 +1,6 @@
-import { FileUp, Plus, Trash2 } from 'lucide-react';
+import { FileUp, PencilRuler, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SLEEVE_COLORS, rosterOf, sleeveFor, useDecks, type RosterDeck } from '../stores/decks';
 import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
@@ -17,6 +18,7 @@ export function DecksScreen() {
   const [removing, setRemoving] = useState<RosterDeck | null>(null);
   const selected = roster.find((deck) => deck.id === decks.selectedId) ?? null;
   const fileInput = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!decks.loaded) void decks.refresh();
@@ -39,7 +41,8 @@ export function DecksScreen() {
         aside={
           <>
             <Button size="sm" icon={<FileUp size={16} />} onClick={() => fileInput.current?.click()}>Import file</Button>
-            <Button size="sm" variant="decision" icon={<Plus size={16} />} onClick={() => setImportOpen(true)}>Paste a list</Button>
+            <Button size="sm" icon={<Plus size={16} />} onClick={() => setImportOpen(true)}>Paste a list</Button>
+            <Button size="sm" variant="decision" icon={<PencilRuler size={16} />} onClick={() => navigate('/decks/new')}>Build a deck</Button>
             <input
               ref={fileInput}
               type="file"
@@ -57,7 +60,9 @@ export function DecksScreen() {
         <div className={styles.grid} role="list">
           {roster.map((deck) => (
             <div key={deck.id} role="listitem" className={styles.cell}>
-              <DeckBox deck={deck} sleeve={sleeveFor(decks.sleeves, deck)} selected={deck.id === decks.selectedId} onSelect={() => decks.select(deck.id)} />
+              <div onDoubleClick={() => navigate(`/decks/${encodeURIComponent(deck.id)}`)}>
+                <DeckBox deck={deck} sleeve={sleeveFor(decks.sleeves, deck)} selected={deck.id === decks.selectedId} onSelect={() => decks.select(deck.id)} />
+              </div>
             </div>
           ))}
         </div>
@@ -85,7 +90,9 @@ export function DecksScreen() {
                 ))}
               </div>
             </div>
-            <p className={styles.soon}>Card-by-card editing arrives with the new deck builder.</p>
+            <Button variant="decision" icon={<PencilRuler size={16} />} onClick={() => navigate(`/decks/${encodeURIComponent(selected.id)}`)}>
+              {selected.starter ? 'Copy and edit' : 'Edit deck'}
+            </Button>
             {!selected.starter && (
               <Button variant="danger" size="sm" icon={<Trash2 size={16} />} onClick={() => setRemoving(selected)}>Remove deck</Button>
             )}

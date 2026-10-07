@@ -106,6 +106,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `getExpansionSets` | - | `ExpansionSetInfo[]` | public | All card sets. |
 | `getBasicLandSets` | - | `BasicLandSetInfo[]` | public | Sets with basic lands, newest first. |
 | `searchCards` | `criteria: CardCriteria` | `CardView[]` | session | Search the card database (paged with start/count, at most 1000 per page). |
+| `lookupCards` | `cards: DeckCardInfo[]` | `CardView[]` | public | Card details for deck entries (by set and number, falling back to name), in the same order; null for unknown cards. At most 500 per call. |
 | `deckValidate` | `deckType: string`, `deck: DeckCardLists` | `DeckValidationResult` | session | Check a deck against a format, with EDH power level and Commander brackets. |
 | `roomGetUsers` | `roomId: UUID` | `RoomUsersView[]` | session | Users and server statistics of a room. |
 | `roomGetAllTables` | `roomId: UUID` | `TableView[]` | session | All open and running tables of a room. |

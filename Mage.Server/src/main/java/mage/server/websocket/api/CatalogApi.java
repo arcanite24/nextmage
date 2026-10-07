@@ -1,5 +1,6 @@
 package mage.server.websocket.api;
 
+import mage.cards.decks.DeckCardInfo;
 import mage.cards.decks.DeckCardLists;
 import mage.cards.repository.CardCriteria;
 import mage.server.websocket.rpc.RpcMethod;
@@ -94,6 +95,13 @@ final class CatalogApi {
                         .returns("CardView[]")
                         .doc("Search the card database (paged with start/count, at most 1000 per page).")
                         .handler(call -> ctx.cardSearch.search(call.object(0, CardCriteria.class))),
+
+                RpcMethod.named("lookupCards")
+                        .publicAccess()
+                        .params(object("cards", "DeckCardInfo[]"))
+                        .returns("CardView[]")
+                        .doc("Card details for deck entries (by set and number, falling back to name), in the same order; null for unknown cards. At most 500 per call.")
+                        .handler(call -> ctx.cardSearch.lookup(call.object(0, DeckCardInfo[].class))),
 
                 RpcMethod.named("deckValidate")
                         .params(of("deckType", STRING), object("deck", "DeckCardLists"))

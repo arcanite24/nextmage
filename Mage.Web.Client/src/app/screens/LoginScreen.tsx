@@ -1,6 +1,6 @@
 import { ChevronDown, Server } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../brand';
 import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
@@ -12,6 +12,10 @@ import styles from './LoginScreen.module.css';
 export function LoginScreen() {
   const session = useSession();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
+  // game links go stale across sign-ins; anything else is worth returning to
+  const destination = from && !from.startsWith('/game/') && from !== '/login' ? from : '/';
   const [userName, setUserName] = useState(session.userName);
   const [password, setPassword] = useState('');
   const [serverUrl, setServerUrl] = useState(session.serverUrl);
@@ -21,8 +25,8 @@ export function LoginScreen() {
   useEffect(() => {
     if (resumed.current) return;
     resumed.current = true;
-    void session.resume().then((ok) => ok && navigate('/', { replace: true }));
-  }, [session, navigate]);
+    void session.resume().then((ok) => ok && navigate(destination, { replace: true }));
+  }, [session, navigate, destination]);
   const busy = session.phase === 'signingIn';
   const nameError = userName.trim() && !/^[A-Za-z0-9_]{3,14}$/.test(userName.trim())
     ? '3 to 14 letters, digits or underscores.'
@@ -31,7 +35,7 @@ export function LoginScreen() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!userName.trim() || nameError) return;
-    if (await session.signIn(serverUrl.trim(), userName.trim(), password)) navigate('/', { replace: true });
+    if (await session.signIn(serverUrl.trim(), userName.trim(), password)) navigate(destination, { replace: true });
   }
 
   return (
