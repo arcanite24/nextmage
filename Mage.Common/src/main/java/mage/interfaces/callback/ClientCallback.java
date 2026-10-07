@@ -4,6 +4,8 @@ import mage.remote.traffic.ZippedObject;
 import mage.utils.CompressUtil;
 import mage.util.ThreadUtils;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -28,6 +30,9 @@ public class ClientCallback implements Serializable {
     private Object data;
     private ClientCallbackMethod method;
     private int messageId;
+
+    // compression is applied lazily during java serialization (desktop clients), so JSON clients get raw data for free
+    private transient boolean compressOnSerialize;
 
     public ClientCallback(ClientCallbackMethod method, UUID objectId) {
         this(method, objectId, null);
@@ -70,12 +75,22 @@ public class ClientCallback implements Serializable {
     }
 
     public void setData(Object data, boolean useCompress) {
-        if (!useCompress || data == null || data instanceof ZippedObject) {
-            this.data = data;
-        } else {
-            this.data = CompressUtil.compress(data);
+        this.data = data;
+        this.compressOnSerialize = useCompress && data != null && !(data instanceof ZippedObject);
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        Object sendData = this.data;
+        if (this.compressOnSerialize && !(sendData instanceof ZippedObject)) {
+            sendData = CompressUtil.compress(sendData);
             simulateBadConnection();
         }
+        ObjectOutputStream.PutField fields = out.putFields();
+        fields.put("objectId", this.objectId);
+        fields.put("data", sendData);
+        fields.put("method", this.method);
+        fields.put("messageId", this.messageId);
+        out.writeFields();
     }
 
     public void decompressData() {

@@ -311,7 +311,8 @@ public final class Main {
 
                 // WebSocket Server
                 int websocketPort = config.getWebsocketPort();
-                mage.server.websocket.WebSocketServerImpl webSocketServer = new mage.server.websocket.WebSocketServerImpl(new java.net.InetSocketAddress(websocketPort), mageServerImpl, managerFactory);
+                mage.server.websocket.WebSocketServerImpl webSocketServer = new mage.server.websocket.WebSocketServerImpl(
+                        new java.net.InetSocketAddress(websocketPort), mageServerImpl, managerFactory, config.getWebsocketAllowedOrigins());
                 try {
                     webSocketServer.start();
                     webSocketServer.awaitStartup(10, java.util.concurrent.TimeUnit.SECONDS);
@@ -324,6 +325,7 @@ public final class Main {
                     throw ex;
                 }
 
+                Runtime.getRuntime().addShutdownHook(new Thread(webSocketServer::shutdown, "WebSocket shutdown"));
                 logger.info("Started MAGE WebSocket server - listening on port " + websocketPort);
 
                 if (testMode) {
