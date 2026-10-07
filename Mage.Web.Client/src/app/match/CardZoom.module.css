@@ -1,0 +1,36 @@
+.zoom {
+  position: absolute;
+  z-index: 120;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: lift var(--dur-place) var(--ease-place);
+}
+
+.faces {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  filter: drop-shadow(0 28px 50px rgb(0 0 0 / 0.6));
+}
+
+.details {
+  max-width: 340px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgb(7 12 10 / 0.92);
+  box-shadow: inset 0 0 0 1px var(--ink-faint);
+  list-style: none;
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}

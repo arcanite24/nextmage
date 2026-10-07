@@ -1,0 +1,130 @@
+.cluster {
+  position: absolute;
+  right: 40px;
+  bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  width: 420px;
+  z-index: 45;
+}
+
+.headline {
+  max-width: 420px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgb(7 12 10 / 0.8);
+  box-shadow: inset 0 0 0 1px var(--ink-ghost);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: right;
+  color: var(--ink-soft);
+}
+
+.headline:empty {
+  display: none;
+}
+
+.deciding {
+  color: var(--ink-strong);
+  box-shadow: inset 0 0 0 1.5px var(--decision);
+}
+
+.secondary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.attack {
+  box-shadow: inset 0 0 0 2px var(--oxblood) !important;
+  color: var(--oxblood-ink) !important;
+}
+
+.mainRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.main {
+  min-width: 260px;
+  height: 84px !important;
+  font-size: 34px !important;
+}
+
+.mainAttack {
+  background: linear-gradient(180deg, #ffcf74, var(--decision)) !important;
+}
+
+.waiting {
+  display: grid;
+  place-items: center;
+  min-width: 260px;
+  height: 84px;
+  border-radius: var(--radius-control);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  font-family: var(--font-print);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.ahead {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 84px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: rgb(7 12 10 / 0.75);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ahead:hover {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.menu {
+  z-index: var(--z-overlay);
+  min-width: 280px;
+  padding: 6px;
+  border-radius: var(--radius-control);
+  background: var(--mat-600);
+  box-shadow: inset 0 0 0 1px var(--ink-ghost), var(--shadow-lifted);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+
+.menuItem[data-highlighted] {
+  background: rgb(233 228 214 / 0.1);
+}
+
+.menuItem kbd {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+
+.menuRule {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--ink-ghost);
+}

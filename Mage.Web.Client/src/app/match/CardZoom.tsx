@@ -1,0 +1,73 @@
+import { useEffect, useState } from 'react';
+import type { CardView, PermanentView } from '../../protocol/generated/views';
+import { stripMarkup } from '../../core/game/prompt';
+import { CardFace } from '../ui/CardFace';
+import { useMatchUi } from './matchUi';
+import { STAGE_HEIGHT, STAGE_WIDTH, toStagePoint, useStage } from './stageContext';
+import styles from './CardZoom.module.css';
+
+const ZOOM_WIDTH = 340;
+const ZOOM_HEIGHT = ZOOM_WIDTH * (88 / 63);
+const DELAY_MS = 260;
+
+/** The hovered card, large, beside the pointer (after a short delay so sweeping the board stays calm). */
+export function CardZoom() {
+  const zoom = useMatchUi((state) => state.zoom);
+  const dragging = useMatchUi((state) => state.dragging);
+  const stage = useStage();
+  const [settled, setSettled] = useState<typeof zoom>(null);
+
+  useEffect(() => {
+    if (!zoom || dragging) return;
+    const timer = setTimeout(() => setSettled(zoom), DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [zoom, dragging]);
+
+  // show the hovered card only once the pointer has rested on it
+  const shown = zoom && !dragging && settled === zoom ? zoom : null;
+  if (!shown) return null;
+  const point = toStagePoint(stage, shown.x, shown.y);
+  const left = point.x > STAGE_WIDTH / 2 ? point.x - ZOOM_WIDTH - 60 : point.x + 60;
+  const top = Math.max(24, Math.min(STAGE_HEIGHT - ZOOM_HEIGHT - 24, point.y - ZOOM_HEIGHT / 2));
+  const card = shown.card as PermanentView;
+  const back = card.secondCardFace;
+  const extra = details(card);
+
+  return (
+    <div className={styles.zoom} style={{ left, top }} aria-hidden="true">
+      <div className={styles.faces}>
+        <CardFace card={card} size="large" sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH }} />
+        {back && card.transformable && (
+          <CardFace card={back} face="back" size="normal" sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH * 0.62 }} />
+        )}
+      </div>
+      {extra.length > 0 && (
+        <ul className={styles.details}>
+          {extra.map((line) => <li key={line}>{line}</li>)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** What the picture can't show: changed stats, counters, damage, who controls it. */
+function details(card: PermanentView & CardView): string[] {
+  const lines: string[] = [];
+  if (card.power !== undefined && card.toughness !== undefined && (card.cardTypes ?? []).includes('CREATURE')) {
+    const base = card.original;
+    if (base && (base.power !== card.power || base.toughness !== card.toughness)) {
+      lines.push(`Now ${card.power}/${card.toughness} (printed ${base.power}/${base.toughness})`);
+    }
+  }
+  if ((card.damage ?? 0) > 0) lines.push(`${card.damage} damage marked`);
+  for (const counter of card.counters ?? []) {
+    if ((counter.count ?? 0) > 0) lines.push(`${counter.count} × ${counter.name}`);
+  }
+  if (card.nameController && card.nameOwner && card.nameOwner !== card.nameController) {
+    lines.push(`Controlled by ${card.nameController}, owned by ${card.nameOwner}`);
+  }
+  if (card.isAbility) {
+    lines.push(...(card.rules ?? []).map(stripMarkup).filter(Boolean).slice(0, 3));
+  }
+  return lines;
+}

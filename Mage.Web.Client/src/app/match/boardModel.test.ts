@@ -1,0 +1,70 @@
+import { describe, expect, it } from 'vitest';
+import type { GameView, PermanentView, PlayerView } from '../../protocol/generated/views';
+import { buildBoard, buildPlayerBoard, fitCardWidth } from './boardModel';
+
+function permanent(id: string, overrides: Partial<PermanentView> = {}): PermanentView {
+  return { id, name: 'Forest', expansionSetCode: 'M21', cardTypes: ['LAND'], ...overrides };
+}
+
+function player(id: string, permanents: PermanentView[]): PlayerView {
+  return { playerId: id, name: id, battlefield: Object.fromEntries(permanents.map((p) => [p.id!, p])) };
+}
+
+describe('buildPlayerBoard', () => {
+  it('puts creatures in front and lands first in the back row', () => {
+    const board = buildPlayerBoard(player('me', [
+      permanent('relic', { name: 'Relic', cardTypes: ['ARTIFACT'] }),
+      permanent('bear', { name: 'Bear', cardTypes: ['CREATURE'], power: '2', toughness: '2' }),
+      permanent('land'),
+    ]), true);
+    expect(board.front.map((group) => group.key)).toEqual(['bear']);
+    expect(board.back.map((group) => group.key)).toEqual(['land', 'relic']);
+  });
+
+  it('stacks identical lands up to four, but never creatures or damaged permanents', () => {
+    const lands = Array.from({ length: 5 }, (_, i) => permanent(`f${i}`));
+    const bears = [1, 2].map((i) => permanent(`b${i}`, { name: 'Bear', cardTypes: ['CREATURE'] }));
+    const board = buildPlayerBoard(player('me', [...lands, ...bears]), true);
+    expect(board.back.map((group) => group.members.length)).toEqual([4, 1]);
+    expect(board.front).toHaveLength(2);
+  });
+
+  it('keeps tapped and untapped lands apart', () => {
+    const board = buildPlayerBoard(player('me', [permanent('a'), permanent('b', { tapped: true })]), true);
+    expect(board.back).toHaveLength(2);
+  });
+
+  it('tucks attachments behind their host', () => {
+    const board = buildPlayerBoard(player('me', [
+      permanent('bear', { name: 'Bear', cardTypes: ['CREATURE'] }),
+      permanent('aura', { name: 'Aura', cardTypes: ['ENCHANTMENT'], attachedTo: 'bear', attachedToPermanent: true }),
+    ]), true);
+    expect(board.front[0].attachments.map((p) => p.id)).toEqual(['aura']);
+    expect(board.back).toHaveLength(0);
+  });
+});
+
+describe('buildBoard', () => {
+  it('seats me at the bottom and opponents in turn order after me', () => {
+    const view: GameView = { players: [player('a', []), player('me', []), player('c', [])] };
+    const board = buildBoard(view, 'me');
+    expect(board.me?.player.playerId).toBe('me');
+    expect(board.opponents.map((o) => o.player.playerId)).toEqual(['c', 'a']);
+  });
+
+  it('shows the first player at the bottom when watching', () => {
+    const board = buildBoard({ players: [player('a', []), player('b', [])] }, null);
+    expect(board.me?.isMe).toBe(false);
+    expect(board.me?.player.playerId).toBe('a');
+    expect(board.opponents.map((o) => o.player.playerId)).toEqual(['b']);
+  });
+});
+
+describe('fitCardWidth', () => {
+  it('uses the ideal width when there is room and shrinks to fit when crowded', () => {
+    const groups = buildPlayerBoard(player('me', Array.from({ length: 3 }, (_, i) => permanent(`c${i}`, { name: `C${i}`, cardTypes: ['CREATURE'] }))), true).front;
+    expect(fitCardWidth(groups, 1000, 120, 50)).toBe(120);
+    expect(fitCardWidth(groups, 300, 120, 50)).toBeLessThan(120);
+    expect(fitCardWidth(groups, 10, 120, 50)).toBe(50);
+  });
+});
