@@ -588,3 +588,40 @@
     transform: translateY(6px);
   }
 }
+
+/* tablets and small laptops: a slimmer deck list and smaller binder cards */
+@media (max-width: 1200px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--space-4);
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 14px 10px;
+  }
+
+  .filters {
+    gap: 8px 10px;
+    padding: var(--space-3);
+  }
+
+  .pip {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cost {
+    width: 28px;
+    height: 28px;
+  }
+
+  .deckFoot {
+    flex-wrap: wrap;
+  }
+
+  .deckFoot > :last-child {
+    flex: 1 0 100%;
+    margin-left: 0;
+  }
+}
