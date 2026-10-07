@@ -35,6 +35,11 @@ export interface GameSessionState {
 }
 
 const MAX_NOTICES = 50;
+/**
+ * After an answer, the last prompt stays on screen this long while the server works. The next prompt usually
+ * arrives sooner and replaces it directly, so highlights and buttons don't blink off and on between decisions.
+ */
+const PROMPT_HOLD_MS = 350;
 
 /**
  * Client side of one game: applies server events for that game and sends the player's answers.
@@ -44,6 +49,7 @@ export class GameSession {
   readonly store: StoreApi<GameSessionState>;
   private readonly unsubscribers: (() => void)[] = [];
   private noticeId = 0;
+  private holdTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly api: Api,
@@ -104,7 +110,13 @@ export class GameSession {
     return this.store.getState();
   }
 
+  private clearHold(): void {
+    if (this.holdTimer) clearTimeout(this.holdTimer);
+    this.holdTimer = null;
+  }
+
   dispose(): void {
+    this.clearHold();
     this.unsubscribers.forEach((unsubscribe) => unsubscribe());
   }
 
@@ -112,9 +124,16 @@ export class GameSession {
   async respond(command: Command): Promise<void> {
     const { gameId, playerId } = this.store.getState();
     if (command.type !== 'action') {
-      // the server will ask again (or move on); until then nothing on the board is clickable
-      this.store.setState({ prompt: null, awaitingServer: true });
-      this.refreshInteraction();
+      // the server will ask again (or move on); until then clicks are ignored, and the answered prompt fades out
+      // only if nothing new arrives soon
+      this.store.setState({ awaitingServer: true });
+      this.clearHold();
+      this.holdTimer = setTimeout(() => {
+        this.holdTimer = null;
+        if (!this.store.getState().awaitingServer) return;
+        this.store.setState({ prompt: null });
+        this.refreshInteraction();
+      }, PROMPT_HOLD_MS);
     }
     try {
       switch (command.type) {
@@ -167,6 +186,7 @@ export class GameSession {
     this.applyView(promptGameView(method, data));
     if (this.store.getState().mode !== 'play') return;
     const prompt = parsePrompt(method, data as never);
+    this.clearHold();
     this.store.setState({ prompt, awaitingServer: false });
     this.refreshInteraction();
   }

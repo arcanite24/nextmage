@@ -37,8 +37,12 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
+      // Space always answers with the main button (as on the table, the big button is the one decision);
+      // a focused real button keeps its own Space and Enter
       if (isEditableEventTarget(event.target) || event.target instanceof HTMLButtonElement) return;
-      if ((event.code === 'Space' || event.key === 'Enter') && main?.shortcut === 'Space' && !awaiting) {
+      // Enter belongs to a focused card or plate; with nothing focused it also answers with the main button
+      const onObject = event.target instanceof HTMLElement && event.target.getAttribute('role') === 'button';
+      if ((event.code === 'Space' || (event.key === 'Enter' && !onObject)) && main?.shortcut === 'Space' && !awaiting) {
         event.preventDefault();
         onCommand(main.command);
       } else if (event.key === 'Escape' && cancel && !awaiting) {
@@ -55,7 +59,8 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
     return () => window.removeEventListener('keydown', onKey);
   }, [main, cancel, awaiting, canAct, onCommand]);
 
-  const deciding = interaction.mode !== 'waiting' && !awaiting;
+  // the answered prompt stays up while the server works (see the session's hold), so nothing blinks between decisions
+  const deciding = interaction.mode !== 'waiting';
   // other decisions are printed across the table; the corner keeps the priority and waiting lines
   const centred = deciding && interaction.mode !== 'priority';
   const headline = centred ? '' : deciding ? interaction.headline : status ?? interaction.headline;

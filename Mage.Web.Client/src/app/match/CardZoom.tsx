@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CardView, PermanentView } from '../../protocol/generated/views';
-import { stripMarkup } from '../../core/game/prompt';
+import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { useMatchUi } from './matchUi';
 import { STAGE_HEIGHT, STAGE_WIDTH, toStagePoint, useStage } from './stageContext';
@@ -36,7 +36,9 @@ export function CardZoom() {
   return (
     <div className={styles.zoom} style={{ left, top }} aria-hidden="true">
       <div className={styles.faces}>
-        <CardFace card={card} size="large" sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH }} />
+        {card.isAbility
+          ? <AbilityCard ability={card} sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH }} />
+          : <CardFace card={card} size="large" sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH }} />}
         {back && card.transformable && (
           <CardFace card={back} face="back" size="normal" sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH * 0.62 }} />
         )}
@@ -66,8 +68,6 @@ function details(card: PermanentView & CardView): string[] {
   if (card.nameController && card.nameOwner && card.nameOwner !== card.nameController) {
     lines.push(`Controlled by ${card.nameController}, owned by ${card.nameOwner}`);
   }
-  if (card.isAbility) {
-    lines.push(...(card.rules ?? []).map(stripMarkup).filter(Boolean).slice(0, 3));
-  }
+
   return lines;
 }

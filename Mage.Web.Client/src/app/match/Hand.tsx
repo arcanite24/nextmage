@@ -134,7 +134,7 @@ function HandCard({ card, choosing, index, left, rotate, drop, clickable, select
         setDragging(null);
       }}
       onKeyDown={(event) => {
-        if (clickable && (event.key === 'Enter' || event.key === ' ')) {
+        if (clickable && event.key === 'Enter') {
           event.preventDefault();
           onPlay(card.id!);
         }

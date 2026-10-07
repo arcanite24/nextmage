@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { api } from '../connection';
 import { useDecks, STARTER_PREFIX } from './decks';
 import { useEvents } from './events';
+import { warmCards } from '../ui/imageCache';
 import { useSession } from './session';
 import { toWire } from '../decks/deckModel';
 import type { DeckCardLists as WireDeck } from '../../protocol/generated/views';
@@ -59,6 +60,8 @@ export const usePlay = create<PlayState>((set, get) => ({
     useEvents.setState({ currentTournamentId: null });
     try {
       const { deck } = await useDecks.getState().loadForPlay(deckId);
+      // the whole deck's pictures download while the table is set up, before the first card is drawn
+      warmCards([...deck.cards, ...deck.sideboard].map((card) => ({ name: card.cardName, setCode: card.setCode ?? undefined, cardNumber: card.cardNumber ?? undefined })));
       const size = deck.cards.reduce((sum, card) => sum + card.amount, 0);
       if (size < MIN_DECK_SIZE) {
         throw new Error(`${deck.name || 'This deck'} has ${size} ${size === 1 ? 'card' : 'cards'}. Decks need at least ${MIN_DECK_SIZE}; add more in the deck builder.`);

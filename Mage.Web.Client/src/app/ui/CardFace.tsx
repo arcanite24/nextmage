@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { useCardImage } from '../../core/images/useCardImage';
+import { isDecoded, markDecoded } from './imageCache';
 import type { CardFace as Face, CardImageRef, ImageSize } from '../../core/images/imageLinks';
 import { ManaCost } from './ManaCost';
 import styles from './CardFace.module.css';
@@ -32,7 +33,8 @@ export function CardFace({ card, face = 'front', size = 'normal', sleeve, hidden
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showImage = typeof src === 'string' && src !== failedSrc;
-  const loaded = showImage && loadedSrc === src;
+  // a picture decoded earlier this session shows on the first frame: no text-frame flash when a card changes zone
+  const loaded = showImage && (loadedSrc === src || isDecoded(src));
   const name = card.displayName ?? card.name ?? '';
 
   return (
@@ -67,7 +69,10 @@ export function CardFace({ card, face = 'front', size = 'normal', sleeve, hidden
                 loading="lazy"
                 decoding="async"
                 draggable={false}
-                onLoad={() => setLoadedSrc(src)}
+                onLoad={() => {
+                  markDecoded(src);
+                  setLoadedSrc(src);
+                }}
                 onError={() => setFailedSrc(src)}
               />
             )}
