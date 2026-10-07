@@ -105,7 +105,7 @@ export function passLabel(view: GameView | null | undefined): string {
   }
 }
 
-function myAttackers(view: GameView | null | undefined): string[] {
+export function myAttackers(view: GameView | null | undefined): string[] {
   const me = view?.myPlayerId;
   return (view?.combat ?? []).flatMap((group) =>
     Object.entries(group.attackers ?? {})
@@ -113,7 +113,7 @@ function myAttackers(view: GameView | null | undefined): string[] {
       .map(([id]) => id));
 }
 
-function myBlockers(view: GameView | null | undefined): string[] {
+export function myBlockers(view: GameView | null | undefined): string[] {
   const me = view?.myPlayerId;
   return (view?.combat ?? []).flatMap((group) =>
     Object.entries(group.blockers ?? {})
