@@ -56,10 +56,6 @@
   font-size: 34px !important;
 }
 
-.mainAttack {
-  background: linear-gradient(180deg, #ffcf74, var(--decision)) !important;
-}
-
 .waiting {
   display: grid;
   place-items: center;
@@ -98,7 +94,7 @@
   padding: 6px;
   border-radius: var(--radius-control);
   background: var(--mat-600);
-  box-shadow: inset 0 0 0 1px var(--ink-ghost), var(--shadow-lifted);
+  box-shadow: inset 0 0 0 1px var(--ink-ghost), var(--shadow-held);
 }
 
 .menuItem {
@@ -119,7 +115,7 @@
 
 .menuItem kbd {
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--ink-dim);
 }
 
@@ -129,14 +125,8 @@
   background: var(--ink-ghost);
 }
 
-/* nothing to do: the corner says the game is moving on by itself */
+/* nothing to do: the corner says, quietly, that the game is moving on by itself */
 .passing {
-  color: var(--ink-soft);
-  animation: passing 600ms ease-in-out infinite alternate;
+  color: var(--ink-dim);
 }
 
-@keyframes passing {
-  from {
-    opacity: 0.55;
-  }
-}

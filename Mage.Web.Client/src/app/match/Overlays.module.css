@@ -317,7 +317,6 @@
 
 .victory {
   color: var(--ink-strong);
-  text-shadow: 0 0 60px rgb(233 228 214 / 0.35);
 }
 
 .defeat {

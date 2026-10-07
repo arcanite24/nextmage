@@ -32,7 +32,7 @@ export function BuildScreen() {
         <div className={styles.empty}>
           <h1>Nothing to build</h1>
           <p>Deck building for this event isn't open in this tab.</p>
-          <Button variant="decision" onClick={() => navigate('/events')}>Back to events</Button>
+          <Button variant="print" onClick={() => navigate('/events')}>Back to events</Button>
         </div>
       </div>
     );
@@ -84,7 +84,6 @@ function Builder({ construct }: { construct: ConstructState }) {
     <div className={styles.screen}>
       <header className={styles.top}>
         <div>
-          <span className={styles.kicker}>{construct.kind === 'construct' ? 'Deck building' : 'Sideboarding'}</span>
           <h1 className={styles.title}>{construct.kind === 'construct' ? 'Build your deck' : 'Adjust your deck'}</h1>
         </div>
         <div className={styles.topRight}>

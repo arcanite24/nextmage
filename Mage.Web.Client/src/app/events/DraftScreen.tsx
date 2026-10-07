@@ -67,7 +67,7 @@ export function DraftScreen() {
         <div className={styles.center}>
           <h1 className={styles.title}>No draft here</h1>
           <p className={styles.sub}>This draft isn't open in this tab.</p>
-          <Button variant="decision" onClick={() => navigate('/events')}>Back to events</Button>
+          <Button variant="print" onClick={() => navigate('/events')}>Back to events</Button>
         </div>
       </div>
     );

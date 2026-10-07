@@ -13,7 +13,7 @@ export function RouteError() {
       <p><code>{message}</code></p>
       <div style={{ display: 'flex', gap: 12 }}>
         <Button variant="print" onClick={() => window.location.reload()}>Reload</Button>
-        <Button variant="decision" onClick={() => window.location.assign('/')}>Back to Play</Button>
+        <Button variant="print" onClick={() => window.location.assign('/')}>Back to Play</Button>
       </div>
     </div>
   );

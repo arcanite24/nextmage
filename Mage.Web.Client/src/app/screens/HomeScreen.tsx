@@ -1,4 +1,4 @@
-import { Bot, SlidersHorizontal, Swords, Trophy, Users } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rosterOf, sleeveFor, useDecks } from '../stores/decks';
@@ -10,13 +10,12 @@ import { AiSettingsDialog } from './AiSettingsDialog';
 import { describeAi } from './aiSetup';
 import styles from './HomeScreen.module.css';
 
-type Mode = 'ai' | 'friend' | 'table' | 'event';
+type Mode = 'ai' | 'friend';
 
-const MODES: { id: Mode; label: string; detail: string; icon: typeof Bot }[] = [
-  { id: 'ai', label: 'Against the AI', detail: "A game against the server's AI.", icon: Bot },
-  { id: 'friend', label: 'Against a friend', detail: 'Host a table your friends can join.', icon: Users },
-  { id: 'table', label: 'Join a table', detail: 'Browse open games on this server.', icon: Swords },
-  { id: 'event', label: 'Events', detail: 'Drafts, sealed and tournaments.', icon: Trophy },
+// open tables and events have their own pages in the rail; here the only question is who you play
+const MODES: { id: Mode; label: string }[] = [
+  { id: 'ai', label: 'The AI' },
+  { id: 'friend', label: 'A friend' },
 ];
 
 /** Home: your deck on your mat, one decision away from a game. */
@@ -43,12 +42,6 @@ export function HomeScreen() {
         break;
       case 'friend':
         navigate('/tables', { state: { host: selected.id } });
-        break;
-      case 'table':
-        navigate('/tables');
-        break;
-      case 'event':
-        navigate('/events');
         break;
     }
   }
@@ -85,30 +78,25 @@ export function HomeScreen() {
         <MatPrint card={selected?.cover ?? null} />
         <div className={styles.deckTitle}>
           <h1 className={styles.deckName}>{selected?.name ?? 'Choose a deck'}</h1>
-          <p className={styles.deckKicker}>{selected?.note ?? ' '}</p>
+          <p className={styles.deckNote}>{selected?.note ?? ' '}</p>
         </div>
 
         <div className={styles.playZone} role="group" aria-labelledby="play-zone-label">
           <h2 id="play-zone-label" className={styles.zoneLabel}>Play</h2>
-          <div className={styles.modes} role="radiogroup" aria-label="How to play">
-            {MODES.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={mode === item.id}
-                  className={[styles.mode, mode === item.id ? styles.modeOn : ''].join(' ')}
-                  onClick={() => setMode(item.id)}
-                  disabled={busy}
-                >
-                  <Icon size={20} aria-hidden="true" />
-                  <span className={styles.modeLabel}>{item.label}</span>
-                  <span className={styles.modeDetail}>{item.detail}</span>
-                </button>
-              );
-            })}
+          <div className={styles.modes} role="radiogroup" aria-label="Opponent">
+            {MODES.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="radio"
+                aria-checked={mode === item.id}
+                className={[styles.mode, mode === item.id ? styles.modeOn : ''].join(' ')}
+                onClick={() => setMode(item.id)}
+                disabled={busy}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
           {mode === 'ai' && (
             <button type="button" className={styles.aiSetup} onClick={() => setAiOpen(true)} disabled={busy}>
@@ -117,6 +105,7 @@ export function HomeScreen() {
               <span className={styles.aiSetupAction}>Change</span>
             </button>
           )}
+          {mode === 'friend' && <p className={styles.modeNote}>You host a table with this deck; your friend joins it from Tables.</p>}
           {play.error && <p className={styles.error} role="alert">{play.error}</p>}
           <div className={styles.playRow}>
             {busy && (

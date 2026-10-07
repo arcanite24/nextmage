@@ -21,9 +21,13 @@
   position: absolute;
   inset: -4px;
   border-radius: 9px;
-  box-shadow: 0 0 0 2px var(--ink-soft), 0 0 14px 2px rgb(233 228 214 / 0.35);
-  animation: breathe 1.6s ease-in-out infinite;
+  /* still ink: on a full board, a dozen breathing halos would drown the one thing that matters */
+  box-shadow: 0 0 0 2px var(--ink-soft);
   pointer-events: none;
+}
+
+.clickable:hover::after {
+  box-shadow: 0 0 0 3px var(--ink-strong);
 }
 
 .clickable:hover,
@@ -32,7 +36,7 @@
 }
 
 .clickable:focus-visible::after {
-  box-shadow: 0 0 0 3px var(--decision);
+  box-shadow: 0 0 0 3px var(--ink-strong), 0 0 0 6px rgb(233 228 214 / 0.25);
 }
 
 /* chosen in the current decision: amber, steady */
@@ -160,8 +164,4 @@
   box-shadow: var(--shadow-placed);
 }
 
-@keyframes breathe {
-  50% {
-    box-shadow: 0 0 0 2px var(--ink), 0 0 20px 4px rgb(233 228 214 / 0.45);
-  }
-}
+

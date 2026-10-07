@@ -49,7 +49,7 @@ export function AiSettingsDialog({ open, onOpenChange }: { open: boolean; onOpen
       footer={(
         <>
           <Button variant="quiet" onClick={() => setOptions(DEFAULT_AI_OPTIONS)}>Restore defaults</Button>
-          <Button variant="decision" onClick={() => onOpenChange(false)}>Done</Button>
+          <Button variant="print" onClick={() => onOpenChange(false)}>Done</Button>
         </>
       )}
     >

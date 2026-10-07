@@ -44,15 +44,6 @@
   gap: var(--space-4);
 }
 
-.kicker {
-  color: var(--ink-dim);
-  font-family: var(--font-print);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  letter-spacing: var(--tracking-print-wide);
-  text-transform: uppercase;
-}
-
 .title {
   font-size: var(--text-3xl);
   line-height: 1;

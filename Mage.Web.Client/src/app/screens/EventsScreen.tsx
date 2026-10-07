@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Eye, Layers, Package, Swords, Trophy } from 'lucide-react';
+import { ChevronRight, Eye, Layers, Package, Swords, Trophy } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { PlayerType, TableView } from '../../protocol/generated/views';
@@ -64,7 +64,7 @@ export function EventsScreen() {
     <div className={styles.page}>
       <header className={styles.head}>
         <h1 className={styles.title}>Events</h1>
-        <Button variant="decision" icon={<Trophy size={18} />} onClick={() => setHosting('draft')}>Host an event</Button>
+        <Button variant="print" icon={<Trophy size={18} />} onClick={() => setHosting('draft')}>Host an event</Button>
       </header>
 
       {mine.length > 0 && (
@@ -84,15 +84,17 @@ export function EventsScreen() {
       {open.length === 0 && running.length === 0 ? (
         <Zone label="Start one" className={styles.starter}>
           <p className={styles.empty}>Nothing is running on the server. Empty seats can be filled with AI players.</p>
-          <div className={styles.kinds}>
+          <ul className={styles.starts}>
             {KINDS.map((option) => (
-              <button key={option.value} type="button" className={styles.kind} onClick={() => setHosting(option.value)}>
-                {option.icon}
-                <strong>{option.label}</strong>
-                <span>{option.detail}</span>
-              </button>
+              <li key={option.value}>
+                <button type="button" className={styles.start} onClick={() => setHosting(option.value)}>
+                  <strong>{option.label}</strong>
+                  <span>{option.detail}</span>
+                  <ChevronRight size={20} aria-hidden="true" />
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
         </Zone>
       ) : (
       <div className={styles.columns}>

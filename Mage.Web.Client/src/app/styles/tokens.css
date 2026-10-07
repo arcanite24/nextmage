@@ -33,6 +33,8 @@
   /* damage, destructive actions, errors */
   --oxblood: #8a2f2a;
   --oxblood-ink: #f0b3a9;
+  /* oxblood lit for strokes drawn over the dark mat (attack arrows) */
+  --oxblood-lit: #c9473b;
   --danger-text: #e5877c;
 
   /* positive outcomes (victory, legal) */

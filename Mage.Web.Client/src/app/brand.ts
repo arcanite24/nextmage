@@ -1,2 +1,2 @@
-/** Product name shown in the UI. The final name is still open (see PRODUCT.md); change it here only. */
+/** Product name shown in the UI (see PRODUCT.md). Change it here only. */
 export const APP_NAME = 'Playmat';

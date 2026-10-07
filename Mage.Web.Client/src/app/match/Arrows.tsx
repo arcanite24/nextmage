@@ -90,7 +90,7 @@ export function Arrows({ sourceId, targetIds, live, links, attacks }: {
           <path d="M0 0 L10 5 L0 10 z" fill="var(--decision)" />
         </marker>
         <marker id="arrow-attack" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4.2" markerHeight="4.2" orient="auto-start-reverse">
-          <path d="M0 0 L10 5 L0 10 L2.5 5 z" fill="#d9493b" />
+          <path d="M0 0 L10 5 L0 10 L2.5 5 z" fill="var(--oxblood-lit)" />
         </marker>
       </defs>
       {assault.map(([attacker, defender], index) => {
