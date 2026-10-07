@@ -12,7 +12,12 @@ import { EventsScreen } from './screens/EventsScreen';
 import { GameScreen } from './screens/GameScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
+import { RouteError } from './screens/RouteError';
 import { TablesScreen } from './screens/TablesScreen';
+import { DraftScreen } from './events/DraftScreen';
+import { BuildScreen } from './events/BuildScreen';
+import { EventScreen } from './events/EventScreen';
+import { useEvents } from './stores/events';
 import { useGames } from './stores/games';
 import { usePlay } from './stores/play';
 import { useSession } from './stores/session';
@@ -32,6 +37,14 @@ function SignedIn() {
     navigate(`/game/${latestGameId}`);
   }, [latestGameId, navigate]);
 
+  // drafts, deck building and tournaments move the player along as the server advances them
+  const redirect = useEvents((state) => state.redirect);
+  useEffect(() => {
+    if (!redirect) return;
+    useEvents.getState().clearRedirect();
+    navigate(redirect);
+  }, [redirect, navigate]);
+
   // come back here after signing in
   if (phase !== 'signedIn') return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   return <Outlet />;
@@ -41,15 +54,20 @@ const router = createBrowserRouter([
   { path: '/login', element: <LoginScreen /> },
   {
     element: <SignedIn />,
+    errorElement: <RouteError />,
     children: [
       { path: '/game/:gameId', element: <GameScreen /> },
+      { path: '/draft/:draftId', element: <DraftScreen /> },
+      { path: '/build/:tableId', element: <BuildScreen /> },
       {
         element: <AppShell />,
+        errorElement: <RouteError />,
         children: [
           { path: '/', element: <HomeScreen /> },
           { path: '/decks', element: <DecksScreen /> },
           { path: '/decks/:deckId', element: <DeckBuilderScreen /> },
           { path: '/events', element: <EventsScreen /> },
+          { path: '/event/:tournamentId', element: <EventScreen /> },
           { path: '/tables', element: <TablesScreen /> },
         ],
       },

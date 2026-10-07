@@ -32,7 +32,7 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
         ClientCallback clientCallback = (ClientCallback) callback.getCallbackObject();
         clientCallback.decompressData(); // no-op unless the callback was compressed for a desktop client
         try {
-            conn.send(JsonCodec.GSON.toJson(clientCallback));
+            WebSocketServerImpl.sendText(conn, JsonCodec.GSON.toJson(clientCallback));
         } catch (Exception e) {
             throw new HandleCallbackException("Error sending WebSocket message", e);
         }
