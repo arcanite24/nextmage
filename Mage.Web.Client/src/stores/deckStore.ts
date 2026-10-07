@@ -143,18 +143,16 @@ function cloneSearchSettings(settings: DeckSearchSettings): DeckSearchSettings {
 }
 
 function filtersToSearchSettings(filters: CardFilters): DeckSearchSettings {
-    const {
-        sortBy: _sortBy,
-        sortDirection: _sortDirection,
-        ...searchSettings
-    } = filters;
+    const searchSettings: DeckSearchSettings & Partial<Pick<CardFilters, 'sortBy' | 'sortDirection'>> = { ...filters };
+    delete searchSettings.sortBy;
+    delete searchSettings.sortDirection;
     return cloneSearchSettings(searchSettings);
 }
 
 /**
  * Calculate deck colors from card list
  */
-function calculateDeckColors(cards: DeckCardInfo[]): DeckColors {
+function calculateDeckColors(): DeckColors {
     // Note: We don't have color info in DeckCardInfo, so this would need
     // to be enhanced with card data lookup. For now, return empty.
     // In a full implementation, we'd cache card color data.
@@ -300,7 +298,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
             const deckToSave: DeckCardLists = {
                 ...currentDeck,
                 coverCard: getCoverCard(currentDeck.cards),
-                colors: calculateDeckColors(currentDeck.cards),
+                colors: calculateDeckColors(),
                 updatedAt: Date.now(),
             };
 
@@ -333,7 +331,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
                 id: undefined,
                 name: trimmedName,
                 coverCard: getCoverCard(currentDeck.cards),
-                colors: calculateDeckColors(currentDeck.cards),
+                colors: calculateDeckColors(),
                 createdAt: now,
                 updatedAt: now,
             };

@@ -78,11 +78,12 @@ function generateActionSummary(callback: ClientCallback, gameView?: GameView): s
   switch (method) {
     case 'gameInit':
       return `Game initialized - Turn ${gameView?.turn || 0}`;
-    case 'gameUpdate':
+    case 'gameUpdate': {
       const turn = gameView?.turn || 0;
       const phase = gameView?.phase || 'UNKNOWN';
       const step = gameView?.step || 'UNKNOWN';
       return `Update - Turn ${turn} ${phase}/${step}`;
+    }
     case 'gameInform':
     case 'gameInformPersonal':
       return `Inform: ${data.message || 'Game info'}`;
@@ -168,7 +169,7 @@ export const useDebugStore = create<DebugState & DebugActions>()(
       },
 
       recordAction: (callback) => {
-        const { config, actions, matchId } = get();
+        const { config, matchId } = get();
 
         if (!config.autoTrack || !matchId) return;
 

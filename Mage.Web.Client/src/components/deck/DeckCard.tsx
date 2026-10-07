@@ -7,7 +7,6 @@
 
 import React from 'react';
 import { DeckSummary } from '../../services/DeckStorageService';
-import { cardImageService } from '../../services/CardImageService';
 import { ManaSymbol } from '../common/ManaSymbols';
 import './DeckCard.css';
 

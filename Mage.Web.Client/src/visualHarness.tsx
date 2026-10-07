@@ -2143,7 +2143,8 @@ function resetStores(scenario: VisualScenario) {
                 return player;
               }
 
-              const { [removedPermanentId]: _removed, ...battlefield } = player.battlefield;
+              const battlefield = { ...player.battlefield };
+              delete battlefield[removedPermanentId];
               return {
                 ...player,
                 battlefield,

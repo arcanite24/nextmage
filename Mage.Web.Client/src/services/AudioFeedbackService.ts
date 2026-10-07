@@ -20,7 +20,7 @@ class AudioFeedbackService {
   private musicOscillator: OscillatorNode | null = null;
   private musicGain: GainNode | null = null;
 
-  unlock(settings: ClientSettings): boolean {
+  unlock(): boolean {
     if (typeof window === 'undefined') return false;
     const AudioContextCtor = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextCtor) return false;
@@ -46,7 +46,7 @@ class AudioFeedbackService {
       this.stopMatchMusic();
       return;
     }
-    if (!this.unlock(settings) || !this.audioContext) return;
+    if (!this.unlock() || !this.audioContext) return;
 
     const volume = (settings.masterVolume / 100) * (settings.musicVolume / 100) * 0.025;
     if (this.musicGain) {
@@ -81,7 +81,7 @@ class AudioFeedbackService {
 
   private playTone(frequency: number, settings: ClientSettings): void {
     if (settings.reducedAudioMode || settings.masterVolume <= 0 || settings.effectsVolume <= 0) return;
-    if (!this.unlock(settings) || !this.audioContext) return;
+    if (!this.unlock() || !this.audioContext) return;
 
     const now = this.audioContext.currentTime;
     const oscillator = this.audioContext.createOscillator();

@@ -144,7 +144,7 @@ export interface SimpleCardView {
   rules?: string[];
 }
 
-export interface SimpleCardsView extends Record<UUID, SimpleCardView> { }
+export type SimpleCardsView = Record<UUID, SimpleCardView>;
 
 export interface DeckView {
   name: string;
@@ -407,11 +407,10 @@ export interface SearchSimpleCardView {
   manaCostRightStr?: string[];
 }
 
-export interface SearchCardView extends SearchSimpleCardView {
-  // Full CardView has more fields, but for deck editor search results, 
-  // the backend is sending a View created from a MockCard which has limited data.
-  // We can extend this as needed.
-}
+// Full CardView has more fields, but for deck editor search results,
+// the backend is sending a View created from a MockCard which has limited data.
+// We can extend this as needed.
+export type SearchCardView = SearchSimpleCardView;
 
 export interface ExpansionSetInfo {
   setCode: string;

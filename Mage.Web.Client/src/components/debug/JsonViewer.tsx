@@ -43,19 +43,9 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
     );
   };
 
-  if (!isObject) {
-    return renderPrimitive(data);
-  }
-
-  const entries = Object.entries(data as Record<string, unknown>);
-
-  const matchesSearch = useMemo(() => {
-    if (!searchTerm) return true;
-    const jsonStr = JSON.stringify(data).toLowerCase();
-    return jsonStr.includes(searchTerm.toLowerCase());
-  }, [data, searchTerm]);
-
   const filteredEntries = useMemo(() => {
+    if (!isObject) return [];
+    const entries = Object.entries(data as Record<string, unknown>);
     if (!searchTerm) return entries;
 
     return entries.filter(([key, value]) => {
@@ -63,7 +53,11 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
       const valueMatch = JSON.stringify(value).toLowerCase().includes(searchTerm.toLowerCase());
       return keyMatch || valueMatch;
     });
-  }, [entries, searchTerm]);
+  }, [data, isObject, searchTerm]);
+
+  if (!isObject) {
+    return renderPrimitive(data);
+  }
 
   if (isEmpty) {
     return (

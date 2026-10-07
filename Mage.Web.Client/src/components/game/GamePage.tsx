@@ -646,6 +646,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
                 <CardPreviewModal
                     card={previewCard}
                     initialFace={previewInitialFace ?? undefined}
+                    showGameActions
                     onClose={() => {
                         setPreviewCard(null);
                         setPreviewInitialFace(null);

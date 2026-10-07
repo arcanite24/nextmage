@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useSessionStore, useDebugStore } from '../../stores';
 import { GameView, PhaseStep, SkipPrioritySteps } from '../../types';
@@ -130,7 +130,7 @@ interface PhaseStepIndicatorProps {
 }
 
 const PhaseStepIndicator: React.FC<PhaseStepIndicatorProps> = React.memo(({
-    id, label, stepKey, isActive, isStopSet, canSet, onClick
+    label, isActive, isStopSet, canSet, onClick
 }) => {
     return (
         <div

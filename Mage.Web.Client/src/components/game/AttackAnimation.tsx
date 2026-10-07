@@ -7,10 +7,9 @@
  */
 
 import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence, useAnimation, Variants } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useShallow } from 'zustand/react/shallow';
 import { useAnimationStore } from '../../stores';
-import { cardImageService } from '../../services/CardImageService';
 import './AttackAnimation.css';
 
 interface PlainRect {
@@ -31,18 +30,24 @@ interface CardSnapshot {
     rect: PlainRect;
 }
 
+/** Random visual jitter, rolled once per attack so renders stay pure. */
+interface AttackJitter {
+    rotation: number;
+    sparkDistances: number[];
+}
+
+const SPARK_COUNT = 8;
+
+const rollAttackJitter = (): AttackJitter => ({
+    rotation: Math.random() * 10 - 5,
+    sparkDistances: Array.from({ length: SPARK_COUNT }, () => 50 + Math.random() * 30),
+});
+
 const getElementRect = (id: string): DOMRect | null => {
     const el = document.getElementById(id);
     if (!el) return null;
     return el.getBoundingClientRect();
 };
-
-const toPlainRect = (rect: DOMRect): PlainRect => ({
-    left: rect.left,
-    top: rect.top,
-    width: rect.width,
-    height: rect.height
-});
 
 const getElementCenter = (rect: PlainRect | DOMRect): Point => ({
     x: rect.left + rect.width / 2,
@@ -63,8 +68,8 @@ export const AttackAnimation: React.FC = React.memo(() => {
     const [targetCenter, setTargetCenter] = useState<Point | null>(null);
     const [showImpact, setShowImpact] = useState(false);
     const [animationPhase, setAnimationPhase] = useState<'idle' | 'attacking' | 'returning'>('idle');
+    const [attackJitter, setAttackJitter] = useState<AttackJitter>(rollAttackJitter);
 
-    const controls = useAnimation();
     const originalCardRef = useRef<HTMLElement | null>(null);
 
     // 1. Prepare Snapshot Effect
@@ -124,6 +129,7 @@ export const AttackAnimation: React.FC = React.memo(() => {
         const normalizedRect: PlainRect = { left, top, width, height };
 
         setTargetCenter(getElementCenter(targetRect));
+        setAttackJitter(rollAttackJitter());
         setAttackerSnapshot({
             id: currentAttack.attackerId,
             imageUrl,
@@ -147,7 +153,7 @@ export const AttackAnimation: React.FC = React.memo(() => {
             x: dx * 0.85,
             y: dy * 0.85,
             scale: 1.25, // Slightly larger for impact
-            rotate: Math.random() * 10 - 5,
+            rotate: attackJitter.rotation,
             transition: { duration: 0.4, ease: "backIn" as any } // Hammer hit feel
         },
         impact: {
@@ -321,9 +327,8 @@ export const AttackAnimation: React.FC = React.memo(() => {
                         />
 
                         {/* Spark particles */}
-                        {[...Array(8)].map((_, i) => {
-                            const angle = (i / 8) * Math.PI * 2;
-                            const distance = 50 + Math.random() * 30;
+                        {attackJitter.sparkDistances.map((distance, i) => {
+                            const angle = (i / SPARK_COUNT) * Math.PI * 2;
                             return (
                                 <motion.div
                                     key={`spark-${i}`}

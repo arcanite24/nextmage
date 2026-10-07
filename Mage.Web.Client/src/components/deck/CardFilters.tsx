@@ -76,14 +76,15 @@ export const CardFilters: React.FC<CardFiltersProps> = ({ onSearch }) => {
         updateEditorModeConfig,
     } = useDeckStore();
     const modeConfig = editorConfig.modes[editorMode];
+    const currentDeckFormat = currentDeck?.format;
     const formatOptions = useMemo(() => {
         const options = new Set(deckTypeOptions);
-        if (currentDeck?.format) options.add(currentDeck.format);
+        if (currentDeckFormat) options.add(currentDeckFormat);
         if (filters.format) options.add(filters.format);
         return Array.from(options)
             .filter(Boolean)
             .sort((a, b) => a.localeCompare(b));
-    }, [currentDeck?.format, deckTypeOptions, filters.format]);
+    }, [currentDeckFormat, deckTypeOptions, filters.format]);
     const setCodeOptions = useMemo(() => {
         const byCode = new Map<string, ExpansionSetInfo>();
         for (const setInfo of setOptions) {

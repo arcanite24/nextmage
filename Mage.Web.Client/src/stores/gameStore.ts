@@ -993,7 +993,6 @@ export const useGameStore = create<GameState & GameActions>()(
 
                     case 'endGameInfo':
                         // This provides richer info than gameOver
-                        // @ts-ignore
                         get().setEndGameInfo(callback.data as EndGameInfo);
                         break;
 

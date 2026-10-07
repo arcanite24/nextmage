@@ -2,8 +2,6 @@ export * from './GamePage';
 export * from './Battlefield';
 export * from './Hand';
 export * from './PhaseIndicator';
-export * from './PlayerPanel';
-export * from './Stack';
 export * from './ArenaStack';
 export * from './ArenaPlayerHUD';
 export * from './ArenaOpponentHUD';
