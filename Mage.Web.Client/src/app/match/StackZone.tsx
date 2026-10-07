@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import type { CardView, StackAbilityView } from '../../protocol/generated/views';
+import type { CardView } from '../../protocol/generated/views';
+import { isStackAbility } from '../../core/game/cards';
 import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { useFlip } from './flip';
@@ -54,7 +55,7 @@ function StackItem({ item, index, total, clickable, selected, sleeve, onClick, o
 }) {
   const ref = useRef<HTMLLIElement>(null);
   const setZoom = useMatchUi((state) => state.setZoom);
-  const ability = item.isAbility ? (item as StackAbilityView) : null;
+  const ability = isStackAbility(item) ? item : null;
   const face = ability?.sourceCard ?? item;
   useFlip(ability ? item.id : (item.cardId ?? item.id), ref, { fallbackOrigin: origin });
 

@@ -99,7 +99,15 @@ describe('interaction model', () => {
     const optional = deriveInteraction(view(), parsePrompt('GAME_TARGET', {
       message: 'Choose up to one target', targets: ['bear'], flag: false,
     }));
-    expect(optional.mainButton).toMatchObject({ label: 'Skip', command: { type: 'uuid', id: null } });
+    // nothing chosen yet on an optional choice (e.g. while casting): Cancel abandons it
+    expect(optional.mainButton).toBeNull();
+    expect(optional.secondaryButtons).toEqual([{ label: 'Cancel', command: { type: 'uuid', id: null }, tone: 'danger' }]);
+    expect(required.secondaryButtons).toEqual([]);
+
+    const chosen = deriveInteraction(view(), parsePrompt('GAME_TARGET', {
+      message: 'Choose up to two targets', targets: ['bear', OPPONENT], flag: false, options: { chosenTargets: ['bear'] },
+    }));
+    expect(chosen.mainButton).toMatchObject({ label: 'Done', command: { type: 'uuid', id: null } });
   });
 
   test('targets among cards that are not on the board use a card picker', () => {

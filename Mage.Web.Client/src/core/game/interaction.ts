@@ -193,15 +193,14 @@ export function deriveInteraction(view: GameView | null | undefined, prompt: Pro
 
     case 'target': {
       const selected = new Set(prompt.chosen);
-      const canFinish = !prompt.required || prompt.doneLabel !== null;
+      // an optional choice (always the case while casting or activating) can be abandoned: answering nothing
+      // cancels the spell or ability, or skips an optional effect
+      const canAbandon = !prompt.required && selected.size === 0;
+      const canFinish = selected.size > 0 && (!prompt.required || prompt.doneLabel !== null);
       const mainButton: PromptButton | null = canFinish
-        ? {
-          label: prompt.doneLabel ?? (selected.size > 0 ? 'Done' : 'Skip'),
-          command: uuid(null),
-          tone: 'primary',
-          shortcut: 'Space',
-        }
+        ? { label: prompt.doneLabel ?? 'Done', command: uuid(null), tone: 'primary', shortcut: 'Space' }
         : null;
+      const secondaryButtons: PromptButton[] = canAbandon ? [{ label: 'Cancel', command: uuid(null), tone: 'danger' }] : [];
       return {
         mode: prompt.cards ? 'pickCards' : 'target',
         prompt,
@@ -209,7 +208,7 @@ export function deriveInteraction(view: GameView | null | undefined, prompt: Pro
         clickable: clickMap(new Set([...prompt.targets, ...selected])),
         selected,
         mainButton,
-        secondaryButtons: [],
+        secondaryButtons,
       };
     }
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { CardImageRef } from '../../core/images/imageLinks';
 import type { CardView, GameView } from '../../protocol/generated/views';
+import { isStackAbility } from '../../core/game/cards';
 import { warmCards } from '../ui/imageCache';
 
 function refKey(card: CardImageRef): string {
@@ -31,7 +32,7 @@ export function useWarmImages(view: GameView | null) {
   useEffect(() => {
     if (!view) return;
     const fresh = cardsIn(view).filter((card) => {
-      if (card.isAbility && !card.expansionSetCode) return false;
+      if (isStackAbility(card)) return false;
       const key = refKey(card);
       if (seen.current.has(key)) return false;
       seen.current.add(key);

@@ -6,6 +6,7 @@ import type { CardView, GameEndView } from '../../protocol/generated/views';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { PromptText } from '../ui/PromptText';
+import { cleanText } from '../ui/text';
 import styles from './Overlays.module.css';
 
 /** Opening hand, shown large: keep it or mulligan. */
@@ -62,7 +63,7 @@ export function CardPicker({ title, cards, interaction, sleeve, onCommand }: {
     <div className={styles.scrim} role="dialog" aria-modal="true" aria-label={title}>
       <div className={styles.panel}>
         <header className={styles.panelHead}>
-          <h2 className={styles.panelTitle}>{title}</h2>
+          <h2 className={styles.panelTitle}>{cleanText(title)}</h2>
           <Button variant="quiet" size="sm" onClick={() => setHidden(true)}>See the board</Button>
         </header>
         <p className={styles.panelText}><PromptText text={interaction.headline} /></p>
@@ -106,11 +107,17 @@ export function ChoicePanel({ prompt, onCommand }: { prompt: Prompt; onCommand(c
             {prompt.choices.map((choice, index) => (
               <button key={choice.id} type="button" className={styles.option} onClick={() => onCommand({ type: 'uuid', id: choice.id })}>
                 <span className={styles.optionKey}>{index + 1}</span>
-                <span><PromptText text={stripMarkup(choice.text)} /></span>
+                {/* the server numbers its choices; the key already shows the number */}
+                <span><PromptText text={stripMarkup(choice.text).replace(/^\d+\.\s*/, '')} /></span>
               </button>
             ))}
           </div>
           <NumberKeys count={prompt.choices.length} onPick={(index) => onCommand({ type: 'uuid', id: prompt.choices[index].id })} />
+          {/* backing out: nothing is cast or activated */}
+          <EscapeKey onEscape={() => onCommand({ type: 'uuid', id: null })} />
+          <footer className={styles.panelFoot}>
+            <Button variant="quiet" onClick={() => onCommand({ type: 'uuid', id: null })}>Cancel</Button>
+          </footer>
         </PanelShell>
       );
     case 'chooseChoice':
@@ -141,13 +148,27 @@ export function ChoicePanel({ prompt, onCommand }: { prompt: Prompt; onCommand(c
 
 function PanelShell({ title, children, wide }: { title: string; children: React.ReactNode; wide?: boolean }) {
   return (
-    <div className={styles.scrim} role="dialog" aria-modal="true" aria-label={title}>
+    <div className={styles.scrim} role="dialog" aria-modal="true" aria-label={cleanText(title)}>
       <div className={[styles.panel, wide ? styles.panelWide : styles.panelNarrow].join(' ')}>
         <h2 className={styles.panelTitle}>{title}</h2>
         {children}
       </div>
     </div>
   );
+}
+
+function EscapeKey({ onEscape }: { onEscape(): void }) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onEscape();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onEscape]);
+  return null;
 }
 
 function NumberKeys({ count, onPick }: { count: number; onPick(index: number): void }) {

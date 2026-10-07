@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CardView, PermanentView } from '../../protocol/generated/views';
+import { isStackAbility } from '../../core/game/cards';
 import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { useMatchUi } from './matchUi';
@@ -36,7 +37,7 @@ export function CardZoom() {
   return (
     <div className={styles.zoom} style={{ left, top }} aria-hidden="true">
       <div className={styles.faces}>
-        {card.isAbility
+        {isStackAbility(card)
           ? <AbilityCard ability={card} sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH }} />
           : <CardFace card={card} size="large" sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH }} />}
         {back && card.transformable && (
