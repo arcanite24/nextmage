@@ -77,7 +77,7 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
   const navigate = useNavigate();
   const [deck, setDeck] = useState(initial);
   const [zone, setZone] = useState<DeckZone>('cards');
-  const [preview, setPreview] = useState<{ card: CardView; x: number; y: number } | null>(null);
+  const [preview, setPreview] = useState<{ card: CardView; anchor: DOMRect; side: 'auto' | 'left' } | null>(null);
   const allEntries = useMemo(() => [...deck.cards, ...deck.sideboard], [deck.cards, deck.sideboard]);
   const info = useCardInfo(allEntries);
   const format = deck.format || DEFAULT_FORMAT;
@@ -126,7 +126,9 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
       return current;
     });
   }, [zone]);
-  const onPreview = useCallback((card: CardView | null, x = 0, y = 0) => setPreview(card ? { card, x, y } : null), []);
+  // collection cards preview beside the card; deck rows preview to the left of the deck list
+  const onPreview = useCallback((card: CardView | null, anchor?: DOMRect) => setPreview(card && anchor ? { card, anchor, side: 'auto' } : null), []);
+  const onRowPreview = useCallback((card: CardView | null, anchor?: DOMRect) => setPreview(card && anchor ? { card, anchor, side: 'left' } : null), []);
 
   return (
     <div className={styles.page}>
@@ -139,7 +141,7 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
         saving={saving}
         onZone={setZone}
         onChange={setDeck}
-        onPreview={onPreview}
+        onPreview={onRowPreview}
         onDone={() => navigate('/decks')}
         onPlay={() => {
           useDecks.getState().select(deck.id!);
@@ -159,7 +161,7 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
   saving: boolean;
   onZone(zone: DeckZone): void;
   onChange(update: (deck: DeckCardLists) => DeckCardLists): void;
-  onPreview(card: CardView | null, x?: number, y?: number): void;
+  onPreview(card: CardView | null, anchor?: DOMRect): void;
   onDone(): void;
   onPlay(): void;
 }) {
@@ -237,7 +239,7 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
                 <li
                   key={row.key}
                   className={styles.row}
-                  onPointerEnter={(event) => row.card && onPreview(row.card, event.clientX, event.clientY)}
+                  onPointerEnter={(event) => row.card && onPreview(row.card, event.currentTarget.closest('aside')?.getBoundingClientRect() ?? event.currentTarget.getBoundingClientRect())}
                   onPointerLeave={() => onPreview(null)}
                 >
                   <span className={styles.rowCount}>{row.entry.amount}</span>
@@ -269,7 +271,10 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
       <div className={styles.curve} aria-label="Mana curve">
         {curve.map((value, index) => (
           <div key={index} className={styles.bar} title={`${value} ${index === 7 ? '7+' : index}-drops`}>
-            <span className={styles.barFill} style={{ height: `${(value / peak) * 100}%` }}>{value > 0 && <b>{value}</b>}</span>
+            <span className={styles.barTrack}>
+              <span className={styles.barFill} style={{ transform: `scaleY(${value / peak})` }} />
+              {value > 0 && <b className={styles.barValue} style={{ bottom: `calc(${(value / peak) * 100}% + 2px)` }}>{value}</b>}
+            </span>
             <span className={styles.barLabel}>{index === 7 ? '7+' : index}</span>
           </div>
         ))}
@@ -350,11 +355,15 @@ function useValidation(deck: DeckCardLists, format: string) {
   });
 }
 
-function Preview({ card, x, y }: { card: CardView; x: number; y: number }) {
+function Preview({ card, anchor, side }: { card: CardView; anchor: DOMRect; side: 'auto' | 'left' }) {
   const width = 300;
   const height = width * (88 / 63);
-  const left = x + width + 40 > window.innerWidth ? x - width - 30 : x + 30;
-  const top = Math.max(12, Math.min(window.innerHeight - height - 12, y - height / 2));
+  const gap = 16;
+  // beside the hovered card, on whichever side has room; never over the deck list on the right
+  const deckEdge = window.innerWidth - 400;
+  const fitsRight = side === 'auto' && anchor.right + gap + width <= deckEdge;
+  const left = fitsRight ? anchor.right + gap : Math.max(gap, anchor.left - gap - width);
+  const top = Math.max(12, Math.min(window.innerHeight - height - 12, anchor.top + anchor.height / 2 - height / 2));
   return (
     <div className={styles.preview} style={{ left, top, width }} aria-hidden="true">
       <CardFace card={card} size="large" />

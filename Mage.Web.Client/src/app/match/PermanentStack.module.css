@@ -1,7 +1,7 @@
 .slot {
+  /* no width transition: cards that shift when a neighbor taps glide via FLIP */
   position: relative;
   flex: none;
-  transition: width var(--dur-place) var(--ease-place);
 }
 
 .card {
