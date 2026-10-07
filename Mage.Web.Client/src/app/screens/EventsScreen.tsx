@@ -83,7 +83,7 @@ export function EventsScreen() {
 
       {open.length === 0 && running.length === 0 ? (
         <Zone label="Start one" className={styles.starter}>
-          <p className={styles.empty}>Nothing is running on the server. Host an event and the AI fills the empty seats, so you can start right away.</p>
+          <p className={styles.empty}>Nothing is running on the server. Empty seats can be filled with AI players.</p>
           <div className={styles.kinds}>
             {KINDS.map((option) => (
               <button key={option.value} type="button" className={styles.kind} onClick={() => setHosting(option.value)}>

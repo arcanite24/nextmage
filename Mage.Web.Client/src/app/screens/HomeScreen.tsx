@@ -11,7 +11,7 @@ import styles from './HomeScreen.module.css';
 type Mode = 'ai' | 'friend' | 'table' | 'event';
 
 const MODES: { id: Mode; label: string; detail: string; icon: typeof Bot }[] = [
-  { id: 'ai', label: 'Against the AI', detail: 'Start right away against the server AI.', icon: Bot },
+  { id: 'ai', label: 'Against the AI', detail: "A game against the server's AI.", icon: Bot },
   { id: 'friend', label: 'Against a friend', detail: 'Host a table your friends can join.', icon: Users },
   { id: 'table', label: 'Join a table', detail: 'Browse open games on this server.', icon: Swords },
   { id: 'event', label: 'Events', detail: 'Drafts, sealed and tournaments.', icon: Trophy },
