@@ -64,3 +64,6 @@ mage-bundle.zip
 
 # dev tools
 .devcontainer/**/*lock.json
+
+# personal notes
+/TODO.md

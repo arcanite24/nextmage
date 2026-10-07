@@ -1,22 +1,28 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { STAGE_HEIGHT, STAGE_WIDTH, StageContext, type StageContextValue } from './stageContext';
+import { MAX_STAGE_WIDTH, STAGE_HEIGHT, STAGE_WIDTH, StageContext, type StageContextValue } from './stageContext';
 import styles from './Stage.module.css';
 
 /**
- * The match is laid out once at 1920x1080 and scaled to the window, like a game: nothing reflows or scrolls,
- * every zone keeps its place, and the mat fills the margins.
+ * The match is laid out at 1080 stage pixels tall and scaled to the window, like a game: nothing reflows or scrolls
+ * and every zone keeps its place. The stage is 1920 wide at 16:9 and widens with wider windows, so the battlefield
+ * reaches the edges of a 16:10 laptop as well as a 21:9 monitor; the side columns are anchored to the stage edges.
+ * Narrower windows keep 1920 and the mat fills above and below.
  */
-export function Stage({ children, background }: { children: ReactNode; background?: ReactNode }) {
+export function Stage({ children, background }: { children: ReactNode | ((width: number) => ReactNode); background?: ReactNode }) {
   const frame = useRef<HTMLDivElement>(null);
-  const [stage, setStage] = useState<StageContextValue>({ scale: 1, element: null });
+  const [stage, setStage] = useState<StageContextValue>({ scale: 1, element: null, width: STAGE_WIDTH });
   const stageRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const update = () => {
       const box = frame.current?.getBoundingClientRect();
       if (!box) return;
-      const scale = Math.min(box.width / STAGE_WIDTH, box.height / STAGE_HEIGHT);
-      setStage({ scale, element: stageRef.current });
+      if (!box.width || !box.height) return;
+      const width = Math.round(Math.min(MAX_STAGE_WIDTH, Math.max(STAGE_WIDTH, STAGE_HEIGHT * (box.width / box.height))));
+      const scale = Math.min(box.width / width, box.height / STAGE_HEIGHT);
+      setStage((previous) => (previous.scale === scale && previous.width === width && previous.element === stageRef.current
+        ? previous
+        : { scale, element: stageRef.current, width }));
     };
     update();
     const observer = new ResizeObserver(update);
@@ -30,9 +36,9 @@ export function Stage({ children, background }: { children: ReactNode; backgroun
       <div
         ref={stageRef}
         className={styles.stage}
-        style={{ width: STAGE_WIDTH, height: STAGE_HEIGHT, transform: `translate(-50%, -50%) scale(${stage.scale})` }}
+        style={{ width: stage.width, height: STAGE_HEIGHT, transform: `translate(-50%, -50%) scale(${stage.scale})` }}
       >
-        <StageContext.Provider value={stage}>{children}</StageContext.Provider>
+        <StageContext.Provider value={stage}>{typeof children === 'function' ? children(stage.width) : children}</StageContext.Provider>
       </div>
     </div>
   );

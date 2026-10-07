@@ -1,14 +1,19 @@
 import { createContext, useCallback, useContext } from 'react';
 
+/** The reference layout: 1080 tall, and at least 1920 wide. */
 export const STAGE_WIDTH = 1920;
 export const STAGE_HEIGHT = 1080;
+/** Wider windows widen the stage (the battlefield grows) up to this; beyond it the mat fills the sides. */
+export const MAX_STAGE_WIDTH = 2640;
 
 export interface StageContextValue {
   scale: number;
   element: HTMLDivElement | null;
+  /** the stage's current width in stage pixels, between STAGE_WIDTH and MAX_STAGE_WIDTH */
+  width: number;
 }
 
-export const StageContext = createContext<StageContextValue>({ scale: 1, element: null });
+export const StageContext = createContext<StageContextValue>({ scale: 1, element: null, width: STAGE_WIDTH });
 
 export function useStage() {
   return useContext(StageContext);

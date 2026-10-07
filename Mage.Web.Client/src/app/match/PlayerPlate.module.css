@@ -1,24 +1,40 @@
+/*
+ * A seat printed on the mat: flat ink, no shadow. The avatar disc is dyed in the player's sleeve color so a seat
+ * reads as the owner of the cards in that color; life is set in big printed numerals.
+ */
 .plate {
+  --sleeve: var(--mat-500);
   position: absolute;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 18px 10px 10px;
-  border-radius: 60px 18px 18px 60px;
-  background: rgb(7 12 10 / 0.72);
-  box-shadow: inset 0 0 0 1.5px var(--ink-faint), var(--shadow-lifted);
+  gap: 16px;
+  min-width: 248px;
+  padding: 12px 22px 12px 12px;
+  border-radius: var(--radius-zone);
+  background: rgb(7 12 10 / 0.62);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   z-index: 20;
   transition: box-shadow var(--dur-quick) linear;
 }
 
+/* whose turn it is: the seat's outline is printed heavy */
+.active {
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong);
+}
+
+/* the player has to decide now: amber, the one decision color */
+.deciding {
+  box-shadow: inset 0 0 0 2.5px var(--decision);
+}
+
 .targetable {
   cursor: crosshair;
-  box-shadow: inset 0 0 0 2px var(--ink), 0 0 26px 4px rgb(233 228 214 / 0.35), var(--shadow-lifted);
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong), 0 0 0 6px rgb(233 228 214 / 0.16);
   animation: breathe 1.6s ease-in-out infinite;
 }
 
 .selected {
-  box-shadow: inset 0 0 0 3px var(--decision), 0 0 30px 6px var(--decision-glow), var(--shadow-lifted);
+  box-shadow: inset 0 0 0 3px var(--decision), 0 0 0 6px rgb(240 177 61 / 0.22);
   animation: none;
 }
 
@@ -29,27 +45,22 @@
 .avatar {
   position: relative;
   display: grid;
+  flex: none;
   place-items: center;
-  width: 76px;
-  height: 76px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 35% 30%, var(--mat-400), var(--mat-600) 70%);
-  box-shadow: inset 0 0 0 2px var(--ink-faint), inset 0 -6px 14px rgb(0 0 0 / 0.35);
+  background: color-mix(in srgb, var(--sleeve) 62%, var(--mat-900));
+  box-shadow: inset 0 0 0 2px rgb(246 242 232 / 0.55);
   font-family: var(--font-print);
-  font-size: 40px;
+  font-size: 38px;
   font-weight: 700;
+  line-height: 1;
   color: var(--ink-strong);
 }
 
-/* whose turn it is: a heavy printed ring */
-.active {
-  box-shadow: inset 0 0 0 2px var(--ink-faint), 0 0 0 3px var(--ink), inset 0 -6px 14px rgb(0 0 0 / 0.35);
-}
-
-/* the player has to decide now */
-.deciding {
-  box-shadow: inset 0 0 0 2px var(--ink-faint), 0 0 0 3px var(--decision), 0 0 24px 4px var(--decision-glow), inset 0 -6px 14px rgb(0 0 0 / 0.35);
+.deciding .avatar {
+  box-shadow: inset 0 0 0 2.5px var(--decision);
 }
 
 .rope {
@@ -71,37 +82,53 @@
 .info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
 }
 
 .name {
-  max-width: 220px;
+  max-width: 240px;
   font-family: var(--font-print);
-  font-size: 26px;
+  font-size: 19px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-print-wide);
+  line-height: 1;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--ink-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.active .name {
+  color: var(--ink-strong);
 }
 
 .lifeRow {
   position: relative;
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* life: big printed numerals, like a spindown face */
 .life {
   font-family: var(--font-print);
-  font-size: 56px;
+  font-size: 60px;
   font-weight: 700;
-  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.86;
   color: var(--ink-strong);
+}
+
+.unit {
+  margin-right: 6px;
+  font-family: var(--font-print);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-faint);
 }
 
 .hurt {
@@ -175,5 +202,13 @@
 }
 
 @keyframes breathe {
-  50% { box-shadow: inset 0 0 0 2px var(--ink-strong), 0 0 34px 8px rgb(233 228 214 / 0.45), var(--shadow-lifted); }
+  50% { box-shadow: inset 0 0 0 2.5px var(--ink-strong), 0 0 0 10px rgb(233 228 214 / 0.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .targetable,
+  .hurt,
+  .healed {
+    animation: none;
+  }
 }

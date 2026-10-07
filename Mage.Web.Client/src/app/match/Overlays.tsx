@@ -9,6 +9,7 @@ import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { PromptText } from '../ui/PromptText';
 import { cleanText } from '../ui/text';
+import { useMatchUi } from './matchUi';
 import styles from './Overlays.module.css';
 
 /** Opening hand, shown large: keep it or mulligan. */
@@ -83,6 +84,7 @@ export function CardPicker({ title, cards, interaction, sleeve, onCommand }: {
                 className={[styles.pick, clickable ? styles.pickable : styles.unpickable, selected ? styles.picked : ''].join(' ')}
                 disabled={!clickable}
                 aria-pressed={selected}
+                data-card-id={id}
                 aria-label={`${name}${selected ? ', chosen' : ''}`}
                 onClick={() => onCommand({ type: 'uuid', id })}
               >
@@ -164,6 +166,7 @@ function PanelShell({ title, children, wide }: { title: string; children: React.
 function EscapeKey({ onEscape }: { onEscape(): void }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (useMatchUi.getState().detail) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         onEscape();
@@ -178,6 +181,7 @@ function EscapeKey({ onEscape }: { onEscape(): void }) {
 function NumberKeys({ count, onPick }: { count: number; onPick(index: number): void }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (useMatchUi.getState().detail) return;
       if (event.target instanceof HTMLInputElement) return;
       const value = Number.parseInt(event.key, 10);
       if (value >= 1 && value <= Math.min(9, count)) {
@@ -350,7 +354,7 @@ export function GameOverOverlay({ message, endInfo, onLeave, leaveLabel = 'Back 
 /** A zone's cards laid out to read (graveyard, exile, revealed). */
 export function ZoneViewer({ title, cards, onClose }: { title: string; cards: CardView[]; onClose(): void }) {
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && !useMatchUi.getState().detail && onClose();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
@@ -363,7 +367,7 @@ export function ZoneViewer({ title, cards, onClose }: { title: string; cards: Ca
         </header>
         {cards.length === 0 ? <p className={styles.panelText}>Empty.</p> : (
           <div className={styles.grid}>
-            {cards.map((card) => <div key={card.id} className={styles.pick}><CardFace card={card} size="normal" /></div>)}
+            {cards.map((card) => <div key={card.id} className={styles.pick} data-card-id={card.id}><CardFace card={card} size="normal" /></div>)}
           </div>
         )}
       </div>
