@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMatchUi } from './matchUi';
-import { STAGE_HEIGHT, STAGE_WIDTH, toStagePoint, useObjectCenter, useStage } from './stageContext';
+import { STAGE_HEIGHT, toStagePoint, useObjectCenter, useStage } from './stageContext';
 import styles from './Arrows.module.css';
 
 interface Point {
@@ -81,7 +81,7 @@ export function Arrows({ sourceId, targetIds, live, links, attacks }: {
   if (dragging || (combat.length === 0 && assault.length === 0 && (!from || (targets.length === 0 && !(live && pointer))))) return null;
 
   return (
-    <svg className={styles.arrows} width={STAGE_WIDTH} height={STAGE_HEIGHT} aria-hidden="true">
+    <svg className={styles.arrows} width={stage.width} height={STAGE_HEIGHT} aria-hidden="true">
       <defs>
         <marker id="arrow-ink" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="var(--ink)" />

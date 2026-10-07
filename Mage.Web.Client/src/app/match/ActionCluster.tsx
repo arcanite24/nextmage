@@ -6,6 +6,7 @@ import type { PlayerAction } from '../../protocol/generated/views';
 import { isEditableEventTarget } from '../ui/keys';
 import { Button } from '../ui/Button';
 import { PromptText } from '../ui/PromptText';
+import { useMatchUi } from './matchUi';
 import styles from './ActionCluster.module.css';
 
 export interface ActionClusterProps {
@@ -39,6 +40,8 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
+      // while a card is open in the detail view, keys belong to it: Space must never pass by accident
+      if (useMatchUi.getState().detail) return;
       // Space always answers with the main button (as on the table, the big button is the one decision);
       // a focused real button keeps its own Space and Enter
       if (isEditableEventTarget(event.target) || event.target instanceof HTMLButtonElement) return;

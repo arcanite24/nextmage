@@ -20,6 +20,7 @@ import { Stitch } from '../ui/Stitch';
 import { ActionCluster } from './ActionCluster';
 import { Arrows } from './Arrows';
 import { buildBoard, fitCardWidth, type PermanentGroup, type PlayerBoard } from './boardModel';
+import { CardDetail } from './CardDetail';
 import { CardZoom } from './CardZoom';
 import { setCardMotion, useFlipOrigin } from './flip';
 import { GameLog } from './GameLog';
@@ -40,11 +41,14 @@ import { Stage } from './Stage';
 import { STAGE_HEIGHT } from './stageContext';
 import styles from './MatchStage.module.css';
 
-/** The battlefield's horizontal span on the stage, between the seats (left) and the stack and decision corner (right). */
+/**
+ * The battlefield's horizontal span on the stage, between the seats (left) and the stack and decision corner (right).
+ * The stage widens with the window, and the field takes all of the extra width.
+ */
 const FIELD_LEFT = 300;
-const FIELD_RIGHT = 1450;
-const FIELD_WIDTH = FIELD_RIGHT - FIELD_LEFT;
+const FIELD_RIGHT_MARGIN = 470;
 const EMPTY: ReadonlySet<string> = new Set();
+const NO_CARDS: readonly CardView[] = [];
 
 /** Attacking and blocking permanents, from the combat groups. */
 function combatSets(combat: GameView['combat']) {
@@ -92,7 +96,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
   useEffect(() => setCardMotion(animations), [animations]);
   // a new game starts with a clean table
-  useEffect(() => () => useMatchUi.setState({ zoom: null, dragging: null, viewer: null, logOpen: false }), []);
+  useEffect(() => () => useMatchUi.setState({ zoom: null, dragging: null, viewer: null, logOpen: false, detail: null }), []);
 
   const board = useMemo(() => buildBoard(view, playerId), [view, playerId]);
   const clickable = useMemo(() => new Set(interaction.clickable.keys()), [interaction.clickable]);
@@ -179,125 +183,135 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
   return (
     <Stage>
-      <div className={styles.mat} aria-hidden="true" />
-      {/* each half carries its player's deck art, printed faintly into the mat */}
-      <div className={styles.printTheirs}><MatPrint card={opponentArt} /></div>
-      <div className={styles.printMine}><MatPrint card={sleeves.cover} /></div>
-      <div className={styles.seam} aria-hidden="true" />
-      {/* under the hand and the controls, over the mat */}
-      <Stitch inset={10} radius={22} zIndex={2} />
+      {(stageWidth) => {
+        const fieldWidth = stageWidth - FIELD_LEFT - FIELD_RIGHT_MARGIN;
+        return (
+          <>
+            <div className={styles.mat} aria-hidden="true" />
+            {/* each half carries its player's deck art, printed faintly into the mat */}
+            <div className={styles.printTheirs}><MatPrint card={opponentArt} /></div>
+            <div className={styles.printMine}><MatPrint card={sleeves.cover} /></div>
+            <div className={styles.seam} aria-hidden="true" />
+            {/* under the hand and the controls, over the mat */}
+            <Stitch inset={10} radius={22} zIndex={2} />
 
-      {board.opponents.map((opponent, index) => (
-        <OpponentSide
-          key={opponent.player.playerId}
-          board={opponent}
-          index={index}
-          count={board.opponents.length}
-          sleeve={sleeves.theirs}
-          handCount={opponent.player.handCount ?? 0}
-          clickable={clickable}
-          selected={interaction.selected}
-          quiet={EMPTY}
-          attacking={attacking}
-          blocking={blocking}
-          onClick={onClick}
-          deciding={!!opponent.player.hasPriority && interaction.mode === 'waiting'}
-        />
-      ))}
+            {board.opponents.map((opponent, index) => (
+              <OpponentSide
+                key={opponent.player.playerId}
+                board={opponent}
+                index={index}
+                count={board.opponents.length}
+                sleeve={sleeves.theirs}
+                handCount={opponent.player.handCount ?? 0}
+                clickable={clickable}
+                selected={interaction.selected}
+                quiet={EMPTY}
+                attacking={attacking}
+                blocking={blocking}
+                onClick={onClick}
+                deciding={!!opponent.player.hasPriority && interaction.mode === 'waiting'}
+                fieldWidth={fieldWidth}
+              />
+            ))}
 
-      {board.me && (
-        <>
-          <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} onClick={onClick} left={FIELD_LEFT} width={FIELD_WIDTH} frontTop={556} backTop={778} />
-          <div className={styles.myPlate}>
-            <PlayerPlate
-              player={board.me.player}
-              isMe={board.me.isMe}
-              targetable={clickable.has(board.me.player.playerId!)}
-              selected={interaction.selected.has(board.me.player.playerId!)}
-              deciding={canAct && interaction.mode !== 'waiting'}
-              onClick={() => onClick(board.me!.player.playerId!)}
-            />
-          </div>
-          <div className={styles.myPiles}>
-            <Piles player={board.me.player} sleeve={sleeves.mine} isMe={board.me.isMe} />
-          </div>
-        </>
-      )}
+            {board.me && (
+              <>
+                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} onClick={onClick} left={FIELD_LEFT} width={fieldWidth} frontTop={556} backTop={778} />
+                <div className={styles.myPlate}>
+                  <PlayerPlate
+                    player={board.me.player}
+                    isMe={board.me.isMe}
+                    sleeve={sleeves.mine}
+                    targetable={clickable.has(board.me.player.playerId!)}
+                    selected={interaction.selected.has(board.me.player.playerId!)}
+                    deciding={canAct && interaction.mode !== 'waiting'}
+                    onClick={() => onClick(board.me!.player.playerId!)}
+                  />
+                </div>
+                <div className={styles.myPiles}>
+                  <Piles player={board.me.player} sleeve={sleeves.mine} isMe={board.me.isMe} />
+                </div>
+              </>
+            )}
 
-      <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
-      <PhaseLadder step={view?.step} myTurn={!!myId && view?.activePlayerId === myId} turn={view?.turn ?? 0} />
+            <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
+            <PhaseLadder step={view?.step} myTurn={!!myId && view?.activePlayerId === myId} turn={view?.turn ?? 0} />
 
-      {mode === 'play' && board.me && !handHidden && (
-        <Hand
-          cards={hand}
-          choosing={choosingInHand}
-          clickable={pickerCards ? EMPTY : clickable}
-          selected={interaction.selected}
-          sleeve={sleeves.mine}
-          onPlay={onClick}
-          playLine={STAGE_HEIGHT - 300}
-          libraryOrigin={`library:${board.me.player.playerId}`}
-        />
-      )}
+            {mode === 'play' && board.me && !handHidden && (
+              <Hand
+                cards={hand}
+                choosing={choosingInHand}
+                clickable={pickerCards ? EMPTY : clickable}
+                selected={interaction.selected}
+                sleeve={sleeves.mine}
+                onPlay={onClick}
+                playLine={STAGE_HEIGHT - 300}
+                libraryOrigin={`library:${board.me.player.playerId}`}
+              />
+            )}
 
-      {deciding && (
-        <p className={styles.prompt} aria-hidden="true"><PromptText text={interaction.headline} /></p>
-      )}
+            {deciding && (
+              <p className={styles.prompt} aria-hidden="true"><PromptText text={interaction.headline} /></p>
+            )}
 
-      {mode === 'play' ? (
-        !overlayOpen && <ActionCluster
-          interaction={interaction}
-          awaiting={awaitingServer}
-          status={state.status}
-          canAct={canAct}
-          special={!!view?.special}
-          holdingPriority={holding}
-          autoPassing={!!autoPassing}
-          onCommand={onCommand}
-        />
-      ) : (
-        <div className={styles.watching}>
-          <p>{mode === 'watch' ? 'Watching' : 'Replay'}</p>
-          <Button variant="print" onClick={leave}>Leave</Button>
-        </div>
-      )}
+            {mode === 'play' ? (
+              !overlayOpen && <ActionCluster
+                interaction={interaction}
+                awaiting={awaitingServer}
+                status={state.status}
+                canAct={canAct}
+                special={!!view?.special}
+                holdingPriority={holding}
+                autoPassing={!!autoPassing}
+                onCommand={onCommand}
+              />
+            ) : (
+              <div className={styles.watching}>
+                <p>{mode === 'watch' ? 'Watching' : 'Replay'}</p>
+                <Button variant="print" onClick={leave}>Leave</Button>
+              </div>
+            )}
 
-      <Vfx view={view} myPlayerId={myId} />
-      <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
-      <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} />
-      <GameMenu canConcede={canAct} onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })} onLeave={leave} />
+            <Vfx view={view} myPlayerId={myId} />
+            <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
+            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} />
+            <GameMenu canConcede={canAct} onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })} onLeave={leave} />
 
-      {interaction.mode === 'mulligan' && !awaitingServer && (
-        <MulliganOverlay hand={hand} interaction={interaction} sleeve={sleeves.mine} onCommand={onCommand} />
-      )}
-      {choosingStarter && board.me && !awaitingServer && (
-        <StartingPlayerOverlay
-          me={{ id: board.me.player.playerId!, name: board.me.player.name ?? 'You' }}
-          opponents={board.opponents.map((opponent) => ({ id: opponent.player.playerId!, name: opponent.player.name ?? 'Opponent' }))}
-          onChoose={onClick}
-        />
-      )}
-      {pickerCards && !awaitingServer && (
-        <CardPicker
-          title={choosingFromHand ? 'Put cards on the bottom' : 'Choose cards'}
-          cards={pickerCards}
-          interaction={interaction}
-          sleeve={sleeves.mine}
-          onCommand={onCommand}
-        />
-      )}
-      {interaction.mode === 'panel' && prompt && !awaitingServer && <ChoicePanel prompt={prompt} onCommand={onCommand} />}
-      {viewer && <ZoneViewer title={viewer.title} cards={viewer.cards} onClose={() => openViewer(null)} />}
-      {state.gameOver && (
-        <GameOverOverlay
-          message={state.gameOver}
-          endInfo={state.endInfo}
-          onLeave={leave}
-          leaveLabel={eventId ? 'Back to the event' : 'Back to Play'}
-          onPlayAgain={mode === 'play' && deckId && !eventId ? playAgain : undefined}
-        />
-      )}
-      <CardZoom />
+            {interaction.mode === 'mulligan' && !awaitingServer && (
+              <MulliganOverlay hand={hand} interaction={interaction} sleeve={sleeves.mine} onCommand={onCommand} />
+            )}
+            {choosingStarter && board.me && !awaitingServer && (
+              <StartingPlayerOverlay
+                me={{ id: board.me.player.playerId!, name: board.me.player.name ?? 'You' }}
+                opponents={board.opponents.map((opponent) => ({ id: opponent.player.playerId!, name: opponent.player.name ?? 'Opponent' }))}
+                onChoose={onClick}
+              />
+            )}
+            {pickerCards && !awaitingServer && (
+              <CardPicker
+                title={choosingFromHand ? 'Put cards on the bottom' : 'Choose cards'}
+                cards={pickerCards}
+                interaction={interaction}
+                sleeve={sleeves.mine}
+                onCommand={onCommand}
+              />
+            )}
+            {interaction.mode === 'panel' && prompt && !awaitingServer && <ChoicePanel prompt={prompt} onCommand={onCommand} />}
+            {viewer && <ZoneViewer title={viewer.title} cards={viewer.cards} onClose={() => openViewer(null)} />}
+            {state.gameOver && (
+              <GameOverOverlay
+                message={state.gameOver}
+                endInfo={state.endInfo}
+                onLeave={leave}
+                leaveLabel={eventId ? 'Back to the event' : 'Back to Play'}
+                onPlayAgain={mode === 'play' && deckId && !eventId ? playAgain : undefined}
+              />
+            )}
+            <CardZoom />
+            <CardDetail view={view} extra={pickerCards ?? viewer?.cards ?? NO_CARDS} sleeveOf={sleeveOf} attacking={attacking} blocking={blocking} />
+          </>
+        );
+      }}
     </Stage>
   );
 }
@@ -358,14 +372,15 @@ function Row({ groups, left, width, top, ideal, min, forward, label, flip, ...re
 }
 
 /** An opponent's half: their rows mirrored above the seam, their seat, piles and hidden hand. */
-function OpponentSide({ board, index, count, sleeve, handCount, deciding, ...row }: RowProps & {
+function OpponentSide({ board, index, count, sleeve, handCount, deciding, fieldWidth, ...row }: RowProps & {
+  fieldWidth: number;
   board: PlayerBoard;
   index: number;
   count: number;
   handCount: number;
   deciding: boolean;
 }) {
-  const width = FIELD_WIDTH / count;
+  const width = fieldWidth / count;
   const left = FIELD_LEFT + index * width;
   const player = board.player;
   const plateTop = count === 1 ? 24 : 24 + index * 120;
@@ -376,6 +391,7 @@ function OpponentSide({ board, index, count, sleeve, handCount, deciding, ...row
         <PlayerPlate
           player={player}
           isMe={false}
+          sleeve={sleeve}
           targetable={row.clickable.has(player.playerId!)}
           selected={row.selected.has(player.playerId!)}
           deciding={deciding}

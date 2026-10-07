@@ -4,7 +4,7 @@ import { isStackAbility } from '../../core/game/cards';
 import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { useMatchUi } from './matchUi';
-import { STAGE_HEIGHT, STAGE_WIDTH, toStagePoint, useStage } from './stageContext';
+import { STAGE_HEIGHT, toStagePoint, useStage } from './stageContext';
 import styles from './CardZoom.module.css';
 
 const ZOOM_WIDTH = 340;
@@ -15,6 +15,7 @@ const DELAY_MS = 260;
 export function CardZoom() {
   const zoom = useMatchUi((state) => state.zoom);
   const dragging = useMatchUi((state) => state.dragging);
+  const detailOpen = useMatchUi((state) => !!state.detail);
   const stage = useStage();
   const [settled, setSettled] = useState<typeof zoom>(null);
 
@@ -29,9 +30,9 @@ export function CardZoom() {
   // a card that left its place while hovered (cast from hand, died) never reports the pointer leaving it
   // ...or that changed zone under the same id (a spell becoming a permanent): only the hovered element counts
   const element = shown?.card.id ? stage.element?.querySelector(`[data-object-id="${CSS.escape(shown.card.id)}"]`) : null;
-  if (!shown || !element || !element.matches(':hover')) return null;
+  if (!shown || detailOpen || !element || !element.matches(':hover')) return null;
   const point = toStagePoint(stage, shown.x, shown.y);
-  const left = point.x > STAGE_WIDTH / 2 ? point.x - ZOOM_WIDTH - 60 : point.x + 60;
+  const left = point.x > stage.width / 2 ? point.x - ZOOM_WIDTH - 60 : point.x + 60;
   const top = Math.max(24, Math.min(STAGE_HEIGHT - ZOOM_HEIGHT - 24, point.y - ZOOM_HEIGHT / 2));
   const card = shown.card as PermanentView;
   const back = card.secondCardFace;

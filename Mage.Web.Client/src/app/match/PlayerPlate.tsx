@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { PlayerView } from '../../protocol/generated/views';
 import styles from './PlayerPlate.module.css';
 
@@ -10,6 +10,8 @@ export interface PlayerPlateProps {
   selected: boolean;
   /** the player must answer something right now */
   deciding: boolean;
+  /** the player's sleeve color: their seat is dyed to match their cards */
+  sleeve?: string;
   onClick(): void;
 }
 
@@ -23,7 +25,7 @@ const MANA: { key: keyof NonNullable<PlayerView['manaPool']>; symbol: string }[]
 ];
 
 /** A player's seat: who they are, their life, counters, floating mana and clock. */
-export function PlayerPlate({ player, isMe, targetable, selected, deciding, onClick }: PlayerPlateProps) {
+export function PlayerPlate({ player, isMe, targetable, selected, deciding, sleeve, onClick }: PlayerPlateProps) {
   const life = player.life ?? 0;
   const previous = useRef(life);
   const [delta, setDelta] = useState<{ value: number; key: number } | null>(null);
@@ -48,7 +50,10 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, onCl
         targetable ? styles.targetable : '',
         selected ? styles.selected : '',
         player.hasLeft ? styles.left : '',
+        player.isActive ? styles.active : '',
+        deciding ? styles.deciding : '',
       ].join(' ')}
+      style={sleeve ? ({ '--sleeve': sleeve } as CSSProperties) : undefined}
       role={targetable ? 'button' : 'group'}
       tabIndex={targetable ? 0 : undefined}
       aria-label={`${player.name}, ${life} life${targetable ? ', can be targeted' : ''}`}
@@ -61,7 +66,7 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, onCl
       }}
       data-object-id={player.playerId}
     >
-      <div className={[styles.avatar, player.isActive ? styles.active : '', deciding ? styles.deciding : ''].join(' ')}>
+      <div className={styles.avatar}>
         <span aria-hidden="true">{initial}</span>
         {ticking && (
           <svg className={styles.rope} viewBox="0 0 100 100" aria-label={`${timeLeft} seconds left`}>
@@ -73,6 +78,7 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, onCl
         <div className={styles.name}>{player.name}{player.hasLeft ? ' (left)' : ''}</div>
         <div className={styles.lifeRow}>
           <span key={delta?.key} className={[styles.life, delta ? (delta.value < 0 ? styles.hurt : styles.healed) : ''].join(' ')}>{life}</span>
+          <span className={styles.unit} aria-hidden="true">life</span>
           {delta && (
             <span key={`d${delta.key}`} className={[styles.delta, delta.value < 0 ? styles.deltaDown : styles.deltaUp].join(' ')}>
               {delta.value > 0 ? `+${delta.value}` : delta.value}

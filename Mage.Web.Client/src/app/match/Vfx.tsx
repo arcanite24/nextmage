@@ -32,7 +32,8 @@ interface Snapshot {
 
 const LIFETIME: Record<EffectKind, number> = { damage: 1300, heal: 1300, enter: 700, resolve: 800, death: 900, charge: 600 };
 /** where spells resolve: the top of the stack zone, in stage pixels */
-const STACK_POINT = { x: 1920 - 236 - 105, y: 470 };
+/** where the stack's top card sits, from the stage's right edge */
+const STACK_POINT = { right: 236 + 105, y: 470 };
 
 function snapshot(view: GameView): Snapshot {
   const permanents = new Map<string, PermanentView>();
@@ -135,7 +136,7 @@ export function Vfx({ view, myPlayerId }: { view: GameView | null; myPlayerId: s
       }
     }
     // spells and abilities resolving
-    if ([...before.stack].some((id) => !now.stack.has(id))) add({ kind: 'resolve', ...STACK_POINT });
+    if ([...before.stack].some((id) => !now.stack.has(id))) add({ kind: 'resolve', x: stage.width - STACK_POINT.right, y: STACK_POINT.y });
     // new attackers charge
     for (const id of now.attackers) {
       if (before.attackers.has(id)) continue;
