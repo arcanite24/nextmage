@@ -1,0 +1,590 @@
+/* the binder on the left, the deck list printed on the right */
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: var(--space-5);
+  height: 100%;
+  min-height: 0;
+}
+
+.missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  height: 100%;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.missing h1 {
+  font-size: var(--text-3xl);
+  text-transform: uppercase;
+  color: var(--ink-strong);
+}
+
+/* collection */
+.collection {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--radius-zone);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--ink-ghost);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 260px;
+  min-width: 200px;
+  max-width: 420px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-control);
+  background: rgb(7 12 10 / 0.6);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink-dim);
+}
+
+.search:focus-within {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-strong);
+  font-size: var(--text-md);
+  outline: none;
+  caret-color: var(--decision);
+}
+
+.clearText {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.toggle input {
+  accent-color: var(--decision);
+}
+
+.pips,
+.costs {
+  display: flex;
+  gap: 4px;
+}
+
+.pip,
+.cost {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  color: var(--ink-soft);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--dur-quick) linear, box-shadow var(--dur-quick) linear;
+}
+
+.pip i {
+  font-size: 22px;
+}
+
+.cost {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-family: var(--font-print);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.pip:hover,
+.cost:hover {
+  opacity: 1;
+}
+
+.pipOn,
+.costOn {
+  opacity: 1;
+  box-shadow: inset 0 0 0 2px var(--decision), 0 0 12px var(--decision-glow);
+  color: var(--ink-strong);
+}
+
+.select {
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: rgb(7 12 10 / 0.6);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink-strong);
+  font-size: var(--text-sm);
+}
+
+.reset {
+  border: 0;
+  background: transparent;
+  color: var(--decision-strong);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.results {
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 18px 14px;
+}
+
+.tile {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: var(--card-radius);
+  background: transparent;
+  cursor: pointer;
+  transition: transform var(--dur-quick) var(--ease-lift);
+}
+
+.tile:hover {
+  transform: translateY(-4px);
+}
+
+.tile:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--decision);
+  outline-offset: 3px;
+}
+
+.tileFull {
+  opacity: 0.55;
+}
+
+/* copies in the deck, as pips under the card */
+.copies {
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  translate: -50% 0;
+  display: flex;
+  gap: 4px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgb(7 12 10 / 0.92);
+  box-shadow: inset 0 0 0 1px var(--ink-faint);
+  font-family: var(--font-print);
+  font-size: 14px;
+  color: var(--decision-strong);
+}
+
+.copyOn,
+.copyOff {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.copyOn {
+  background: var(--decision);
+}
+
+.copyOff {
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+
+.sentinel {
+  height: 1px;
+}
+
+.note {
+  padding: var(--space-4) 0;
+  color: var(--ink-dim);
+}
+
+/* deck list */
+.deck {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-zone);
+  background: rgb(7 12 10 / 0.55);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost), inset 0 1px 12px rgb(0 0 0 / 0.35);
+  gap: 12px;
+}
+
+.deckHead {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.deckName {
+  width: 100%;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 1.5px dashed transparent;
+  background: transparent;
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  caret-color: var(--decision);
+}
+
+.deckName:hover,
+.deckName:focus {
+  border-bottom-color: var(--ink-faint);
+  outline: none;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.total {
+  font-family: var(--font-print);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.total small {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.chipOk {
+  background: rgb(127 168 136 / 0.16);
+  color: var(--sage);
+}
+
+.chipBad {
+  background: rgb(160 52 42 / 0.25);
+  color: var(--oxblood-ink);
+  cursor: pointer;
+}
+
+.saved {
+  margin-left: auto;
+  color: var(--ink-dim);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+.problems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 140px;
+  margin: 0;
+  padding: 8px 12px;
+  overflow: auto;
+  border-radius: 10px;
+  background: rgb(160 52 42 / 0.12);
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.problems b {
+  color: var(--oxblood-ink);
+  font-weight: 600;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--ink-ghost);
+}
+
+.tab,
+.tabOn {
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.tabOn {
+  border-bottom-color: var(--decision);
+  color: var(--ink-strong);
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  margin-right: -8px;
+  padding-right: 8px;
+  overflow-y: auto;
+}
+
+.group + .group {
+  margin-top: 12px;
+}
+
+.groupHead {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+.row:hover {
+  background: rgb(233 228 214 / 0.06);
+}
+
+.rowCount {
+  min-width: 18px;
+  font-family: var(--font-print);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--decision-strong);
+  text-align: right;
+}
+
+.rowName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  color: var(--ink-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowActions {
+  position: absolute;
+  right: 4px;
+  display: none;
+  gap: 2px;
+  padding-left: 12px;
+  background: linear-gradient(90deg, transparent, var(--mat-800) 12px);
+}
+
+.row:hover .rowActions,
+.row:focus-within .rowActions {
+  display: flex;
+}
+
+.rowActions button,
+.basic button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: rgb(233 228 214 / 0.08);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.rowActions button:hover,
+.basic button:hover:not(:disabled) {
+  background: rgb(233 228 214 / 0.18);
+}
+
+.basic button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.curve {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+  height: 84px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ink-ghost);
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 3px;
+  min-height: 0;
+}
+
+.barFill {
+  position: relative;
+  min-height: 2px;
+  border-radius: 4px 4px 1px 1px;
+  background: var(--ink-faint);
+  transition: height var(--dur-place) var(--ease-place);
+}
+
+.barFill b {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -17px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.barLabel {
+  font-family: var(--font-print);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-dim);
+  text-align: center;
+}
+
+.basics {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.basic {
+  display: grid;
+  grid-template-columns: 22px 1fr 22px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-items: center;
+  row-gap: 2px;
+}
+
+.basic i {
+  grid-column: 1 / -1;
+}
+
+.basic i {
+  font-size: 18px;
+}
+
+.basic button {
+  width: 22px;
+  height: 22px;
+}
+
+.basic b {
+  min-width: 18px;
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.deckFoot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deckFoot > :last-child {
+  margin-left: auto;
+}
+
+.preview {
+  position: fixed;
+  z-index: var(--z-overlay);
+  pointer-events: none;
+  filter: drop-shadow(0 24px 40px rgb(0 0 0 / 0.6));
+  animation: lift var(--dur-quick) var(--ease-lift);
+}
+
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

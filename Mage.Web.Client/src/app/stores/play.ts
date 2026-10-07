@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { api } from '../connection';
 import { useDecks, STARTER_PREFIX } from './decks';
 import { useSession } from './session';
-import type { DeckCardLists } from '../../types/models';
+import { toWire } from '../decks/deckModel';
 import type { DeckCardLists as WireDeck } from '../../protocol/generated/views';
 
 export type PlayPhase = 'idle' | 'starting' | 'waitingForGame';
@@ -23,14 +23,6 @@ interface PlayState {
   lastOptions: Partial<AiOptions>;
   playVsAi(deckId: string, options?: Partial<AiOptions>): Promise<void>;
   cancel(): Promise<void>;
-}
-
-function toWire(deck: DeckCardLists): WireDeck {
-  return {
-    name: deck.name,
-    cards: deck.cards.map((card) => ({ cardName: card.cardName, setCode: card.setCode ?? '', cardNumber: card.cardNumber ?? '', amount: card.amount })),
-    sideboard: deck.sideboard.map((card) => ({ cardName: card.cardName, setCode: card.setCode ?? '', cardNumber: card.cardNumber ?? '', amount: card.amount })),
-  };
 }
 
 async function aiDeck(starterFile: string | null): Promise<WireDeck> {

@@ -47,7 +47,7 @@ public class WebClientApiContractTest {
     private static final Map<String, String> SERVER_METHOD_OVERRIDES = new HashMap<>();
     private static final Set<String> NOT_MAPPED_TO_SERVER = new HashSet<>(Arrays.asList(
             "disconnectSession", "playerLogout", // session manager
-            "getExpansionSets", "getBasicLandSets", "searchCards", "deckValidate", // card database services
+            "getExpansionSets", "getBasicLandSets", "searchCards", "lookupCards", "deckValidate", // card database services
             "testEndGame", "testConcedeMatch" // test mode helpers on table manager
     ));
 

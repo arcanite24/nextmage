@@ -2,7 +2,7 @@
 // Regenerate: mvn -pl Mage.Server test -Dtest=WebClientApiDocsTest -Dxmage.updateWebApiDocs=true
 
 import type { RpcMethodName, RpcMethods, UUID } from './protocol';
-import type { CardCriteria, DeckCardLists, ManaType, PlayerAction, UserData } from './views';
+import type { CardCriteria, DeckCardInfo, DeckCardLists, ManaType, PlayerAction, UserData } from './views';
 import type { WebMatchOptions, WebTournamentOptions } from '../options';
 
 export interface RpcCaller {
@@ -59,6 +59,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('getBasicLandSets'),
     searchCards: (criteria: CardCriteria) =>
       rpc.call('searchCards', criteria),
+    lookupCards: (cards: DeckCardInfo[]) =>
+      rpc.call('lookupCards', cards),
     deckValidate: (deckType: string, deck: DeckCardLists) =>
       rpc.call('deckValidate', deckType, deck),
     roomGetUsers: (roomId: UUID) =>
