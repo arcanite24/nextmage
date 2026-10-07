@@ -11,12 +11,12 @@ services:
       context: ../..
       dockerfile: ops/web/Dockerfile.server
     environment:
-      XMAGE_ALLOWED_ORIGINS: https://${DOMAIN:?set DOMAIN}
+      XMAGE_ALLOWED_ORIGINS: ${XMAGE_ALLOWED_ORIGINS:-https://${DOMAIN:?set DOMAIN}}
       XMAGE_MEMORY: ${XMAGE_MEMORY:-2g}
       XMAGE_JAVA_OPTS: ${XMAGE_JAVA_OPTS:-}
       XMAGE_ADMIN_PASSWORD: ${XMAGE_ADMIN_PASSWORD:-}
       # the proxy's network: the server trusts X-Forwarded-For only from these addresses
-      XMAGE_TRUSTED_PROXIES: ${XMAGE_TRUSTED_PROXIES:-172.30.17.10}
+      XMAGE_TRUSTED_PROXIES: ${XMAGE_TRUSTED_PROXIES:-${CADDY_IP:-10.89.17.10}}
       XMAGE_SERVER_NAME: ${XMAGE_SERVER_NAME:-}
       XMAGE_SERVER_ADDRESS: ${XMAGE_SERVER_ADDRESS:-}
       XMAGE_PORT: ${XMAGE_PORT:-}
@@ -58,16 +58,16 @@ services:
     environment:
       DOMAIN: ${DOMAIN:?set DOMAIN}
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
     volumes:
       - caddy-data:/data
       - caddy-config:/config
     networks:
       xmage:
         # fixed so the server can trust forwarding headers from Caddy alone
-        ipv4_address: 172.30.17.10
+        ipv4_address: ${CADDY_IP:-10.89.17.10}
     healthcheck:
       # Caddy's admin API answers on localhost only
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
@@ -104,7 +104,7 @@ networks:
   xmage:
     ipam:
       config:
-        - subnet: 172.30.17.0/24
+        - subnet: ${XMAGE_SUBNET:-10.89.17.0/24}
 
 volumes:
   xmage-db:

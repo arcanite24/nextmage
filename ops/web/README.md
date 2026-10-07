@@ -21,6 +21,20 @@ Before you start:
 - The first server image build compiles the whole card database (expect tens of minutes). Later builds reuse the Maven cache.
 - The first server start builds the card database before the game port opens, which takes a few minutes. The web container waits until the server is healthy, so the site comes up after that.
 
+## Private server on a LAN
+
+For a group on one home network, with no public domain:
+
+```bash
+DOMAIN=multivac.local            # the host's mDNS name
+HTTPS_PORT=8443                  # when another proxy already owns 443
+HTTP_PORT=8088
+XMAGE_ALLOWED_ORIGINS=https://multivac.local:8443
+COMPOSE_PROJECT_NAME=xmage
+```
+
+Caddy can't get a public certificate for a `.local` name, so it signs one with its own local CA. Each player accepts the browser warning once, or installs Caddy's root certificate (`docker compose cp web:/data/caddy/pki/authorities/local/root.crt .`). Players then open `https://multivac.local:8443`. Nothing is reachable from the internet unless the router forwards the port.
+
 ## Settings
 
 Set these in `ops/web/.env` (Compose reads it automatically) or in the environment. An empty value uses the default. The server renders `config/config.xml` from the shipped config and these variables on every start, so removing a variable restores its default. You never edit `config.xml` and you don't need to rebuild to change settings: `docker compose -f ops/web/docker-compose.yml up -d` applies them.
@@ -40,7 +54,11 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_SERVER_ADDRESS` | `0.0.0.0` | `serverAddress`. Only matters for desktop clients. |
 | `XMAGE_PORT` | `17171` | `port`: the desktop client port. It isn't published by default. |
 | `XMAGE_SECONDARY_PORT` | `-1` (shipped) | `secondaryBindPort` for the desktop protocol. |
-| `XMAGE_TRUSTED_PROXIES` | `172.30.17.10` | IPs and CIDR ranges, comma separated, whose `X-Forwarded-For` / `X-Real-IP` the bridge believes (`-Dxmage.web.trustedProxies`). The default is Caddy's fixed address on the Compose network, so no other container can claim a client address. Without it, every player appears to come from Caddy's address, and per-address login limits would hit everyone at once. |
+| `XMAGE_TRUSTED_PROXIES` | `CADDY_IP` | IPs and CIDR ranges, comma separated, whose `X-Forwarded-For` / `X-Real-IP` the bridge believes (`-Dxmage.web.trustedProxies`). The default is Caddy's fixed address on the Compose network, so no other container can claim a client address. Without it, every player appears to come from Caddy's address, and per-address login limits would hit everyone at once. |
+| `XMAGE_SUBNET` | `10.89.17.0/24` | Subnet of the stack's Compose network. Change it if it overlaps another Docker network on the host (`docker network inspect`). |
+| `CADDY_IP` | `10.89.17.10` | Caddy's fixed address inside `XMAGE_SUBNET`. |
+| `HTTP_PORT` / `HTTPS_PORT` | `80` / `443` | Host ports Caddy publishes. Change them when another web server already owns 80/443. |
+| `XMAGE_ALLOWED_ORIGINS` | `https://$DOMAIN` | Browser origins the bridge accepts. Include the port when `HTTPS_PORT` isn't 443. |
 | `XMAGE_ALLOWED_ORIGINS` | `https://$DOMAIN` | Set by Compose. Browser origins allowed to open a game connection. |
 | `XMAGE_MAILGUN_API_KEY`, `XMAGE_MAILGUN_DOMAIN` | empty | Mailgun account for registration and password-reset mail. |
 | `XMAGE_MAIL_SMTP_HOST`, `XMAGE_MAIL_SMTP_PORT`, `XMAGE_MAIL_USER`, `XMAGE_MAIL_PASSWORD`, `XMAGE_MAIL_FROM` | empty | SMTP instead of Mailgun. The server uses SMTP when `XMAGE_MAIL_USER` is set. |
@@ -128,4 +146,4 @@ Add the page origin to `websocketAllowedOrigins` in `config.xml` on the `<server
 - Leave port 17172 unpublished. The bridge expects the proxy in front of it, for TLS, the origin check and the client address.
 - Only publish 17171 (the desktop client's port) if desktop players should join the same server.
 - Set `XMAGE_AUTH=true` on a public server, so names need passwords. Configure mail too, so players can reset their passwords.
-- Caddy sets `X-Forwarded-For` to the real client address and drops any value the client sent, because Caddy itself trusts no upstream proxies. It also adds `X-Real-IP`. The server only trusts those headers from `XMAGE_TRUSTED_PROXIES`. If you change Caddy's address or the Compose network subnet, change that variable with it.
+- Caddy sets `X-Forwarded-For` to the real client address and drops any value the client sent, because Caddy itself trusts no upstream proxies. It also adds `X-Real-IP`. The server only trusts those headers from `XMAGE_TRUSTED_PROXIES`. It defaults to `CADDY_IP`, so changing `XMAGE_SUBNET` and `CADDY_IP` together is enough.
