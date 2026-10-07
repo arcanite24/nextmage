@@ -153,23 +153,26 @@ export function deriveInteraction(view: GameView | null | undefined, prompt: Pro
 
     case 'declareAttackers': {
       const selected = new Set(myAttackers(view));
-      const secondary: PromptButton[] = [];
-      if (prompt.allAttackLabel && prompt.possibleAttackers.length > 0) {
-        secondary.push({ label: prompt.allAttackLabel, command: { type: 'string', value: 'special' }, tone: 'attack' });
-      }
+      const noAttacks: PromptButton = { label: 'No Attacks', command: { type: 'boolean', value: true }, tone: 'secondary' };
+      // with nothing chosen yet, the big button (and Space) attacks with everything, as on Arena: skipping the attack
+      // takes a deliberate click on the smaller "No Attacks"
+      const allAttack = !!prompt.allAttackLabel && prompt.possibleAttackers.length > 0;
+      const mainButton: PromptButton = selected.size > 0
+        ? { label: `Attack (${selected.size})`, command: { type: 'boolean', value: true }, tone: 'attack', shortcut: 'Space' }
+        : allAttack
+          ? { label: prompt.allAttackLabel!, command: { type: 'string', value: 'special' }, tone: 'attack', shortcut: 'Space' }
+          : { ...noAttacks, tone: 'primary', shortcut: 'Space' };
       return {
         mode: 'declareAttackers',
         prompt,
         headline: selected.size > 0 ? 'Choose attackers' : prompt.text,
         clickable: clickMap(new Set([...prompt.possibleAttackers, ...selected])),
         selected,
-        mainButton: {
-          label: selected.size === 0 ? 'No Attacks' : `Attack (${selected.size})`,
-          command: { type: 'boolean', value: true },
-          tone: selected.size === 0 ? 'primary' : 'attack',
-          shortcut: 'Space',
-        },
-        secondaryButtons: secondary,
+        mainButton,
+        // once some are chosen, "No Attacks" would confirm them: un-choosing is done on the cards
+        secondaryButtons: !allAttack ? [] : selected.size > 0
+          ? [{ label: prompt.allAttackLabel!, command: { type: 'string', value: 'special' }, tone: 'attack' }]
+          : [noAttacks],
       };
     }
 

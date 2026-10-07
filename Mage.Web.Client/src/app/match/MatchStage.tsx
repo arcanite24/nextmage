@@ -51,15 +51,19 @@ function combatSets(combat: GameView['combat']) {
   const attacking = new Set<string>();
   const blocking = new Set<string>();
   const links: [string, string][] = [];
+  const attacks: [string, string][] = [];
   for (const group of combat ?? []) {
     const attackers = Object.keys(group.attackers ?? {});
     attackers.forEach((id) => attacking.add(id));
-    for (const blocker of Object.keys(group.blockers ?? {})) {
+    const blockers = Object.keys(group.blockers ?? {});
+    // unblocked attackers point at what they attack; blocked ones are tied to their blockers instead
+    if (group.defenderId && blockers.length === 0 && !group.isBlocked) attackers.forEach((id) => attacks.push([id, group.defenderId!]));
+    for (const blocker of blockers) {
       blocking.add(blocker);
       attackers.forEach((attacker) => links.push([blocker, attacker]));
     }
   }
-  return { attacking, blocking, links };
+  return { attacking, blocking, links, attacks };
 }
 
 function useSleeves() {
@@ -93,7 +97,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const board = useMemo(() => buildBoard(view, playerId), [view, playerId]);
   const clickable = useMemo(() => new Set(interaction.clickable.keys()), [interaction.clickable]);
   const combat = view?.combat;
-  const { attacking, blocking, links } = useMemo(() => combatSets(combat), [combat]);
+  const { attacking, blocking, links, attacks } = useMemo(() => combatSets(combat), [combat]);
   // lands can always tap for mana while you hold priority; glowing them all would drown the real options
   const quiet = useMemo(() => {
     if (interaction.mode !== 'priority' || !board.me) return EMPTY;
@@ -259,7 +263,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
       )}
 
       <Vfx view={view} myPlayerId={myId} />
-      <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} />
+      <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
       <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} />
       <GameMenu canConcede={canAct} onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })} onLeave={leave} />
 
