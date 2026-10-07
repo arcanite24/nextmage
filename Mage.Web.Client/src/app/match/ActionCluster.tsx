@@ -56,11 +56,14 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
   }, [main, cancel, awaiting, canAct, onCommand]);
 
   const deciding = interaction.mode !== 'waiting' && !awaiting;
-  const headline = deciding ? interaction.headline : status ?? interaction.headline;
+  // other decisions are printed across the table; the corner keeps the priority and waiting lines
+  const centred = deciding && interaction.mode !== 'priority';
+  const headline = centred ? '' : deciding ? interaction.headline : status ?? interaction.headline;
+  const passAhead = canAct && (interaction.mode === 'priority' || interaction.mode === 'waiting');
 
   return (
     <section className={styles.cluster} aria-label="Your decision" aria-live="polite">
-      <p className={[styles.headline, deciding ? styles.deciding : ''].join(' ')}><PromptText text={headline} /></p>
+      {headline && <p className={[styles.headline, deciding ? styles.deciding : ''].join(' ')}><PromptText text={headline} /></p>}
       {secondary.length > 0 && deciding && (
         <div className={styles.secondary}>
           {secondary.map((button) => (
@@ -77,7 +80,7 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
         </div>
       )}
       <div className={styles.mainRow}>
-        {canAct && (
+        {passAhead && (
           <DropdownMenu.Root>
             <DropdownMenu.Trigger className={styles.ahead} aria-label="Pass ahead">
               <ChevronUp size={20} />

@@ -19,7 +19,7 @@
 
 .turnNumber {
   font-family: var(--font-print);
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 700;
   letter-spacing: var(--tracking-print-wide);
   text-transform: uppercase;
@@ -28,7 +28,7 @@
 
 .whose {
   font-family: var(--font-print);
-  font-size: 30px;
+  font-size: 42px;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--ink-strong);
@@ -52,14 +52,14 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  width: 112px;
-  padding: 3px 10px;
+  width: 156px;
+  padding: 4px 12px;
   border: 0;
   border-radius: 6px;
   background: transparent;
   color: var(--ink-dim);
   font-family: var(--font-print);
-  font-size: 17px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -85,8 +85,8 @@
 }
 
 .dot {
-  width: 9px;
-  height: 9px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   box-shadow: inset 0 0 0 1.5px currentColor;
   opacity: 0.6;

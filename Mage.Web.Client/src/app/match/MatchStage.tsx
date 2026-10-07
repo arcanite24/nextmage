@@ -13,6 +13,9 @@ import { useSettings } from '../stores/settings';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
+import { MatPrint } from '../ui/MatPrint';
+import { PromptText } from '../ui/PromptText';
+import { Stitch } from '../ui/Stitch';
 import { ActionCluster } from './ActionCluster';
 import { Arrows } from './Arrows';
 import { buildBoard, fitCardWidth, type PermanentGroup, type PlayerBoard } from './boardModel';
@@ -64,7 +67,7 @@ function useSleeves() {
     const mine = sleeveFor(sleeves, deck);
     // opponents' sleeves must read as "theirs" at a glance
     const theirs = SLEEVE_COLORS.find((color) => color !== mine && color !== SLEEVE_COLORS[0]) ?? SLEEVE_COLORS[2];
-    return { mine, theirs };
+    return { mine, theirs, cover: deck?.cover ?? null };
   }, [deckId, sleeves, saved, starters]);
 }
 
@@ -145,11 +148,27 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   // before the first turn, a choice among exactly the players is "who starts"
   const choosingStarter = interaction.mode === 'target' && pregame && clickable.size > 0
     && [...clickable].every((id) => board.players.has(id));
+  // one decision, one set of controls: an overlay owns the choice while it's open
+  const overlayOpen = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards || interaction.mode === 'panel') && !awaitingServer;
+  const handHidden = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards) && !awaitingServer;
+  // a choice among cards in hand (discard, reveal...): eligible cards take the decision edge
+  const choosingInHand = interaction.mode === 'target' && !pickerCards && [...clickable].some((id) => handIds.has(id));
+  const deciding = mode === 'play' && interaction.mode !== 'waiting' && interaction.mode !== 'priority' && !awaitingServer && !overlayOpen;
+  const opponentArt = useMemo(() => {
+    const permanent = board.opponents[0]?.front[0]?.lead ?? board.opponents[0]?.back.find((group) => !(group.lead.cardTypes ?? []).includes('LAND'))?.lead;
+    return permanent?.expansionSetCode && permanent.cardNumber
+      ? { setCode: permanent.expansionSetCode, cardNumber: permanent.cardNumber, name: permanent.name }
+      : null;
+  }, [board.opponents]);
 
   return (
     <Stage>
       <div className={styles.mat} aria-hidden="true" />
+      {/* each half carries its player's deck art, printed faintly into the mat */}
+      <div className={styles.printTheirs}><MatPrint card={opponentArt} /></div>
+      <div className={styles.printMine}><MatPrint card={sleeves.cover} /></div>
       <div className={styles.seam} aria-hidden="true" />
+      <Stitch inset={10} radius={22} />
 
       {board.opponents.map((opponent, index) => (
         <OpponentSide
@@ -171,7 +190,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
       {board.me && (
         <>
-          <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} onClick={onClick} left={FIELD_LEFT} width={FIELD_WIDTH} frontTop={572} backTop={770} />
+          <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} onClick={onClick} left={FIELD_LEFT} width={FIELD_WIDTH} frontTop={556} backTop={778} />
           <div className={styles.myPlate}>
             <PlayerPlate
               player={board.me.player}
@@ -191,9 +210,10 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
       <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
       <PhaseLadder step={view?.step} myTurn={!!myId && view?.activePlayerId === myId} turn={view?.turn ?? 0} />
 
-      {mode === 'play' && board.me && (
+      {mode === 'play' && board.me && !handHidden && (
         <Hand
           cards={hand}
+          choosing={choosingInHand}
           clickable={pickerCards ? EMPTY : clickable}
           selected={interaction.selected}
           sleeve={sleeves.mine}
@@ -203,8 +223,12 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
         />
       )}
 
+      {deciding && (
+        <p className={styles.prompt} aria-hidden="true"><PromptText text={interaction.headline} /></p>
+      )}
+
       {mode === 'play' ? (
-        <ActionCluster
+        !overlayOpen && <ActionCluster
           interaction={interaction}
           awaiting={awaitingServer}
           status={state.status}
@@ -280,13 +304,13 @@ const Battlefield = memo(function Battlefield({ board, left, width, frontTop, ba
   const forward = board.isMe ? -1 : 1;
   return (
     <>
-      <Row groups={board.front} left={left} width={width} top={frontTop} ideal={128} min={58} forward={forward} {...row} />
-      <Row groups={board.back} left={left} width={width} top={backTop} ideal={98} min={50} forward={forward} {...row} />
+      <Row groups={board.front} left={left} width={width} top={frontTop} ideal={150} min={58} forward={forward} label="Creatures" flip={!board.isMe} {...row} />
+      <Row groups={board.back} left={left} width={width} top={backTop} ideal={112} min={50} forward={forward} label="Lands & permanents" flip={!board.isMe} {...row} />
     </>
   );
 });
 
-function Row({ groups, left, width, top, ideal, min, forward, ...rest }: RowProps & {
+function Row({ groups, left, width, top, ideal, min, forward, label, flip, ...rest }: RowProps & {
   groups: PermanentGroup[];
   left: number;
   width: number;
@@ -294,10 +318,19 @@ function Row({ groups, left, width, top, ideal, min, forward, ...rest }: RowProp
   ideal: number;
   min: number;
   forward: 1 | -1;
+  /** printed into the zone outline */
+  label: string;
+  /** the opponent's zones read from their side: label at the top edge */
+  flip: boolean;
 }) {
-  const cardWidth = fitCardWidth(groups, width, ideal, min);
+  const cardWidth = fitCardWidth(groups, width - 24, ideal, min);
+  const height = ideal * (88 / 63);
   return (
-    <div className={styles.row} style={{ left, top, width, gap: cardWidth * 0.12 }}>
+    <div
+      className={[styles.row, flip ? styles.rowFlip : ''].join(' ')}
+      style={{ left, top, width, height, gap: cardWidth * 0.12 }}
+      data-label={label}
+    >
       {groups.map((group) => (
         <PermanentStack key={group.key} group={group} width={cardWidth} forward={forward} {...rest} />
       ))}
