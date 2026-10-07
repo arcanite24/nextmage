@@ -4,8 +4,16 @@ import {
   getDefaultComputerPlayerType,
   getDefaultDeckType,
   getDefaultGameTypeName,
+  getDefaultTournamentTypeName,
   getHumanPlayerType,
   isLimitedDeckType,
+  isTournamentTypeCubeBooster,
+  isTournamentTypeDraft,
+  isTournamentTypeJumpstart,
+  isTournamentTypeLimited,
+  isTournamentTypeRandom,
+  isTournamentTypeReshuffled,
+  isTournamentTypeRichMan,
   normalizeLobbyServerOptions,
   resizePlayerTypes,
   validateDeckGameTypePair,
@@ -40,7 +48,50 @@ const SERVER_STATE = {
     'Limited',
   ],
   playerTypes: ['HUMAN', 'COMPUTER_MAD', 'Computer - monte carlo'],
-  tournamentTypes: [],
+  tournamentTypes: [
+    {
+      name: 'Booster Draft Swiss',
+      minPlayers: 4,
+      maxPlayers: 8,
+      numBoosters: 3,
+      draft: true,
+      limited: true,
+      cubeBooster: false,
+      random: false,
+      reshuffled: false,
+      richMan: false,
+      jumpstart: false,
+      elimination: false,
+    },
+    {
+      name: 'Rich Man Cube Draft Swiss',
+      minPlayers: 4,
+      maxPlayers: 8,
+      numBoosters: 3,
+      draft: true,
+      limited: true,
+      cubeBooster: true,
+      random: false,
+      reshuffled: false,
+      richMan: true,
+      jumpstart: false,
+      elimination: false,
+    },
+    {
+      name: 'Jumpstart Elimination (Custom)',
+      minPlayers: 2,
+      maxPlayers: 2,
+      numBoosters: 2,
+      draft: false,
+      limited: true,
+      cubeBooster: false,
+      random: false,
+      reshuffled: false,
+      richMan: false,
+      jumpstart: true,
+      elimination: true,
+    },
+  ],
   draftCubes: ['Legacy Cube'],
   testMode: true,
   version: {
@@ -74,6 +125,11 @@ test('normalizes lobby options from Java server state', () => {
   assert.equal(options.playerTypes[1].isAI, true);
   assert.equal(options.tournamentGameTypes.length, 1);
   assert.equal(options.tournamentGameTypes[0].name, 'Two Player Duel');
+  assert.equal(options.tournamentTypes[0].name, 'Booster Draft Swiss');
+  assert.equal(options.tournamentTypes[0].isDraft, true);
+  assert.equal(options.tournamentTypes[1].isCubeBooster, true);
+  assert.equal(options.tournamentTypes[1].isRichMan, true);
+  assert.equal(options.tournamentTypes[2].isJumpstart, true);
   assert.equal(options.draftCubes[0], 'Legacy Cube');
 });
 
@@ -89,6 +145,23 @@ test('selects resilient create-table defaults from server-provided options', () 
     'Human',
     'Human',
   ]);
+});
+
+test('normalizes Java tournament type flags for create tournament flows', () => {
+  const options = normalizeLobbyServerOptions(SERVER_STATE);
+  const draft = options.tournamentTypes[0];
+  const richCube = options.tournamentTypes[1];
+  const jumpstart = options.tournamentTypes[2];
+
+  assert.equal(getDefaultTournamentTypeName(options), 'Booster Draft Swiss');
+  assert.equal(isTournamentTypeLimited(draft), true);
+  assert.equal(isTournamentTypeDraft(draft), true);
+  assert.equal(isTournamentTypeCubeBooster(draft), false);
+  assert.equal(isTournamentTypeCubeBooster(richCube), true);
+  assert.equal(isTournamentTypeRichMan(richCube), true);
+  assert.equal(isTournamentTypeRandom(richCube), false);
+  assert.equal(isTournamentTypeReshuffled(richCube), false);
+  assert.equal(isTournamentTypeJumpstart(jumpstart), true);
 });
 
 test('matches Java NewTableDialog deck and game type validation', () => {

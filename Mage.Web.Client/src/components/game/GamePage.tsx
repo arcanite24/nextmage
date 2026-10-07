@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGameStore, useDebugStore, useAnimationStore } from '../../stores';
 import { Button } from '../common';
-import { Battlefield } from './Battlefield';
+import { Battlefield, type BattlefieldCardClickOptions, type BattlefieldInspectMode } from './Battlefield';
 import { Hand } from './Hand';
 import { ArenaPlayerHUD } from './ArenaPlayerHUD';
 import { ArenaOpponentHUD } from './ArenaOpponentHUD';
@@ -28,8 +28,15 @@ import { ArenaPriorityControls } from './ArenaPriorityControls';
 import { MatchActionPanel } from './MatchActionPanel';
 import { MatchZonePanel } from './MatchZonePanel';
 import { MatchLogPanel } from './MatchLogPanel';
+import { audioFeedbackService } from '../../services/AudioFeedbackService';
+import { appConfigService } from '../../services/AppConfigService';
 import { cardImageService } from '../../services/CardImageService';
-import { keybindService } from '../../services/KeybindService';
+import { applyClientKeybind, keybindService, type KeybindDefinition } from '../../services/KeybindService';
+import {
+    createPlayerFeedbackSnapshot,
+    diffPlayerFeedbackSnapshots,
+    type PlayerFeedbackSnapshot,
+} from '../../services/PlayerFeedbackService';
 import { DebugMode } from '../debug/DebugMode';
 import { CardView, ManaType, PermanentView, PlayerView, StackAbilityView, UUID } from '../../types';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -115,43 +122,63 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
         syncRuntimeSettings: state.syncRuntimeSettings,
     })));
     const [previewCard, setPreviewCard] = React.useState<CardView | PermanentView | null>(null);
+    const [previewInitialFace, setPreviewInitialFace] = React.useState<'front' | 'back' | null>(null);
     const [hoverPreviewCard, setHoverPreviewCard] = React.useState<CardView | PermanentView | null>(null);
     const [resultModalClosed, setResultModalClosed] = React.useState(false);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(() => appConfigService.loadPanelLayoutConfig().game.sidebarOpen);
     const [debugModeOpen, setDebugModeOpen] = useState(false);
     const hoverPreviewTimerRef = useRef<number | null>(null);
+    const isPlayerControlLocked = React.useCallback(() => (
+        isReplay || useGameStore.getState().isWatching
+    ), [isReplay]);
 
     // Animation store for life change detection and attack animations
     const updateLifeTotals = useAnimationStore(state => state.updateLifeTotals);
+    const triggerPlayerCounterEffect = useAnimationStore(state => state.triggerPlayerCounterEffect);
     const queueMultipleAttacks = useAnimationStore(state => state.queueMultipleAttacks);
     const clearAnimationQueue = useAnimationStore(state => state.clearAnimationQueue);
-    const previousLifeRef = useRef<Record<UUID, number>>({});
+    const previousPlayerFeedbackSnapshotRef = useRef<PlayerFeedbackSnapshot | null>(null);
     const previousStepRef = useRef<string | null>(null);
     const hasQueuedAttacksRef = useRef(false);
 
-    // Track life changes to trigger damage animations
+    // Track player life and counter changes to trigger damage and HUD feedback.
     useEffect(() => {
-        if (!gameStore.gameView?.players) return;
-
-        const currentLifeTotals: Record<UUID, number> = {};
-        gameStore.gameView.players.forEach((p) => {
-            currentLifeTotals[p.playerId] = p.life;
-        });
-
-        // Check for changes
-        const hasChange = Object.keys(currentLifeTotals).some(
-            (id) => previousLifeRef.current[id] !== currentLifeTotals[id]
-        );
-
-        if (hasChange && Object.keys(previousLifeRef.current).length > 0) {
-            // This is not the first load, trigger damage animations
-            const currentStep = gameStore.gameView.step;
-            const isCombatDamageStep = currentStep === 'COMBAT_DAMAGE' || currentStep === 'FIRST_COMBAT_DAMAGE';
-            updateLifeTotals(currentLifeTotals, isCombatDamageStep);
+        const players = gameStore.gameView?.players;
+        if (!players) {
+            previousPlayerFeedbackSnapshotRef.current = null;
+            return;
         }
 
-        previousLifeRef.current = currentLifeTotals;
-    }, [gameStore.gameView?.players, gameStore.gameView?.step, updateLifeTotals]);
+        const currentLifeTotals: Record<UUID, number> = {};
+        players.forEach((p) => {
+            currentLifeTotals[p.playerId] = p.life;
+        });
+        const currentStep = gameStore.gameView?.step;
+        const isCombatDamageStep = currentStep === 'COMBAT_DAMAGE' || currentStep === 'FIRST_COMBAT_DAMAGE';
+        updateLifeTotals(currentLifeTotals, isCombatDamageStep);
+
+        const currentSnapshot = createPlayerFeedbackSnapshot(players);
+        const previousSnapshot = previousPlayerFeedbackSnapshotRef.current;
+        previousPlayerFeedbackSnapshotRef.current = currentSnapshot;
+
+        if (!settings.animationsEnabled || !previousSnapshot) {
+            return;
+        }
+
+        for (const event of diffPlayerFeedbackSnapshots(previousSnapshot, currentSnapshot)) {
+            if (event.kind !== 'counterGained' && event.kind !== 'counterLost') {
+                continue;
+            }
+            triggerPlayerCounterEffect(
+                event.playerId,
+                event.counterName ?? 'counter',
+                event.amount,
+                event.kind === 'counterGained' ? 'counterGain' : 'counterLoss',
+                event.previousValue ?? 0,
+                event.currentValue ?? 0
+            );
+        }
+    }, [gameStore.gameView?.players, gameStore.gameView?.step, settings.animationsEnabled, triggerPlayerCounterEffect, updateLifeTotals]);
 
     // Track combat phase changes to trigger attack animations
     useEffect(() => {
@@ -210,8 +237,27 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
         syncRuntimeSettings();
     }, [gameId, syncRuntimeSettings]);
 
+    useEffect(() => {
+        if (!gameStore.gameView || !settings.browserAudioUnlocked) {
+            audioFeedbackService.stopMatchMusic();
+            return;
+        }
+
+        audioFeedbackService.startMatchMusic(settings);
+        return () => {
+            audioFeedbackService.stopMatchMusic();
+        };
+    }, [
+        gameStore.gameView,
+        settings.browserAudioUnlocked,
+        settings.matchMusicEnabled,
+        settings.masterVolume,
+        settings.musicVolume,
+        settings.reducedAudioMode,
+    ]);
+
     const handleConfirmCurrentRequest = React.useCallback(async () => {
-        if (useGameStore.getState().isWatching) {
+        if (isPlayerControlLocked()) {
             return;
         }
 
@@ -226,31 +272,61 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
         }
 
         await actions.passPriority();
-    }, [actions.passPriority, actions.sendBoolean]);
+    }, [actions.passPriority, actions.sendBoolean, isPlayerControlLocked]);
 
     const handleUseFirstManaAbilityStart = React.useCallback(async () => {
-        if (useGameStore.getState().isWatching) {
+        if (isPlayerControlLocked()) {
             return;
         }
 
         await actions.sendPlayerAction('USE_FIRST_MANA_ABILITY_ON');
-    }, [actions.sendPlayerAction]);
+    }, [actions.sendPlayerAction, isPlayerControlLocked]);
 
     const handleUseFirstManaAbilityEnd = React.useCallback(async () => {
-        if (useGameStore.getState().isWatching) {
+        if (isPlayerControlLocked()) {
             return;
         }
 
         await actions.sendPlayerAction('USE_FIRST_MANA_ABILITY_OFF');
-    }, [actions.sendPlayerAction]);
+    }, [actions.sendPlayerAction, isPlayerControlLocked]);
+
+    const handleSwitchChat = React.useCallback(() => {
+        const input = document.querySelector<HTMLInputElement>('.chat-panel.expanded .chat-input:not(:disabled), .chat-input:not(:disabled)');
+        input?.focus();
+    }, []);
+
+    const handleToggleMacro = React.useCallback(async () => {
+        if (isPlayerControlLocked()) {
+            return;
+        }
+
+        await actions.sendPlayerAction('TOGGLE_RECORD_MACRO');
+    }, [actions.sendPlayerAction, isPlayerControlLocked]);
+
+    const handleSidebarToggle = React.useCallback(() => {
+        setSidebarOpen((open) => {
+            const nextOpen = !open;
+            if (settings.persistPanelLayout) {
+                const currentLayout = appConfigService.loadPanelLayoutConfig();
+                appConfigService.savePanelLayoutConfig({
+                    ...currentLayout,
+                    game: {
+                        ...currentLayout.game,
+                        sidebarOpen: nextOpen,
+                    },
+                });
+            }
+            return nextOpen;
+        });
+    }, [settings.persistPanelLayout]);
 
     const guardPlayerControl = React.useCallback((handler: () => Promise<void>) => {
-        if (useGameStore.getState().isWatching) {
+        if (isPlayerControlLocked()) {
             return;
         }
 
         void handler();
-    }, []);
+    }, [isPlayerControlLocked]);
 
     // Global keyboard shortcuts
     useEffect(() => {
@@ -261,32 +337,40 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
             keybindService.handleKeyUp(e);
         };
 
-        const unregister = keybindService.registerMany([
-            { id: 'confirm-request', label: 'Confirm current request', key: 'F2', handler: handleConfirmCurrentRequest },
-            { id: 'cancel-skip', label: 'Cancel active skip action', key: 'F3', handler: () => guardPlayerControl(actions.cancelPassActions) },
-            { id: 'pass-next-turn', label: 'Until Next Turn', key: 'F4', handler: () => guardPlayerControl(actions.passPriorityUntilNextTurn) },
-            { id: 'pass-end-step', label: 'Until End Step', key: 'F5', handler: () => guardPlayerControl(actions.passPriorityUntilEndOfTurn) },
-            { id: 'pass-next-turn-skip-stack', label: 'Until Next Turn, Skip Stack', key: 'F6', handler: () => guardPlayerControl(actions.passPriorityUntilNextTurnSkipStack) },
-            { id: 'pass-next-main', label: 'Until Next Main', key: 'F7', handler: () => guardPlayerControl(actions.passPriorityUntilNextMain) },
-            { id: 'pass-my-turn', label: 'Until My Turn', key: 'F9', handler: () => guardPlayerControl(actions.passPriorityUntilMyNextTurn) },
-            { id: 'pass-stack', label: 'Until Stack Resolved', key: 'F10', handler: () => guardPlayerControl(actions.passPriorityUntilStackResolved) },
-            { id: 'pass-prior-end-step', label: 'Until End Step Before My Turn', key: 'F11', handler: () => guardPlayerControl(actions.passPriorityUntilEndStepBeforeMyTurn) },
-            {
+        const keybinds = settings.keybinds;
+        const bind = (definition: KeybindDefinition) => (
+            definition.actionId ? applyClientKeybind(definition, keybinds[definition.actionId]) : definition
+        );
+        const definitions = [
+            bind({ id: 'confirm-request', actionId: 'confirm', label: 'Confirm current request', key: 'F2', handler: handleConfirmCurrentRequest }),
+            bind({ id: 'cancel-skip', actionId: 'cancelSkip', label: 'Cancel active skip action', key: 'F3', handler: () => guardPlayerControl(actions.cancelPassActions) }),
+            bind({ id: 'pass-next-turn', actionId: 'nextTurn', label: 'Until Next Turn', key: 'F4', handler: () => guardPlayerControl(actions.passPriorityUntilNextTurn) }),
+            bind({ id: 'pass-end-step', actionId: 'endStep', label: 'Until End Step', key: 'F5', handler: () => guardPlayerControl(actions.passPriorityUntilEndOfTurn) }),
+            bind({ id: 'pass-next-turn-skip-stack', actionId: 'skipStep', label: 'Until Next Turn, Skip Stack', key: 'F6', handler: () => guardPlayerControl(actions.passPriorityUntilNextTurnSkipStack) }),
+            bind({ id: 'pass-next-main', actionId: 'mainStep', label: 'Until Next Main', key: 'F7', handler: () => guardPlayerControl(actions.passPriorityUntilNextMain) }),
+            bind({ id: 'pass-my-turn', actionId: 'yourTurn', label: 'Until My Turn', key: 'F9', handler: () => guardPlayerControl(actions.passPriorityUntilMyNextTurn) }),
+            bind({ id: 'pass-stack', actionId: 'skipStack', label: 'Until Stack Resolved', key: 'F10', handler: () => guardPlayerControl(actions.passPriorityUntilStackResolved) }),
+            bind({ id: 'pass-prior-end-step', actionId: 'priorEndStep', label: 'Until End Step Before My Turn', key: 'F11', handler: () => guardPlayerControl(actions.passPriorityUntilEndStepBeforeMyTurn) }),
+            bind({ id: 'switch-chat', actionId: 'switchChat', label: 'Focus chat input', key: 'Enter', ctrlOrMeta: true, handler: handleSwitchChat }),
+            bind({ id: 'toggle-macro', actionId: 'toggleMacro', label: 'Toggle macro recording', key: 'm', ctrlOrMeta: true, handler: () => guardPlayerControl(handleToggleMacro) }),
+            bind({
                 id: 'use-first-mana-ability-hold',
+                actionId: 'holdFirstMana',
                 label: 'Hold first mana ability',
                 key: '1',
                 altKey: true,
                 ignoreRepeat: true,
                 handler: handleUseFirstManaAbilityStart,
-            },
-            {
+            }),
+            bind({
                 id: 'use-first-mana-ability-release',
+                actionId: 'holdFirstMana',
                 label: 'Release first mana ability',
                 key: '1',
                 eventType: 'keyup',
                 altKey: true,
                 handler: handleUseFirstManaAbilityEnd,
-            },
+            }),
             {
                 id: 'cancel',
                 label: 'Cancel',
@@ -294,13 +378,14 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
                 handler: () => {
                     if (debugModeOpen) {
                         setDebugModeOpen(false);
-                    } else if (!useGameStore.getState().isWatching) {
+                    } else if (!isPlayerControlLocked()) {
                         void actions.cancelPassActions();
                     }
                 },
             },
-            {
+            bind({
                 id: 'debug-mode',
+                actionId: 'debugMode',
                 label: 'Debug Mode',
                 key: 'd',
                 ctrlOrMeta: true,
@@ -308,8 +393,13 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
                     toggleDebugMode();
                     setDebugModeOpen((open) => !open);
                 },
-            },
-        ]);
+            }),
+        ].map(definition => definition?.id === 'use-first-mana-ability-release' && definition.actionId
+            ? { ...definition, eventType: 'keyup' as const }
+            : definition
+        ).filter((definition): definition is KeybindDefinition => definition !== null);
+
+        const unregister = keybindService.registerMany(definitions);
 
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
@@ -333,8 +423,12 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
         debugModeOpen,
         guardPlayerControl,
         handleConfirmCurrentRequest,
+        handleSwitchChat,
+        handleToggleMacro,
         handleUseFirstManaAbilityEnd,
         handleUseFirstManaAbilityStart,
+        isPlayerControlLocked,
+        settings.keybinds,
         toggleDebugMode,
     ]);
 
@@ -348,23 +442,28 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
     }, [actions.concede]);
 
     const handleManaClick = React.useCallback(async (manaType: ManaType) => {
-        if (gameStore.isWatching) {
+        if (isPlayerControlLocked()) {
             return;
         }
 
         await actions.sendManaType(manaType);
-    }, [actions.sendManaType, gameStore.isWatching]);
+    }, [actions.sendManaType, isPlayerControlLocked]);
 
-    const handleCardClick = React.useCallback((cardId: string) => {
-        if (gameStore.isWatching) {
+    const handleCardClick = React.useCallback((cardId: string, options: BattlefieldCardClickOptions = {}) => {
+        if (isPlayerControlLocked()) {
             return;
         }
 
         console.log('Card clicked:', cardId);
         // By default, just sending UUID to server handles most interactions 
         // (casting, activating, targeting) if the server state expects it.
-        actions.sendUUID(cardId);
-    }, [actions.sendUUID, gameStore.isWatching]);
+        void (async () => {
+            if (options.holdPriority) {
+                await actions.sendPlayerAction('HOLD_PRIORITY');
+            }
+            await actions.sendUUID(cardId);
+        })();
+    }, [actions.sendPlayerAction, actions.sendUUID, isPlayerControlLocked]);
 
     React.useEffect(() => {
         const findHandCardAtPoint = (clientX: number, clientY: number): HTMLElement | null => {
@@ -390,7 +489,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
         };
 
         const handleDocumentClick = (event: MouseEvent) => {
-            if (event.button !== 0 || useGameStore.getState().isWatching) {
+            if (event.button !== 0 || isPlayerControlLocked()) {
                 return;
             }
 
@@ -418,7 +517,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
 
         document.addEventListener('click', handleDocumentClick, true);
         return () => document.removeEventListener('click', handleDocumentClick, true);
-    }, [handleCardClick]);
+    }, [handleCardClick, isPlayerControlLocked]);
 
     const findCardById = React.useCallback((cardId: string): CardView | PermanentView | null => {
         const { gameView, getMyPlayer, getOpponents } = useGameStore.getState();
@@ -456,10 +555,16 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
         return card ?? null;
     }, []);
 
-    const handleCardInspect = React.useCallback((cardId: string) => {
+    const handleCardInspect = React.useCallback((cardId: string, mode: BattlefieldInspectMode = 'normal') => {
         const card = findCardById(cardId);
         if (card) {
             setHoverPreviewCard(null);
+            if (mode === 'copy' && 'original' in card && card.original) {
+                setPreviewInitialFace('front');
+                setPreviewCard(card.original);
+                return;
+            }
+            setPreviewInitialFace(mode === 'alternate' ? 'back' : 'front');
             setPreviewCard(card);
         }
     }, [findCardById, setPreviewCard]);
@@ -478,8 +583,8 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
         hoverPreviewTimerRef.current = window.setTimeout(() => {
             setHoverPreviewCard(findCardById(cardId));
             hoverPreviewTimerRef.current = null;
-        }, 180);
-    }, [findCardById, previewCard]);
+        }, settings.tooltipDelayMs);
+    }, [findCardById, previewCard, settings.tooltipDelayMs]);
 
     const getHoverPreviewImageCard = React.useCallback((card: CardView | PermanentView): CardView | PermanentView => {
         if (isStackAbilityCard(card)) {
@@ -540,7 +645,11 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
             {previewCard && (
                 <CardPreviewModal
                     card={previewCard}
-                    onClose={() => setPreviewCard(null)}
+                    initialFace={previewInitialFace ?? undefined}
+                    onClose={() => {
+                        setPreviewCard(null);
+                        setPreviewInitialFace(null);
+                    }}
                 />
             )}
             {hoverPreviewCard && !previewCard && (
@@ -689,6 +798,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
                                 onShowZone={actions.showZone}
                                 onInteract={handleCardClick}
                                 showPlayerName={settings.alwaysShowPlayerNames}
+                                displayLifeOnAvatar={settings.displayLifeOnAvatar}
                             />
                             <Battlefield
                                 player={p}
@@ -725,6 +835,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
                     onInteract={handleCardClick}
                     onManaClick={handleManaClick}
                     showPlayerName={settings.alwaysShowPlayerNames}
+                    displayLifeOnAvatar={settings.displayLifeOnAvatar}
                 />
             )}
 
@@ -777,7 +888,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
             {/* Sidebar Toggle */}
             <button
                 className={`arena-sidebar-toggle ${sidebarOpen ? 'open' : ''}`}
-                onClick={() => setSidebarOpen(!sidebarOpen)}
+                onClick={handleSidebarToggle}
                 aria-label={sidebarOpen ? 'Close game sidebar' : 'Open game sidebar'}
                 data-testid="game-sidebar-toggle"
             >

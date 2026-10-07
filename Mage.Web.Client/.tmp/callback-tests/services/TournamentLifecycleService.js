@@ -29,7 +29,8 @@ export function createTournamentLifecycleHandler(options) {
                 });
                 return;
             }
-            if (callback.method !== 'startTournament' || !callback.objectId) {
+            if ((callback.method !== 'startTournament' && callback.method !== 'showTournament')
+                || !callback.objectId) {
                 return;
             }
             const tournamentId = callback.objectId;

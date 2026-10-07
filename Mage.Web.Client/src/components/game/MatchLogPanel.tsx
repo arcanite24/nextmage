@@ -34,9 +34,9 @@ export const MatchLogPanel: React.FC<MatchLogPanelProps> = ({ gameId, gameView, 
                 kind: message.type === 'error' ? 'error' : message.type === 'status' ? 'status' : message.type === 'system' ? 'status' : 'chat',
                 label: channel.name,
                 message: message.type === 'user' ? `${message.userName}: ${message.message}` : message.message,
-                time: message.timestamp,
+                time: message.timestamp ?? undefined,
             } satisfies MatchLogEntry)))
-            .sort((first, second) => second.time.getTime() - first.time.getTime());
+            .sort((first, second) => (second.time?.getTime() ?? 0) - (first.time?.getTime() ?? 0));
 
         const systemEntries: MatchLogEntry[] = [];
         if (lastError) {
@@ -75,7 +75,7 @@ export const MatchLogPanel: React.FC<MatchLogPanelProps> = ({ gameId, gameView, 
                 id: channel.id,
                 name: channel.name,
                 messages: channel.messages.map((message) => ({
-                    timestamp: message.timestamp.toISOString(),
+                    timestamp: message.timestamp?.toISOString() ?? null,
                     userName: message.userName,
                     type: message.type,
                     message: message.message,

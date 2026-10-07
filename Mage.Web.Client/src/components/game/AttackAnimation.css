@@ -216,6 +216,52 @@
         1px 1px 0 #14532d;
 }
 
+.player-counter-effect {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    max-width: min(180px, 42vw);
+    padding: 4px 8px;
+    border: 1px solid rgba(148, 163, 184, 0.52);
+    border-radius: 7px;
+    background: rgba(15, 23, 42, 0.92);
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.1;
+    pointer-events: none;
+    z-index: 710;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+    transform: translate(-50%, -50%);
+    animation: playerCounterFloat 0.9s ease-out forwards;
+}
+
+.player-counter-effect.counter-gain {
+    border-color: rgba(45, 212, 191, 0.75);
+}
+
+.player-counter-effect.counter-loss {
+    border-color: rgba(251, 146, 60, 0.75);
+}
+
+.player-counter-effect-delta {
+    color: #7dd3fc;
+    white-space: nowrap;
+}
+
+.player-counter-effect.counter-loss .player-counter-effect-delta {
+    color: #fdba74;
+}
+
+.player-counter-effect-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 @keyframes damageNumberFloat {
     0% {
         opacity: 1;
@@ -234,6 +280,23 @@
     100% {
         opacity: 0;
         transform: translate(-50%, -120%) scale(0.8);
+    }
+}
+
+@keyframes playerCounterFloat {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -40%) scale(0.86);
+    }
+
+    18% {
+        opacity: 1;
+        transform: translate(-50%, -52%) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -95%) scale(0.96);
     }
 }
 

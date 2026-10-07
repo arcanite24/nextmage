@@ -9,6 +9,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDeckStore } from '../../stores/deckStore';
 import { DeckSerializer } from '../../services/DeckSerializer';
+import { deckStorage } from '../../services/DeckStorageService';
+import {
+    buildLimitedDeckAutosaveDeck,
+    shouldAutosaveLimitedDeck,
+    type LimitedDeckAutosaveKind,
+} from '../../services/LimitedDeckAutosaveService';
+import { getLimitedDeckSubmitValidationError } from '../../services/LimitedDeckSubmitValidationService';
 import {
     cardResolverService,
     DECK_TEXT_IMPORT_ACCEPT,
@@ -145,6 +152,9 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({
     } = useDeckStore();
     const modeConfig = editorConfig.modes[editorMode];
     const isLimitedAddLandsMode = editorMode === 'limited' || activitySubmitContext?.limitedSideboard === true;
+    const limitedDeckAutosaveKind: LimitedDeckAutosaveKind | null = activitySubmitContext?.kind === 'construction'
+        ? 'construction'
+        : activitySubmitContext?.kind === 'sideboard' && activitySubmitContext.limitedSideboard === true ? 'sideboard' : null;
     const allowSnowBasics = editorMode === 'normal';
     const canAddLands = editorMode === 'normal' || isLimitedAddLandsMode;
     const addLandsAllowedZones = editorMode === 'normal' ? FREE_BUILD_ADD_LANDS_ZONES : MAIN_DECK_ADD_LANDS_ZONES;
@@ -175,6 +185,8 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({
     const [pendingImportMode, setPendingImportMode] = useState<EditorImportMode>('replace');
     const [importStatus, setImportStatus] = useState<string | null>(null);
     const [importError, setImportError] = useState<string | null>(null);
+    const [limitedDeckAutosaveState, setLimitedDeckAutosaveState] = useState<'idle' | 'pending' | 'saved' | 'error'>('idle');
+    const [limitedDeckAutosaveMessage, setLimitedDeckAutosaveMessage] = useState<string | null>(null);
     const [isDragImportActive, setIsDragImportActive] = useState(false);
     const [selectedLegalityCardNames, setSelectedLegalityCardNames] = useState<string[]>([]);
     const [deckRowSelectionSource, setDeckRowSelectionSource] = useState<DeckRowSelectionSource>(null);
@@ -184,6 +196,8 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({
     const importReviewReturnFocusRef = useRef<HTMLElement | null>(null);
     const addLandsReturnFocusRef = useRef<HTMLElement | null>(null);
     const generatorReturnFocusRef = useRef<HTMLElement | null>(null);
+    const limitedDeckAutosaveTimerRef = useRef<number | null>(null);
+    const canAutosaveLimitedDeck = Boolean(limitedDeckAutosaveKind && shouldAutosaveLimitedDeck(currentDeck));
 
     useEffect(() => {
         if (!isDirty) return;
@@ -219,6 +233,61 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({
             // Cleanup when leaving editor
         };
     }, [deckId, loadDeck, createNewDeck, isEditing]);
+
+    useEffect(() => {
+        if (limitedDeckAutosaveTimerRef.current !== null) {
+            window.clearTimeout(limitedDeckAutosaveTimerRef.current);
+            limitedDeckAutosaveTimerRef.current = null;
+        }
+
+        if (!activitySubmitContext || !currentDeck || !limitedDeckAutosaveKind || !shouldAutosaveLimitedDeck(currentDeck)) {
+            setLimitedDeckAutosaveState('idle');
+            setLimitedDeckAutosaveMessage(null);
+            return;
+        }
+
+        let cancelled = false;
+        const snapshot: DeckCardLists = {
+            ...currentDeck,
+            cards: currentDeck.cards.map(card => ({ ...card })),
+            sideboard: currentDeck.sideboard.map(card => ({ ...card })),
+        };
+        setLimitedDeckAutosaveState('pending');
+        setLimitedDeckAutosaveMessage('Autosave pending.');
+        limitedDeckAutosaveTimerRef.current = window.setTimeout(() => {
+            limitedDeckAutosaveTimerRef.current = null;
+            const autosaveDeck = buildLimitedDeckAutosaveDeck(snapshot, {
+                kind: limitedDeckAutosaveKind,
+                activityId: activitySubmitContext.tableId,
+                title: activitySubmitContext.title,
+                limitedSideboard: activitySubmitContext.limitedSideboard,
+            });
+            deckStorage.saveDeck(autosaveDeck)
+                .then(() => {
+                    if (cancelled) return;
+                    setLimitedDeckAutosaveState('saved');
+                    setLimitedDeckAutosaveMessage(`Autosaved as ${autosaveDeck.name}.`);
+                })
+                .catch((error) => {
+                    if (cancelled) return;
+                    console.error('[DeckEditorPage] Failed to autosave limited deck:', error);
+                    setLimitedDeckAutosaveState('error');
+                    setLimitedDeckAutosaveMessage(error instanceof Error ? error.message : 'Limited deck autosave failed.');
+                });
+        }, 750);
+
+        return () => {
+            cancelled = true;
+            if (limitedDeckAutosaveTimerRef.current !== null) {
+                window.clearTimeout(limitedDeckAutosaveTimerRef.current);
+                limitedDeckAutosaveTimerRef.current = null;
+            }
+        };
+    }, [
+        activitySubmitContext,
+        currentDeck,
+        limitedDeckAutosaveKind,
+    ]);
 
     const handleNavigation = (page: NavPage) => {
         const action = page === 'lobby'
@@ -257,10 +326,17 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({
     const handleActivityDeckSubmit = async () => {
         if (!activitySubmitContext || !onSubmitActivityDeck || !currentDeck) return;
 
-        setIsSubmittingActivityDeck(true);
         setAddLandsResultDetails(null);
         setImportStatus(null);
         setImportError(null);
+
+        const validationError = getLimitedDeckSubmitValidationError(currentDeck, activitySubmitContext);
+        if (validationError) {
+            setImportError(validationError);
+            return;
+        }
+
+        setIsSubmittingActivityDeck(true);
 
         try {
             const submitted = await onSubmitActivityDeck(activitySubmitContext.tableId, currentDeck);
@@ -819,10 +895,21 @@ export const DeckEditorPage: React.FC<DeckEditorPageProps> = ({
                     />
                     <DeckAnalyticsPanel deck={currentDeck} onSelectCardNames={handleSelectAnalyticsCards} />
                     <div className="deck-editor-actions">
+                        {canAutosaveLimitedDeck && (
+                            <div
+                                className={`deck-editor-status ${limitedDeckAutosaveState === 'error' ? 'deck-editor-status-error' : ''}`}
+                                role={limitedDeckAutosaveState === 'error' ? 'alert' : 'status'}
+                                data-testid="deck-editor-limited-autosave-state"
+                                data-autosave-state={limitedDeckAutosaveState}
+                            >
+                                {limitedDeckAutosaveMessage ?? 'Limited deck autosave ready.'}
+                            </div>
+                        )}
                         {(importStatus || importError) && (
                             <div
                                 className={`deck-editor-status ${importError ? 'deck-editor-status-error' : ''}`}
                                 role={importError ? 'alert' : 'status'}
+                                data-testid="deck-editor-status"
                             >
                                 {importError || importStatus}
                             </div>

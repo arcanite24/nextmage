@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { Eye, Lock, Star, Trophy, X } from 'lucide-react';
 import { TableView, TableState } from '../../types';
 import { Button } from '../common';
 import './TableDetails.css';
@@ -68,7 +69,7 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
             <div className="details-header">
                 <h3 data-testid="table-details-name">{table.tableName}</h3>
                 <button className="close-btn" onClick={onClose} aria-label="Close">
-                    ×
+                    <X size={16} aria-hidden="true" />
                 </button>
             </div>
 
@@ -111,16 +112,16 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
                 {/* Features */}
                 <div className="details-features">
                     {table.passworded && (
-                        <span className="feature-badge">🔒 Password Required</span>
+                        <span className="feature-badge"><Lock size={14} aria-hidden="true" /> Password Required</span>
                     )}
                     {table.rated && (
-                        <span className="feature-badge">⭐ Rated</span>
+                        <span className="feature-badge"><Star size={14} aria-hidden="true" /> Rated</span>
                     )}
                     {table.spectatorsAllowed && (
-                        <span className="feature-badge">👁️ Spectators Allowed</span>
+                        <span className="feature-badge"><Eye size={14} aria-hidden="true" /> Spectators Allowed</span>
                     )}
                     {table.isTournament && (
-                        <span className="feature-badge">🏆 Tournament</span>
+                        <span className="feature-badge"><Trophy size={14} aria-hidden="true" /> Tournament</span>
                     )}
                 </div>
 

@@ -54,7 +54,7 @@
 
 .collection-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--mage-editor-card-size, 130px), 1fr));
     gap: 12px;
     padding: 16px;
 }

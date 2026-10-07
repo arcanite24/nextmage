@@ -603,7 +603,7 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                         _setConnectionStatus(status);
 
                         // If we reconnected and were previously logged in, try to restore the session
-                        if (status === 'connected' && isAuthenticated) {
+                        if (status === 'connected' && isAuthenticated && appConfigService.loadSettings().restoreSessionOnReconnect) {
                             console.log('[SessionStore] Reconnected, attempting to restore session...');
                             restoreSession().then(success => {
                                 if (success) {
@@ -730,7 +730,7 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                         case 'CLIENT_DOWNLOAD_CARD_IMAGES':
                             get().showAlert(
                                 'Resources',
-                                'The web client loads and caches card images and symbols through the browser. A desktop-style resource download is not required here.'
+                                'The web client uses bundled web symbols and caches card images through the browser. Use Settings for language, fallback, cache size/age, trim/clear, and missing-image diagnostics; use Card Viewer to preload visible pages with progress and cancel.'
                             );
                             break;
 

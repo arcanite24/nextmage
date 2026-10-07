@@ -27,6 +27,17 @@ export interface DamageAnimation {
     timestamp: number;
 }
 
+export interface PlayerCounterAnimation {
+    id: string;
+    targetId: UUID; // Player ID
+    counterName: string;
+    amount: number;
+    type: 'counterGain' | 'counterLoss';
+    previousValue: number;
+    currentValue: number;
+    timestamp: number;
+}
+
 export interface LifeChangeAnimation {
     playerId: UUID;
     previousLife: number;
@@ -43,6 +54,7 @@ interface AnimationState {
 
     // Damage effects (shown as flash effects)
     activeDamageEffects: DamageAnimation[];
+    activePlayerCounterEffects: PlayerCounterAnimation[];
 
     // Life tracking for detecting changes
     previousLifeTotals: Record<UUID, number>;
@@ -66,7 +78,16 @@ interface AnimationActions {
     // Damage animations
     triggerDamageEffect: (targetId: UUID, amount: number) => void;
     triggerLifeGainEffect: (targetId: UUID, amount: number) => void;
+    triggerPlayerCounterEffect: (
+        targetId: UUID,
+        counterName: string,
+        amount: number,
+        type: 'counterGain' | 'counterLoss',
+        previousValue: number,
+        currentValue: number
+    ) => void;
     clearDamageEffect: (damageId: string) => void;
+    clearPlayerCounterEffect: (effectId: string) => void;
     applyCombatDamage: (targetId: UUID) => void;
 
     // Life tracking
@@ -85,6 +106,7 @@ interface AnimationActions {
 // Animation timing constants (in ms)
 const BASE_ATTACK_DURATION = 600;
 const BASE_DAMAGE_EFFECT_DURATION = 500;
+const BASE_COUNTER_EFFECT_DURATION = 900;
 
 export const useAnimationStore = create<AnimationState & AnimationActions>()(
     devtools(
@@ -94,6 +116,7 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
             currentAttack: null,
             isAnimating: false,
             activeDamageEffects: [],
+            activePlayerCounterEffects: [],
             previousLifeTotals: {},
             visualLifeTotals: null,
             damagePools: {},
@@ -201,6 +224,10 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
 
             // Trigger a damage flash effect on a player
             triggerDamageEffect: (targetId, amount) => {
+                if (!get().animationsEnabled) {
+                    return;
+                }
+
                 const id = `damage-${targetId}-${Date.now()}`;
                 set((state) => {
                     state.activeDamageEffects.push({
@@ -219,6 +246,10 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
             },
 
             triggerLifeGainEffect: (targetId, amount) => {
+                if (!get().animationsEnabled) {
+                    return;
+                }
+
                 const id = `life-gain-${targetId}-${Date.now()}`;
                 set((state) => {
                     state.activeDamageEffects.push({
@@ -236,10 +267,43 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
                 }, duration);
             },
 
+            triggerPlayerCounterEffect: (targetId, counterName, amount, type, previousValue, currentValue) => {
+                if (!get().animationsEnabled) {
+                    return;
+                }
+
+                const id = `counter-${targetId}-${counterName}-${Date.now()}`;
+                set((state) => {
+                    state.activePlayerCounterEffects.push({
+                        id,
+                        targetId,
+                        counterName,
+                        amount,
+                        type,
+                        previousValue,
+                        currentValue,
+                        timestamp: Date.now(),
+                    });
+                });
+
+                const duration = BASE_COUNTER_EFFECT_DURATION / get().animationSpeed;
+                setTimeout(() => {
+                    get().clearPlayerCounterEffect(id);
+                }, duration);
+            },
+
             clearDamageEffect: (damageId) => {
                 set((state) => {
                     state.activeDamageEffects = state.activeDamageEffects.filter(
                         (d) => d.id !== damageId
+                    );
+                });
+            },
+
+            clearPlayerCounterEffect: (effectId) => {
+                set((state) => {
+                    state.activePlayerCounterEffects = state.activePlayerCounterEffects.filter(
+                        (effect) => effect.id !== effectId
                     );
                 });
             },
@@ -284,7 +348,7 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
 
             // Update life totals and detect changes
             updateLifeTotals: (lifeTotals, isCombatDamageStep) => {
-                const { previousLifeTotals } = get();
+                const { previousLifeTotals, animationsEnabled } = get();
                 const changes: LifeChangeAnimation[] = [];
 
                 Object.entries(lifeTotals).forEach(([playerId, currentLife]) => {
@@ -300,7 +364,7 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
                         });
 
                         // Logic for deferred combat damage
-                        if (isCombatDamageStep && delta < 0) {
+                        if (animationsEnabled && isCombatDamageStep && delta < 0) {
                             set((state) => {
                                 if (!state.visualLifeTotals) state.visualLifeTotals = {};
                                 // Initialize with previous life if not present
@@ -317,11 +381,13 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
                                     state.visualLifeTotals[playerId] = currentLife;
                                 }
                             });
-                            // Trigger immediate effect for non-deferred
-                            if (delta < 0) {
-                                get().triggerDamageEffect(playerId, Math.abs(delta));
-                            } else if (delta > 0) {
-                                get().triggerLifeGainEffect(playerId, delta);
+                            if (animationsEnabled) {
+                                // Trigger immediate effect for non-deferred
+                                if (delta < 0) {
+                                    get().triggerDamageEffect(playerId, Math.abs(delta));
+                                } else if (delta > 0) {
+                                    get().triggerLifeGainEffect(playerId, delta);
+                                }
                             }
                         }
                     }
@@ -355,6 +421,10 @@ export const useAnimationStore = create<AnimationState & AnimationActions>()(
                         state.attackQueue = [];
                         state.currentAttack = null;
                         state.isAnimating = false;
+                        state.activeDamageEffects = [];
+                        state.activePlayerCounterEffects = [];
+                        state.visualLifeTotals = null;
+                        state.damagePools = {};
                     }
                 });
             },

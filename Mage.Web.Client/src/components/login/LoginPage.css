@@ -18,7 +18,10 @@
     pointer-events: none;
     background:
         linear-gradient(135deg, rgba(10, 11, 18, 0.95), rgba(16, 20, 27, 0.92)),
-        linear-gradient(90deg, rgba(201, 162, 39, 0.08), transparent 42%, rgba(14, 104, 171, 0.08));
+        linear-gradient(90deg, rgba(201, 162, 39, 0.08), transparent 42%, rgba(14, 104, 171, 0.08)),
+        var(--mage-login-background-image, none);
+    background-position: center;
+    background-size: auto, auto, cover;
 }
 
 .login-bg-table {

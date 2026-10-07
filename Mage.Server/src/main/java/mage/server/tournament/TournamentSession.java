@@ -143,6 +143,7 @@ public class TournamentSession {
     }
 
     public void tournamentOver() {
+        gameOver("Tournament finished.");
         cleanUp();
         removeTournamentForUser();
     }

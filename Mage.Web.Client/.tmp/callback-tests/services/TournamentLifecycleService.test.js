@@ -11,7 +11,7 @@ function callback(method = 'startTournament', objectId = TOURNAMENT_ID) {
         data: {},
     };
 }
-test('joins tournament activity once when the server starts a tournament', async () => {
+test('joins tournament activity once when the server starts or shows a tournament', async () => {
     const calls = [];
     const handler = createTournamentLifecycleHandler({
         getSessionId: () => SESSION_ID,
@@ -22,6 +22,20 @@ test('joins tournament activity once when the server starts a tournament', async
     });
     handler.handleCallback(callback());
     handler.handleCallback(callback());
+    handler.handleCallback(callback('showTournament'));
+    await Promise.resolve();
+    assert.deepEqual(calls, [{ tournamentId: TOURNAMENT_ID, sessionId: SESSION_ID }]);
+});
+test('joins tournament activity from a show tournament callback', async () => {
+    const calls = [];
+    const handler = createTournamentLifecycleHandler({
+        getSessionId: () => SESSION_ID,
+        joinTournament: async (tournamentId, sessionId) => {
+            calls.push({ tournamentId, sessionId });
+            return true;
+        },
+    });
+    handler.handleCallback(callback('showTournament'));
     await Promise.resolve();
     assert.deepEqual(calls, [{ tournamentId: TOURNAMENT_ID, sessionId: SESSION_ID }]);
 });

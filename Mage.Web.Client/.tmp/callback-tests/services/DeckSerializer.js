@@ -53,6 +53,22 @@ export class DeckSerializer {
         }
         return false;
     }
+    static normalizeDraftLogSetCode(setCode) {
+        const normalized = (setCode ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        return normalized || 'UNK';
+    }
+    static normalizeDraftLogLine(value) {
+        return this.normalizeName(value).replace(/\s+/g, ' ').trim();
+    }
+    static formatDraftLogExportTime(value) {
+        if (value instanceof Date)
+            return value.toISOString();
+        if (typeof value === 'number')
+            return new Date(value).toISOString();
+        if (typeof value === 'string' && value.trim())
+            return value.trim();
+        return new Date().toISOString();
+    }
     /**
      * Parse a deck file content into a DeckCardLists object.
      * Supports:
@@ -495,5 +511,51 @@ export class DeckSerializer {
             content += `SB: ${card.amount} [${setCode}:${num}] ${card.cardName}\n`;
         }
         return content;
+    }
+    /**
+     * Serialize picked draft cards into an XMage-style .draft log that this
+     * browser importer can read back through importDeck.
+     */
+    static exportDraftLog(deck, options = {}) {
+        const lines = [];
+        const draftId = options.draftId?.trim() || 'browser-draft';
+        const sourceName = options.sourceName?.trim() || deck.name?.trim() || 'Draft Picks';
+        const players = (options.players ?? [])
+            .map(player => player.trim())
+            .filter(Boolean);
+        lines.push(`Event #: ${draftId}`);
+        lines.push(`Exported: ${this.formatDraftLogExportTime(options.exportedAt)}`);
+        lines.push(`Deck: ${sourceName}`);
+        if (players.length > 0) {
+            lines.push('Players:');
+            for (const player of players) {
+                lines.push(`    ${player.replace(/\s+/g, ' ')}`);
+            }
+        }
+        let currentSet = null;
+        let packNumber = 0;
+        let pickNumber = 0;
+        for (const card of deck.cards) {
+            const cardName = this.normalizeDraftLogLine(card.cardName);
+            if (!cardName)
+                continue;
+            const amount = Number.isFinite(card.amount) ? Math.max(0, Math.floor(card.amount)) : 0;
+            const setCode = this.normalizeDraftLogSetCode(card.setCode);
+            for (let copy = 0; copy < amount; copy += 1) {
+                if (setCode !== currentSet) {
+                    currentSet = setCode;
+                    packNumber += 1;
+                    pickNumber = 0;
+                    lines.push('');
+                    lines.push(`------ ${setCode} ------`);
+                    lines.push('');
+                }
+                pickNumber += 1;
+                lines.push(`Pack ${packNumber} pick ${pickNumber}:`);
+                lines.push(`--> ${cardName}`);
+                lines.push('');
+            }
+        }
+        return `${lines.join('\n').trimEnd()}\n`;
     }
 }

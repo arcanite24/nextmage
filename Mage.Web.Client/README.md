@@ -56,6 +56,7 @@ npm run dev:all
 ```
 
 Use `Ctrl-C` in that terminal to stop both Vite and the Mage server.
+If the Mage server or WebSocket listener survives a failed shutdown, run `npm run dev:kill` from `Mage.Web.Client` to clear the local server listeners on ports `17171` and `17172`.
 
 ### Production Build
 
@@ -111,6 +112,7 @@ Current settings include:
 ```bash
 npm run dev      # Start Vite dev server
 npm run dev:all  # Start the Mage server and Vite dev server together
+npm run dev:kill # Stop leftover local Mage server/WebSocket listeners
 npm run build    # TypeScript project build plus Vite production bundle
 npm test         # Node service tests plus accessibility gate
 npm run test:visual        # Playwright visual regression screenshots

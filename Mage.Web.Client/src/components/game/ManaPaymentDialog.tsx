@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import { Coins, MousePointerClick, WandSparkles, X } from 'lucide-react';
 import { ManaType, ManaPoolView } from '../../types';
 import { useGameStore } from '../../stores';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -26,13 +27,19 @@ const MANA_CONFIG: Array<{ type: ManaType; color: string; symbol: string; bgColo
     { type: ManaType.COLORLESS, color: '#1a1a1a', bgColor: '#d1d5db', symbol: 'C', key: 'colorless' },
 ];
 
+function getAvailableManaTypes(manaPool: ManaPoolView | undefined): ManaType[] {
+    if (!manaPool) return [];
+    return MANA_CONFIG
+        .filter(({ key }) => manaPool[key] > 0)
+        .map(({ type }) => type);
+}
+
 export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, message }) => {
     const sendManaType = useGameStore(state => state.sendManaType);
     const sendBoolean = useGameStore(state => state.sendBoolean);
-    const sendPlayerAction = useGameStore(state => state.sendPlayerAction);
     const getMyPlayer = useGameStore(state => state.getMyPlayer);
     const settings = useSettingsStore(state => state.settings);
-    const setSetting = useSettingsStore(state => state.setSetting);
+    const [isAutoPaying, setIsAutoPaying] = React.useState(false);
 
     const myPlayer = getMyPlayer();
     const manaPool = myPlayer?.manaPool;
@@ -42,6 +49,7 @@ export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, me
     const totalMana = manaPool
         ? manaPool.white + manaPool.blue + manaPool.black + manaPool.red + manaPool.green + manaPool.colorless
         : 0;
+    const availableManaTypes = getAvailableManaTypes(manaPool);
 
     const handleClickMana = (manaType: ManaType) => {
         // Send the mana type to the server to pay from pool
@@ -54,9 +62,16 @@ export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, me
     };
 
     const handleAutoPay = async () => {
-        setSetting('autoTapManaPayment', true);
-        await sendPlayerAction('MANA_AUTO_PAYMENT_ON');
-        await sendBoolean(true);
+        if (availableManaTypes.length === 0 || isAutoPaying) return;
+
+        setIsAutoPaying(true);
+        try {
+            for (const manaType of availableManaTypes) {
+                await sendManaType(manaType);
+            }
+        } finally {
+            setIsAutoPaying(false);
+        }
     };
 
     const handleCancel = () => {
@@ -67,16 +82,19 @@ export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, me
     return (
         <div className="mana-payment-panel">
             <div className="mana-payment-header">
-                <span className="mana-payment-title">💰 Pay Mana</span>
+                <span className="mana-payment-title">
+                    <Coins size={16} aria-hidden="true" />
+                    Pay Mana
+                </span>
                 <button className="mana-payment-close" onClick={handleCancel} title="Cancel (Esc)">
-                    ✕
+                    <X size={14} aria-hidden="true" />
                 </button>
             </div>
 
             <div className="mana-payment-message" dangerouslySetInnerHTML={{ __html: message }} />
 
             <div className="mana-payment-instructions">
-                <span className="instruction-icon">👆</span>
+                <MousePointerClick className="instruction-icon" size={14} aria-hidden="true" />
                 <span>{settings.autoTapManaPayment ? 'Auto-pay is enabled for matching costs' : 'Tap lands to add mana, then click mana below to pay'}</span>
             </div>
 
@@ -114,8 +132,15 @@ export const ManaPaymentDialog: React.FC<ManaPaymentDialogProps> = ({ isOpen, me
                 <button className="mana-action-btn cancel" onClick={handleCancel}>
                     Cancel
                 </button>
-                <button className="mana-action-btn auto" onClick={handleAutoPay}>
-                    Auto
+                <button
+                    className="mana-action-btn auto"
+                    onClick={handleAutoPay}
+                    disabled={availableManaTypes.length === 0 || isAutoPaying}
+                    title={availableManaTypes.length > 0 ? 'Pay with available mana in pool' : 'No mana in pool'}
+                    data-testid="mana-auto-pay-button"
+                >
+                    <WandSparkles size={14} aria-hidden="true" />
+                    {isAutoPaying ? 'Paying' : 'Auto pay'}
                 </button>
                 <button className="mana-action-btn done" onClick={handleDone}>
                     Done

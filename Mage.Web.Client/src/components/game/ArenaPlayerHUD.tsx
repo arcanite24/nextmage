@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { BookOpen, Skull, Sparkles, Zap } from 'lucide-react';
 import { ManaType, PlayerView } from '../../types';
 import { useAnimationStore } from '../../stores';
 import { MatchPlayerFlagPill, MatchPlayerHudDetails } from './MatchPlayerHudDetails';
@@ -13,6 +14,7 @@ interface ArenaPlayerHUDProps {
     onInteract?: (uuid: string) => void;
     onManaClick?: (manaType: ManaType) => void;
     showPlayerName?: boolean;
+    displayLifeOnAvatar?: boolean;
 }
 
 // Default avatar SVG
@@ -23,7 +25,7 @@ const DefaultAvatarSVG = () => (
     </svg>
 );
 
-export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ player, isMe, isActivePlayer, onShowZone, onInteract, onManaClick, showPlayerName = true }) => {
+export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ player, isMe, isActivePlayer, onShowZone, onInteract, onManaClick, showPlayerName = true, displayLifeOnAvatar = true }) => {
     // Check for deferred life update (visual override)
     const visualLifeTotals = useAnimationStore(state => state.visualLifeTotals);
     const displayedLife = visualLifeTotals?.[player.playerId] ?? player.life;
@@ -42,10 +44,10 @@ export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ playe
         const classes = ['arena-avatar-container'];
         if (isActivePlayer) classes.push('active-player');
         if (player.hasPriority) classes.push('has-priority');
-        if (activeLifeEffect === 'damage') classes.push('taking-damage');
-        if (activeLifeEffect === 'lifeGain') classes.push('gaining-life');
+        if (displayLifeOnAvatar && activeLifeEffect === 'damage') classes.push('taking-damage');
+        if (displayLifeOnAvatar && activeLifeEffect === 'lifeGain') classes.push('gaining-life');
         return classes.join(' ');
-    }, [isActivePlayer, player.hasPriority, activeLifeEffect]);
+    }, [isActivePlayer, player.hasPriority, activeLifeEffect, displayLifeOnAvatar]);
 
     return (
         <>
@@ -60,7 +62,7 @@ export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ playe
                         <MatchPlayerFlagPill flagName={player.userData?.flagName} />
                         <span className="arena-player-name">{player.name}</span>
                         {player.hasPriority && (
-                            <span className="priority-indicator-hud">⚡</span>
+                            <Zap className="priority-indicator-hud" size={13} aria-hidden="true" />
                         )}
                     </div>
                 )}
@@ -76,7 +78,7 @@ export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ playe
                         data-testid="player-zone-graveyard"
                     >
                         <div className="arena-zone-icon graveyard">
-                            💀
+                            <Skull size={17} aria-hidden="true" />
                             {graveyardCount > 0 && (
                                 <span className="arena-zone-count">{graveyardCount}</span>
                             )}
@@ -93,7 +95,7 @@ export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ playe
                         data-testid="player-zone-library"
                     >
                         <div className="arena-zone-icon library">
-                            📚
+                            <BookOpen size={17} aria-hidden="true" />
                             <span className="arena-zone-count">{player.libraryCount}</span>
                         </div>
                     </button>
@@ -109,7 +111,7 @@ export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ playe
                             data-testid="player-zone-exile"
                         >
                             <div className="arena-zone-icon exile">
-                                🌌
+                                <Sparkles size={17} aria-hidden="true" />
                                 <span className="arena-zone-count">{exileCount}</span>
                             </div>
                         </button>
@@ -118,7 +120,7 @@ export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ playe
             </div>
 
             {/* Avatar & Life (Center, above hand) */}
-            <div id={`player-${player.playerId}`} className={avatarContainerClasses}>
+            <div id={`player-${player.playerId}`} className={avatarContainerClasses} data-life-on-avatar={displayLifeOnAvatar ? 'true' : 'false'}>
                 <div
                     className="arena-avatar"
                     onClick={() => onInteract?.(player.playerId)}
@@ -143,11 +145,13 @@ export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ playe
                     )}
                 </div>
 
-                <div className="arena-life-display">
-                    <span className={`arena-life-value ${lifeClass}`}>
-                        {displayedLife}
-                    </span>
-                </div>
+                {displayLifeOnAvatar && (
+                    <div className="arena-life-display" data-testid="player-avatar-life">
+                        <span className={`arena-life-value ${lifeClass}`}>
+                            {displayedLife}
+                        </span>
+                    </div>
+                )}
 
                 <MatchPlayerHudDetails
                     player={player}

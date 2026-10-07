@@ -32,6 +32,7 @@ import {
     MatchView,
     RoomUsersView,
     MatchOptions,
+    TournamentOptions,
     DeckCardLists,
     ClientCallback,
     TableState,
@@ -99,6 +100,7 @@ interface LobbyActions {
 
     // Table actions
     createTable: (options: MatchOptions) => Promise<TableView | null>;
+    createTournament: (options: TournamentOptions) => Promise<TableView | null>;
     joinTable: (tableId: UUID, playerName: string, deckList: DeckCardLists, password?: string) => Promise<boolean>;
     watchTable: (tableId: UUID) => Promise<boolean>;
     leaveTable: () => Promise<boolean>;
@@ -448,6 +450,39 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                 }
             },
 
+            createTournament: async (options) => {
+                const { sessionId, mainRoomId } = useSessionStore.getState();
+                if (!mainRoomId) return null;
+
+                try {
+                    const table = await webSocketBridgeService.createTournament(sessionId, mainRoomId, options);
+
+                    if (!table?.tableId) {
+                        await get().fetchTables();
+                        return null;
+                    }
+
+                    set((state) => {
+                        state.pendingCreatedTables[table.tableId] = {
+                            table,
+                            createdAt: Date.now(),
+                        };
+                        const merged = mergeTablesWithPendingCreated(state.tables, state.pendingCreatedTables);
+                        state.pendingCreatedTables = merged.pendingCreatedTables;
+                        state.tables = merged.tables;
+                        state.filteredTables = applyFilters(merged.tables, state.filters);
+                        state.selectedTableId = table.tableId;
+                    });
+
+                    void get().fetchTables();
+
+                    return table;
+                } catch (error) {
+                    console.error('Failed to create tournament:', error);
+                    throw error;
+                }
+            },
+
             joinTable: async (tableId, playerName, deckList, password = '') => {
                 const { sessionId, mainRoomId } = useSessionStore.getState();
                 if (!mainRoomId) return false;
@@ -505,6 +540,9 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
             addAI: async (tableId: UUID, aiName: string, deckList: DeckCardLists, playerType: string, skill = 2) => {
                 const { sessionId, mainRoomId } = useSessionStore.getState();
                 if (!mainRoomId) return false;
+                const table = get().currentTable?.tableId === tableId
+                    ? get().currentTable
+                    : get().tables.find(candidate => candidate.tableId === tableId) ?? null;
 
                 const unresolvedCards = getUnresolvedDeckCardNames(deckList);
                 if (unresolvedCards.length > 0) {
@@ -513,18 +551,30 @@ export const useLobbyStore = create<LobbyState & LobbyActions>()(
                 }
 
                 try {
-                    // Re-use roomJoinTable but with the server-provided default computer type.
+                    // Re-use the matching join path with the server-provided default computer type.
                     // Note: This relies on the server allowing the same Session/User to add a Computer player
-                    const result = await wsService.send<boolean>('roomJoinTable', [
-                        sessionId,
-                        mainRoomId,
-                        tableId,
-                        aiName,
-                        playerType || getDefaultComputerPlayerType(get().serverOptions),
-                        skill,
-                        deckList,
-                        '', // No password needed usually for adding AI by host
-                    ]);
+                    const effectivePlayerType = playerType || getDefaultComputerPlayerType(get().serverOptions);
+                    const result = table?.isTournament
+                        ? await webSocketBridgeService.joinTournamentTable(
+                            sessionId,
+                            mainRoomId,
+                            tableId,
+                            aiName,
+                            effectivePlayerType,
+                            skill,
+                            deckList,
+                            '',
+                        )
+                        : await wsService.send<boolean>('roomJoinTable', [
+                            sessionId,
+                            mainRoomId,
+                            tableId,
+                            aiName,
+                            effectivePlayerType,
+                            skill,
+                            deckList,
+                            '', // No password needed usually for adding AI by host
+                        ]);
 
                     if (result) {
                         // Refresh table to show new seat

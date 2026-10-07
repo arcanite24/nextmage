@@ -156,6 +156,101 @@ test('activity store keeps replay callback state for replay controls', () => {
     assert.equal(activity.replay?.state, 'done');
     assert.equal(activity.replay?.message, 'Replay finished.');
 });
+test('activity store preserves tournament view payloads for standings and match watching', () => {
+    useActivityStore.setState({ activities: [], activeActivityId: null });
+    const tournamentId = '00000000-0000-0000-0000-000000000810';
+    const tableId = '00000000-0000-0000-0000-000000000811';
+    const gameTableId = '00000000-0000-0000-0000-000000000812';
+    useActivityStore.getState().handleCallback({
+        method: 'showTournament',
+        messageId: 61,
+        objectId: tournamentId,
+        data: {
+            currentTableId: tableId,
+        },
+    });
+    let activity = useActivityStore.getState().activities[0];
+    assert.equal(activity.kind, 'tournament');
+    assert.equal(activity.objectId, tournamentId);
+    assert.equal(activity.tableId, tableId);
+    assert.equal(activity.tournament?.state, 'Showing');
+    assert.equal(useActivityStore.getState().activeActivityId, activity.id);
+    useActivityStore.getState().handleCallback({
+        method: 'tournamentUpdate',
+        messageId: 62,
+        objectId: tournamentId,
+        data: {
+            tournamentName: 'Friday Draft',
+            tournamentType: 'Booster Draft / Swiss',
+            tournamentState: 'Dueling',
+            startTime: '2026-06-20T12:10:00.000Z',
+            stepStartTime: '2026-06-20T12:12:00.000Z',
+            serverTime: '2026-06-20T12:18:00.000Z',
+            constructionTime: 1200,
+            watchingAllowed: true,
+            runningInfo: 'Round 2',
+            players: [
+                {
+                    name: 'Alice',
+                    state: 'Dueling',
+                    points: 6,
+                    results: '2-0',
+                    history: '4-1',
+                    flagName: 'us.png',
+                    quit: false,
+                },
+                {
+                    name: 'Bob',
+                    state: 'Quit',
+                    points: 0,
+                    results: '0-2',
+                    history: '1-3',
+                    flagName: 'world.png',
+                    quit: true,
+                },
+            ],
+            rounds: [
+                {
+                    games: [
+                        {
+                            roundNum: 2,
+                            tableId: gameTableId,
+                            matchId: '00000000-0000-0000-0000-000000000813',
+                            gameId: '00000000-0000-0000-0000-000000000814',
+                            players: 'Alice - Charlie',
+                            state: 'Dueling (06:00)',
+                            result: '',
+                        },
+                    ],
+                },
+            ],
+        },
+    });
+    activity = useActivityStore.getState().activities[0];
+    assert.equal(activity.title, 'Friday Draft');
+    assert.equal(activity.tournament?.name, 'Friday Draft');
+    assert.equal(activity.tournament?.type, 'Booster Draft / Swiss');
+    assert.equal(activity.tournament?.state, 'Dueling');
+    assert.equal(activity.tournament?.runningInfo, 'Round 2');
+    assert.equal(activity.tournament?.players.length, 2);
+    assert.equal(activity.tournament?.players[0].flagName, 'us.png');
+    assert.equal(activity.tournament?.players[1].quit, true);
+    assert.equal(activity.tournament?.matches.length, 1);
+    assert.equal(activity.tournament?.matches[0].roundNumber, 2);
+    assert.equal(activity.tournament?.matches[0].tableId, gameTableId);
+    assert.equal(activity.tournament?.matches[0].canWatch, true);
+    useActivityStore.getState().handleCallback({
+        method: 'tournamentOver',
+        messageId: 63,
+        objectId: tournamentId,
+        data: 'Tournament finished.',
+    });
+    activity = useActivityStore.getState().activities[0];
+    assert.equal(activity.status, 'completed');
+    assert.equal(activity.tournament?.message, 'Tournament finished.');
+    assert.equal(activity.tournament?.name, 'Friday Draft');
+    assert.equal(activity.tournament?.matches.length, 1);
+});
 test('activity store preserves limited sideboard callbacks from the Java flag bit', () => {
     useActivityStore.setState({ activities: [], activeActivityId: null });
     const callback = {
@@ -317,11 +412,23 @@ test('activity store retains normalized draft deck payloads from callbacks', () 
 });
 test('activity store derives draft deck payloads from live draft pick views', () => {
     useActivityStore.setState({ activities: [], activeActivityId: null });
+    const draftId = '00000000-0000-0000-0000-000000000790';
+    const tableId = '00000000-0000-0000-0000-000000000890';
     const callback = {
         method: 'draftPick',
         messageId: 44,
-        objectId: '00000000-0000-0000-0000-000000000790',
+        objectId: draftId,
         data: {
+            currentTableId: tableId,
+            draftView: {
+                draftId,
+                players: ['Alice', 'Bob', 'Charlie', 'Dana'],
+                setNames: ['Dominaria', 'Dominaria', 'The Brothers War'],
+                setCodes: ['DOM', 'DOM', 'BRO'],
+                boosterNum: 2,
+                cardNum: 4,
+                isCube: false,
+            },
             draftPickView: {
                 booster: {
                     '00000000-0000-0000-0000-000000000007': {
@@ -350,7 +457,16 @@ test('activity store derives draft deck payloads from live draft pick views', ()
     useActivityStore.getState().handleCallback(callback);
     const activity = useActivityStore.getState().activities[0];
     assert.equal(activity.kind, 'draft');
+    assert.equal(activity.objectId, draftId);
     assert.equal(activity.time, 30);
+    assert.equal(activity.draft?.draftId, draftId);
+    assert.equal(activity.draft?.tableId, tableId);
+    assert.deepEqual(activity.draft?.setNames, ['Dominaria', 'Dominaria', 'The Brothers War']);
+    assert.deepEqual(activity.draft?.setCodes, ['DOM', 'DOM', 'BRO']);
+    assert.equal(activity.draft?.boosterNum, 2);
+    assert.equal(activity.draft?.cardNum, 4);
+    assert.equal(activity.draft?.isCube, false);
+    assert.deepEqual(activity.draft?.players, ['Alice', 'Bob', 'Charlie', 'Dana']);
     assert.equal(activity.draftPick?.picking, false);
     assert.deepEqual(activity.deck?.cards, [
         { amount: 2, cardName: 'Llanowar Elves', setCode: 'M12', cardNumber: '182' },
@@ -410,9 +526,31 @@ test('activity store accumulates draft picks across incremental live pick payloa
             },
         },
     });
+    useActivityStore.getState().handleCallback({
+        method: 'draftUpdate',
+        messageId: 47,
+        objectId: draftId,
+        data: {
+            currentTableId: '00000000-0000-0000-0000-000000000891',
+            draftView: {
+                draftId,
+                players: ['Alice', 'Bob'],
+                setNames: ['Community Cube'],
+                setCodes: ['CUBE'],
+                boosterNum: 3,
+                cardNum: 1,
+                isCube: true,
+            },
+        },
+    });
     const activity = useActivityStore.getState().activities[0];
     assert.equal(activity.kind, 'draft');
     assert.equal(activity.time, 39);
+    assert.equal(activity.lastCallbackMethod, 'draftUpdate');
+    assert.equal(activity.draft?.boosterNum, 3);
+    assert.equal(activity.draft?.cardNum, 1);
+    assert.equal(activity.draft?.isCube, true);
+    assert.deepEqual(activity.draft?.players, ['Alice', 'Bob']);
     assert.deepEqual(activity.deck?.cards, [
         { amount: 1, cardName: 'Llanowar Elves', setCode: 'M12', cardNumber: '182' },
         { amount: 1, cardName: 'Naturalize', setCode: 'M11', cardNumber: '190' },

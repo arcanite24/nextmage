@@ -14,6 +14,7 @@ import { useSessionStore } from './sessionStore';
 import { useDebugStore } from './debugStore';
 import { useActivityStore } from './activityStore';
 import { useNotificationStore } from './notificationStore';
+import { useSettingsStore } from './settingsStore';
 import {
     createCallbackOrderingGuard,
     getCallbackRouteTargets,
@@ -115,5 +116,18 @@ export function initializeCallbackDispatcher(): () => void {
         }
     });
 
-    return unsubscribe;
+    const unsubscribeStatus = wsService.onStatusChange((status) => {
+        if (status !== 'connected') return;
+        if (!useSettingsStore.getState().settings.reconnectRecoveryEnabled) return;
+        globalThis.setTimeout(() => {
+            useChatStore.getState().recoverJoinedChannels().catch((error) => {
+                console.error('[Dispatcher] Failed to recover joined chat channels', error);
+            });
+        }, 1000);
+    });
+
+    return () => {
+        unsubscribe();
+        unsubscribeStatus();
+    };
 }

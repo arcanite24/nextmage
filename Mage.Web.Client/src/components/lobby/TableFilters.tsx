@@ -5,8 +5,8 @@
  */
 
 import React, { useMemo } from 'react';
+import { Lock, X } from 'lucide-react';
 import { useLobbyStore } from '../../stores';
-import { TableState } from '../../types';
 import './TableFilters.css';
 
 export const TableFilters: React.FC = () => {
@@ -58,7 +58,7 @@ export const TableFilters: React.FC = () => {
                             onClick={() => setFilter('searchText', '')}
                             aria-label="Clear search"
                         >
-                            ×
+                            <X size={14} aria-hidden="true" />
                         </button>
                     )}
                 </div>
@@ -132,7 +132,10 @@ export const TableFilters: React.FC = () => {
                             checked={filters.showPassworded}
                             onChange={(e) => setFilter('showPassworded', e.target.checked)}
                         />
-                        <span className="checkbox-label-text">🔒 Passworded</span>
+                        <span className="checkbox-label-text">
+                            <Lock size={14} aria-hidden="true" />
+                            Passworded
+                        </span>
                     </label>
                 </div>
 

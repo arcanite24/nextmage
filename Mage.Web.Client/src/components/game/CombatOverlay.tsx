@@ -156,26 +156,28 @@ export const CombatOverlay: React.FC = React.memo(() => {
         setMarkers(newMarkers);
     }, [combat, pendingAction, selectedCardId, stack]);
 
+    const scheduleOverlayUpdate = useCallback(() => {
+        if (animFrameRef.current) {
+            cancelAnimationFrame(animFrameRef.current);
+        }
+        animFrameRef.current = requestAnimationFrame(updateLines);
+    }, [updateLines]);
+
     useEffect(() => {
         // Initial update with small delay to let DOM settle
         const timeout = setTimeout(updateLines, 50);
 
-        // Update on resize
-        const handleResize = () => {
-            if (animFrameRef.current) {
-                cancelAnimationFrame(animFrameRef.current);
-            }
-            animFrameRef.current = requestAnimationFrame(updateLines);
-        };
-        window.addEventListener('resize', handleResize);
+        window.addEventListener('resize', scheduleOverlayUpdate);
+        window.addEventListener('scroll', scheduleOverlayUpdate, { passive: true });
+        const scrollContainers = Array.from(document.querySelectorAll<HTMLElement>(
+            '.game-page, .arena-battlefield-area, .arena-opponents-grid, .arena-player-area, .battlefield'
+        ));
+        scrollContainers.forEach(container => {
+            container.addEventListener('scroll', scheduleOverlayUpdate, { passive: true });
+        });
 
         // Use MutationObserver to detect DOM changes (cards moving)
-        const observer = new MutationObserver(() => {
-            if (animFrameRef.current) {
-                cancelAnimationFrame(animFrameRef.current);
-            }
-            animFrameRef.current = requestAnimationFrame(updateLines);
-        });
+        const observer = new MutationObserver(scheduleOverlayUpdate);
 
         // Observe the entire game page for attribute and subtree changes
         const gameEl = document.querySelector('.game-page');
@@ -192,7 +194,11 @@ export const CombatOverlay: React.FC = React.memo(() => {
         const interval = setInterval(updateLines, 200);
 
         return () => {
-            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('resize', scheduleOverlayUpdate);
+            window.removeEventListener('scroll', scheduleOverlayUpdate);
+            scrollContainers.forEach(container => {
+                container.removeEventListener('scroll', scheduleOverlayUpdate);
+            });
             clearTimeout(timeout);
             clearInterval(interval);
             observer.disconnect();
@@ -200,7 +206,7 @@ export const CombatOverlay: React.FC = React.memo(() => {
                 cancelAnimationFrame(animFrameRef.current);
             }
         };
-    }, [updateLines]);
+    }, [scheduleOverlayUpdate, updateLines]);
 
     if (lines.length === 0 && markers.length === 0) return null;
 

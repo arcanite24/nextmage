@@ -52,7 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogou
             </div>
 
             <div className="navbar-center">
-                <nav className="navbar-nav">
+                <nav className="navbar-nav" aria-label="Primary">
                     <button
                         className={`nav-item ${currentPage === 'lobby' ? 'active' : ''}`}
                         onClick={() => onNavigate('lobby')}

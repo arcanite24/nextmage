@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ClipboardPaste, FolderOpen, Package, Save, Trash2, Upload } from 'lucide-react';
 import { Button } from '../common';
 import { Modal } from '../common/Modal';
 import { useSessionStore } from '../../stores';
@@ -73,7 +74,7 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({
             const text = await navigator.clipboard.readText();
             onDeckTextChange(text);
             if (onError) onError(null);
-        } catch (err) {
+        } catch {
             if (onError) onError('Failed to read clipboard. Please paste manually.');
         }
     };
@@ -156,26 +157,27 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({
             <div className="deck-header">
                 <h4>Deck Details</h4>
                 <div className="deck-actions">
-                    <Button variant="secondary" size="sm" onClick={() => setIsLoadModalOpen(true)}>
-                        📂 Load Saved
+                    <Button variant="secondary" size="sm" onClick={() => setIsLoadModalOpen(true)} leftIcon={<FolderOpen size={14} aria-hidden="true" />}>
+                        Load Saved
                     </Button>
-                    <Button variant="primary" size="sm" onClick={handleSaveDeck}>
-                        💾 Save
+                    <Button variant="primary" size="sm" onClick={handleSaveDeck} leftIcon={<Save size={14} aria-hidden="true" />}>
+                        Save
                     </Button>
                     <div className="divider-vertical"></div>
                     <label className="btn btn-ghost btn-sm upload-btn">
-                        📁 Upload
+                        <Upload size={14} aria-hidden="true" />
+                        Upload
                         <input
                             type="file"
                             accept=".dck,.txt"
                             onChange={handleFileUpload}
                         />
                     </label>
-                    <Button variant="ghost" size="sm" onClick={handlePaste}>
-                        📋 Paste
+                    <Button variant="ghost" size="sm" onClick={handlePaste} leftIcon={<ClipboardPaste size={14} aria-hidden="true" />}>
+                        Paste
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={handleLoadSample}>
-                        📦 Sample
+                    <Button variant="ghost" size="sm" onClick={handleLoadSample} leftIcon={<Package size={14} aria-hidden="true" />}>
+                        Sample
                     </Button>
                 </div>
             </div>
@@ -249,7 +251,7 @@ Sideboard
                                         onClick={(e) => handleDeleteDeck(e, deck.id)}
                                         title="Delete Deck"
                                     >
-                                        🗑️
+                                        <Trash2 size={14} aria-hidden="true" />
                                     </button>
                                 </li>
                             ))}

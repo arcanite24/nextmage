@@ -1,7 +1,9 @@
 import React from 'react';
+import { FastForward } from 'lucide-react';
 import { PhaseStep } from '../../types';
-import { useGameStore } from '../../stores';
+import { useGameStore, useSettingsStore } from '../../stores';
 import { useShallow } from 'zustand/react/shallow';
+import { audioFeedbackService } from '../../services';
 import { shouldCompleteSelectWithBooleanFalse } from '../../services/BattlefieldPerformanceService';
 import './ArenaPriorityControls.css';
 
@@ -66,6 +68,7 @@ export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = React
         sendUUID: state.sendUUID,
         sendPlayerAction: state.sendPlayerAction
     })));
+    const settings = useSettingsStore(state => state.settings);
 
     const phaseLabel = getNextPhaseLabel(currentPhase, pendingAction.type);
 
@@ -99,6 +102,11 @@ export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = React
         }
     };
 
+    const handleToggleSkip = () => {
+        audioFeedbackService.playSkipCue(settings);
+        onToggleSkip();
+    };
+
     // Only show controls when we have priority or it's our turn
     if (!hasPriority && !isMyTurn) {
         return null;
@@ -122,12 +130,12 @@ export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = React
             {/* Skip Toggle Button */}
             <button
                 className={`arena-skip-toggle ${skipEnabled ? 'active' : ''}`}
-                onClick={onToggleSkip}
+                onClick={handleToggleSkip}
                 title={skipEnabled ? 'Stop Auto-Pass (Click or ESC)' : 'Enable Auto-Pass'}
                 aria-label={skipEnabled ? 'Stop auto-pass' : 'Enable auto-pass'}
                 data-testid="priority-skip-toggle"
             >
-                <span className="skip-icon">⏩</span>
+                <FastForward className="skip-icon" size={16} aria-hidden="true" />
             </button>
         </div>
     );

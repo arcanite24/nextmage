@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { BookOpen, Hand, Skull, Sparkles, Zap } from 'lucide-react';
 import { PlayerView } from '../../types';
 import { useAnimationStore } from '../../stores';
 import { MatchPlayerFlagPill, MatchPlayerHudDetails } from './MatchPlayerHudDetails';
@@ -11,6 +12,7 @@ interface ArenaOpponentHUDProps {
     onShowZone?: (zone: 'graveyard' | 'exile' | 'library' | 'sideboard', playerId: string) => void;
     onInteract?: (uuid: string) => void;
     showPlayerName?: boolean;
+    displayLifeOnAvatar?: boolean;
 }
 
 // Default avatar SVG
@@ -21,7 +23,7 @@ const DefaultAvatarSVG = () => (
     </svg>
 );
 
-export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ player, isActivePlayer, onShowZone, onInteract, showPlayerName = true }) => {
+export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ player, isActivePlayer, onShowZone, onInteract, showPlayerName = true, displayLifeOnAvatar = true }) => {
     // Check for deferred life update (visual override)
     const visualLifeTotals = useAnimationStore(state => state.visualLifeTotals);
     const displayedLife = visualLifeTotals?.[player.playerId] ?? player.life;
@@ -40,10 +42,10 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
         const classes = ['arena-opponent-avatar-container', 'clickable-stat'];
         if (isActivePlayer) classes.push('active-player');
         if (player.hasPriority) classes.push('has-priority');
-        if (activeLifeEffect === 'damage') classes.push('taking-damage');
-        if (activeLifeEffect === 'lifeGain') classes.push('gaining-life');
+        if (displayLifeOnAvatar && activeLifeEffect === 'damage') classes.push('taking-damage');
+        if (displayLifeOnAvatar && activeLifeEffect === 'lifeGain') classes.push('gaining-life');
         return classes.join(' ');
-    }, [isActivePlayer, player.hasPriority, activeLifeEffect]);
+    }, [isActivePlayer, player.hasPriority, activeLifeEffect, displayLifeOnAvatar]);
 
     return (
         <>
@@ -53,7 +55,7 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
                     <span className="arena-opponent-name" data-testid="opponent-name">
                         <MatchPlayerFlagPill flagName={player.userData?.flagName} />
                         {player.name}
-                        {player.hasPriority && <span className="priority-indicator-opponent">⚡</span>}
+                        {player.hasPriority && <Zap className="priority-indicator-opponent" size={13} aria-hidden="true" />}
                     </span>
                 )}
                 <div className="arena-opponent-stats">
@@ -65,7 +67,7 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
                         aria-label={`View ${player.name}'s graveyard`}
                         data-testid="opponent-zone-graveyard"
                     >
-                        💀 {graveyardCount}
+                        <Skull size={14} aria-hidden="true" /> {graveyardCount}
                     </button>
                     {exileCount > 0 && (
                         <button
@@ -76,7 +78,7 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
                             aria-label={`View ${player.name}'s exile`}
                             data-testid="opponent-zone-exile"
                         >
-                            🌌 {exileCount}
+                            <Sparkles size={14} aria-hidden="true" /> {exileCount}
                         </button>
                     )}
                 </div>
@@ -87,6 +89,7 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
                 <div
                     id={`player-${player.playerId}`}
                     className={avatarContainerClasses}
+                    data-life-on-avatar={displayLifeOnAvatar ? 'true' : 'false'}
                     onClick={() => onInteract?.(player.playerId)}
                     title="Click to target player"
                 >
@@ -104,9 +107,11 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
                         )}
                     </div>
 
-                <div className={`arena-opponent-life ${lifeClass}`}>
-                    {displayedLife}
-                </div>
+                {displayLifeOnAvatar && (
+                    <div className={`arena-opponent-life ${lifeClass}`} data-testid="opponent-avatar-life">
+                        {displayedLife}
+                    </div>
+                )}
 
                 <MatchPlayerHudDetails
                     player={player}
@@ -119,10 +124,10 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
                 {/* Deck Info next to avatar */}
                 <div className="arena-opponent-deck-info">
                     <div className="arena-opponent-zone-mini" title="Library">
-                        📚 {player.libraryCount}
+                        <BookOpen size={13} aria-hidden="true" /> {player.libraryCount}
                     </div>
                     <div className="arena-opponent-zone-mini" title="Hand">
-                        ✋ {player.handCount}
+                        <Hand size={13} aria-hidden="true" /> {player.handCount}
                     </div>
                 </div>
             </div>

@@ -31,12 +31,30 @@ interface ImageCard {
   manaCostRightStr?: string[];
 }
 
+export interface MissingCardImageDiagnostic {
+  cacheKey: string;
+  setCode: string;
+  cardNumber: string;
+  size: ImageSize;
+  language: string;
+}
+
 // Set of known error cache keys to avoid repeated network requests
 const errorCache = new Set<string>();
 
 class CardImageService {
   private cache = new Map<string, ImageCache>();
   private loadingPromises = new Map<string, Promise<string>>();
+  private preferredLanguage = 'en';
+
+  setPreferredLanguage(language: string): void {
+    const normalized = language.trim().toLowerCase().replace(/[^a-z-]/g, '').slice(0, 8);
+    this.preferredLanguage = normalized || 'en';
+  }
+
+  getPreferredLanguage(): string {
+    return this.preferredLanguage;
+  }
 
   /**
    * Get Scryfall image URL for a card
@@ -60,7 +78,10 @@ class CardImageService {
     number = encodeURIComponent(number);
 
     const shouldUseBackFace = face === 'back' || ('transformed' in card && card.transformed && 'isDoubleFacedCard' in card && card.isDoubleFacedCard);
-    return `https://api.scryfall.com/cards/${setCode}/${number}?format=image&version=${size}${shouldUseBackFace ? '&face=back' : ''}`;
+    const languagePath = this.preferredLanguage && this.preferredLanguage !== 'en'
+      ? `/${encodeURIComponent(this.preferredLanguage)}`
+      : '';
+    return `https://api.scryfall.com/cards/${setCode}/${number}${languagePath}?format=image&version=${size}${shouldUseBackFace ? '&face=back' : ''}`;
   }
 
   /**
@@ -84,7 +105,7 @@ class CardImageService {
     card: ImageCard,
     size: ImageSize = 'normal'
   ): Promise<string> {
-    const cacheKey = `${card.expansionSetCode}-${card.cardNumber}-${size}`;
+    const cacheKey = this.createCacheKey(card, size);
 
     // Check if we've already seen this error - return placeholder immediately
     if (errorCache.has(cacheKey)) {
@@ -268,6 +289,7 @@ class CardImageService {
   clearInMemoryCache(): void {
     this.cache.clear();
     this.loadingPromises.clear();
+    errorCache.clear();
   }
 
   /**
@@ -288,11 +310,37 @@ class CardImageService {
     return deletedCount;
   }
 
+  async enforceCacheSizeLimit(): Promise<void> {
+    await imageCacheManager.enforceSizeLimit();
+  }
+
   /**
    * Get all cache entries for debugging/management
    */
   async getCacheEntries() {
     return await imageCacheManager.getAllEntries();
+  }
+
+  getMissingImageDiagnostics(): MissingCardImageDiagnostic[] {
+    return Array.from(errorCache).map((cacheKey) => {
+      const [setCode = '', cardNumber = '', size = 'normal', language = 'en'] = cacheKey.split('|');
+      return {
+        cacheKey,
+        setCode,
+        cardNumber,
+        size: size as ImageSize,
+        language,
+      };
+    });
+  }
+
+  private createCacheKey(card: ImageCard, size: ImageSize): string {
+    return [
+      card.expansionSetCode,
+      card.cardNumber,
+      size,
+      this.preferredLanguage || 'en',
+    ].join('|');
   }
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Image } from 'lucide-react';
 import { useSessionStore } from '../../stores';
 import { cardImageService } from '../../services/CardImageService';
 import { CacheStats } from '../../services/ImageCacheManager';
@@ -98,7 +99,8 @@ export const ImageCachePanel: React.FC = () => {
         onClick={() => setOpen(true)}
         title="Manage image cache"
       >
-        🖼️ Cache ({stats ? formatBytes(stats.totalSize) : 'Loading...'})
+        <Image size={16} aria-hidden="true" />
+        Cache ({stats ? formatBytes(stats.totalSize) : 'Loading...'})
       </button>
 
       {open && (

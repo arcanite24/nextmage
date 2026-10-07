@@ -100,7 +100,7 @@ function App() {
 
   useEffect(() => {
     if (!activeActivity || activeActivity.status === 'completed') return;
-    if (!['construction', 'sideboard', 'draft', 'replay'].includes(activeActivity.kind)) return;
+    if (!['construction', 'sideboard', 'draft', 'replay', 'tournament'].includes(activeActivity.kind)) return;
     if (openedActivityIdRef.current === activeActivity.id) return;
     if (currentView === 'deck-editor' && useDeckStore.getState().isDirty) return;
 
@@ -210,8 +210,7 @@ function App() {
   const handleOpenTournamentActivity = (tableId: string, title: string) => {
     if (!confirmDiscardDirtyDeck('open the tournament')) return;
     openUtilityActivity('tournament', {
-      objectId: tableId,
-      title: title || 'Tournament',
+      title: title || `Tournament ${tableId.slice(0, 8)}`,
     });
     setCurrentView('activity');
   };

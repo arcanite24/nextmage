@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SearchCardView, SearchSimpleCardView, CardView as GameCardView, SimpleCardView as GameSimpleCardView } from '../../types';
 import { cardImageService } from '../../services/CardImageService';
+import { useSettingsStore } from '../../stores/settingsStore';
 import './CardView.css';
 
 interface CardViewProps {
@@ -11,6 +12,7 @@ interface CardViewProps {
 }
 
 export const CardView: React.FC<CardViewProps> = ({ card, onClick, onContextMenu, size = 'normal' }) => {
+    const cardImageFallbackMode = useSettingsStore(state => state.settings.cardImageFallbackMode);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -22,12 +24,13 @@ export const CardView: React.FC<CardViewProps> = ({ card, onClick, onContextMenu
 
         // Use the cache-aware preload method (always resolves, returns placeholder on error)
         cardImageService.preload(card, size).then((url) => {
-            setImageUrl(url);
+            const failed = url === cardImageService.getPlaceholderUrl();
+            setImageUrl(failed ? cardImageService.getFallbackImageUrl(card, cardImageFallbackMode) : url);
             // Check if we got a placeholder (indicates an error)
-            setError(url === cardImageService.getPlaceholderUrl());
+            setError(failed);
             setLoading(false);
         });
-    }, [card.expansionSetCode, card.cardNumber, size]);
+    }, [card, card.expansionSetCode, card.cardNumber, cardImageFallbackMode, size]);
 
     // Handle cards that might not have a name property (SimpleCardView)
     const cardName = 'name' in card ? (card as any).name : 'Card';

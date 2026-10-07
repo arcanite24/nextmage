@@ -22,6 +22,7 @@ export type {
     CardsView,
     SimpleCardsView,
     PermanentsView,
+    MutateView,
     PlayerView,
     PlayableObjectsList,
     GameView,

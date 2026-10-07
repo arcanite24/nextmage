@@ -33,7 +33,9 @@ import mage.constants.PlayerAction;
 import mage.constants.RangeOfInfluence;
 import mage.constants.SkillLevel;
 import mage.game.draft.DraftOptions;
+import mage.game.Game;
 import mage.game.Table;
+import mage.game.match.Match;
 import mage.game.match.MatchOptions;
 import mage.game.mulligan.MulliganType;
 import mage.game.tournament.LimitedOptions;
@@ -304,7 +306,7 @@ public class WebSocketServerImpl extends WebSocketServer {
         handlers.put("draftJoin", (conn, params) -> { mageServer.draftJoin(getUUID(params, 0), getString(params, 1)); return true; });
         handlers.put("draftQuit", (conn, params) -> { mageServer.draftQuit(getUUID(params, 0), getString(params, 1)); return true; });
         handlers.put("sendDraftCardPick", this::handleSendDraftCardPick);
-        handlers.put("sendDraftCardMark", (conn, params) -> { mageServer.sendDraftCardMark(getUUID(params, 0), getString(params, 1), getUUID(params, 2)); return true; });
+        handlers.put("sendDraftCardMark", (conn, params) -> { mageServer.sendDraftCardMark(getUUID(params, 0), getString(params, 1), getNullableUUID(params, 2)); return true; });
         handlers.put("draftSetBoosterLoaded", (conn, params) -> { mageServer.draftSetBoosterLoaded(getUUID(params, 0), getString(params, 1)); return true; });
 
         // Decks
@@ -354,6 +356,7 @@ public class WebSocketServerImpl extends WebSocketServer {
         handlers.put("tableRemove", (conn, params) -> { mageServer.tableRemove(getString(params, 0), getUUID(params, 1), getUUID(params, 2)); return true; });
         handlers.put("adminTableRemove", this::handleAdminTableRemove);
         handlers.put("testEndGame", this::handleTestEndGame);
+        handlers.put("testConcedeMatch", this::handleTestConcedeMatch);
         handlers.put("tableIsOwner", (conn, params) -> mageServer.tableIsOwner(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
         handlers.put("roomGetFinishedMatches", (conn, params) -> mageServer.roomGetFinishedMatches(getUUID(params, 0)));
         handlers.put("roomGetTableById", (conn, params) -> mageServer.roomGetTableById(getUUID(params, 0), getUUID(params, 1)));
@@ -405,15 +408,68 @@ public class WebSocketServerImpl extends WebSocketServer {
             return false;
         }
 
-        UUID targetTableId = managerFactory.tableManager().getTables().stream()
+        UUID targetTableId = findActiveChildOrSelfTableId(tableId);
+
+        managerFactory.tableManager().endGameOnGameThread(targetTableId);
+        return true;
+    }
+
+    private Object handleTestConcedeMatch(WebSocket conn, JsonArray params) throws Exception {
+        String sessionId = getString(params, 0);
+        UUID tableId = getUUID(params, 1);
+        int losingPlayerIndex = params.size() > 2 ? getInt(params, 2) : 0;
+
+        if (!mage.server.Main.isTestMode()) {
+            logger.warn("Rejected testConcedeMatch request outside server test mode for tableId: " + tableId);
+            return false;
+        }
+
+        java.util.Optional<Session> session = managerFactory.sessionManager().getSession(sessionId);
+        if (!session.isPresent()) {
+            logger.warn("Rejected testConcedeMatch request for unknown session: " + sessionId);
+            return false;
+        }
+
+        if (!managerFactory.tableManager().isTableOwner(tableId, session.get().getUserId())) {
+            logger.warn("Rejected testConcedeMatch request for non-owner session: " + sessionId + ", tableId: " + tableId);
+            return false;
+        }
+
+        UUID targetTableId = findActiveChildOrSelfTableId(tableId);
+        java.util.Optional<Match> match = managerFactory.tableManager().getMatch(targetTableId);
+        if (!match.isPresent() || match.get().getPlayers().isEmpty()) {
+            logger.warn("Rejected testConcedeMatch request for table without active match players: " + targetTableId);
+            return false;
+        }
+
+        Match activeMatch = match.get();
+        Game game = activeMatch.getGame();
+        if (game == null) {
+            logger.warn("Rejected testConcedeMatch request for table without active game: " + targetTableId);
+            return false;
+        }
+
+        int safePlayerIndex = Math.max(0, Math.min(losingPlayerIndex, activeMatch.getPlayers().size() - 1));
+        UUID losingPlayerId = activeMatch.getPlayers().get(safePlayerIndex).getPlayer().getId();
+        managerFactory.threadExecutor().getGameExecutor().execute(() -> {
+            activeMatch.quitMatch(losingPlayerId);
+            game.concede(losingPlayerId);
+            if (game.checkIfGameIsOver() || game.hasEnded()) {
+                managerFactory.tableManager().endGame(targetTableId);
+            } else {
+                logger.warn("testConcedeMatch did not end game for tableId: " + targetTableId + ", playerId: " + losingPlayerId);
+            }
+        });
+        return true;
+    }
+
+    private UUID findActiveChildOrSelfTableId(UUID tableId) {
+        return managerFactory.tableManager().getTables().stream()
                 .filter(table -> tableId.equals(table.getParentTableId()))
                 .filter(table -> table.getMatch() != null && table.getMatch().getGame() != null)
                 .findFirst()
                 .map(Table::getId)
                 .orElse(tableId);
-
-        managerFactory.tableManager().endGameOnGameThread(targetTableId);
-        return true;
     }
 
     private Object handleAuthRegister(WebSocket conn, JsonArray params) throws Exception {
@@ -599,10 +655,13 @@ public class WebSocketServerImpl extends WebSocketServer {
                 ? optionsJson.get("matchOptions").getAsJsonObject()
                 : new JsonObject();
         String gameType = matchOptionsJson.has("gameType") ? matchOptionsJson.get("gameType").getAsString() : "Two Player Duel";
-        boolean multiPlayer = gameType.contains("Free For All") || gameType.contains("Commander");
+        boolean multiPlayer = optionsJson.has("singleMultiplayerGame")
+                ? optionsJson.get("singleMultiplayerGame").getAsBoolean()
+                : gameType.contains("Free For All") || gameType.contains("Commander");
 
         TournamentOptions tournamentOptions = new TournamentOptions(name, gameType, multiPlayer);
         tournamentOptions.setTournamentType(tournamentType);
+        tournamentOptions.setPassword("");
         applyMatchOptions(matchOptionsJson, tournamentOptions.getMatchOptions());
 
         if (optionsJson.has("playerTypes") && optionsJson.get("playerTypes").isJsonArray()) {
@@ -638,10 +697,23 @@ public class WebSocketServerImpl extends WebSocketServer {
 
         if (optionsJson.has("constructionTime")) limitedOptions.setConstructionTime(optionsJson.get("constructionTime").getAsInt());
         if (optionsJson.has("draftCubeName") && !optionsJson.get("draftCubeName").isJsonNull()) limitedOptions.setDraftCubeName(optionsJson.get("draftCubeName").getAsString());
+        if (optionsJson.has("cubeFromDeck") && optionsJson.get("cubeFromDeck").isJsonObject()) {
+            try {
+                Deck cubeFromDeck = Deck.load(gson.fromJson(optionsJson.get("cubeFromDeck"), DeckCardLists.class), true, true);
+                cubeFromDeck.clearLayouts();
+                limitedOptions.setCubeFromDeck(cubeFromDeck);
+            } catch (Exception e) {
+                logger.warn("Failed to load cubeFromDeck from websocket tournament options", e);
+            }
+        }
+        if (optionsJson.has("jumpstartPacks") && !optionsJson.get("jumpstartPacks").isJsonNull()) {
+            limitedOptions.setJumpstartPacks(optionsJson.get("jumpstartPacks").getAsString());
+        }
         if (optionsJson.has("numberBoosters")) limitedOptions.setNumberBoosters(optionsJson.get("numberBoosters").getAsInt());
         if (optionsJson.has("isRandom")) limitedOptions.setIsRandom(optionsJson.get("isRandom").getAsBoolean());
         if (optionsJson.has("isReshuffled")) limitedOptions.setIsReshuffled(optionsJson.get("isReshuffled").getAsBoolean());
         if (optionsJson.has("isRichMan")) limitedOptions.setIsRichMan(optionsJson.get("isRichMan").getAsBoolean());
+        if (optionsJson.has("isJumpstart")) limitedOptions.setIsJumpstart(optionsJson.get("isJumpstart").getAsBoolean());
 
         if (limitedOptions instanceof DraftOptions) {
             try {

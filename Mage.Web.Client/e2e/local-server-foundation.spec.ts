@@ -307,7 +307,7 @@ Pack 1 pick 2:
         await expect(sideNaturalize).toHaveCount(0);
         await expect(page.getByTestId('deck-selection-toolbar')).toHaveCount(0);
 
-        await page.getByRole('button', { name: 'Reset' }).click();
+        await page.getByRole('button', { name: 'Reset', exact: true }).click();
         await page.getByTestId('deck-editor-card-name-filter').fill('Aang');
         await page.getByTestId('deck-editor-collection-list-button').click();
         await page.getByRole('checkbox', { name: 'Deck' }).uncheck();
@@ -328,7 +328,7 @@ Pack 1 pick 2:
             },
         });
 
-        await page.getByRole('button', { name: 'Reset' }).click();
+        await page.getByRole('button', { name: 'Reset', exact: true }).click();
         await page.getByTestId('deck-editor-collection-list-button').click();
         await page.getByTestId('deck-editor-set-code-filter').fill('M11');
         await page.getByTestId('deck-editor-color-filter-red').click();

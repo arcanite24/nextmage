@@ -102,6 +102,12 @@
     padding: 5px 7px;
 }
 
+.match-action-section input[type='range'] {
+    width: 100%;
+    min-height: 24px;
+    accent-color: #60a5fa;
+}
+
 .match-rollback-row {
     display: grid;
     grid-template-columns: 64px minmax(0, 1fr);
@@ -153,6 +159,22 @@
     color: #dbeafe;
     font-size: 11px;
     font-weight: 800;
+}
+
+.match-action-field-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.match-action-field-label strong {
+    min-width: 2.5ch;
+    color: #bfdbfe;
+    font-size: 10px;
+    font-weight: 900;
+    line-height: 1;
+    text-align: right;
 }
 
 .match-option-summary {

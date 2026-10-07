@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
+import { FastForward, X } from 'lucide-react';
 import './SkipIndicator.css';
 
 interface SkipIndicatorProps {
@@ -7,10 +8,6 @@ interface SkipIndicatorProps {
 }
 
 export const SkipIndicator: React.FC<SkipIndicatorProps> = React.memo(({ activeSkip, onCancel }) => {
-    if (activeSkip === 'none') {
-        return null;
-    }
-
     const skipLabel = useMemo(() => {
         switch (activeSkip) {
             case 'F4':
@@ -36,10 +33,14 @@ export const SkipIndicator: React.FC<SkipIndicatorProps> = React.memo(({ activeS
         onCancel();
     }, [onCancel]);
 
+    if (activeSkip === 'none') {
+        return null;
+    }
+
     return (
         <div className="skip-indicator">
             <div className="skip-indicator-content">
-                <div className="skip-indicator-icon">⏩</div>
+                <FastForward className="skip-indicator-icon" size={24} aria-hidden="true" />
                 <div className="skip-indicator-text">
                     <div className="skip-indicator-key">{activeSkip}</div>
                     <div className="skip-indicator-label">{skipLabel}</div>
@@ -49,7 +50,7 @@ export const SkipIndicator: React.FC<SkipIndicatorProps> = React.memo(({ activeS
                     onClick={handleCancel}
                     title="Cancel (ESC)"
                 >
-                    ✕
+                    <X size={15} aria-hidden="true" />
                 </button>
             </div>
         </div>

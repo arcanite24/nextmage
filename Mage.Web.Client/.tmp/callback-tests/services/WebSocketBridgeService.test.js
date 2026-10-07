@@ -100,6 +100,7 @@ test('bridge wrappers emit every P0 server method', async () => {
     await service.quitDraft(DRAFT_ID, SESSION_ID);
     await service.pickDraftCard(DRAFT_ID, SESSION_ID, CARD_ID, [CARD_ID]);
     await service.markDraftCard(DRAFT_ID, SESSION_ID, CARD_ID);
+    await service.markDraftCard(DRAFT_ID, SESSION_ID, null);
     await service.setDraftBoosterLoaded(DRAFT_ID, SESSION_ID);
     await service.initReplay(GAME_ID, SESSION_ID);
     await service.startReplay(GAME_ID, SESSION_ID);

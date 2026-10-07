@@ -330,11 +330,12 @@ const TOURNAMENT_VIEW = {
 };
 const DRAFT_VIEW = {
     draftId: DRAFT_ID,
-    players: [
-        { playerId: PLAYER_ID, name: 'Alice', picks: 3 },
-    ],
+    players: ['Alice'],
+    setNames: ['Dominaria'],
+    setCodes: ['DOM'],
     boosterNum: 1,
     cardNum: 3,
+    isCube: false,
 };
 const DRAFT_PICK_VIEW = {
     booster: {
@@ -399,7 +400,8 @@ test('accepts Java Gson-shaped view fixtures for core web models', () => {
     assert.equal(DECK_VIEW.cards[CARD_ID].usesVariousArt, false);
     assert.equal(TABLE_VIEW.tableState, TableState.WAITING);
     assert.equal(tournamentView.tournamentId, undefined);
-    assert.equal(DRAFT_VIEW.players[0].picks, 3);
+    assert.equal(DRAFT_VIEW.players[0], 'Alice');
+    assert.equal(DRAFT_VIEW.setCodes[0], 'DOM');
     assert.equal(DRAFT_PICK_VIEW.picking, true);
     assert.equal(ROOM_USERS_VIEW.usersView[0].userName, 'Alice');
     assert.equal(ROOM_USERS_VIEW.numberMaxGames, 10);

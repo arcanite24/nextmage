@@ -1,4 +1,5 @@
 import React from 'react';
+import { Hand, Heart } from 'lucide-react';
 import { useGameStore } from '../../../stores/gameStore';
 import { useSettingsStore } from '../../../stores/settingsStore';
 import { CardView, CommandObjectView, GameView, PlayerView, SimpleCardView } from '../../../types';
@@ -439,8 +440,8 @@ export const CardSelectorDialog: React.FC<CardSelectorDialogProps> = (props) => 
                                     <div className="player-selector-info">
                                         <div className="player-selector-name">{player.name}</div>
                                         <div className="player-selector-stats">
-                                            <span>❤️ {player.life}</span>
-                                            <span>✋ {player.handCount}</span>
+                                            <span><Heart size={14} aria-hidden="true" /> {player.life}</span>
+                                            <span><Hand size={14} aria-hidden="true" /> {player.handCount}</span>
                                         </div>
                                     </div>
                                 </button>
