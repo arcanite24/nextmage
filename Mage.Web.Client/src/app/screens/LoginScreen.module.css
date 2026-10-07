@@ -22,6 +22,7 @@
 
 .welcome {
   position: relative;
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -40,7 +41,7 @@
 
 /* the mat's printed slogan: big, condensed, in ivory ink */
 .headline {
-  font-size: clamp(3rem, 7vw, 6rem);
+  font-size: clamp(3rem, 11cqi, 6rem);
   line-height: 0.92;
   text-transform: uppercase;
   letter-spacing: 0.005em;
