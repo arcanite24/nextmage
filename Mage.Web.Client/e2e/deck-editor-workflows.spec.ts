@@ -13,7 +13,7 @@ test.describe('deck editor browser workflows', () => {
 
     await page.getByTestId('deck-description-input').fill('Browser round trip notes');
     await page.getByTestId('deck-editor-save-button').click();
-    await expect(page.getByRole('status')).toContainText('Saved P0 Visual Smoke.');
+    await expect(page.getByRole('status').filter({ hasText: 'Saved P0 Visual Smoke.' })).toBeVisible();
 
     await expect.poll(async () => readStoredDeck(page, 'P0 Visual Smoke')).toMatchObject({
       description: 'Browser round trip notes',
@@ -37,7 +37,7 @@ test.describe('deck editor browser workflows', () => {
     });
     await page.keyboard.type('Browser Round Trip Copy');
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('status')).toContainText('Saved copy as Browser Round Trip Copy.');
+    await expect(page.getByRole('status').filter({ hasText: 'Saved copy as Browser Round Trip Copy.' })).toBeVisible();
 
     await expect.poll(async () => readStoredDecksMeta(page)).toEqual(expect.arrayContaining([
       expect.objectContaining({ name: 'P0 Visual Smoke' }),
@@ -63,7 +63,7 @@ test.describe('deck editor browser workflows', () => {
 
     await expect(page.getByRole('heading', { name: 'Browser Round Trip Copy' })).toBeVisible();
     await expect(page.getByTestId('deck-description-input')).toHaveValue('Browser round trip notes');
-    await expect(page.getByRole('status')).toContainText('Loaded Browser Round Trip Copy.');
+    await expect(page.getByRole('status').filter({ hasText: 'Loaded Browser Round Trip Copy.' })).toBeVisible();
   });
 
   test('guards unsaved deck changes before app navigation', async ({ page }) => {
@@ -681,8 +681,8 @@ test.describe('deck editor browser workflows', () => {
     await addLandsModal.getByTestId('deck-add-lands-submit-button').click();
 
     await expect(page.getByTestId('deck-add-lands-modal')).toHaveCount(0);
-    await expect(page.getByRole('status')).toContainText('Added 1 basic land (from ICE) to main deck.');
-    await expect(page.getByRole('status')).toContainText('Forest used fallback printings.');
+    await expect(page.getByRole('status').filter({ hasText: 'Added 1 basic land (from ICE) to main deck.' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'Forest used fallback printings.' })).toBeVisible();
     const resultDetails = page.getByTestId('add-lands-result-details');
     await expect(resultDetails).toHaveAttribute('data-total-added', '1');
     await expect(resultDetails).toHaveAttribute('data-destination', 'main');
@@ -764,7 +764,7 @@ test.describe('deck editor browser workflows', () => {
     await expect(page.getByTestId('deck-editor-generate-button')).toBeFocused();
     await expect(page.getByRole('heading', { name: /Generated-Deck-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}-\d{2}-\d{3}/ })).toBeVisible();
     await expect(page.getByRole('status')).toContainText(/Generated Generated-Deck-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}-\d{2}-\d{3} from green\./);
-    await expect(page.getByRole('status')).toContainText('Generated 23/40 main-deck cards');
+    await expect(page.getByRole('status').filter({ hasText: 'Generated 23/40 main-deck cards' })).toBeVisible();
     await expect(deckRow(page, 'main', 'Llanowar Elves').getByTestId('deck-card-count-input')).toHaveValue(/^[1-4]$/);
     await expect(deckRow(page, 'main', 'Elvish Visionary').getByTestId('deck-card-count-input')).toHaveValue(/^[1-4]$/);
     await expect(deckRow(page, 'main', 'Giant Growth').getByTestId('deck-card-count-input')).toHaveValue(/^[1-4]$/);
@@ -1667,7 +1667,7 @@ test.describe('deck editor browser workflows', () => {
         await expect(page.getByTestId('deck-add-lands-modal')).toHaveCount(0);
         await expect(deckRow(page, 'main', 'Forest').getByTestId('deck-card-count-input')).toHaveValue('1');
         await expect(promotedAnalytics.getByTestId('deck-analytics-stat-main')).toContainText('60/40');
-        await expect(page.getByRole('status')).toContainText('Added 1 basic land to main deck.');
+        await expect(page.getByRole('status').filter({ hasText: 'Added 1 basic land to main deck.' })).toBeVisible();
       }
 
       const activitySubmitButton = page.getByTestId('deck-editor-activity-submit-button');
@@ -1675,7 +1675,7 @@ test.describe('deck editor browser workflows', () => {
         await expect(activitySubmitButton).toHaveAttribute('data-activity-kind', activityEditorCase.submitKind);
         await expect(activitySubmitButton).toBeEnabled();
         await activitySubmitButton.click();
-        await expect(page.getByRole('status')).toContainText(activityEditorCase.submitStatus);
+        await expect(page.getByRole('status').filter({ hasText: activityEditorCase.submitStatus })).toBeVisible();
 
         let discardPrompts = 0;
         page.on('dialog', async (dialog) => {
@@ -2486,7 +2486,7 @@ test.describe('deck editor browser workflows', () => {
     await fixer.getByTestId('deck-import-apply-fixes-button').click();
 
     await expect(fixer).toHaveCount(0);
-    await expect(page.getByRole('status')).toContainText('Appended Dropped Deck.');
+    await expect(page.getByRole('status').filter({ hasText: 'Appended Dropped Deck.' })).toBeVisible();
     await expect(deckRow(page, 'main', 'Lightning Bolt').getByTestId('deck-card-count-input')).toHaveValue('5');
     await expect.poll(async () => readCardResolverFixes(page)).toMatchObject({
       'mystery bolt||': {
@@ -2501,7 +2501,7 @@ test.describe('deck editor browser workflows', () => {
 
     await dropDeckText(page.getByTestId('deck-manager-drop-zone'), '1 Mystery Bolt');
     await expect(page.getByTestId('deck-import-fixer-modal')).toHaveCount(0);
-    await expect(page.getByRole('status')).toContainText('Imported Dropped Deck.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Dropped Deck.' })).toBeVisible();
     await expect(page.getByTestId('deck-manager-deck-card').filter({ hasText: 'Dropped Deck' })).toBeVisible();
 
     await expect.poll(async () => readStoredDeck(page, 'Dropped Deck')).toMatchObject({
@@ -2528,7 +2528,7 @@ test.describe('deck editor browser workflows', () => {
     await fileFixer.getByTestId('deck-import-apply-fixes-button').click();
 
     await expect(fileFixer).toHaveCount(0);
-    await expect(page.getByRole('status')).toContainText('Appended Dropped Mystery Growth.');
+    await expect(page.getByRole('status').filter({ hasText: 'Appended Dropped Mystery Growth.' })).toBeVisible();
     await expect(deckRow(page, 'main', 'Giant Growth').getByTestId('deck-card-count-input')).toHaveValue('1');
 
     await gotoVisual(page, '/visual.html?scenario=deck-manager');
@@ -2540,7 +2540,7 @@ test.describe('deck editor browser workflows', () => {
     );
 
     await expect(page.getByTestId('deck-import-fixer-modal')).toHaveCount(0);
-    await expect(page.getByRole('status')).toContainText('Imported Manager Remembered Growth.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Manager Remembered Growth.' })).toBeVisible();
     await expect.poll(async () => readStoredDeck(page, 'Manager Remembered Growth')).toMatchObject({
       cards: [
         expect.objectContaining({
@@ -2577,7 +2577,7 @@ test.describe('deck editor browser workflows', () => {
     );
 
     await expect(page.getByRole('heading', { name: 'Browser File Replace' })).toBeVisible();
-    await expect(page.getByRole('status')).toContainText('Imported Browser File Replace.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Browser File Replace.' })).toBeVisible();
     await expect(deckRow(page, 'main', 'Lightning Bolt').getByTestId('deck-card-count-input')).toHaveValue('1');
     await expect(deckRow(page, 'main', 'Mountain')).toHaveCount(0);
     await expect.poll(async () => readDeckFileHistory(page)).toMatchObject({
@@ -2603,7 +2603,7 @@ test.describe('deck editor browser workflows', () => {
       '2 Llanowar Elves\nSB: 1 Naturalize',
     );
 
-    await expect(page.getByRole('status')).toContainText('Imported Browser Manager File.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Browser Manager File.' })).toBeVisible();
     await expect(page.getByTestId('deck-manager-deck-card').filter({ hasText: 'Browser Manager File' })).toBeVisible();
     await expect.poll(async () => readStoredDeck(page, 'Browser Manager File')).toMatchObject({
       cards: [
@@ -2630,7 +2630,7 @@ test.describe('deck editor browser workflows', () => {
       '1 [M11:999] Lightning Bolt',
     );
 
-    await expect(page.getByRole('status')).toContainText('Imported Browser Stale DCK.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Browser Stale DCK.' })).toBeVisible();
     await expect(page.getByTestId('deck-manager-deck-card').filter({ hasText: 'Browser Stale DCK' })).toBeVisible();
     await expect.poll(async () => readStoredDeck(page, 'Browser Stale DCK')).toMatchObject({
       cards: [
@@ -2658,7 +2658,7 @@ test.describe('deck editor browser workflows', () => {
       </cockatrice_deck>`,
     );
 
-    await expect(page.getByRole('status')).toContainText('Imported Browser Cockatrice.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Browser Cockatrice.' })).toBeVisible();
     await expect(page.getByTestId('deck-manager-deck-card').filter({ hasText: 'Browser Cockatrice' })).toBeVisible();
     await expect.poll(async () => readStoredDeck(page, 'Browser Cockatrice')).toMatchObject({
       cards: [
@@ -2693,7 +2693,7 @@ test.describe('deck editor browser workflows', () => {
       </deck>`,
     );
 
-    await expect(page.getByRole('status')).toContainText('Imported Browser OCTGN.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Browser OCTGN.' })).toBeVisible();
     await expect(page.getByTestId('deck-manager-deck-card').filter({ hasText: 'Browser OCTGN' })).toBeVisible();
     await expect.poll(async () => readStoredDeck(page, 'Browser OCTGN')).toMatchObject({
       cards: [
@@ -2731,7 +2731,7 @@ test.describe('deck editor browser workflows', () => {
       }),
     );
 
-    await expect(page.getByRole('status')).toContainText('Imported Browser MTGJSON.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Browser MTGJSON.' })).toBeVisible();
     await expect(page.getByTestId('deck-manager-deck-card').filter({ hasText: 'Browser MTGJSON' })).toBeVisible();
     await expect.poll(async () => readStoredDeck(page, 'Browser MTGJSON')).toMatchObject({
       cards: [
@@ -2770,7 +2770,7 @@ test.describe('deck editor browser workflows', () => {
           Mountain`,
     );
 
-    await expect(page.getByRole('status')).toContainText('Imported Browser Draft Log.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Browser Draft Log.' })).toBeVisible();
     await expect(page.getByTestId('deck-manager-deck-card').filter({ hasText: 'Browser Draft Log' })).toBeVisible();
     await expect.poll(async () => readStoredDeck(page, 'Browser Draft Log')).toMatchObject({
       cards: [
@@ -2819,7 +2819,7 @@ test.describe('deck editor browser workflows', () => {
     });
 
     await page.getByTestId('deck-editor-copy-button').click();
-    await expect(page.getByRole('status')).toContainText('Copied P0 Visual Smoke to clipboard.');
+    await expect(page.getByRole('status').filter({ hasText: 'Copied P0 Visual Smoke to clipboard.' })).toBeVisible();
     await expect.poll(async () => readTestClipboard(page)).toContain('4 [M11:149] Lightning Bolt');
     await expect.poll(async () => readTestClipboard(page)).toContain('SB: 2 [M11:190] Naturalize');
 
@@ -2839,7 +2839,7 @@ test.describe('deck editor browser workflows', () => {
     expect(managerExportedText).toContain('SB: 2 [M11:190] Naturalize');
 
     await page.getByTestId('deck-export-clipboard-button').click();
-    await expect(page.getByRole('status')).toContainText('Copied P0 Visual Smoke to clipboard.');
+    await expect(page.getByRole('status').filter({ hasText: 'Copied P0 Visual Smoke to clipboard.' })).toBeVisible();
     await expect.poll(async () => readTestClipboard(page)).toContain('4 [M11:149] Lightning Bolt');
     await expect.poll(async () => readTestClipboard(page)).toContain('SB: 2 [M11:190] Naturalize');
   });
@@ -2854,7 +2854,7 @@ test.describe('deck editor browser workflows', () => {
     await expect(page.getByTestId('deck-manager-import-source-dialog')).toBeVisible();
     await page.getByTestId('deck-manager-import-clipboard-option').click();
 
-    await expect(page.getByRole('status')).toContainText('Imported Clipboard Deck.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Clipboard Deck.' })).toBeVisible();
     await expect(page.getByTestId('deck-manager-deck-card').filter({ hasText: 'Clipboard Deck' })).toBeVisible();
     await expect.poll(async () => readStoredDeck(page, 'Clipboard Deck')).toMatchObject({
       cards: [
@@ -2885,7 +2885,7 @@ test.describe('deck editor browser workflows', () => {
     await page.getByTestId('deck-editor-import-clipboard-replace-option').click();
 
     await expect(page.getByRole('heading', { name: 'Clipboard Deck' })).toBeVisible();
-    await expect(page.getByRole('status')).toContainText('Imported Clipboard Deck.');
+    await expect(page.getByRole('status').filter({ hasText: 'Imported Clipboard Deck.' })).toBeVisible();
     await expect(deckRow(page, 'main', 'Giant Growth').getByTestId('deck-card-count-input')).toHaveValue('1');
     await expect(deckRow(page, 'main', 'Lightning Bolt')).toHaveCount(0);
 
@@ -2893,7 +2893,7 @@ test.describe('deck editor browser workflows', () => {
     await page.getByTestId('deck-editor-import-menu-button').click();
     await expect(page.getByTestId('deck-editor-import-source-dialog')).toBeVisible();
     await page.getByTestId('deck-editor-import-clipboard-append-option').click();
-    await expect(page.getByRole('status')).toContainText('Appended Clipboard Append.');
+    await expect(page.getByRole('status').filter({ hasText: 'Appended Clipboard Append.' })).toBeVisible();
     await expect(deckRow(page, 'main', 'Giant Growth').getByTestId('deck-card-count-input')).toHaveValue('1');
     await expect(deckRow(page, 'main', 'Naturalize').getByTestId('deck-card-count-input')).toHaveValue('1');
   });
@@ -2919,16 +2919,6 @@ function collectionCards(page: import('@playwright/test').Page) {
   return page.locator('.collection-browser [data-testid="deck-editor-collection-card"]');
 }
 
-async function dragDeckRowToZone(
-  page: import('@playwright/test').Page,
-  sourceZone: 'main' | 'side',
-  cardName: string,
-  targetZone: 'main' | 'side',
-) {
-  await startDeckRowDrag(page, sourceZone, cardName);
-  await finishDeckRowDragToZone(page, targetZone);
-}
-
 async function dispatchDeckRowDoubleClick(
   page: import('@playwright/test').Page,
   zone: 'main' | 'side',
@@ -2942,16 +2932,6 @@ async function dispatchDeckRowDoubleClick(
       altKey: Boolean(eventOptions.altKey),
     }));
   }, options);
-}
-
-async function dispatchDeckRowCheckboxClick(
-  page: import('@playwright/test').Page,
-  zone: 'main' | 'side',
-  cardName: string,
-) {
-  await deckRow(page, zone, cardName).getByTestId('deck-card-select-checkbox').evaluate((source) => {
-    (source as HTMLInputElement).click();
-  });
 }
 
 async function startDeckRowDrag(

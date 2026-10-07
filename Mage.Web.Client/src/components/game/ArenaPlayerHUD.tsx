@@ -25,7 +25,7 @@ const DefaultAvatarSVG = () => (
     </svg>
 );
 
-export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ player, isMe, isActivePlayer, onShowZone, onInteract, onManaClick, showPlayerName = true, displayLifeOnAvatar = true }) => {
+export const ArenaPlayerHUD: React.FC<ArenaPlayerHUDProps> = React.memo(({ player, isActivePlayer, onShowZone, onInteract, onManaClick, showPlayerName = true, displayLifeOnAvatar = true }) => {
     // Check for deferred life update (visual override)
     const visualLifeTotals = useAnimationStore(state => state.visualLifeTotals);
     const displayedLife = visualLifeTotals?.[player.playerId] ?? player.life;

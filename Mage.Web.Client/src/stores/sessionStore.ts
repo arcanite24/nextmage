@@ -118,11 +118,6 @@ interface SessionActions {
     restoreSession: () => Promise<boolean>;
 }
 
-// Helper to generate UUID
-const generateUUID = (): string => {
-    return crypto.randomUUID();
-};
-
 const initialConnectionProfiles = connectionProfileService.load();
 
 function formatServerVersion(serverState: ServerState): string {

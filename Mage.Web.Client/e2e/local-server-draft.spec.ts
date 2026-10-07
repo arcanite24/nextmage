@@ -713,15 +713,6 @@ async function readActivityDeckCounts(workspace: Locator): Promise<{ main: numbe
     };
 }
 
-async function readDeckSectionCount(page: Page, zone: 'main' | 'side'): Promise<number> {
-    return page
-        .locator(`[data-testid="deck-card-row"][data-zone="${zone}"]`)
-        .evaluateAll(rows => rows.reduce((sum, row) => {
-            const input = row.querySelector<HTMLInputElement>('[data-testid="deck-card-count-input"]');
-            return sum + Number(input?.value ?? '0');
-        }, 0));
-}
-
 async function expectLiveLegality(scope: Locator, labelText: string, deckType: string) {
     const label = scope.getByTestId('deck-legality-label').filter({ hasText: labelText });
     await expect(label).toHaveAttribute('data-validation-source', /^(server|browser)$/, { timeout: 20_000 });

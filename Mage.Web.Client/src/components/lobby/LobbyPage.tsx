@@ -29,7 +29,6 @@ interface LobbyPageProps {
 }
 
 export const LobbyPage: React.FC<LobbyPageProps> = ({
-    onEnterGame,
     onLogout,
     onOpenDeckEditor,
     onOpenTournament,
@@ -46,7 +45,6 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
 
     const { userName, sessionId, mainRoomId, serverUrl, logout, showAlert } = useSessionStore();
     const {
-        tables,
         filteredTables,
         finishedMatches,
         filteredFinishedMatches,

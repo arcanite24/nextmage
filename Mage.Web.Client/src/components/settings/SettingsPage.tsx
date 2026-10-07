@@ -134,7 +134,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onExit, onNavigate, 
   }, [updateKeybind]);
 
   const unlockAudio = React.useCallback(() => {
-    const unlocked = audioFeedbackService.unlock(settings);
+    const unlocked = audioFeedbackService.unlock();
     setSetting('browserAudioUnlocked', unlocked);
   }, [settings, setSetting]);
 
@@ -599,7 +599,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onExit, onNavigate, 
             </div>
             <div className="setting-row">
               <span><strong>Browser audio unlocked</strong><small>Set after the first user gesture permits browser audio.</small></span>
-              <button type="button" className="settings-inline-button" onClick={unlockAudio} data-testid="settings-audio-unlocked">
+              <button type="button" className="settings-inline-button" onClick={unlockAudio} data-testid="settings-audio-unlocked" aria-label="Unlock browser audio">
                 {settings.browserAudioUnlocked ? 'Unlocked' : 'Unlock'}
               </button>
             </div>

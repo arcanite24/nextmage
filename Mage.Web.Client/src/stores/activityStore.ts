@@ -700,7 +700,7 @@ function activityFromCallback(callback: ClientCallback): ActivityDraft | null {
         case 'draftInit':
         case 'draftPick':
         case 'draftUpdate':
-        case 'draftOver':
+        case 'draftOver': {
             if (!objectId) return null;
             const draftPick = readDraftPickPayload(data);
             const draft = readDraftPayload(data, objectId);
@@ -715,6 +715,7 @@ function activityFromCallback(callback: ClientCallback): ActivityDraft | null {
                 draftPick,
                 time: readNumber(data.time) ?? draftPick?.timeout ?? undefined,
             };
+        }
 
         case 'sideboard': {
             const tableId = readRecordString(data, 'currentTableId') ?? objectId;

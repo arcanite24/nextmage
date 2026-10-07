@@ -134,11 +134,26 @@ export const DeckPanel: React.FC<DeckPanelProps> = ({
         setSelectionAnchorKey((anchorKey) => (anchorKey && isMainDeckCardKey(anchorKey) ? anchorKey : null));
     }, [modeConfig.showSideboard]);
 
+    const focusDeckCardRow = (cardKey: string | null | undefined): boolean => {
+        if (!cardKey) return false;
+
+        const row = Array.from(deckPanelRef.current?.querySelectorAll<HTMLElement>('[data-testid="deck-card-row"]') ?? [])
+            .find(element => element.dataset.cardKey === cardKey);
+        if (!row) return false;
+
+        row.focus();
+        return true;
+    };
+
     useLayoutEffect(() => {
         const pendingFocusKey = pendingDeckRowFocusKeyRef.current;
         if (!pendingFocusKey) return;
 
-        focusDeckCardRow(pendingFocusKey);
+        // Focus once after the deck change commits; keeping the key around would let later
+        // deck updates steal focus from dialogs opened in the meantime.
+        if (focusDeckCardRow(pendingFocusKey)) {
+            pendingDeckRowFocusKeyRef.current = null;
+        }
     }, [currentDeck, selectedDeckCardKeys]);
 
     if (!currentDeck) {
@@ -431,17 +446,6 @@ export const DeckPanel: React.FC<DeckPanelProps> = ({
         event.stopPropagation();
         clearPendingCardClick();
         selectDeckCardRange(cardKey);
-    };
-
-    const focusDeckCardRow = (cardKey: string | null | undefined): boolean => {
-        if (!cardKey) return false;
-
-        const row = Array.from(deckPanelRef.current?.querySelectorAll<HTMLElement>('[data-testid="deck-card-row"]') ?? [])
-            .find(element => element.dataset.cardKey === cardKey);
-        if (!row) return false;
-
-        row.focus();
-        return true;
     };
 
     const scheduleDeckCardRowFocus = (cardKey: string | null | undefined) => {

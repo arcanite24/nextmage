@@ -5,7 +5,6 @@ import {
     appConfigService,
     FALLBACK_LOBBY_SERVER_OPTIONS,
     findTournamentType,
-    getClampedPlayerCount,
     getDefaultComputerPlayerType,
     getDefaultDeckType,
     getDefaultTournamentTypeName,
@@ -26,7 +25,7 @@ import {
     type CreateTournamentPresetSlot,
     type LobbyServerOptions,
 } from '../../services';
-import { DeckCardLists, DraftTimingOption, GameTypeView, SkillLevel, TournamentOptions } from '../../types';
+import { DeckCardLists, DraftTimingOption, SkillLevel, TournamentOptions } from '../../types';
 import { DeckPicker } from './DeckPicker';
 import './CreateTableDialog.css';
 
@@ -134,10 +133,6 @@ export const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     const selectedTournamentType = useMemo(
         () => findTournamentType(serverOptions, formData.tournamentType),
         [formData.tournamentType, serverOptions],
-    );
-    const selectedGameType = useMemo(
-        () => findTournamentGameType(serverOptions, formData.gameType),
-        [formData.gameType, serverOptions],
     );
     const humanPlayerType = getHumanPlayerType(serverOptions);
     const computerPlayerType = getDefaultComputerPlayerType(serverOptions);
@@ -1191,20 +1186,6 @@ function getDefaultTournamentGameTypeName(options: LobbyServerOptions): string {
     return options.tournamentGameTypes.find(gameType => gameType.name === 'Two Player Duel')?.name
         ?? options.tournamentGameTypes[0]?.name
         ?? 'Two Player Duel';
-}
-
-function findTournamentGameType(options: LobbyServerOptions, gameTypeName: string): GameTypeView {
-    return options.tournamentGameTypes.find(gameType => gameType.name === gameTypeName)
-        ?? options.tournamentGameTypes[0]
-        ?? {
-            name: 'Two Player Duel',
-            minPlayers: 2,
-            maxPlayers: 2,
-            numTeams: 0,
-            playersPerTeam: 0,
-            useRange: false,
-            useAttackOption: false,
-        };
 }
 
 function ensureTournamentGameType(options: LobbyServerOptions, gameTypeName: string): string {

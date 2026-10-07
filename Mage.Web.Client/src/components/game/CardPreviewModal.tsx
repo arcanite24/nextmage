@@ -13,6 +13,8 @@ interface CardPreviewModalProps {
     card: CardView | PermanentView;
     initialFace?: 'front' | 'back';
     onClose: () => void;
+    /** In-match only: offers trigger auto-order actions that are sent to the running game. */
+    showGameActions?: boolean;
 }
 
 // Type guard to check if a card is an ability with sourceCard
@@ -124,7 +126,7 @@ const getMutateCards = (card: PermanentView | null): CardView[] => {
         .map(([, value]) => value as CardView);
 };
 
-export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, initialFace, onClose }) => {
+export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, initialFace, onClose, showGameActions = false }) => {
     const { showCardReminderText, showCardSetInfo, showCardHints, cardImageFallbackMode } = useSettingsStore(useShallow(state => ({
         showCardReminderText: state.settings.showCardReminderText,
         showCardSetInfo: state.settings.showCardSetInfo,
@@ -177,9 +179,9 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, initia
             ? document.activeElement
             : null;
 
-        window.requestAnimationFrame(() => {
-            closeButtonRef.current?.focus();
-        });
+        // The ref is attached by the time effects run; focusing synchronously avoids losing focus
+        // to a deferred frame (rAF also never fires in background tabs).
+        closeButtonRef.current?.focus();
 
         return () => {
             if (previouslyFocused?.isConnected) {
@@ -414,7 +416,7 @@ export const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, initia
                         </div>
                     )}
 
-                    {(triggerObjectId || triggerRuleText) && (
+                    {showGameActions && (triggerObjectId || triggerRuleText) && (
                         <div className="card-info-trigger-actions" data-testid="card-preview-trigger-actions">
                             <div className="card-info-trigger-title">Trigger Auto-Order</div>
                             <div className="card-info-trigger-grid">

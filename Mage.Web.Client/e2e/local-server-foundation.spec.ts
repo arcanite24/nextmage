@@ -203,7 +203,7 @@ Pack 1 pick 2:
         await expect(analytics.getByTestId('deck-analytics-mana-pip-red')).toHaveAttribute('aria-label', 'Casting Costs Red: 4');
         await expect(analytics.getByTestId('deck-analytics-land-source-mountain')).toHaveAttribute('aria-label', 'Basic Lands Mountain: 56');
         await expect(analytics.getByTestId('deck-analytics-mana-source-red')).toHaveAttribute('aria-label', 'Mana Sources Red: 56');
-        await expect(analytics.getByTestId('deck-analytics-mana-distribution-1')).toHaveAttribute('aria-label', 'Mana value 1 pips: 4');
+        await expect(analytics.getByTestId('deck-analytics-mana-distribution-1').getByRole('button', { name: 'Mana value 1 pips: 4' })).toBeVisible();
         await expect(analytics.getByTestId('deck-analytics-mana-distribution-1-red')).toHaveAttribute('title', '1 Red: 4');
         await expect(analytics.getByTestId('deck-analytics-type-instant')).toContainText('4');
         await expect(analytics.getByTestId('deck-analytics-type-land')).toContainText('56');
@@ -213,7 +213,7 @@ Pack 1 pick 2:
         await expect(analytics.getByTestId('deck-analytics-active-detail-names')).toContainText('Lightning Bolt');
         await expect(deckRow(page, 'main', 'Lightning Bolt')).toHaveAttribute('data-selected', 'true');
         await expect(deckRow(page, 'main', 'Mountain')).not.toHaveAttribute('data-selected', 'true');
-        await analytics.getByTestId('deck-analytics-mana-distribution-1').click();
+        await analytics.getByTestId('deck-analytics-mana-distribution-1-summary').click();
         await expect(analytics.getByTestId('deck-analytics-active-detail-title')).toHaveText('Mana value 1 spread');
         await expect(analytics.getByTestId('deck-analytics-active-detail-count')).toHaveText('4');
         await expect(analytics.getByTestId('deck-analytics-active-detail-names')).toContainText('Lightning Bolt');
@@ -644,10 +644,6 @@ async function collectionCardMetadata(page: Page): Promise<Array<{ name: string;
         red: (card.getAttribute('data-card-colors') ?? '').split(/\s+/).includes('red'),
         manaValue: Number(card.getAttribute('data-mana-value') ?? Number.NaN),
     })));
-}
-
-async function deckRowCount(page: Page, zone: 'main' | 'side'): Promise<number> {
-    return page.locator(`[data-testid="deck-card-row"][data-zone="${zone}"]`).count();
 }
 
 async function readDeckEditorConfig(page: Page): Promise<Record<string, unknown> | null> {

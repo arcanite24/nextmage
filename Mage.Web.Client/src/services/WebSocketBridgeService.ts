@@ -128,7 +128,10 @@ function cardCollectionToList(cards: DeckView['cards']): DeckCardInfo[] {
 
 export function normalizeDeckSubmitPayload(deck: DeckSubmitPayload): DeckCardLists {
     if (isDeckCardLists(deck)) {
-        const { cardLayout: _cardLayout, sideboardLayout: _sideboardLayout, ...submitDeck } = deck;
+        // Layout metadata is client-only; strip it before submitting to the server.
+        const submitDeck: DeckCardLists = { ...deck };
+        delete submitDeck.cardLayout;
+        delete submitDeck.sideboardLayout;
         return {
             ...submitDeck,
             cards: deck.cards.map((card: DeckCardInfo) => ({ ...card })),

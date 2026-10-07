@@ -109,7 +109,7 @@ export const FeedbackPanel: React.FC = React.memo(() => {
     // Specific rendering based on action type
     const renderActionContent = useMemo(() => {
         switch (pendingAction.type) {
-            case 'ask':
+            case 'ask': {
                 const yesText = getOptionText(pendingAction.options, ['UI.left.btn.text', 'leftButtonText'], 'Yes');
                 const noText = getOptionText(pendingAction.options, ['UI.right.btn.text', 'rightButtonText'], 'No');
                 return (
@@ -156,8 +156,9 @@ export const FeedbackPanel: React.FC = React.memo(() => {
                         )}
                     </>
                 );
+            }
 
-            case 'priority':
+            case 'priority': {
                 const passText = getOptionText(pendingAction.options, ['UI.right.btn.text', 'rightButtonText'], 'Done');
                 const playText = getOptionText(pendingAction.options, ['UI.left.btn.text', 'leftButtonText'], '');
                 return (
@@ -166,6 +167,7 @@ export const FeedbackPanel: React.FC = React.memo(() => {
                         {passText && <Button variant={playText ? 'secondary' : 'primary'} onClick={handleDonePriority}>{passText}</Button>}
                     </div>
                 );
+            }
 
             case 'mana':
                 return (
@@ -175,7 +177,7 @@ export const FeedbackPanel: React.FC = React.memo(() => {
                 );
 
             case 'target':
-            case 'select':
+            case 'select': {
                 // For target/select, show Done/Cancel based on whether selection is required
                 const actionData = pendingAction as any;
                 const isRequired = actionData.required;
@@ -193,6 +195,7 @@ export const FeedbackPanel: React.FC = React.memo(() => {
                         )}
                     </div>
                 );
+            }
 
             default:
                 return null;

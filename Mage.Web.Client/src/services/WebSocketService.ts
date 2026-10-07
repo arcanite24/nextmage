@@ -409,7 +409,7 @@ class WebSocketService {
     }
 
     private rejectAllPendingRequests(error: Error): void {
-        this.pendingRequests.forEach((pending, id) => {
+        this.pendingRequests.forEach((pending) => {
             clearTimeout(pending.timeout);
             pending.reject(error);
         });

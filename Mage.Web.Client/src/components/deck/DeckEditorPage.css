@@ -62,7 +62,15 @@
     width: var(--deck-panel-width, 320px);
     flex-shrink: 0;
     height: 100%;
-    overflow: hidden;
+    /* The fixed-height panels below the deck list can outgrow short windows; scroll the
+       column instead of squeezing the deck list to nothing. */
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.deck-editor-right > .deck-panel {
+    flex: 1 1 0;
+    min-height: 340px;
 }
 
 /* Done Button */
