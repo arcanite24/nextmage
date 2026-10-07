@@ -1,4 +1,4 @@
-import { useLayoutEffect, type RefObject } from 'react';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { useStage } from './stageContext';
 
 /**
@@ -39,19 +39,20 @@ function reducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 }
 
+/**
+ * Where an element sits on the stage: its centre from the screen box (a turn about the centre doesn't move it),
+ * its size from layout, which ignores rotation, so a tapped card doesn't read as a differently sized one.
+ */
 function measure(element: HTMLElement, stageElement: HTMLElement | null, scale: number, rotation: number): Placement | null {
   if (!stageElement) return null;
   const box = element.getBoundingClientRect();
   const stageBox = stageElement.getBoundingClientRect();
   if (box.width === 0 && box.height === 0) return null;
-  return {
-    x: (box.left - stageBox.left) / scale,
-    y: (box.top - stageBox.top) / scale,
-    width: box.width / scale,
-    height: box.height / scale,
-    rotation,
-    at: performance.now(),
-  };
+  const width = element.offsetWidth || box.width / scale;
+  const height = element.offsetHeight || box.height / scale;
+  const centerX = (box.left + box.width / 2 - stageBox.left) / scale;
+  const centerY = (box.top + box.height / 2 - stageBox.top) / scale;
+  return { x: centerX - width / 2, y: centerY - height / 2, width, height, rotation, at: performance.now() };
 }
 
 /** A zone that cards come from or vanish into (library, hidden hand, graveyard pile). */
@@ -72,10 +73,14 @@ export function useFlipOrigin(key: string, ref: RefObject<HTMLElement | null>) {
 export function useFlip(cardId: string | undefined, ref: RefObject<HTMLElement | null>, options: { rotation?: number; fallbackOrigin?: string } = {}) {
   const stage = useStage();
   const rotation = options.rotation ?? 0;
+  // the element's first layout: it may have come from another zone at another angle (the fanned hand)
+  const arrived = useRef(false);
 
   useLayoutEffect(() => {
     const element = ref.current;
     if (!element || !cardId || !stage.element) return;
+    const firstLayout = !arrived.current;
+    arrived.current = true;
     // a card in flight is measured where it lands, not mid-air
     if (element.getAnimations().some((animation) => animation.playState === 'running')) return;
     const now = measure(element, stage.element, stage.scale, rotation);
@@ -92,10 +97,13 @@ export function useFlip(cardId: string | undefined, ref: RefObject<HTMLElement |
     const scale = from.width / Math.max(1, now.width);
     if (Math.abs(dx) < 2 && Math.abs(dy) < 2 && Math.abs(scale - 1) < 0.02) return;
 
+    // individual transform properties compose with the card's own transform (tapped, attacking), so the flight
+    // never undoes a card's turn. An angle change on the same element is the card's own tap transition.
+    const turn = firstLayout ? from.rotation - rotation : 0;
     const flight = element.animate(
       [
-        { transform: `translate(${dx}px, ${dy}px) scale(${scale}) rotate(${from.rotation - rotation}deg)`, zIndex: 50 },
-        { transform: 'translate(0, 0) scale(1) rotate(0deg)', zIndex: 50 },
+        { translate: `${dx}px ${dy}px`, scale: String(scale), rotate: `${turn}deg`, zIndex: 50 },
+        { translate: '0px 0px', scale: '1', rotate: '0deg', zIndex: 50 },
       ],
       { duration: Math.min(560, 260 + Math.hypot(dx, dy) * 0.25), easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
     );
