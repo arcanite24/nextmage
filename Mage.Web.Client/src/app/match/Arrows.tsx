@@ -58,7 +58,8 @@ export function Arrows({ sourceId, targetIds, live, links, attacks }: {
     };
     handle = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(handle);
-  }, [sourceId, targetKey]);
+    // a resized window moves everything: measure again
+  }, [sourceId, targetKey, stage.scale, stage.width]);
 
   useEffect(() => {
     if (!live) {

@@ -346,6 +346,17 @@ export function explainCard(card: CardView): CardExplanation {
   return { lines, terms, hints };
 }
 
+/** Keywords the card has as abilities of its own (from its keyword lines), not ones it merely mentions. */
+export function keywordsOf(card: CardView): string[] {
+  const names = new Set<string>();
+  for (const line of splitRules(card).rules) {
+    const text = plain(line);
+    if (classify(line, card).kind !== 'keyword') continue;
+    for (const part of text.split(DASH)) leadingKeywords(part).forEach((entry) => names.add(entry.name));
+  }
+  return [...names];
+}
+
 export const LINE_KIND_LABEL: Record<LineKind, string> = {
   keyword: 'Keyword',
   triggered: 'Triggered',
