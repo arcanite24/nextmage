@@ -4,10 +4,10 @@ import mage.server.websocket.rpc.RpcConnection;
 import org.java_websocket.WebSocket;
 import org.jboss.remoting.callback.InvokerCallbackHandler;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Web client bridge: per-connection state (bound session, request queue, rate limit).
@@ -24,6 +24,8 @@ final class ConnectionState implements RpcConnection {
     private final WebSocket conn;
     private final String remoteHost;
     private final Executor workers;
+    private final long maxOutgoingBytes;
+    private final AtomicBoolean holdsConnectionSlot = new AtomicBoolean();
     private final Queue<Runnable> queue = new ArrayDeque<>();
     private boolean running;
 
@@ -33,11 +35,30 @@ final class ConnectionState implements RpcConnection {
     private double tokens = BURST;
     private long lastRefillNanos = System.nanoTime();
 
-    ConnectionState(WebSocket conn, Executor workers) {
+    /**
+     * @param remoteHost       client IP (behind a trusted proxy: the forwarded one, see {@link ClientAddressResolver})
+     * @param maxOutgoingBytes bytes queued for this client before the connection is dropped
+     */
+    ConnectionState(WebSocket conn, Executor workers, String remoteHost, long maxOutgoingBytes) {
         this.conn = conn;
         this.workers = workers;
-        InetSocketAddress remote = conn.getRemoteSocketAddress();
-        this.remoteHost = remote == null || remote.getAddress() == null ? "" : remote.getAddress().getHostAddress();
+        this.remoteHost = remoteHost == null ? "" : remoteHost;
+        this.maxOutgoingBytes = maxOutgoingBytes;
+    }
+
+    long getMaxOutgoingBytes() {
+        return maxOutgoingBytes;
+    }
+
+    void markConnectionSlotHeld() {
+        holdsConnectionSlot.set(true);
+    }
+
+    /**
+     * @return true exactly once if this connection held a per-IP connection slot
+     */
+    boolean releaseConnectionSlot() {
+        return holdsConnectionSlot.compareAndSet(true, false);
     }
 
     @Override

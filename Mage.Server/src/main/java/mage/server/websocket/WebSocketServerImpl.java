@@ -17,6 +17,7 @@ import mage.server.websocket.rpc.RpcSessions;
 import mage.util.ThreadUtils;
 import org.apache.log4j.Logger;
 import org.java_websocket.WebSocket;
+import org.java_websocket.WebSocketImpl;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.exceptions.InvalidDataException;
@@ -28,6 +29,7 @@ import org.java_websocket.handshake.ServerHandshakeBuilder;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -63,18 +65,39 @@ public class WebSocketServerImpl extends WebSocketServer {
     private final RpcDispatcher dispatcher;
     private final RpcSessions sessions;
     private final Set<String> allowedOrigins;
+    private final WebSocketLimits limits;
+    private final ConnectionLimiter connectionLimiter;
     private final ThreadPoolExecutor workers;
     private final CountDownLatch startupLatch = new CountDownLatch(1);
     private volatile Exception startupException;
 
     public WebSocketServerImpl(InetSocketAddress address, MageServer mageServer, ManagerFactory managerFactory, String allowedOrigins) {
+        this(address, mageServer, managerFactory, allowedOrigins, "");
+    }
+
+    /**
+     * @param adminPassword server admin password; admin login over WebSocket is disabled when it is empty
+     */
+    public WebSocketServerImpl(InetSocketAddress address, MageServer mageServer, ManagerFactory managerFactory,
+                               String allowedOrigins, String adminPassword) {
+        this(address, mageServer, managerFactory, allowedOrigins, adminPassword, WebSocketLimits.fromSystemProperties());
+    }
+
+    WebSocketServerImpl(InetSocketAddress address, MageServer mageServer, ManagerFactory managerFactory,
+                        String allowedOrigins, String adminPassword, WebSocketLimits limits) {
         super(address, Collections.<Draft>singletonList(
                 // the empty protocol accepts clients that request no subprotocol (all browsers by default)
                 new Draft_6455(Collections.singletonList(new PerMessageDeflateExtension()),
                         Collections.singletonList(new Protocol("")), MAX_MESSAGE_BYTES)));
         this.sessions = new ServerRpcSessions(managerFactory);
-        this.dispatcher = WebClientApi.createDispatcher(new ApiContext(mageServer, managerFactory, sessions));
+        this.dispatcher = WebClientApi.createDispatcher(new ApiContext(mageServer, managerFactory, sessions, adminPassword));
         this.allowedOrigins = parseOrigins(allowedOrigins);
+        this.limits = limits;
+        this.connectionLimiter = new ConnectionLimiter(limits.maxConnectionsPerIp);
+        if (!limits.addressResolver.hasTrustedProxies()) {
+            logger.info("WebSocket: no trusted reverse proxies (-D" + WebSocketLimits.TRUSTED_PROXIES_PROP
+                    + "), client IPs are the TCP peers");
+        }
 
         AtomicInteger threadNumber = new AtomicInteger();
         this.workers = new ThreadPoolExecutor(WORKER_THREADS, WORKER_THREADS, 60L, TimeUnit.SECONDS,
@@ -118,8 +141,35 @@ public class WebSocketServerImpl extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        conn.setAttachment(new ConnectionState(conn, workers));
-        logger.debug("WebSocket connection opened: " + conn.getRemoteSocketAddress());
+        String clientIp = clientIp(conn, handshake);
+        ConnectionState state = new ConnectionState(conn, workers, clientIp, limits.maxOutgoingBytes);
+        conn.setAttachment(state);
+        if (limits.limitLoopback || !isLoopback(clientIp)) {
+            if (!connectionLimiter.tryAcquire(clientIp)) {
+                logger.warn("Closing WebSocket connection over the per-IP limit (" + limits.maxConnectionsPerIp + "): " + clientIp);
+                conn.close(CloseFrame.POLICY_VALIDATION, "Too many connections from your address");
+                return;
+            }
+            state.markConnectionSlotHeld();
+        }
+        logger.debug("WebSocket connection opened: " + clientIp + " via " + conn.getRemoteSocketAddress());
+    }
+
+    private String clientIp(WebSocket conn, ClientHandshake handshake) {
+        InetSocketAddress remote = conn.getRemoteSocketAddress();
+        String peer = remote == null || remote.getAddress() == null ? "" : remote.getAddress().getHostAddress();
+        return limits.addressResolver.resolve(peer,
+                handshake == null ? null : handshake.getFieldValue("X-Forwarded-For"),
+                handshake == null ? null : handshake.getFieldValue("X-Real-IP"));
+    }
+
+    private static boolean isLoopback(String ip) {
+        java.net.InetAddress address = ClientAddressResolver.parseAddress(ip);
+        return address != null && address.isLoopbackAddress();
+    }
+
+    int openConnectionsFrom(String ip) {
+        return connectionLimiter.openConnections(ip);
     }
 
     @Override
@@ -128,6 +178,9 @@ public class WebSocketServerImpl extends WebSocketServer {
         logger.debug("WebSocket connection closed: " + conn.getRemoteSocketAddress() + " (" + code + ")");
         if (state == null) {
             return;
+        }
+        if (state.releaseConnectionSlot()) {
+            connectionLimiter.release(state.getRemoteHost());
         }
         // same as a dropped desktop connection: the user keeps tables for a while and can reconnect
         state.submit(() -> {
@@ -232,7 +285,26 @@ public class WebSocketServerImpl extends WebSocketServer {
     static void sendText(WebSocket conn, String text) {
         synchronized (conn) {
             conn.send(text);
+            ConnectionState state = conn.getAttachment();
+            long limit = state == null ? WebSocketLimits.DEFAULT_MAX_OUTGOING_BYTES : state.getMaxOutgoingBytes();
+            if (limit > 0 && conn instanceof WebSocketImpl && queuedBytesExceed(((WebSocketImpl) conn).outQueue, limit)) {
+                // Java-WebSocket queues without limit: a client that stops reading would grow server memory forever
+                logger.warn("Dropping WebSocket connection with more than " + limit + " bytes of unsent data: "
+                        + (state == null ? conn.getRemoteSocketAddress() : state.getRemoteHost()));
+                conn.closeConnection(CloseFrame.TRY_AGAIN_LATER, "Client is not reading its messages");
+            }
         }
+    }
+
+    static boolean queuedBytesExceed(Iterable<ByteBuffer> queue, long limit) {
+        long total = 0;
+        for (ByteBuffer buffer : queue) {
+            total += buffer.remaining();
+            if (total > limit) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

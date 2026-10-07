@@ -13,7 +13,14 @@ interface RememberedLogin {
 }
 
 const LOGIN_KEY = 'playmat.login';
-const RESTORE_KEY = 'playmat.restoreId';
+const RESTORE_KEY = 'playmat.restore';
+
+/** Server-issued token that hands our user (and its tables) back to a later connection. */
+interface RememberedRestore {
+  serverUrl: string;
+  userName: string;
+  token: string;
+}
 
 export interface SessionState {
   phase: SessionPhase;
@@ -28,14 +35,20 @@ export interface SessionState {
   resume(): Promise<boolean>;
 }
 
-/** Stable id that lets the server hand back our tables after a reload or a dropped connection. */
-function restoreId(): string {
-  let id = readJson<string>(RESTORE_KEY, '');
-  if (!id) {
-    id = crypto.randomUUID();
-    writeJson(RESTORE_KEY, id);
+/** The restore token the server gave this player on this server, '' when there is none. */
+function restoreToken(serverUrl: string, userName: string): string {
+  const saved = readJson<RememberedRestore | null>(RESTORE_KEY, null);
+  return saved && saved.serverUrl === serverUrl && saved.userName === userName ? saved.token : '';
+}
+
+/** The token changes with every login, so ask for the new one each time. */
+async function rememberRestoreToken(serverUrl: string, userName: string): Promise<void> {
+  try {
+    const token = await api.sessionGetRestoreToken();
+    writeJson<RememberedRestore | null>(RESTORE_KEY, token ? { serverUrl, userName, token } : null);
+  } catch {
+    // older server without restore tokens: reconnects fall back to the server's same-address rule
   }
-  return id;
 }
 
 function describeError(error: unknown): string {
@@ -63,12 +76,13 @@ export const useSession = create<SessionState>((set, get) => ({
       if (rpc.getStatus() !== 'open' || rpc.getUrl() !== serverUrl) {
         await rpc.connect(serverUrl);
       }
-      const ok = await api.connectUser(userName, password, restoreId());
+      const ok = await api.connectUser(userName, password, restoreToken(serverUrl, userName));
       if (!ok) {
         set({ phase: 'signedOut', error: 'The server refused the login. Check your name and password.' });
         return false;
       }
       sessionPassword = password;
+      await rememberRestoreToken(serverUrl, userName);
       const roomId = await api.serverGetMainRoomId();
       writeJson<RememberedLogin>(LOGIN_KEY, { serverUrl, userName, passwordless: !password });
       set({ phase: 'signedIn', roomId });
@@ -94,6 +108,8 @@ export const useSession = create<SessionState>((set, get) => ({
       // leaving anyway
     }
     sessionPassword = '';
+    // leaving for good gives the tables up, so the token is of no use any more
+    if (!keepGames) writeJson<RememberedRestore | null>(RESTORE_KEY, null);
     writeJson<RememberedLogin>(LOGIN_KEY, { serverUrl: get().serverUrl, userName: get().userName, passwordless: false });
     rpc.disconnect();
     set({ phase: 'signedOut', roomId: null });
@@ -107,11 +123,12 @@ rpc.onStatus((connection) => {
   }
 });
 
-// a reconnect opens a fresh server session: log back in with the same restore id to get our tables back
+// a reconnect opens a fresh server session: log back in with the restore token to get our tables back
 rpc.onStatus((connection) => {
   const state = useSession.getState();
   if (connection !== 'open' || state.phase !== 'signedIn') return;
-  api.connectUser(state.userName, sessionPassword, restoreId())
+  api.connectUser(state.userName, sessionPassword, restoreToken(state.serverUrl, state.userName))
+    .then(() => rememberRestoreToken(state.serverUrl, state.userName))
     .then(() => api.serverGetMainRoomId())
     .then((roomId) => useSession.setState({ roomId }))
     .catch((error) => useSession.setState({ phase: 'signedOut', error: describeError(error) }));
