@@ -68,7 +68,7 @@ export function DecksScreen() {
         </div>
       </Zone>
 
-      <Zone label="Selected deck" tone="filled" className={styles.detail}>
+      <Zone tone="filled" className={styles.detail}>
         {selected ? (
           <div className={styles.detailBody}>
             <h2 className={styles.detailName}>{selected.name}</h2>
@@ -90,7 +90,7 @@ export function DecksScreen() {
                 ))}
               </div>
             </div>
-            <Button variant="decision" icon={<PencilRuler size={16} />} onClick={() => navigate(`/decks/${encodeURIComponent(selected.id)}`)}>
+            <Button variant="print" icon={<PencilRuler size={16} />} onClick={() => navigate(`/decks/${encodeURIComponent(selected.id)}`)}>
               {selected.starter ? 'Copy and edit' : 'Edit deck'}
             </Button>
             {!selected.starter && (

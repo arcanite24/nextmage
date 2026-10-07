@@ -23,7 +23,10 @@ export function DeckBox({ deck, sleeve, selected, onSelect, onActivate }: DeckBo
       onClick={onSelect}
       onDoubleClick={onActivate}
     >
-      <span className={styles.window} style={typeof art === 'string' ? { backgroundImage: `url("${art}")` } : undefined} aria-hidden="true" />
+      <span className={styles.window} style={typeof art === 'string' ? { backgroundImage: `url("${art}")` } : undefined} aria-hidden="true">
+        {/* no art (yet): the deck's initial, printed */}
+        {typeof art !== 'string' && <span className={styles.initial}>{deck.name.slice(0, 1).toUpperCase()}</span>}
+      </span>
       <span className={styles.plate}>
         <span className={styles.name}>{deck.name}</span>
         <span className={styles.note}>
@@ -35,7 +38,6 @@ export function DeckBox({ deck, sleeve, selected, onSelect, onActivate }: DeckBo
           {deck.note}
         </span>
       </span>
-      {deck.starter && <span className={styles.badge}>Starter</span>}
     </button>
   );
 }

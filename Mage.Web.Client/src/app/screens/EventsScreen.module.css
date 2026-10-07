@@ -48,8 +48,8 @@
   padding: 12px 14px;
   border: 0;
   border-radius: 10px;
-  background: rgb(240 177 61 / 0.08);
-  box-shadow: inset 0 0 0 1.5px var(--decision);
+  background: rgb(233 228 214 / 0.06);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   color: var(--ink-strong);
   font-size: var(--text-md);
   font-weight: 600;
@@ -129,9 +129,9 @@
 }
 
 .kindOn {
-  background: rgb(240 177 61 / 0.08);
-  box-shadow: inset 0 0 0 2px var(--decision);
-  color: var(--decision-strong);
+  background: rgb(233 228 214 / 0.06);
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong);
+  color: var(--ink-strong);
 }
 
 .grid {
@@ -177,5 +177,20 @@
 .check input {
   width: 18px;
   height: 18px;
-  accent-color: var(--decision);
+  accent-color: var(--ink);
+}
+
+/* nothing running: one printed zone with the three ways to start */
+.starter {
+  align-self: start;
+  max-width: 980px;
+}
+
+.starter .kinds {
+  margin-top: var(--space-4);
+}
+
+.starter .kind:hover {
+  box-shadow: inset 0 0 0 2px var(--ink-soft);
+  color: var(--ink);
 }

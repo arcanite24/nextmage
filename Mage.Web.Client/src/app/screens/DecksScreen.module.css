@@ -98,12 +98,12 @@
   font-size: var(--text-md);
   line-height: 1.5;
   resize: vertical;
-  caret-color: var(--decision);
+  caret-color: var(--ink-strong);
 }
 
 .textarea:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px var(--decision);
+  box-shadow: inset 0 0 0 2px var(--ink-strong);
 }
 
 .error {

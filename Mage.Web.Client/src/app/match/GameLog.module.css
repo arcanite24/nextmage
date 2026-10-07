@@ -13,7 +13,7 @@
   height: 22px;
   padding: 0 6px;
   border-radius: 11px;
-  background: var(--decision);
+  background: var(--ink-strong);
   color: var(--mat-950);
   font-family: var(--font-print);
   font-size: 14px;
@@ -74,7 +74,8 @@
 }
 
 .chat b {
-  color: var(--decision-strong);
+  color: var(--ink-strong);
+  font-weight: 700;
 }
 
 .error {
@@ -128,7 +129,7 @@
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   color: var(--ink-strong);
   font-size: 17px;
-  caret-color: var(--decision);
+  caret-color: var(--ink-strong);
 }
 
 @keyframes slide {

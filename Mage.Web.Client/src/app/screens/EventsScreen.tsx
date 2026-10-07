@@ -35,7 +35,7 @@ export function EventsScreen() {
   const tournaments = useEvents((state) => state.tournaments);
   const mine = useMemo(() => Object.values(tournaments).filter((tournament) => !tournament.over), [tournaments]);
   const navigate = useNavigate();
-  const [hosting, setHosting] = useState(false);
+  const [hosting, setHosting] = useState<EventKind | null>(null);
   const events = tables.filter((table) => table.isTournament && table.tableState !== 'FINISHED');
   const open = events.filter((table) => table.tableState === 'WAITING');
   const running = events.filter((table) => table.tableState !== 'WAITING');
@@ -64,7 +64,7 @@ export function EventsScreen() {
     <div className={styles.page}>
       <header className={styles.head}>
         <h1 className={styles.title}>Events</h1>
-        <Button variant="decision" icon={<Trophy size={18} />} onClick={() => setHosting(true)}>Host an event</Button>
+        <Button variant="decision" icon={<Trophy size={18} />} onClick={() => setHosting('draft')}>Host an event</Button>
       </header>
 
       {mine.length > 0 && (
@@ -81,6 +81,20 @@ export function EventsScreen() {
         </Zone>
       )}
 
+      {open.length === 0 && running.length === 0 ? (
+        <Zone label="Start one" className={styles.starter}>
+          <p className={styles.empty}>Nothing is running on the server. Host an event and the AI fills the empty seats, so you can start right away.</p>
+          <div className={styles.kinds}>
+            {KINDS.map((option) => (
+              <button key={option.value} type="button" className={styles.kind} onClick={() => setHosting(option.value)}>
+                {option.icon}
+                <strong>{option.label}</strong>
+                <span>{option.detail}</span>
+              </button>
+            ))}
+          </div>
+        </Zone>
+      ) : (
       <div className={styles.columns}>
         <Zone label="Open to join" className={styles.zone}>
           {open.length === 0 ? (
@@ -109,8 +123,10 @@ export function EventsScreen() {
           )}
         </Zone>
       </div>
+      )}
 
-      <HostDialog open={hosting} onOpenChange={setHosting} />
+      {/* remounted per opening so it starts from the chosen format */}
+      <HostDialog key={hosting ?? 'closed'} open={!!hosting} initialKind={hosting ?? 'draft'} onOpenChange={(open) => !open && setHosting(null)} />
     </div>
   );
 }
@@ -129,7 +145,7 @@ function EventRow({ table, action }: { table: TableView; action: React.ReactNode
   );
 }
 
-function HostDialog({ open, onOpenChange }: { open: boolean; onOpenChange(open: boolean): void }) {
+function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initialKind: EventKind; onOpenChange(open: boolean): void }) {
   const roomId = useSession((state) => state.roomId);
   const userName = useSession((state) => state.userName);
   const server = useServerState();
@@ -146,10 +162,10 @@ function HostDialog({ open, onOpenChange }: { open: boolean; onOpenChange(open: 
   const decks = useDecks();
   const roster = useMemo(() => rosterOf(decks), [decks]);
 
-  const [kind, setKind] = useState<EventKind>('draft');
+  const [kind, setKind] = useState<EventKind>(initialKind);
   const [name, setName] = useState('');
   const [setCode, setSetCode] = useState('');
-  const [seats, setSeats] = useState(8);
+  const [seats, setSeats] = useState(initialKind === 'draft' ? 8 : 4);
   const [fillAi, setFillAi] = useState(true);
   const [swiss, setSwiss] = useState(true);
   const [rounds, setRounds] = useState(3);
