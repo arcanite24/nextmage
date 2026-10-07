@@ -47,11 +47,12 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
             ClientCallback cc = (ClientCallback) callback.getCallbackObject();
             cc.decompressData(); // Ensure data is raw for JSON serialization
             
+            if (!conn.isOpen()) {
+                // lets the session mark itself invalid and disconnect, instead of silently dropping data
+                throw new HandleCallbackException("WebSocket connection is closed");
+            }
             try {
-                String json = gson.toJson(cc);
-                if (conn.isOpen()) {
-                    conn.send(json);
-                }
+                conn.send(gson.toJson(cc));
             } catch (Exception e) {
                 throw new HandleCallbackException("Error sending WebSocket message", e);
             }

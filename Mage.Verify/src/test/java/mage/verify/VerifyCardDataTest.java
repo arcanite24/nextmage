@@ -9,6 +9,7 @@ import mage.abilities.*;
 import mage.abilities.common.*;
 import mage.abilities.condition.Condition;
 import mage.abilities.costs.Cost;
+import mage.abilities.costs.common.RemoveCounterCost;
 import mage.abilities.dynamicvalue.DynamicValue;
 import mage.abilities.dynamicvalue.common.ColorsOfManaSpentToCastCount;
 import mage.abilities.effects.Effect;
@@ -17,10 +18,7 @@ import mage.abilities.effects.common.FightTargetsEffect;
 import mage.abilities.effects.common.InfoEffect;
 import mage.abilities.effects.common.counter.ProliferateEffect;
 import mage.abilities.effects.keyword.ScryEffect;
-import mage.abilities.hint.common.CitysBlessingHint;
-import mage.abilities.hint.common.CurrentDungeonHint;
-import mage.abilities.hint.common.InitiativeHint;
-import mage.abilities.hint.common.MonarchHint;
+import mage.abilities.hint.common.*;
 import mage.abilities.keyword.*;
 import mage.cards.*;
 import mage.cards.decks.CardNameUtil;
@@ -58,6 +56,7 @@ import mage.verify.mtgjson.MtgJsonSet;
 import mage.verify.mtgjson.SpellBookCardsPage;
 import mage.watchers.Watcher;
 import net.java.truevfs.access.TFile;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -77,6 +76,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author JayDi85
@@ -180,7 +180,6 @@ public class VerifyCardDataTest {
         skipListAddName(SKIP_LIST_SUBTYPE, "UGL", "Miss Demeanor"); // uses multiple types as a joke card: Lady, of, Proper, Etiquette
         skipListAddName(SKIP_LIST_SUBTYPE, "UGL", "Elvish Impersonators"); // subtype is "Elves" pun
         skipListAddName(SKIP_LIST_SUBTYPE, "UND", "Elvish Impersonators");
-        subtypesToIgnore.add("Book"); // temporary
 
         // number
         // skipListAddName(SKIP_LIST_NUMBER, set, cardName);
@@ -421,16 +420,16 @@ public class VerifyCardDataTest {
             for (MtgJsonCard refCard : refSet.cards) {
                 String cleanNumber = refCard.number.replaceAll("[\\D]", "");
                 if (cleanNumber.isEmpty()) {
-                    System.out.println("Found non-digit card number: " 
-                        + refSet.code + " - " 
-                        + refCard.getNameAsASCII() + " - " 
+                    System.out.println("Found non-digit card number: "
+                        + refSet.code + " - "
+                        + refCard.getNameAsASCII() + " - "
                         + refCard.number
                     );
                 }
                 if (cleanNumber.equals("0")) {
-                    System.out.println("Found zero card number: " 
-                        + refSet.code + " - " 
-                        + refCard.getNameAsASCII() + " - " 
+                    System.out.println("Found zero card number: "
+                        + refSet.code + " - "
+                        + refCard.getNameAsASCII() + " - "
                         + refCard.number
                     );
                 }
@@ -1021,6 +1020,9 @@ public class VerifyCardDataTest {
         ignoreBoosterSets.add("Zendikar Rising Expeditions"); // box toppers
         ignoreBoosterSets.add("March of the Machine: The Aftermath"); // epilogue boosters aren't for draft
         ignoreBoosterSets.add("Mystery Booster"); // temporary
+        ignoreBoosterSets.add("Mystery Booster Commander Edition"); // temporary - not enough info to collate and draft yet
+        ignoreBoosterSets.add("The Zeta Set"); // Secret Lair adjacent, not draftable
+        ignoreBoosterSets.add("Reality Fracture"); // newly added set, pending MTGJson updates
     }
 
     @Test
@@ -1203,6 +1205,15 @@ public class VerifyCardDataTest {
         Set<String> implementedSets = sets.stream().map(ExpansionSet::getCode).collect(Collectors.toSet());
         MtgJsonService.sets().values().forEach(jsonSet -> {
             if (jsonSet.booster != null && !jsonSet.booster.isEmpty() && !implementedSets.contains(jsonSet.code)) {
+                if (jsonSet.code.equals("HBG")) {
+                    // TODO: remove after implement dozens A-cards, see HBG - Alchemy Horizons: Baldur's Gate
+                    return;
+                }
+                if (jsonSet.code.equals("OM1")) {
+                    // TODO: Determine how to model this set, if at all.
+                    // Wizards released this in lieu of SPM due to licensing issues. Almost mechannically identical, but with unique card names/art.
+                    return;
+                }
                 // how-to fix: it's miss promo sets with boosters, so just add/generate it in most use cases
                 errorsList.add(String.format("Error: missing set implementation (important for draft format) - %s - %s - boosters: %s",
                         jsonSet.code,
@@ -1972,7 +1983,7 @@ public class VerifyCardDataTest {
 
     // "copy" fails means that the copy constructor are not correct inside a card.
     // To fix those, try to find the class that did trigger the copy failure, and check
-    // that copy() exists, a copy constructor exists, and the copy constructor is right. 
+    // that copy() exists, a copy constructor exists, and the copy constructor is right.
     private void checkCardCanBeCopied(Card card1) {
         Card card2;
         try {
@@ -2274,11 +2285,23 @@ public class VerifyCardDataTest {
         return false;
     }
 
+    /**
+     * Effect fields can be declared by a superclass (the boost and ability-gain families keep theirs on a
+     * shared base), so getDeclaredFields alone would miss them.
+     */
+    static Stream<Field> declaredFieldsIncludingSuperclasses(Class<?> type) {
+        Stream<Field> fields = Stream.empty();
+        for (Class<?> current = type; current != null && current != Object.class; current = current.getSuperclass()) {
+            fields = Stream.concat(fields, Arrays.stream(current.getDeclaredFields()));
+        }
+        return fields;
+    }
+
     boolean recursiveTargetEffectCheck(Effect effect, int depth) {
         if (depth < 0) {
             return false;
         }
-        return Arrays.stream(effect.getClass().getDeclaredFields())
+        return declaredFieldsIncludingSuperclasses(effect.getClass())
                 .anyMatch(f -> {
                     f.setAccessible(true);
                     try {
@@ -2371,6 +2394,14 @@ public class VerifyCardDataTest {
         return true;
     }
 
+    private static List<String> getRulesForReferenceFace(Card card) {
+        // Multipart spell options are verified separately. Compare only the
+        // main face here, regardless of how its combined rules are displayed.
+        return card instanceof CardWithSpellOption
+                ? ((CardWithSpellOption) card).getSharedRules(null)
+                : card.getRules();
+    }
+
     private void checkMissingAbilities(Card card, MtgJsonCard ref) {
         if (skipListHaveName(SKIP_LIST_MISSING_ABILITIES, card.getExpansionSetCode(), card.getName())) {
             return;
@@ -2382,7 +2413,7 @@ public class VerifyCardDataTest {
         }
 
         String refLowerText = ref.text.toLowerCase(Locale.ENGLISH);
-        String cardLowerText = String.join("\n", card.getRules()).toLowerCase(Locale.ENGLISH);
+        String cardLowerText = String.join("\n", getRulesForReferenceFace(card)).toLowerCase(Locale.ENGLISH);
 
         // special check: kicker ability must be in rules
         if (card.getAbilities().containsClass(MultikickerAbility.class) && card.getRules().stream().noneMatch(rule -> rule.contains("Multikicker"))) {
@@ -2566,9 +2597,6 @@ public class VerifyCardDataTest {
             String preparedRefText = refLowerText.replaceAll("\\([^)]+\\)", ""); // Remove reminder text
             int refTargetCount = (preparedRefText.length() - preparedRefText.replace("target", "").length());
             String preparedRuleText = cardLowerText.replaceAll("\\([^)]+\\)", "");
-            if (!ref.subtypes.contains("Adventure") && !ref.subtypes.contains("Omen")) {
-                preparedRuleText = preparedRuleText.replaceAll("^(adventure|omen).*", "");
-            }
             int cardTargetCount = (preparedRuleText.length() - preparedRuleText.replace("target", "").length());
             if (refTargetCount != cardTargetCount) {
                 fail(card, "abilities", "target count text discrepancy: " + (refTargetCount / 6) + " in reference but " + (cardTargetCount / 6) + " in card.");
@@ -2600,9 +2628,10 @@ public class VerifyCardDataTest {
         cardHints.put(InitiativeHint.class, "the initiative");
         cardHints.put(CurrentDungeonHint.class, "venture into");
         cardHints.put(ColorsOfManaSpentToCastCount.getHint().getClass(), "Converge —");
+        cardHints.put(PlayersLeftRightHint.class, "choose left or right");
         for (Class hintClass : cardHints.keySet()) {
             String lookupText = cardHints.get(hintClass);
-            boolean needHint = ref.text.contains(lookupText);
+            boolean needHint = StringUtils.containsIgnoreCase(ref.text, lookupText);
             if (needHint) {
                 boolean haveHint = card.getAbilities()
                         .stream()
@@ -2644,6 +2673,21 @@ public class VerifyCardDataTest {
                 // how-to fix: make sure each target has it's own target tag like 1 and 2 (don't use 0 because it's default)
                 fail(card, "abilities", "wrong target tags: miss tag in one of the targets, current list: " + tags);
             }
+        });
+
+        // special check: remove counters cost max targets should be min 1, max equal to number of counters to remove
+        // https://github.com/magefree/mage/pull/16089
+        card.getAbilities().stream().forEach(ability -> {
+            ability.getCosts().stream().filter(RemoveCounterCost.class::isInstance).map(RemoveCounterCost.class::cast).forEach(cost -> {
+                cost.getTargets().stream().forEach(target -> {
+                    if (target.getMinNumberOfTargets() != 1) {
+                        fail(card, "abilities", "RemoveCounterCost min targets should be 1");
+                    }
+                    if (target.getMaxNumberOfTargets() != cost.getCountersToRemove()) {
+                        fail(card, "abilities", "RemoveCounterCost max targets should be equal to number of counters to remove");
+                    }
+                });
+            });
         });
 
         // spells have only 1 ability
@@ -3079,11 +3123,18 @@ public class VerifyCardDataTest {
                         refRules[i];
             }
         }
+        if (card instanceof PrepareSpellCard) {
+            // prepare spells aren't a subtype in mtgjson, so detect by our own card class instead
+            for (int i = 0; i < refRules.length; i++) {
+                refRules[i] = ref.types.get(0) + " - " +
+                        ref.faceName + ' ' +
+                        ref.manaCost + " - " +
+                        refRules[i];
+            }
+        }
 
-        String[] cardRules = card
-                .getRules()
+        String[] cardRules = getRulesForReferenceFace(card)
                 .stream()
-                .filter(s -> !(card instanceof CardWithSpellOption) || !(s.startsWith("Adventure ") || s.startsWith("Omen ")))
                 .collect(Collectors.joining("\n"))
                 .replace("<br>", "\n")
                 .replace("<br/>", "\n")
@@ -3575,7 +3626,7 @@ public class VerifyCardDataTest {
                 if (jsonCard.isUseUnicodeName()) {
                     String inName = jsonCard.getNameAsUnicode();
                     String outName = CardNameUtil.normalizeCardName(inName);
-                    String needOutName = jsonCard.getNameAsFace();
+                    String needOutName = jsonCard.getNameAsASCII();
                     if (!outName.equals(needOutName)) {
                         // how-to fix: add new unicode symbol in CardNameUtil.normalizeCardName
                         errorsList.add(String.format("error, found unsupported unicode symbol in %s - %s", inName, jsonSet.code));

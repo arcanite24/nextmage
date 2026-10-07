@@ -284,7 +284,6 @@ public class WebSocketServerImpl extends WebSocketServer {
         handlers.put("gameJoin", (conn, params) -> { mageServer.gameJoin(getUUID(params, 0), getString(params, 1)); return true; });
         handlers.put("gameWatchStart", (conn, params) -> mageServer.gameWatchStart(getUUID(params, 0), getString(params, 1)));
         handlers.put("gameWatchStop", (conn, params) -> { mageServer.gameWatchStop(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("gameGetView", (conn, params) -> mageServer.gameGetView(getUUID(params, 0), getString(params, 1), getUUID(params, 2)));
 
         // Player Data
         handlers.put("sendPlayerUUID", (conn, params) -> { mageServer.sendPlayerUUID(getUUID(params, 0), getString(params, 1), getNullableUUID(params, 2)); return true; });
@@ -1070,12 +1069,12 @@ public class WebSocketServerImpl extends WebSocketServer {
     }
 
     private Object handleConnectSetUserData(WebSocket conn, JsonArray params) throws Exception {
-        String userName = getString(params, 0);
+        // params[0] (user name) is kept for wire compatibility; the server resolves the user from the session
         String sessionId = getString(params, 1);
         UserData userData = getObject(params, 2, UserData.class);
         String clientVersion = getString(params, 3);
         String userIdStr = getString(params, 4);
-        return mageServer.connectSetUserData(userName, sessionId, userData, clientVersion, userIdStr);
+        return mageServer.connectSetUserData(sessionId, userData, clientVersion, userIdStr);
     }
 
     private Object handleSearchCards(WebSocket conn, JsonArray params) throws Exception {
