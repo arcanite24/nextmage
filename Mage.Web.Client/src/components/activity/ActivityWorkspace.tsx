@@ -220,15 +220,16 @@ function getTimerRemainingSeconds(activity: ClientActivity | null, now: number):
     return Math.max(0, activity.time - elapsed);
 }
 
-function parseActivityDateTime(value: string | null | undefined): number | null {
-    if (!value) return null;
-    const timestamp = Date.parse(value);
+function parseActivityDateTime(value: string | number | null | undefined): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    // the server sends epoch milliseconds; older payloads and fixtures use date strings
+    const timestamp = typeof value === 'number' ? value : Date.parse(value);
     return Number.isFinite(timestamp) ? timestamp : null;
 }
 
-function formatTournamentDate(value: string | null | undefined): string {
+function formatTournamentDate(value: string | number | null | undefined): string {
     const timestamp = parseActivityDateTime(value);
-    if (timestamp === null) return value || 'Unknown';
+    if (timestamp === null) return value ? String(value) : 'Unknown';
     return new Date(timestamp).toLocaleString([], {
         month: 'short',
         day: 'numeric',

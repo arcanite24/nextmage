@@ -41,6 +41,7 @@ import { DebugMode } from '../debug/DebugMode';
 import { CardView, ManaType, PermanentView, PlayerView, StackAbilityView, UUID } from '../../types';
 import { useSettingsStore } from '../../stores/settingsStore';
 import type { MatchSeatOrientation } from '../../services/AppConfigService';
+import { shouldCompleteSelectWithBooleanFalse } from '../../services/BattlefieldPerformanceService';
 import './GamePage.css';
 import './ArenaLayout.css';
 
@@ -267,7 +268,20 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
                 await actions.sendBoolean(false);
                 return;
             }
-            await actions.sendBoolean(true);
+            const pendingAction = useGameStore.getState().pendingAction;
+            if (pendingAction.type === 'target' || pendingAction.type === 'select') {
+                // same as the Next button: "Done" for optional selections (attackers, blockers, optional targets)
+                if (shouldCompleteSelectWithBooleanFalse(pendingAction)) {
+                    await actions.sendBoolean(false);
+                    return;
+                }
+                const min = typeof pendingAction.min === 'number' ? pendingAction.min : pendingAction.required ? 1 : 0;
+                if (!pendingAction.required && min === 0) {
+                    await useGameStore.getState().sendUUID(null);
+                }
+            }
+            // other prompts need an explicit answer: a boolean would mean "mulligan" for the
+            // mulligan question and "cancel" during mana payment
             return;
         }
 
@@ -680,6 +694,7 @@ export const GamePage: React.FC<GamePageProps> = ({ gameId, onLeave, isReplay = 
                 <ManaPaymentDialog
                     isOpen={true}
                     message={gameStore.pendingAction.message}
+                    isXMana={gameStore.pendingAction.type === 'xmana'}
                 />
             )}
 

@@ -115,7 +115,8 @@ function matchesCtrlOrMeta(expected: boolean | undefined, event: KeyboardEvent):
   return expected === pressed;
 }
 
-function isEditableEventTarget(target: EventTarget | null): boolean {
+/** True when a key press belongs to a text field or other editable control, not to the game. */
+export function isEditableEventTarget(target: EventTarget | null): boolean {
   if (!target) return false;
 
   if (typeof HTMLInputElement !== 'undefined' && target instanceof HTMLInputElement) return true;

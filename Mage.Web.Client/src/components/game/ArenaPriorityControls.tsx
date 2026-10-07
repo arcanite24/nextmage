@@ -77,8 +77,7 @@ export const ArenaPriorityControls: React.FC<ArenaPriorityControlsProps> = React
         // If there's a pending action requiring a response, respond to it
         switch (pendingAction.type) {
             case 'ask':
-                // Confirm/Done - same as pressing Space in FeedbackPanel
-                sendBoolean(true);
+                // yes/no questions (e.g. mulligan) are answered with their own labeled buttons
                 break;
             case 'priority':
                 sendBoolean(false);
