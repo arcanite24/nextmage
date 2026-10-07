@@ -28,7 +28,7 @@ function snapshot(state: GameSessionState): Snapshot {
 }
 
 /** Plays a cue when something worth hearing happens: your turn, a decision, a spell, damage, a draw, the result. */
-export function useGameCues(state: GameSessionState, myId: string | null) {
+export function useGameCues(state: GameSessionState, myId: string | null, autoPassing = false) {
   const previous = useRef<Snapshot | null>(null);
   useEffect(() => {
     const now = snapshot(state);
@@ -46,6 +46,7 @@ export function useGameCues(state: GameSessionState, myId: string | null) {
     else if (now.stack > before.stack) playCue('cast');
     else if ([...now.life].some(([id, life]) => life < (before.life.get(id) ?? life))) playCue('damage');
     else if (now.hand > before.hand && now.turn === before.turn) playCue('draw');
-    else if (now.deciding && !before.deciding) playCue('decide');
-  }, [state, myId]);
+    // a prompt the client answers by itself isn't a decision worth a chime
+    else if (now.deciding && !before.deciding && !autoPassing) playCue('decide');
+  }, [state, myId, autoPassing]);
 }

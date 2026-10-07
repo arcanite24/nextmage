@@ -1,0 +1,66 @@
+import type { GameView } from '../../protocol/generated/views';
+import type { Prompt } from './prompt';
+
+/**
+ * Arena-style smart passing, decided on the client. The server asks for priority at every stop; when the player
+ * has nothing real to do there, the client answers for them. "Real" means a spell to cast, a land to play or a
+ * non-mana ability to activate: a land that can only tap for mana is not a reason to stop.
+ */
+
+export interface AutoPassSettings {
+  /** pass priority when nothing can be played */
+  autoPass: boolean;
+  /** answer "no attacks" / "no blocks" when no creature can attack or block */
+  autoSkipCombat: boolean;
+  /** on the opponent's turn, permanents' activated abilities count as something to do (instants always do) */
+  abilitiesOnTheirTurn: boolean;
+}
+
+/**
+ * A mana ability the server lists among "other" abilities (dual lands, "any color" sources): its text is only a
+ * cost and "Add ...".
+ */
+function isManaText(text: string | undefined): boolean {
+  return !!text && /^[^:]*:\s*Add\b[^.]*\.?$/i.test(text.replace(/<[^>]*>/g, '').trim());
+}
+
+/** Objects with something to do besides making mana; optionally only spells and land plays. */
+export function meaningfulPlays(view: GameView | null | undefined, includeAbilities = true): string[] {
+  const objects = view?.canPlayObjects?.objects ?? {};
+  return Object.entries(objects)
+    .filter(([, stats]) => (stats.basicCastAbilities?.length ?? 0) + (stats.basicPlayAbilities?.length ?? 0)
+      + (includeAbilities ? (stats.other ?? []).filter((record) => !isManaText(record.value)).length : 0) > 0)
+    .map(([id]) => id);
+}
+
+/** Combat steps after attackers are declared: with nobody attacking there is nothing to respond to in them. */
+const AFTER_ATTACKS = new Set(['DECLARE_ATTACKERS', 'DECLARE_BLOCKERS', 'FIRST_COMBAT_DAMAGE', 'COMBAT_DAMAGE', 'END_COMBAT']);
+
+function noCombat(view: GameView): boolean {
+  return AFTER_ATTACKS.has(view.step ?? '')
+    && Object.keys(view.stack ?? {}).length === 0
+    && !(view.combat ?? []).some((group) => Object.keys(group.attackers ?? {}).length > 0);
+}
+
+export type AutoAnswer = 'pass' | 'noAttacks' | 'noBlocks';
+
+/** What to answer for the player right now, or null when the decision is theirs. */
+export function autoAnswer(view: GameView | null | undefined, prompt: Prompt | null, settings: AutoPassSettings): AutoAnswer | null {
+  if (!view || !prompt) return null;
+  switch (prompt.kind) {
+    case 'priority':
+    {
+      if (!settings.autoPass) return null;
+      // like Arena: when no creature attacks, the rest of combat goes by even with instants in hand
+      if (settings.autoSkipCombat && noCombat(view)) return 'pass';
+      const myTurn = !!view.myPlayerId && view.activePlayerId === view.myPlayerId;
+      return meaningfulPlays(view, myTurn || settings.abilitiesOnTheirTurn).length === 0 ? 'pass' : null;
+    }
+    case 'declareAttackers':
+      return settings.autoSkipCombat && prompt.possibleAttackers.length === 0 ? 'noAttacks' : null;
+    case 'declareBlockers':
+      return settings.autoSkipCombat && prompt.possibleBlockers.length === 0 ? 'noBlocks' : null;
+    default:
+      return null;
+  }
+}

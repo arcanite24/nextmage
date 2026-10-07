@@ -172,9 +172,17 @@ export class GameSession {
     return true;
   }
 
-  private applyView(view: GameView | null | undefined): void {
-    if (!view || typeof view !== 'object') return;
-    const previous = this.store.getState().view;
+  private applyView(incoming: GameView | null | undefined, fromPrompt = false): void {
+    if (!incoming || typeof incoming !== 'object') return;
+    const { view: previous, prompt, awaitingServer } = this.store.getState();
+    // The server only lists playable objects in views built while this player holds priority. An update sent
+    // mid-decision (after a draw, a trigger...) can arrive without them; it must not wipe what the open prompt
+    // offers, or highlights vanish and auto-pass would think there is nothing to do.
+    const hasPlayables = (candidate: GameView | null | undefined) => Object.keys(candidate?.canPlayObjects?.objects ?? {}).length > 0;
+    // (a prompt's own view is built with priority, so it is always taken as is)
+    const view = !fromPrompt && prompt && !awaitingServer && hasPlayables(previous) && !hasPlayables(incoming)
+      ? { ...incoming, canPlayObjects: previous!.canPlayObjects }
+      : incoming;
     const next = previous ? structuralShare(previous, view) : view;
     if (next === previous) return;
     const playerId = this.store.getState().playerId ?? (this.store.getState().mode === 'play' ? view.myPlayerId ?? null : null);
@@ -183,7 +191,7 @@ export class GameSession {
   }
 
   private applyPrompt(method: PromptEventName, data: unknown): void {
-    this.applyView(promptGameView(method, data));
+    this.applyView(promptGameView(method, data), true);
     if (this.store.getState().mode !== 'play') return;
     const prompt = parsePrompt(method, data as never);
     this.clearHold();

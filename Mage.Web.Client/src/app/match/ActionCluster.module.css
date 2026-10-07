@@ -128,3 +128,15 @@
   margin: 6px 4px;
   background: var(--ink-ghost);
 }
+
+/* nothing to do: the corner says the game is moving on by itself */
+.passing {
+  color: var(--ink-soft);
+  animation: passing 600ms ease-in-out infinite alternate;
+}
+
+@keyframes passing {
+  from {
+    opacity: 0.55;
+  }
+}
