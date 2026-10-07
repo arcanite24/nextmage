@@ -2,12 +2,12 @@ import { Bot, Eye, Lock, Plus, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { api } from '../connection';
+import { toWire } from '../decks/deckModel';
 import { useServerState, useTables, queryClient } from '../queries';
 import { rosterOf, useDecks } from '../stores/decks';
 import { useSession } from '../stores/session';
 import { notify } from '../stores/toasts';
 import type { TableView } from '../../protocol/generated/views';
-import type { DeckCardLists } from '../../types/models';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Field } from '../ui/Field';
@@ -25,11 +25,6 @@ const STATE_LABEL: Record<string, string> = {
   FINISHED: 'Finished',
 };
 
-function toWire(deck: DeckCardLists) {
-  const line = (card: DeckCardLists['cards'][number]) => ({ cardName: card.cardName, setCode: card.setCode ?? '', cardNumber: card.cardNumber ?? '', amount: card.amount });
-  return { name: deck.name, cards: deck.cards.map(line), sideboard: deck.sideboard.map(line) };
-}
-
 /** Every table on the server: join one with your selected deck, watch a game, or host your own. */
 export function TablesScreen() {
   const location = useLocation();
@@ -41,6 +36,9 @@ export function TablesScreen() {
   const selectedDeck = roster.find((deck) => deck.id === decks.selectedId) ?? roster[0] ?? null;
   const [hostOpen, setHostOpen] = useState(!!(location.state as { host?: string } | null)?.host);
   const [busyTable, setBusyTable] = useState<string | null>(null);
+  // a passworded table asks for the password in a dialog before joining
+  const [locked, setLocked] = useState<TableView | null>(null);
+  const [tablePassword, setTablePassword] = useState('');
 
   useEffect(() => {
     if (!decks.loaded) void decks.refresh();
@@ -51,14 +49,18 @@ export function TablesScreen() {
   const open = games.filter((table) => table.tableState === 'WAITING' && !mine.includes(table));
   const running = games.filter((table) => table.tableState !== 'WAITING' && table.tableState !== 'FINISHED' && !mine.includes(table));
 
-  async function join(table: TableView) {
+  async function join(table: TableView, password?: string) {
     if (!roomId || !table.tableId || !selectedDeck) return;
+    if (table.passworded && password === undefined) {
+      setTablePassword('');
+      setLocked(table);
+      return;
+    }
     setBusyTable(table.tableId);
     try {
       const { deck } = await decks.loadForPlay(selectedDeck.id);
-      const password = table.passworded ? window.prompt(`Password for ${table.tableName}`) ?? '' : '';
-      const joined = await api.roomJoinTable(roomId, table.tableId, userName, 'HUMAN', 1, toWire(deck), password);
-      if (!joined) notify("Couldn't join", 'The table did not accept your seat or deck.', 'error');
+      const joined = await api.roomJoinTable(roomId, table.tableId, userName, 'HUMAN', 1, toWire(deck), password ?? '');
+      if (!joined) notify("Couldn't join", table.passworded ? 'Wrong password, or the table did not accept your deck.' : 'The table did not accept your seat or deck.', 'error');
       await queryClient.invalidateQueries({ queryKey: ['tables'] });
     } catch (error) {
       notify("Couldn't join", error instanceof Error ? error.message : String(error), 'error');
@@ -117,6 +119,41 @@ export function TablesScreen() {
       <p className={styles.deckNote}>
         Joining with <strong>{selectedDeck?.name ?? 'no deck'}</strong>. Change it on the Play screen.
       </p>
+      <Dialog
+        open={!!locked}
+        onOpenChange={(open) => !open && setLocked(null)}
+        title="Table password"
+        description={locked ? `${locked.tableName} is private. Ask the host for its password.` : undefined}
+        width="sm"
+        footer={(
+          <>
+            <Button variant="quiet" onClick={() => setLocked(null)}>Cancel</Button>
+            <Button
+              variant="decision"
+              disabled={!tablePassword}
+              onClick={() => {
+                const table = locked!;
+                setLocked(null);
+                void join(table, tablePassword);
+              }}
+            >
+              Join
+            </Button>
+          </>
+        )}
+      >
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!locked || !tablePassword) return;
+            const table = locked;
+            setLocked(null);
+            void join(table, tablePassword);
+          }}
+        >
+          <Field label="Password" type="password" value={tablePassword} onChange={(event) => setTablePassword(event.target.value)} autoFocus />
+        </form>
+      </Dialog>
       <HostDialog open={hostOpen} onOpenChange={setHostOpen} deckId={selectedDeck?.id ?? null} />
     </div>
   );
