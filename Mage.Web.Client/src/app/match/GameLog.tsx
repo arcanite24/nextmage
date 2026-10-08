@@ -1,30 +1,57 @@
-import { MessageSquare, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import {
+  AlertTriangle, ArrowDownToLine, Ban, BellRing, BookOpen, Dot, Flag, Flame, Heart, HeartCrack, MessageCircle,
+  MessageSquare, Mountain, Shield, Shuffle, Skull, Sparkles, Swords, Trophy, Archive, Zap, X, type LucideIcon,
+} from 'lucide-react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { GameNotice } from '../../core/game/gameSession';
-import { stripMarkup } from '../../core/game/prompt';
-import type { ChatMessage } from '../../protocol/generated/views';
+import {
+  buildLogRows, cardInk, collectCards, EMOTES, findLogCard, isEmote, noticeEntry, parseChatMessage,
+  type LogEntry, type LogIcon, type LogSegment,
+} from '../../core/game/gameLog';
+import type { CardView, ChatMessage, GameView } from '../../protocol/generated/views';
 import { api, events } from '../connection';
 import { useSession } from '../stores/session';
 import { IconButton } from '../ui/Button';
 import { PromptText } from '../ui/PromptText';
+import { useEmotes } from './emotes';
 import { useMatchUi } from './matchUi';
 import styles from './GameLog.module.css';
 
-interface LogLine {
-  key: string;
-  at: number;
-  who: string | null;
-  text: string;
-  tone: 'game' | 'chat' | 'error';
-}
-
-const EMOTES = ['Good game', 'Nice play', 'Thinking…', 'Oops', 'Hello'];
 const MAX_LINES = 300;
 
+const ICONS: Record<LogIcon, LucideIcon> = {
+  turn: Dot,
+  cast: Sparkles,
+  land: Mountain,
+  ability: Zap,
+  trigger: BellRing,
+  attack: Swords,
+  block: Shield,
+  damage: Flame,
+  lifeGain: Heart,
+  lifeLoss: HeartCrack,
+  draw: BookOpen,
+  discard: ArrowDownToLine,
+  counter: Ban,
+  destroy: Skull,
+  exile: Archive,
+  mulligan: Shuffle,
+  win: Trophy,
+  lose: Flag,
+  chat: MessageCircle,
+  error: AlertTriangle,
+  info: Dot,
+};
+
 /** Game chat and the game's running log, joined once per game. */
-function useGameChat(gameId: string) {
+function useGameChat(gameId: string, view: GameView | null) {
+  // the latest view, read when a line arrives: it says whose turn the line belongs to
+  const latest = useRef(view);
+  useEffect(() => {
+    latest.current = view;
+  }, [view]);
   const [chatId, setChatId] = useState<string | null>(null);
-  const [lines, setLines] = useState<LogLine[]>([]);
+  const [entries, setEntries] = useState<LogEntry[]>([]);
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
@@ -40,6 +67,7 @@ function useGameChat(gameId: string) {
       .catch(() => undefined);
     return () => {
       cancelled = true;
+      useEmotes.getState().clear();
       if (joined) api.chatLeave(joined).catch(() => undefined);
     };
   }, [gameId]);
@@ -49,32 +77,51 @@ function useGameChat(gameId: string) {
     let seq = 0;
     return events.on('CHATMESSAGE', (message: ChatMessage, event) => {
       if (event.objectId !== chatId) return;
-      const text = stripMarkup(message.message);
-      if (!text) return;
-      const user = message.username || null;
-      const tone: LogLine['tone'] = message.messageType === 'TALK' || message.messageType === 'WHISPER_TO' || message.messageType === 'WHISPER_FROM' ? 'chat' : 'game';
-      setLines((current) => [...current, { key: `c${seq++}`, at: message.time ?? Date.now(), who: tone === 'chat' ? user : null, text, tone }].slice(-MAX_LINES));
-      if (tone === 'chat' && user !== useSession.getState().userName) setUnread((count) => count + 1);
+      const parsed = parseChatMessage(message, `c${seq++}`);
+      if (!parsed) return;
+      const current = latest.current;
+      const entry = parsed.turn !== null && parsed.turn === current?.turn && current.activePlayerName
+        ? { ...parsed, turnOwner: current.activePlayerName }
+        : parsed;
+      setEntries((current) => [...current, entry].slice(-MAX_LINES));
+      if (entry.tone !== 'chat') return;
+      const me = useSession.getState().userName;
+      const fromOther = entry.who !== me;
+      const muted = !!useEmotes.getState().muted[gameId];
+      if (fromOther && muted) return;
+      if (entry.who && isEmote(entry.text)) useEmotes.getState().show(entry.who, entry.text);
+      if (fromOther) setUnread((count) => count + 1);
     });
-  }, [chatId]);
+  }, [chatId, gameId]);
 
   const send = (text: string) => {
     if (chatId && text.trim()) api.chatSendMessage(chatId, useSession.getState().userName, text.trim()).catch(() => undefined);
   };
-  return { lines, send, ready: !!chatId, unread, clearUnread: () => setUnread(0) };
+  return { entries, send, ready: !!chatId, unread, clearUnread: () => setUnread(0) };
 }
 
-export function GameLog({ gameId, notices, canChat }: { gameId: string; notices: GameNotice[]; canChat: boolean }) {
+export function GameLog({ gameId, notices, canChat, view }: { gameId: string; notices: GameNotice[]; canChat: boolean; view: GameView | null }) {
   const open = useMatchUi((state) => state.logOpen);
   const toggle = useMatchUi((state) => state.toggleLog);
-  const chat = useGameChat(gameId);
+  const muted = useEmotes((state) => !!state.muted[gameId]);
+  const toggleMute = useEmotes((state) => state.toggleMute);
+  const myName = useSession((state) => state.userName);
+  const chat = useGameChat(gameId, view);
   const [draft, setDraft] = useState('');
   const list = useRef<HTMLOListElement>(null);
+  // every card seen this game, so lines about cards that left the table can still show them
+  const cards = useRef(new Map<string, CardView>());
+  useEffect(() => {
+    collectCards(view, cards.current);
+  }, [view]);
 
-  const errors: LogLine[] = notices.filter((notice) => notice.kind === 'error').map((notice) => ({
-    key: `n${notice.id}`, at: notice.at, who: null, text: notice.text, tone: 'error',
-  }));
-  const lines = [...chat.lines, ...errors].sort((a, b) => a.at - b.at);
+  const rows = useMemo(() => {
+    const errors = notices.filter((notice) => notice.kind === 'error').map((notice) => noticeEntry(`n${notice.id}`, notice.text, notice.at));
+    const visible = muted ? chat.entries.filter((entry) => entry.tone !== 'chat' || entry.who === myName) : chat.entries;
+    // stable sort: lines from the same moment keep the order the server sent them in
+    const entries = [...visible, ...errors].sort((a, b) => a.at - b.at);
+    return buildLogRows(entries, myName);
+  }, [chat.entries, notices, muted, myName]);
 
   useEffect(() => {
     if (open) chat.clearUnread();
@@ -83,7 +130,7 @@ export function GameLog({ gameId, notices, canChat }: { gameId: string; notices:
 
   useEffect(() => {
     list.current?.scrollTo({ top: list.current.scrollHeight });
-  }, [lines.length, open]);
+  }, [rows.length, open]);
 
   return (
     <>
@@ -95,16 +142,24 @@ export function GameLog({ gameId, notices, canChat }: { gameId: string; notices:
         <aside className={styles.drawer} aria-label="Game log and chat">
           <header className={styles.head}>
             <h2>Log</h2>
-            <IconButton label="Close log" icon={<X size={20} />} onClick={() => toggle(false)} />
+            <div className={styles.headActions}>
+              {canChat && (
+                <button type="button" className={styles.mute} aria-pressed={muted} onClick={() => toggleMute(gameId)}>
+                  {muted ? 'Unmute opponent' : 'Mute opponent'}
+                </button>
+              )}
+              <IconButton label="Close log" icon={<X size={20} />} onClick={() => toggle(false)} />
+            </div>
           </header>
           <ol ref={list} className={styles.lines}>
-            {lines.length === 0 && <li className={styles.empty}>The game's events will show here.</li>}
-            {lines.map((line) => (
-              <li key={line.key} className={styles[line.tone]}>
-                {line.who && <b>{line.who}: </b>}
-                <PromptText text={line.text} />
-              </li>
-            ))}
+            {rows.length === 0 && <li className={styles.empty}>The game's events will show here.</li>}
+            {rows.map((row) => (row.kind === 'separator'
+              ? (
+                <li key={row.key} className={[styles.separator, row.mine ? styles.separatorMine : ''].join(' ')}>
+                  <span>Turn {row.turn}{row.player ? ` · ${row.mine ? 'You' : row.player}` : ''}</span>
+                </li>
+              )
+              : <LogLine key={row.key} entry={row.entry} cards={cards} />))}
           </ol>
           {canChat && (
             <footer className={styles.foot}>
@@ -136,5 +191,45 @@ export function GameLog({ gameId, notices, canChat }: { gameId: string; notices:
         </aside>
       )}
     </>
+  );
+}
+
+const LogLine = memo(function LogLine({ entry, cards }: { entry: LogEntry; cards: { current: Map<string, CardView> } }) {
+  const Icon = ICONS[entry.icon];
+  return (
+    <li className={[styles.line, styles[entry.tone]].join(' ')}>
+      <Icon className={[styles.icon, styles[`icon_${entry.icon}`] ?? ''].join(' ')} size={16} aria-hidden="true" />
+      <span className={styles.body}>
+        {entry.who && <b>{entry.who}: </b>}
+        {entry.segments.map((segment, index) => <Segment key={index} segment={segment} cards={cards} />)}
+      </span>
+    </li>
+  );
+});
+
+function Segment({ segment, cards }: { segment: LogSegment; cards: { current: Map<string, CardView> } }) {
+  const setZoom = useMatchUi((state) => state.setZoom);
+  const openDetail = useMatchUi((state) => state.openDetail);
+  if (segment.kind === 'text') return <PromptText text={segment.text} />;
+  if (segment.kind === 'player') return <span className={styles.player}>{segment.name}</span>;
+  // looked up when used: the card may have moved since the line was written
+  const find = () => findLogCard(cards.current, segment);
+  return (
+    <button
+      type="button"
+      className={[styles.card, styles[`ink_${cardInk(segment.color) ?? 'none'}`] ?? ''].join(' ')}
+      onPointerEnter={(event) => {
+        const card = find();
+        if (card) setZoom({ card, x: event.clientX, y: event.clientY, anchor: event.currentTarget });
+      }}
+      onPointerLeave={() => setZoom(null)}
+      onClick={() => {
+        const card = find();
+        if (card?.id) openDetail({ id: card.id, card });
+      }}
+      aria-label={`${segment.name}, show card`}
+    >
+      {segment.name}
+    </button>
   );
 }
