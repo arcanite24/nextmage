@@ -38,6 +38,7 @@ import { PermanentStack } from './PermanentStack';
 import { PhaseLadder } from './PhaseLadder';
 import { Piles } from './Piles';
 import { PlayerPlate } from './PlayerPlate';
+import { Reveals } from './Reveals';
 import { StackZone } from './StackZone';
 import { Stage } from './Stage';
 import { STAGE_HEIGHT } from './stageContext';
@@ -204,6 +205,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const handHidden = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards) && !awaitingServer;
   // a choice among cards in hand (discard, reveal...): eligible cards take the decision edge
   const choosingInHand = interaction.mode === 'target' && !pickerCards && [...clickable].some((id) => handIds.has(id));
+  const opponentIds = useMemo(() => board.opponents.map((opponent) => opponent.player.playerId!), [board.opponents]);
   const opponentArt = useMemo(() => {
     const permanent = board.opponents[0]?.front[0]?.lead ?? board.opponents[0]?.back.find((group) => !(group.lead.cardTypes ?? []).includes('LAND'))?.lead;
     return permanent?.expansionSetCode && permanent.cardNumber
@@ -265,6 +267,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
               </>
             )}
 
+            <Reveals view={view} myPlayerId={myId} opponentIds={opponentIds} />
             <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
             <PhaseLadder step={view?.step} myTurn={!!myId && view?.activePlayerId === myId} turn={view?.turn ?? 0} />
 
