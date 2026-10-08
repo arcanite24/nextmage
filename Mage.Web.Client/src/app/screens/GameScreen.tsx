@@ -30,7 +30,8 @@ export function GameScreen() {
       backLabel={eventId ? 'Back to the event' : 'Back to Play'}
       onBack={() => navigate(eventId ? `/event/${eventId}` : '/')}
     >
-      <ConnectedStage gameId={gameId} />
+      {/* each game of a match gets a fresh stage */}
+      <ConnectedStage key={gameId} gameId={gameId} />
     </MatchErrorBoundary>
   );
 }
