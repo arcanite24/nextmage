@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { deckStorage, type DeckSummary } from '../../core/decks/DeckStorageService';
 import { DeckSerializer } from '../../core/decks/DeckSerializer';
+import { copyName } from '../../core/decks/exportFormats';
 import type { DeckCardLists, DeckImportSource } from '../../core/decks/types';
 import { readJson, writeJson } from './persist';
 
@@ -77,6 +78,11 @@ export interface DeckLibraryState {
   /** a deck brought up to date with its site, under its own id */
   saveUpdated(deck: DeckCardLists): Promise<void>;
   remove(id: string): Promise<void>;
+  /** a saved copy of a deck under a new name ("Burn (copy)"), with the same sleeve; selected, returns its id */
+  duplicate(id: string): Promise<string>;
+  rename(id: string, name: string): Promise<void>;
+  /** the full deck list of a roster deck (saved or starter) without saving anything */
+  loadList(id: string): Promise<DeckCardLists>;
 }
 
 async function fetchStarters(): Promise<StarterDeck[]> {
@@ -119,15 +125,8 @@ export const useDecks = create<DeckLibraryState>((set, get) => ({
 
   async loadForPlay(id) {
     if (id.startsWith(STARTER_PREFIX)) {
-      const starter = get().starters.find((candidate) => STARTER_PREFIX + candidate.file === id);
-      if (!starter) throw new Error('That starter deck is not available.');
-      const response = await fetch(`/starter-decks/${encodeURIComponent(starter.file)}`);
-      const text = response.ok ? await response.text() : '';
-      if (!text || /^\s*</.test(text)) throw new Error(`Couldn't load ${starter.name}.`);
-      const deck = DeckSerializer.importDeck(text);
-      deck.name = starter.name;
+      const deck = await get().loadList(id);
       deck.format = 'Constructed - Freeform';
-      deck.coverCard = starter.cover;
       const savedId = await deckStorage.saveDeck(deck, { forceNew: true });
       const sleeve = get().sleeves[id];
       await get().refresh();
@@ -155,6 +154,48 @@ export const useDecks = create<DeckLibraryState>((set, get) => ({
   async remove(id) {
     await deckStorage.deleteDeck(id);
     await get().refresh();
+  },
+
+  async duplicate(id) {
+    const deck = await get().loadList(id);
+    const roster = rosterOf(get());
+    const taken = roster.map((entry) => entry.name);
+    // the copy wears the sleeve the original shows, even when that is the original's default
+    const sleeve = sleeveFor(get().sleeves, roster.find((entry) => entry.id === id));
+    const starter = id.startsWith(STARTER_PREFIX);
+    const name = copyName(deck.name, taken);
+    // a copy is the player's own deck: it no longer follows the site it was imported from
+    const copy: DeckCardLists = { ...deck, id: undefined, name, source: undefined, createdAt: undefined };
+    if (starter) copy.format = 'Constructed - Freeform';
+    const newId = await deckStorage.saveDeck(copy, { forceNew: true });
+    await get().refresh();
+    get().setSleeve(newId, sleeve);
+    get().select(newId);
+    return newId;
+  },
+
+  async rename(id, name) {
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error('A deck needs a name.');
+    const deck = await deckStorage.loadDeck(id);
+    if (!deck) throw new Error('That deck is no longer saved.');
+    await deckStorage.saveDeck({ ...deck, id, name: trimmed });
+    await get().refresh();
+  },
+
+  async loadList(id) {
+    if (id.startsWith(STARTER_PREFIX)) {
+      const starter = get().starters.find((candidate) => STARTER_PREFIX + candidate.file === id);
+      if (!starter) throw new Error('That starter deck is not available.');
+      const response = await fetch(`/starter-decks/${encodeURIComponent(starter.file)}`);
+      const text = response.ok ? await response.text() : '';
+      if (!text || /^\s*</.test(text)) throw new Error(`Couldn't load ${starter.name}.`);
+      const deck = DeckSerializer.importDeck(text);
+      return { ...deck, name: starter.name, coverCard: starter.cover };
+    }
+    const deck = await deckStorage.loadDeck(id);
+    if (!deck) throw new Error('That deck is no longer saved.');
+    return { ...deck, id };
   },
 }));
 
