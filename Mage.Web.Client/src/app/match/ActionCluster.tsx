@@ -19,6 +19,9 @@ export interface ActionClusterProps {
   holdingPriority: boolean;
   /** the client is answering for the player (nothing to do): show that instead of a button to press */
   autoPassing?: boolean;
+  /** Arena's full control: stop at every step, never pass for the player */
+  fullControl?: boolean;
+  onFullControl?(on: boolean): void;
   /** the last answer got no reaction from the server in time */
   stalled?: boolean;
   onResend?(): void;
@@ -35,7 +38,8 @@ const PASS_AHEAD: { label: string; action: PlayerAction; key: string }[] = [
 
 /** The decision corner: what the game is asking, and the one big button that answers it. */
 export function ActionCluster({
-  interaction, awaiting, status, canAct, special, holdingPriority, autoPassing = false, stalled = false, onResend, onResync, onCommand,
+  interaction, awaiting, status, canAct, special, holdingPriority, autoPassing = false, fullControl = false, onFullControl,
+  stalled = false, onResend, onResync, onCommand,
 }: ActionClusterProps) {
   const main = interaction.mainButton;
   const secondary = [...interaction.secondaryButtons];
@@ -70,6 +74,30 @@ export function ActionCluster({
     return () => window.removeEventListener('keydown', onKey);
   }, [main, cancel, awaiting, canAct, onCommand]);
 
+  // Ctrl+Shift on its own, as on Arena, locks full control on or off (released without any other key in between)
+  useEffect(() => {
+    if (!canAct || !onFullControl) return;
+    let armed = false;
+    const isModifier = (event: KeyboardEvent) => event.key === 'Control' || event.key === 'Shift';
+    function onDown(event: KeyboardEvent) {
+      armed = isModifier(event) && event.ctrlKey && event.shiftKey && !event.altKey && !event.metaKey;
+    }
+    function onUp(event: KeyboardEvent) {
+      if (!armed || !isModifier(event)) return;
+      armed = false;
+      if (!isEditableEventTarget(event.target)) onFullControl!(!fullControl);
+    }
+    const disarm = () => { armed = false; };
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    window.addEventListener('blur', disarm);
+    return () => {
+      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keyup', onUp);
+      window.removeEventListener('blur', disarm);
+    };
+  }, [canAct, fullControl, onFullControl]);
+
   // the answered prompt stays up while the server works (see the session's hold), so nothing blinks between decisions
   const deciding = interaction.mode !== 'waiting';
   // every decision is asked here, next to its buttons, so the question never covers the cards it is about
@@ -79,6 +107,11 @@ export function ActionCluster({
   return (
     <section className={styles.cluster} aria-label="Your decision" aria-live="polite">
       {headline && <p className={[styles.headline, deciding ? styles.deciding : ''].join(' ')}><PromptText text={headline} /></p>}
+      {fullControl && canAct && (
+        <button type="button" className={styles.fullControl} onClick={() => onFullControl?.(false)} title="Turn full control off (Ctrl+Shift)">
+          Full control
+        </button>
+      )}
       {stalled && canAct && (
         <div className={styles.stalled} role="alert">
           <p>The server hasn't answered.</p>
@@ -125,6 +158,16 @@ export function ActionCluster({
                   Hold priority after casting
                   <kbd>{holdingPriority ? 'On' : 'Off'}</kbd>
                 </DropdownMenu.CheckboxItem>
+                {onFullControl && (
+                  <DropdownMenu.CheckboxItem
+                    className={styles.menuItem}
+                    checked={fullControl}
+                    onCheckedChange={(on) => onFullControl(on)}
+                  >
+                    Full control: stop at every step
+                    <kbd>Ctrl+Shift</kbd>
+                  </DropdownMenu.CheckboxItem>
+                )}
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>

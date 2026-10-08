@@ -94,6 +94,10 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const openViewer = useMatchUi((ui) => ui.openViewer);
   const sleeves = useSleeves();
   const [holding, setHolding] = useState(false);
+  const fullControl = useSettings((settings) => settings.fullControl);
+  const setFullControl = useSettings((settings) => settings.setFullControl);
+  // full control lasts for the match on screen, as on Arena
+  useEffect(() => () => useSettings.getState().setFullControl(false), []);
 
   useEffect(() => setCardMotion(animations), [animations]);
   // a new game starts with a clean table
@@ -282,6 +286,8 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                 special={!!view?.special}
                 holdingPriority={holding}
                 autoPassing={!!autoPassing}
+                fullControl={fullControl}
+                onFullControl={setFullControl}
                 stalled={state.stalled}
                 onResend={onResend}
                 onResync={onResync}

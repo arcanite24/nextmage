@@ -8,6 +8,29 @@ import type { Prompt } from './prompt';
  * non-mana ability to activate: a land that can only tap for mana is not a reason to stop.
  */
 
+/** Where the player wants priority in combat on one side's turn (the server always offers it there). */
+export interface CombatStops {
+  /** after attackers are declared */
+  attackers: boolean;
+  /** after blockers are declared */
+  blockers: boolean;
+}
+
+export interface TurnCombatStops {
+  yourTurn: CombatStops;
+  opponentTurn: CombatStops;
+}
+
+/** True when the player asked to stop in this combat step: there are attackers, and the stop is set for this turn. */
+export function combatStopHere(view: GameView | null | undefined, stops: TurnCombatStops | null | undefined): boolean {
+  if (!view || !stops) return false;
+  const step = view.step === 'DECLARE_ATTACKERS' ? 'attackers' : view.step === 'DECLARE_BLOCKERS' ? 'blockers' : null;
+  if (!step) return false;
+  if (!(view.combat ?? []).some((group) => Object.keys(group.attackers ?? {}).length > 0)) return false;
+  const myTurn = !!view.myPlayerId && view.activePlayerId === view.myPlayerId;
+  return !!(myTurn ? stops.yourTurn : stops.opponentTurn)?.[step];
+}
+
 export interface AutoPassSettings {
   /** pass priority when nothing can be played */
   autoPass: boolean;
@@ -15,6 +38,10 @@ export interface AutoPassSettings {
   autoSkipCombat: boolean;
   /** on the opponent's turn, permanents' activated abilities count as something to do (instants always do) */
   abilitiesOnTheirTurn: boolean;
+  /** Arena's full control: the client never answers for the player */
+  fullControl?: boolean;
+  /** combat steps where the player wants to stop */
+  combatStops?: TurnCombatStops;
 }
 
 /**
@@ -47,11 +74,12 @@ export type AutoAnswer = 'pass' | 'noAttacks' | 'noBlocks';
 
 /** What to answer for the player right now, or null when the decision is theirs. */
 export function autoAnswer(view: GameView | null | undefined, prompt: Prompt | null, settings: AutoPassSettings): AutoAnswer | null {
-  if (!view || !prompt) return null;
+  if (!view || !prompt || settings.fullControl) return null;
   switch (prompt.kind) {
     case 'priority':
     {
       if (!settings.autoPass) return null;
+      if (combatStopHere(view, settings.combatStops)) return null;
       // like Arena: when no creature attacks, the rest of combat goes by even with instants in hand
       if (settings.autoSkipCombat && noCombat(view)) return 'pass';
       const myTurn = !!view.myPlayerId && view.activePlayerId === view.myPlayerId;
