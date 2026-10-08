@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { GameSession, GameSessionState } from '../../core/game/gameSession';
 import type { Command } from '../../core/game/interaction';
+import { parsePayment } from '../../core/game/payment';
 import type { CardView, GameView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
 import { useEvents } from '../stores/events';
@@ -183,12 +184,17 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const prompt = interaction.prompt;
   const targeting = interaction.mode === 'target' && !awaitingServer;
   // the decision corner names the blocker when the server asks which attacker it blocks
+  // while paying: what is still owed, and for what
+  const payment = useMemo(() => (interaction.mode === 'payMana' && prompt?.kind === 'playMana' ? parsePayment(prompt) : null), [interaction.mode, prompt]);
   const cornerInteraction = useMemo(() => {
     if (damageSplit) return damageCorner(interaction, damageSplit);
+    if (payment?.cost && !(prompt?.kind === 'playMana' && prompt.isX)) {
+      return { ...interaction, headline: payment.sourceName ? `Pay ${payment.cost} for ${payment.sourceName}` : `Pay ${payment.cost}` };
+    }
     if (interaction.mode !== 'target' || !/attacker to block/i.test(prompt?.text ?? '') || !lastBlocker) return interaction;
     const blocker = board.me?.front.flatMap((group) => group.members).find((card) => card.id === lastBlocker);
     return blocker ? { ...interaction, headline: `Which attacker does ${blocker.name} block?` } : interaction;
-  }, [interaction, prompt, board.me, lastBlocker, damageSplit]);
+  }, [interaction, prompt, board.me, lastBlocker, damageSplit, payment]);
   const pregame = !view?.step;
   const handIds = useMemo(() => new Set(hand.map((card) => card.id!)), [hand]);
   // London mulligan: choose cards from the opening hand to put on the bottom
@@ -259,6 +265,9 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                     selected={interaction.selected.has(board.me.player.playerId!)}
                     deciding={canAct && interaction.mode !== 'waiting'}
                     onClick={() => onClick(board.me!.player.playerId!)}
+                    toPay={canAct && !awaitingServer ? payment?.cost : null}
+                    payable={canAct ? clickable : undefined}
+                    onPay={onClick}
                   />
                 </div>
                 <div className={styles.myPiles}>
