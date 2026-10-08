@@ -1,3 +1,5 @@
+> Historical: the legacy client's 2026 to-do list, kept for reference. The live backlog is the tracker at https://claude.ai/artifact/DAHwcrRiJseP94iUjjhR5A.
+
 ## Short term
 - [x] Don't re-render the whole battlefield on updates (battlefield/card memo comparisons now use stable gameplay signatures)
 - [x] Confirm available cards to play are correctly displayed (playable glow now comes from canPlayObjects/playableStats; targeting uses its own state)

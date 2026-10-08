@@ -21,6 +21,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('connectUser', userName, password, SESSION, restoreSessionId, clientVersion, userIdStr),
     connectAdmin: (password: string) =>
       rpc.call('connectAdmin', password, SESSION),
+    sessionGetRestoreToken: () =>
+      rpc.call('sessionGetRestoreToken', SESSION),
     authRegister: (userName: string, password: string, email: string) =>
       rpc.call('authRegister', SESSION, userName, password, email),
     authSendTokenToEmail: (email: string) =>

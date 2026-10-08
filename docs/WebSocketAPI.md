@@ -11,13 +11,22 @@ It uses the same server sessions, users and tables as desktop clients, so both k
 - **Limits**: 4 MB per message, about 40 requests per second per connection (bursts of 120). Messages are compressed with permessage-deflate when the client supports it.
 - Requests of one connection run in order; different connections run in parallel.
 
+### Server settings (Java system properties, `-Dname=value`)
+
+| Property | Default | Meaning |
+|----------|---------|---------|
+| `xmage.web.trustedProxies` | empty (trust nothing) | Comma separated IPs / CIDR ranges of reverse proxies, e.g. `127.0.0.1,::1,172.16.0.0/12`. Only when the TCP peer is in this list does the server read `X-Forwarded-For` (the client is the right-most address that is not a trusted proxy) or, without it, `X-Real-IP`. The resulting client IP is the session's host (anonymous users are recognized by it on reconnect), the key of the per-IP limits and what the logs show. Behind a proxy this **must** be set, or every client looks like the proxy. |
+| `xmage.web.maxConnectionsPerIp` | `16` | Open WebSocket connections per client IP; more are closed with code 1008. `0` = unlimited. Loopback clients are not limited. |
+| `xmage.web.maxOutgoingBytes` | `16777216` (16 MB) | Unsent data queued for one connection; a client that stops reading is dropped once it is exceeded. `0` = unlimited. |
+| `xmage.adminPassword` (or `-adminPassword=` argument) | empty | Server admin password. `connectAdmin` over WebSocket is refused while it is empty. |
+
 ## Sessions
 
 The server issues the session. Logging in (`connectUser`, `connectAdmin`, `authRegister`, `authSendTokenToEmail`, `authResetPassword`) creates a new server session bound to the connection, and every later request on that connection acts as that session.
 
 Methods still take a `sessionId` parameter in the documented position for compatibility, but **the server ignores the value and uses the connection's own session**. A client can never act on another session by sending its id.
 
-Closing the socket counts as a lost connection: the user keeps their tables for a few minutes and can come back with `connectUser` and the same `restoreSessionId`.
+Closing the socket counts as a lost connection: the user keeps their tables for a few minutes and can come back from a new connection with `connectUser`, passing the **server-issued restore token** as `restoreSessionId`. Get the token with `sessionGetRestoreToken` right after every successful login (it changes with each login) and keep it client side. A wrong or empty token never takes over another user's seat. Without authentication, a user with the same name from the same client IP is still treated as a reconnect (desktop compatibility).
 
 Access levels in the method table:
 
@@ -55,8 +64,8 @@ A request without `id` is a notification: it runs, but gets no response.
 | -32602 | Missing or invalid parameter |
 | -32603 | Unexpected server error |
 | -32000 | The server rejected the request |
-| -32001 | Not logged in |
-| -32003 | Too many requests |
+| -32001 | Not logged in, or not allowed (wrong admin password, chat not joined) |
+| -32003 | Too many requests, or locked out after failed admin logins |
 | -32004 | Server busy |
 
 ### Server events
@@ -86,7 +95,8 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 |--------|--------|--------|--------|-------------|
 | `ping` | `sessionId?: string`, `pingInfo?: string` | `boolean` | public | Keep-alive. Extends the logged in user's session; always succeeds before login. |
 | `connectUser` | `userName: string`, `password: string`, `sessionId: string`, `restoreSessionId?: string`, `clientVersion?: string`, `userIdStr?: string` | `boolean` | login | Log in. Creates the connection's session; restoreSessionId reattaches a user that lost its connection. |
-| `connectAdmin` | `password: string`, `sessionId: string` | `boolean` | login | Log in as server admin. |
+| `connectAdmin` | `password: string`, `sessionId: string` | `boolean` | login | Log in as server admin. Disabled unless the server was started with a non-empty admin password (-adminPassword=... or -Dxmage.adminPassword=...). After a wrong password the caller's IP is locked out for 1, 2, 4... seconds (at most 5 minutes). |
+| `sessionGetRestoreToken` | `sessionId: string` | `string` | session | Token that reattaches this user (and its tables) from a later connection: pass it as connectUser's restoreSessionId. It changes on every login, so fetch it again after each one. |
 | `authRegister` | `sessionId: string`, `userName: string`, `password: string`, `email: string` | `boolean` | login | Register a new account (servers with authentication enabled). |
 | `authSendTokenToEmail` | `sessionId: string`, `email: string` | `boolean` | login | Send a password reset token by email. |
 | `authResetPassword` | `sessionId: string`, `email: string`, `authToken: string`, `password: string` | `boolean` | login | Set a new password with an emailed token. |
@@ -125,7 +135,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `deckSave` | `sessionId: string`, `tableId: UUID`, `deck: DeckCardLists` | `boolean` | session | Save the in-progress limited deck without submitting it. |
 | `chatJoin` | `chatId: UUID`, `sessionId: string`, `userName?: string` | `boolean` | session | Subscribe to a chat. |
 | `chatLeave` | `chatId: UUID`, `sessionId: string` | `boolean` | session | Unsubscribe from a chat. |
-| `chatSendMessage` | `chatId: UUID`, `userName?: string`, `message: string` | `boolean` | session | Post to a chat as the logged in user. userName is ignored; the session decides the author. |
+| `chatSendMessage` | `chatId: UUID`, `userName?: string`, `message: string` | `boolean` | session | Post to a chat as the logged in user, who must have joined it (chatJoin; the lobby chat is joined on login). userName is ignored; the session decides the author. |
 | `chatFindByGame` | `gameId: UUID` | `UUID \| null` | session | Chat of a game. |
 | `chatFindByTable` | `tableId: UUID` | `UUID \| null` | session | Chat of a table. |
 | `chatFindByTournament` | `tournamentId: UUID` | `UUID \| null` | session | Chat of a tournament. |
@@ -303,11 +313,15 @@ The `sendPlayerAction` method accepts a `PlayerAction` enum value as a string. C
 {"jsonrpc": "2.0", "method": "connectUser", "params": ["myuser", "mypass", "any-id", "", "", ""], "id": 1}
 // Response: {"jsonrpc": "2.0", "result": true, "id": 1}
 
-// 2. Set user data
+// 2. Remember the restore token for a later reconnect (pass it as connectUser's 4th param)
+{"jsonrpc": "2.0", "method": "sessionGetRestoreToken", "params": [""], "id": 4}
+// Response: {"jsonrpc": "2.0", "result": "restore-token", "id": 4}
+
+// 3. Set user data
 {"method": "connectSetUserData", "params": ["myuser", "session-uuid", {"groupId": 0, "avatarId": 51, "confirmEmptyManaPool": true, "userSkipPrioritySteps": {...}, "flagName": "world.png"}, "1.0", ""], "id": 2}
 // Response: {"jsonrpc": "2.0", "result": true, "id": 2}
 
-// 3. Get main room ID
+// 4. Get main room ID
 {"method": "serverGetMainRoomId", "params": [], "id": 3}
 // Response: {"jsonrpc": "2.0", "result": "room-uuid-string", "id": 3}
 ```

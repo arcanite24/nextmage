@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useDeckStore } from '../../stores/deckStore';
-import { DeckSerializer } from '../../services/DeckSerializer';
+import { DeckSerializer } from '../../core/decks/DeckSerializer';
 import {
     appConfigService,
     cardResolverService,

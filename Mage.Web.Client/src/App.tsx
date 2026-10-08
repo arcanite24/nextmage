@@ -22,7 +22,7 @@ import {
   type ActivityKind,
 } from './services/ActivityShellService';
 import { buildDraftAutosaveDeck } from './services/DraftDeckAutosaveService';
-import { deckStorage } from './services/DeckStorageService';
+import { deckStorage } from './core/decks/DeckStorageService';
 import type { DeckEditorModeKey } from './services/AppConfigService';
 import type { ClientActivity } from './stores/activityStore';
 import type { DeckCardLists } from './types';

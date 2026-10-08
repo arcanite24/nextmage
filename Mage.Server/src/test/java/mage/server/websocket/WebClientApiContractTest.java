@@ -46,7 +46,7 @@ public class WebClientApiContractTest {
     // RPC methods that are served by the bridge itself instead of a same-named MageServer method
     private static final Map<String, String> SERVER_METHOD_OVERRIDES = new HashMap<>();
     private static final Set<String> NOT_MAPPED_TO_SERVER = new HashSet<>(Arrays.asList(
-            "disconnectSession", "playerLogout", // session manager
+            "disconnectSession", "playerLogout", "sessionGetRestoreToken", // session manager
             "getExpansionSets", "getBasicLandSets", "searchCards", "lookupCards", "deckValidate", // card database services
             "testEndGame", "testConcedeMatch" // test mode helpers on table manager
     ));
@@ -62,6 +62,8 @@ public class WebClientApiContractTest {
         SERVER_METHOD_OVERRIDES.put("getDraftCubes", "getServerState");
     }
 
+    private static final String ADMIN_PASSWORD = "admin-secret";
+
     private final List<String> serverCalls = new ArrayList<>();
     private final Map<String, Object[]> serverArgs = new HashMap<>();
     private FakeSessions sessions;
@@ -70,7 +72,11 @@ public class WebClientApiContractTest {
     @BeforeEach
     void setUp() {
         sessions = new FakeSessions();
-        MageServer server = (MageServer) Proxy.newProxyInstance(
+        dispatcher = WebClientApi.createDispatcher(new ApiContext(proxyServer(), null, sessions, ADMIN_PASSWORD));
+    }
+
+    private MageServer proxyServer() {
+        return (MageServer) Proxy.newProxyInstance(
                 MageServer.class.getClassLoader(),
                 new Class<?>[]{MageServer.class},
                 (proxy, method, args) -> {
@@ -85,7 +91,6 @@ public class WebClientApiContractTest {
                     }
                     return null;
                 });
-        dispatcher = WebClientApi.createDispatcher(new ApiContext(server, null, sessions));
     }
 
     @TestFactory
@@ -202,6 +207,86 @@ public class WebClientApiContractTest {
     }
 
     @Test
+    void chatPostsRequireMembership() throws Exception {
+        FakeConnection connection = new FakeConnection();
+        login(connection);
+        sessions.everyoneIsInEveryChat = false;
+        String joined = UUID.randomUUID().toString();
+        String other = UUID.randomUUID().toString();
+        sessions.chatMembers.add(connection.getSessionId() + ":" + joined);
+
+        dispatcher.dispatch("chatSendMessage", params(joined, "", "hi"), connection);
+        assertThat(serverCalls).containsExactly("chatSendMessage");
+
+        serverCalls.clear();
+        assertThatThrownBy(() -> dispatcher.dispatch("chatSendMessage", params(other, "", "hi"), connection))
+                .isInstanceOfSatisfying(RpcException.class, e -> assertThat(e.getCode()).isEqualTo(RpcException.NOT_AUTHORIZED));
+        assertThat(serverCalls).isEmpty();
+    }
+
+    @Test
+    void chatAndTableLookupsRequireLogin() {
+        for (String method : Arrays.asList("chatSendMessage", "chatFindByGame", "chatFindByTable", "chatFindByTournament",
+                "chatFindByRoom", "roomGetAllTables", "roomGetTableById", "roomGetUsers", "roomGetFinishedMatches")) {
+            RpcMethod rpc = dispatcher.find(method);
+            assertThat(rpc.getAccess()).as(method).isEqualTo(RpcMethod.Access.SESSION);
+            assertThatThrownBy(() -> dispatcher.dispatch(method, sampleParams(rpc, "x"), new FakeConnection()))
+                    .as(method)
+                    .isInstanceOfSatisfying(RpcException.class, e -> assertThat(e.getCode()).isEqualTo(RpcException.NOT_AUTHORIZED));
+        }
+        assertThat(serverCalls).isEmpty();
+    }
+
+    @Test
+    void adminLoginIsDisabledWithoutAnAdminPassword() {
+        RpcDispatcher noAdmin = WebClientApi.createDispatcher(new ApiContext(proxyServer(), null, sessions, ""));
+        FakeConnection connection = new FakeConnection();
+
+        assertThatThrownBy(() -> noAdmin.dispatch("connectAdmin", params("", "x"), connection))
+                .isInstanceOfSatisfying(RpcException.class, e -> assertThat(e.getCode()).isEqualTo(RpcException.NOT_AUTHORIZED));
+        assertThat(serverCalls).doesNotContain("connectAdmin");
+        assertThat(connection.getSessionId()).as("failed admin login leaves no session").isNull();
+        assertThat(sessions.created).hasSize(1);
+        assertThat(sessions.exists(sessions.created.get(0))).isFalse();
+    }
+
+    @Test
+    void wrongAdminPasswordLocksTheAddressOutWithoutWaiting() throws Exception {
+        FakeConnection attacker = new FakeConnection("203.0.113.9");
+        long start = System.nanoTime();
+        assertThatThrownBy(() -> dispatcher.dispatch("connectAdmin", params("guess", "x"), attacker))
+                .isInstanceOfSatisfying(RpcException.class, e -> assertThat(e.getCode()).isEqualTo(RpcException.NOT_AUTHORIZED));
+        // locked out now, even with the right password
+        assertThatThrownBy(() -> dispatcher.dispatch("connectAdmin", params(ADMIN_PASSWORD, "x"), new FakeConnection("203.0.113.9")))
+                .isInstanceOfSatisfying(RpcException.class, e -> assertThat(e.getCode()).isEqualTo(RpcException.RATE_LIMITED));
+        assertThat(System.nanoTime() - start).as("no sleeping on a worker thread").isLessThan(1_000_000_000L);
+        assertThat(serverCalls).doesNotContain("connectAdmin");
+        assertThat(attacker.getSessionId()).isNull();
+
+        // other addresses are not affected
+        FakeConnection admin = new FakeConnection("198.51.100.1");
+        assertThat(dispatcher.dispatch("connectAdmin", params(ADMIN_PASSWORD, "x"), admin)).isEqualTo(true);
+        assertThat(serverCalls).contains("connectAdmin");
+        assertThat(admin.getSessionId()).isNotNull();
+    }
+
+    @Test
+    void restoreTokenIsTheServerIssuedOneAndIsPassedBackOnLogin() throws Exception {
+        FakeConnection first = new FakeConnection();
+        dispatcher.dispatch("connectUser", params("alice", "", "x", "client-made-up-id"), first);
+        Object token = dispatcher.dispatch("sessionGetRestoreToken", params("x"), first);
+        assertThat(token).isEqualTo(first.getSessionId());
+
+        FakeConnection second = new FakeConnection("192.0.2.44");
+        dispatcher.dispatch("connectUser", params("alice", "", "x", (String) token), second);
+        assertThat(serverArgs.get("connectUser")[3]).as("restoreSessionId reaches the server").isEqualTo(token);
+        assertThat(second.getSessionId()).isNotEqualTo(token);
+
+        assertThatThrownBy(() -> dispatcher.dispatch("sessionGetRestoreToken", params("x"), new FakeConnection()))
+                .isInstanceOfSatisfying(RpcException.class, e -> assertThat(e.getCode()).isEqualTo(RpcException.NOT_AUTHORIZED));
+    }
+
+    @Test
     void methodNamesAreUnique() {
         List<String> names = dispatcher.getMethods().stream().map(RpcMethod::getName).collect(Collectors.toList());
         assertThat(names).doesNotHaveDuplicates();
@@ -227,6 +312,10 @@ public class WebClientApiContractTest {
             RpcParam param = method.getParams().get(i);
             if (i == method.getSessionParam()) {
                 array.add(sessionValue);
+                continue;
+            }
+            if ("connectAdmin".equals(method.getName()) && "password".equals(param.getName())) {
+                array.add(ADMIN_PASSWORD);
                 continue;
             }
             switch (param.getTsType()) {
@@ -276,7 +365,16 @@ public class WebClientApiContractTest {
     }
 
     private static final class FakeConnection implements RpcConnection {
+        private final String host;
         private String sessionId;
+
+        FakeConnection() {
+            this("10.0.0.7");
+        }
+
+        FakeConnection(String host) {
+            this.host = host;
+        }
 
         @Override
         public String getSessionId() {
@@ -290,7 +388,7 @@ public class WebClientApiContractTest {
 
         @Override
         public String getRemoteHost() {
-            return "10.0.0.7";
+            return host;
         }
 
         @Override
@@ -304,6 +402,8 @@ public class WebClientApiContractTest {
         final List<String> disconnected = new ArrayList<>();
         final Map<String, String> hosts = new HashMap<>();
         final Map<String, String> names = new HashMap<>();
+        final Set<String> chatMembers = new HashSet<>(); // "sessionId:chatId"
+        boolean everyoneIsInEveryChat = true;
 
         @Override
         public void create(String sessionId, InvokerCallbackHandler callbackHandler, String host) {
@@ -324,6 +424,17 @@ public class WebClientApiContractTest {
         @Override
         public Optional<String> userName(String sessionId) {
             return Optional.of(names.getOrDefault(sessionId, "user"));
+        }
+
+        @Override
+        public Optional<String> restoreToken(String sessionId) {
+            // like the server: the restore id of a logged in user is its current session id
+            return exists(sessionId) ? Optional.of(sessionId) : Optional.empty();
+        }
+
+        @Override
+        public boolean isChatMember(String sessionId, UUID chatId) {
+            return everyoneIsInEveryChat || chatMembers.contains(sessionId + ":" + chatId);
         }
     }
 }

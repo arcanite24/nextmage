@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import type { CardView } from '../../protocol/generated/views';
-import type { DeckCardInfo } from '../../types/models';
+import type { DeckCardInfo } from '../../core/decks/types';
 import { api } from '../connection';
 import { entryKey, printingOf } from './deckModel';
 
