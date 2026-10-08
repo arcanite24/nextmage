@@ -24,12 +24,22 @@ export type Prompt =
   | AmountPrompt
   | MultiAmountPrompt;
 
+/**
+ * Questions asked before the first turn, named by the server bridge (`options.webPrompt`, see docs/WebSocketAPI.md
+ * "Pre-game prompt markers") so they need no guessing from the text.
+ */
+export type PregameMarker = 'mulligan' | 'mulliganBottom' | 'startingPlayer';
+
+const PREGAME_MARKERS: readonly PregameMarker[] = ['mulligan', 'mulliganBottom', 'startingPlayer'];
+
 interface PromptBase {
   /** server message, may contain simple HTML (colors) */
   message: string;
   /** message without markup */
   text: string;
   options: Record<string, unknown>;
+  /** the pre-game question this is, when the server says so */
+  marker?: PregameMarker | null;
 }
 
 export interface PriorityPrompt extends PromptBase {
@@ -146,12 +156,20 @@ export function stripMarkup(html: string | undefined): string {
     .trim();
 }
 
+/** The server's pre-game marker in a prompt's options, if any. */
+export function pregameMarker(options: Record<string, unknown> | null | undefined): PregameMarker | null {
+  const value = options?.webPrompt;
+  return typeof value === 'string' && (PREGAME_MARKERS as readonly string[]).includes(value) ? value as PregameMarker : null;
+}
+
 function base(message: GameClientMessage | null | undefined): PromptBase {
   const raw = message?.message ?? '';
+  const options = (message?.options ?? {}) as Record<string, unknown>;
   return {
     message: raw,
     text: stripMarkup(raw),
-    options: (message?.options ?? {}) as Record<string, unknown>,
+    options,
+    marker: pregameMarker(options),
   };
 }
 
@@ -210,7 +228,8 @@ export function parsePrompt<M extends PromptEventName>(method: M, data: Callback
         kind: 'ask',
         yesLabel,
         noLabel: label(common.options['UI.right.btn.text']) ?? 'No',
-        isMulligan: yesLabel === 'Mulligan',
+        // servers without the bridge marker: the mulligan question is the one whose "yes" is "Mulligan"
+        isMulligan: common.marker ? common.marker === 'mulligan' : yesLabel === 'Mulligan',
       };
     }
     case 'GAME_CHOOSE_ABILITY': {

@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { GameSession, GameSessionState } from '../../core/game/gameSession';
 import type { Command } from '../../core/game/interaction';
+import { pregameChoice } from '../../core/game/pregame';
 import type { CardView, GameView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
 import { useEvents } from '../stores/events';
@@ -170,15 +171,19 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   }, [interaction, prompt, board.me, lastBlocker]);
   const pregame = !view?.step;
   const handIds = useMemo(() => new Set(hand.map((card) => card.id!)), [hand]);
+  // the server names the pre-game choices (who starts, the London mulligan's bottom cards); older servers are recognized
+  // by what can be chosen
+  const pregamePick = useMemo(
+    () => (interaction.mode === 'target' ? pregameChoice(prompt, { pregame, clickable, handIds, playerIds: board.players }) : null),
+    [interaction.mode, prompt, pregame, clickable, handIds, board.players],
+  );
   // London mulligan: choose cards from the opening hand to put on the bottom
-  const choosingFromHand = interaction.mode === 'target' && pregame && clickable.size > 0 && [...clickable].every((id) => handIds.has(id));
+  const choosingFromHand = pregamePick === 'mulliganBottom';
   const pickerCards = interaction.mode === 'pickCards' && prompt?.kind === 'target' && prompt.cards
     ? Object.values(prompt.cards)
     : choosingFromHand ? hand : null;
   const canAct = mode === 'play' && !state.gameOver;
-  // before the first turn, a choice among exactly the players is "who starts"
-  const choosingStarter = interaction.mode === 'target' && pregame && clickable.size > 0
-    && [...clickable].every((id) => board.players.has(id));
+  const choosingStarter = pregamePick === 'startingPlayer';
   // one decision, one set of controls: an overlay owns the choice while it's open
   const overlayOpen = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards || interaction.mode === 'panel') && !awaitingServer;
   const handHidden = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards) && !awaitingServer;

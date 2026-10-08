@@ -1,6 +1,8 @@
 package mage.server.websocket;
 
+import com.google.gson.JsonObject;
 import mage.interfaces.callback.ClientCallback;
+import mage.interfaces.callback.ClientCallbackMethod;
 import mage.server.websocket.rpc.JsonCodec;
 import org.java_websocket.WebSocket;
 import org.jboss.remoting.callback.AsynchInvokerCallbackHandler;
@@ -32,10 +34,23 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
         ClientCallback clientCallback = (ClientCallback) callback.getCallbackObject();
         clientCallback.decompressData(); // no-op unless the callback was compressed for a desktop client
         try {
-            WebSocketServerImpl.sendText(conn, JsonCodec.GSON.toJson(clientCallback));
+            WebSocketServerImpl.sendText(conn, serialize(clientCallback));
         } catch (Exception e) {
             throw new HandleCallbackException("Error sending WebSocket message", e);
         }
+    }
+
+    /**
+     * The JSON message for a callback; pre-game prompts get a marker for the web client (see {@link PromptMarkers}).
+     */
+    static String serialize(ClientCallback clientCallback) {
+        ClientCallbackMethod method = clientCallback.getMethod();
+        if (method != ClientCallbackMethod.GAME_ASK && method != ClientCallbackMethod.GAME_TARGET) {
+            return JsonCodec.GSON.toJson(clientCallback);
+        }
+        JsonObject json = JsonCodec.GSON.toJsonTree(clientCallback).getAsJsonObject();
+        PromptMarkers.annotate(json);
+        return JsonCodec.GSON.toJson(json);
     }
 
     @Override
