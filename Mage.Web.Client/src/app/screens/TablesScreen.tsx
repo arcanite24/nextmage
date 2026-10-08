@@ -188,7 +188,8 @@ function TableRow({ table, children }: { table: TableView; children?: React.Reac
 function MyTable({ table }: { table: TableView }) {
   const roomId = useSession((state) => state.roomId);
   const userName = useSession((state) => state.userName);
-  const isOwner = table.controllerName === userName;
+  // the server lists the controller first, then the other seated players: "host, guest"
+  const isOwner = (table.controllerName ?? '').split(', ')[0] === userName;
   const ready = table.tableState === 'READY_TO_START';
   return (
     <TableRow table={table}>
