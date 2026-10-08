@@ -29,10 +29,12 @@ export interface PlaySettings {
   abilitiesOnTheirTurn: boolean;
   /** don't take priority back after casting a spell or activating an ability: it resolves unless the opponent responds */
   passAfterCasting: boolean;
-  /** game sounds (synthesized, local only) */
+  /** game sounds (synthesized, local only); M toggles it during a game */
   sound: boolean;
-  /** 0 to 1 */
+  /** master volume, 0 to 1 */
   volume: number;
+  /** only your turn, decisions, the clock and the result make a sound */
+  importantCuesOnly: boolean;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -61,6 +63,7 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   passAfterCasting: true,
   sound: true,
   volume: 0.6,
+  importantCuesOnly: false,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },
