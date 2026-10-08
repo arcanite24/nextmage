@@ -105,8 +105,11 @@ describe.skipIf(!live)('headless game against the AI', () => {
         if (process.env.MAGE_BOT_TRACE) console.log(`[bot] t${state.view?.turn} ${state.view?.step} ${state.interaction.mode} "${state.interaction.headline}" -> ${JSON.stringify(command)} clickable=${state.interaction.clickable.size}`);
         busy = true;
         void session.respond(command).catch(() => undefined).finally(() => {
-          busy = false;
-          queueMicrotask(step);
+          // a human never answers 40 prompts a second; stay well under the bridge's request rate limit
+          setTimeout(() => {
+            busy = false;
+            step();
+          }, 50);
         });
       };
       session.store.subscribe(step);
