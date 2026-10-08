@@ -26,6 +26,10 @@ export interface GameSessionState {
   interaction: Interaction;
   /** an answer was sent and the server has not asked anything new yet */
   awaitingServer: boolean;
+  /** an answer got no reaction from the server in time: input is open again, and the player may resend or resync */
+  stalled: boolean;
+  /** the connection was lost or the page reloaded: the board is stale until the server sends the game again */
+  resyncing: boolean;
   /** latest status line from the server ("Waiting for Bob", "Bob casts ...") */
   status: string | null;
   notices: GameNotice[];
@@ -40,6 +44,12 @@ const MAX_NOTICES = 50;
  * arrives sooner and replaces it directly, so highlights and buttons don't blink off and on between decisions.
  */
 const PROMPT_HOLD_MS = 350;
+/** With no word at all from the server this long after an answer, the answer (or the next question) is taken as lost. */
+export const REPLY_TIMEOUT_MS = 10_000;
+
+export interface GameSessionOptions {
+  replyTimeoutMs?: number;
+}
 
 /**
  * Client side of one game: applies server events for that game and sends the player's answers.
@@ -50,12 +60,18 @@ export class GameSession {
   private readonly unsubscribers: (() => void)[] = [];
   private noticeId = 0;
   private holdTimer: ReturnType<typeof setTimeout> | null = null;
+  private replyTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly replyTimeoutMs: number;
+  /** the last answer sent, for "Send again" */
+  private lastCommand: Command | null = null;
 
   constructor(
     private readonly api: Api,
     bus: EventBus,
     init: { gameId: string; playerId: string | null; mode: GameSessionMode },
+    options: GameSessionOptions = {},
   ) {
+    this.replyTimeoutMs = options.replyTimeoutMs ?? REPLY_TIMEOUT_MS;
     this.store = createStore<GameSessionState>(() => ({
       gameId: init.gameId,
       playerId: init.playerId,
@@ -64,6 +80,8 @@ export class GameSession {
       prompt: null,
       interaction: deriveInteraction(null, null),
       awaitingServer: false,
+      stalled: false,
+      resyncing: false,
       status: null,
       notices: [],
       gameOver: null,
@@ -72,7 +90,10 @@ export class GameSession {
 
     const forThisGame = <T>(handler: (data: T, event: ServerEvent) => void) =>
       (data: T, event: ServerEvent) => {
-        if (event.objectId === null || event.objectId === init.gameId) handler(data, event);
+        if (event.objectId !== null && event.objectId !== init.gameId) return;
+        // any word from the server about this game shows it is alive and working on our answer
+        this.heard();
+        handler(data, event);
       };
 
     this.unsubscribers.push(
@@ -92,7 +113,8 @@ export class GameSession {
       bus.on('GAME_ERROR', forThisGame<string>((message) => this.addNotice('error', stripMarkup(message)))),
       bus.on('GAME_OVER', forThisGame<GameClientMessage>((message) => {
         this.applyView(message?.gameView);
-        this.store.setState({ gameOver: stripMarkup(message?.message) || 'Game over', prompt: null, awaitingServer: false });
+        this.clearReplyTimer();
+        this.store.setState({ gameOver: stripMarkup(message?.message) || 'Game over', prompt: null, awaitingServer: false, stalled: false });
         this.refreshInteraction();
       })),
       bus.on('END_GAME_INFO', forThisGame<GameEndView>((info) => this.store.setState({ endInfo: info }))),
@@ -115,7 +137,65 @@ export class GameSession {
     this.holdTimer = null;
   }
 
+  private clearReplyTimer(): void {
+    if (this.replyTimer) clearTimeout(this.replyTimer);
+    this.replyTimer = null;
+  }
+
+  /** Starts (or restarts) the countdown for the server's reaction to an answer. */
+  private armReplyTimer(): void {
+    this.clearReplyTimer();
+    this.replyTimer = setTimeout(() => {
+      this.replyTimer = null;
+      if (!this.store.getState().awaitingServer) return;
+      this.store.setState({ awaitingServer: false, stalled: true });
+    }, this.replyTimeoutMs);
+  }
+
+  private heard(): void {
+    if (this.replyTimer) this.armReplyTimer();
+  }
+
+  /** The board may be out of date (connection lost, page reloaded) until the server sends the game again. */
+  markResyncing(): void {
+    if (this.store.getState().gameOver) return;
+    this.clearReplyTimer();
+    this.clearHold();
+    this.store.setState({ resyncing: true, awaitingServer: false, stalled: false });
+  }
+
+  /** The server never sent the game back: it ended (or was given up) while we were away. */
+  endAbsent(message = 'This game ended while you were away.'): void {
+    const state = this.store.getState();
+    if (!state.resyncing || state.gameOver) return;
+    this.store.setState({ resyncing: false, gameOver: message, prompt: null, awaitingServer: false });
+    this.refreshInteraction();
+  }
+
+  /** Sends the last answer again, after a stall. */
+  async resend(): Promise<void> {
+    const command = this.lastCommand;
+    this.store.setState({ stalled: false });
+    if (command) await this.respond(command);
+  }
+
+  /**
+   * Asks the server for the open question again. Resolves false when nothing is waiting for the player (the server
+   * is busy, or it is someone else's decision).
+   */
+  async resync(): Promise<boolean> {
+    this.clearReplyTimer();
+    this.store.setState({ stalled: false, awaitingServer: false });
+    try {
+      return await this.api.gameResync(this.store.getState().gameId);
+    } catch (error) {
+      this.addNotice('error', error instanceof Error ? error.message : String(error));
+      return false;
+    }
+  }
+
   dispose(): void {
+    this.clearReplyTimer();
     this.clearHold();
     this.unsubscribers.forEach((unsubscribe) => unsubscribe());
   }
@@ -126,7 +206,9 @@ export class GameSession {
     if (command.type !== 'action') {
       // the server will ask again (or move on); until then clicks are ignored, and the answered prompt fades out
       // only if nothing new arrives soon
-      this.store.setState({ awaitingServer: true });
+      this.lastCommand = command;
+      this.store.setState({ awaitingServer: true, stalled: false });
+      this.armReplyTimer();
       this.clearHold();
       this.holdTimer = setTimeout(() => {
         this.holdTimer = null;
@@ -158,6 +240,7 @@ export class GameSession {
           break;
       }
     } catch (error) {
+      this.clearReplyTimer();
       this.store.setState({ awaitingServer: false });
       this.addNotice('error', error instanceof Error ? error.message : String(error));
       throw error;
@@ -184,6 +267,7 @@ export class GameSession {
       ? { ...incoming, canPlayObjects: previous!.canPlayObjects }
       : incoming;
     const next = previous ? structuralShare(previous, view) : view;
+    if (this.store.getState().resyncing) this.store.setState({ resyncing: false });
     if (next === previous) return;
     const playerId = this.store.getState().playerId ?? (this.store.getState().mode === 'play' ? view.myPlayerId ?? null : null);
     this.store.setState({ view: next, playerId });
@@ -195,7 +279,8 @@ export class GameSession {
     if (this.store.getState().mode !== 'play') return;
     const prompt = parsePrompt(method, data as never);
     this.clearHold();
-    this.store.setState({ prompt, awaitingServer: false });
+    this.clearReplyTimer();
+    this.store.setState({ prompt, awaitingServer: false, stalled: false, resyncing: false });
     this.refreshInteraction();
   }
 

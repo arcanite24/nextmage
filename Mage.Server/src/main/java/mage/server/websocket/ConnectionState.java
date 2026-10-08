@@ -6,6 +6,7 @@ import org.jboss.remoting.callback.InvokerCallbackHandler;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -30,6 +31,7 @@ final class ConnectionState implements RpcConnection {
     private boolean running;
 
     private volatile String sessionId;
+    private volatile WebSocketCallbackHandler callbackHandler;
 
     private int rateLimitStrikes;
     private double tokens = BURST;
@@ -78,7 +80,23 @@ final class ConnectionState implements RpcConnection {
 
     @Override
     public InvokerCallbackHandler createCallbackHandler() {
-        return new WebSocketCallbackHandler(conn);
+        WebSocketCallbackHandler handler = new WebSocketCallbackHandler(conn);
+        callbackHandler = handler;
+        return handler;
+    }
+
+    @Override
+    public void promptAnswered(UUID gameId) {
+        WebSocketCallbackHandler handler = callbackHandler;
+        if (handler != null) {
+            handler.promptAnswered(gameId);
+        }
+    }
+
+    @Override
+    public boolean resendPrompt(UUID gameId) {
+        WebSocketCallbackHandler handler = callbackHandler;
+        return handler != null && handler.resendPrompt(gameId);
     }
 
     synchronized boolean tryAcquire() {

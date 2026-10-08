@@ -2,13 +2,14 @@ import {
   Anvil, ArrowUpToLine, Castle, Eye, EyeOff, Feather, FlaskConical, Footprints, HeartPulse, Hourglass, Shield, ShieldCheck,
   ShieldHalf, Skull, Sword, Swords, Users, Zap, type LucideIcon,
 } from 'lucide-react';
-import { memo, useMemo, useRef, type CSSProperties } from 'react';
+import { memo, useMemo, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { keywordMarks, type MarkedKeyword } from '../../core/game/keywords';
 import type { PermanentView } from '../../protocol/generated/views';
 import { CardFace } from '../ui/CardFace';
-import { stackOffsetRatio, type PermanentGroup } from './boardModel';
+import { cardKey, stackOffsetRatio, type PermanentGroup } from './boardModel';
 import { useFlip } from './flip';
 import { useMatchUi } from './matchUi';
+import { useStage } from './stageContext';
 import styles from './PermanentStack.module.css';
 
 export interface PermanentStackProps {
@@ -26,9 +27,21 @@ export interface PermanentStackProps {
   /** a target is being chosen: the candidates stand out from merely playable cards */
   targeting?: boolean;
   onClick(id: string): void;
+  /** while blockers are declared: a creature dropped on an attacker blocks it (false when nothing was sent) */
+  onBlockDrop?(blockerId: string, attackerId: string): boolean;
 }
 
 const CARD_RATIO = 88 / 63;
+const DRAG_THRESHOLD = 12;
+
+/** The attacking creature under a screen point, if any. */
+function attackerAt(x: number, y: number, attacking: ReadonlySet<string>, self: string): string | null {
+  for (const element of document.elementsFromPoint(x, y)) {
+    const id = element.closest('[data-object-id]')?.getAttribute('data-object-id');
+    if (id && id !== self && attacking.has(id)) return id;
+  }
+  return null;
+}
 
 const KEYWORD_ICONS: Record<MarkedKeyword, LucideIcon> = {
   Flying: Feather,
@@ -65,7 +78,7 @@ export const PermanentStack = memo(function PermanentStack(props: PermanentStack
     <div className={styles.slot} style={{ width: slotWidth, height: slotHeight }}>
       {group.attachments.map((attachment, index) => (
         <PlacedCard
-          key={attachment.id}
+          key={cardKey(attachment)}
           permanent={attachment}
           {...props}
           left={(group.attachments.length - 1 - index) * attachOffset}
@@ -75,7 +88,7 @@ export const PermanentStack = memo(function PermanentStack(props: PermanentStack
       ))}
       {[...group.members].reverse().map((permanent, index, reversed) => (
         <PlacedCard
-          key={permanent.id}
+          key={cardKey(permanent)}
           permanent={permanent}
           {...props}
           left={group.attachments.length * attachOffset + (reversed.length - 1 - index) * stackOffset}
@@ -96,7 +109,7 @@ interface PlacedCardProps extends PermanentStackProps {
   count?: number;
 }
 
-function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, attacking, blocking, forward, targeting, onClick, left, top, depth, count }: PlacedCardProps) {
+function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, attacking, blocking, forward, targeting, onClick, onBlockDrop, left, top, depth, count }: PlacedCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = permanent.id!;
   const tapped = !!permanent.tapped;
@@ -107,7 +120,42 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
   const isBlocking = blocking.has(id);
   const setZoom = useMatchUi((state) => state.setZoom);
   const keywords = useMemo(() => keywordMarks(permanent), [permanent]);
-  useFlip(permanent.cardId ?? id, ref, { rotation: tapped ? 90 : 0 });
+  useFlip(cardKey(permanent), ref, { rotation: tapped ? 90 : 0 });
+  const stage = useStage();
+  const setBlockDrag = useMatchUi((state) => state.setBlockDrag);
+  // drag a creature onto an attacker to block it; a press without moving stays a click
+  const canDrag = !!onBlockDrop && isClickable && !isAttacking;
+  const gesture = useRef<{ startX: number; startY: number; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
+
+  function onPointerDown(event: ReactPointerEvent) {
+    suppressClick.current = false;
+    if (!canDrag || event.button !== 0) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    gesture.current = { startX: event.clientX, startY: event.clientY, moved: false };
+  }
+
+  function onPointerMove(event: ReactPointerEvent) {
+    const current = gesture.current;
+    if (!current) return;
+    if (!current.moved && Math.hypot(event.clientX - current.startX, event.clientY - current.startY) / stage.scale > DRAG_THRESHOLD) {
+      current.moved = true;
+      setZoom(null);
+    }
+    if (current.moved) setBlockDrag({ blockerId: id, attackerId: attackerAt(event.clientX, event.clientY, attacking, id) });
+  }
+
+  function endDrag(event: ReactPointerEvent, drop: boolean) {
+    const current = gesture.current;
+    gesture.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (!current?.moved) return;
+    setBlockDrag(null);
+    // the click that ends a drag is not a click on the card
+    suppressClick.current = true;
+    const attacker = drop ? attackerAt(event.clientX, event.clientY, attacking, id) : null;
+    if (attacker) onBlockDrop?.(id, attacker);
+  }
 
   const damage = permanent.damage ?? 0;
   const counters = (permanent.counters ?? []).filter((counter) => (counter.count ?? 0) > 0);
@@ -140,14 +188,24 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
       tabIndex={isClickable ? 0 : undefined}
       aria-label={describe(permanent, { tapped, isAttacking, isBlocking, isSelected, keywords: keywords.map((mark) => (mark.gained ? `${mark.name.toLowerCase()} (gained)` : mark.name.toLowerCase())) })}
       aria-pressed={isClickable ? isSelected : undefined}
-      onClick={() => isClickable && onClick(id)}
+      onClick={() => {
+        if (suppressClick.current) {
+          suppressClick.current = false;
+          return;
+        }
+        if (isClickable) onClick(id);
+      }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={(event) => endDrag(event, true)}
+      onPointerCancel={(event) => endDrag(event, false)}
       onKeyDown={(event) => {
         if (isClickable && event.key === 'Enter') {
           event.preventDefault();
           onClick(id);
         }
       }}
-      onPointerEnter={(event) => setZoom({ card: permanent, x: event.clientX, y: event.clientY, sleeve })}
+      onPointerEnter={(event) => !gesture.current?.moved && setZoom({ card: permanent, x: event.clientX, y: event.clientY, sleeve })}
       onPointerLeave={() => setZoom(null)}
       data-object-id={id}
     >

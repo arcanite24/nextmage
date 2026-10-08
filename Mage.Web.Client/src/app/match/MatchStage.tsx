@@ -4,12 +4,16 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { GameSession, GameSessionState } from '../../core/game/gameSession';
 import type { Command } from '../../core/game/interaction';
+import { parsePayment } from '../../core/game/payment';
+import { matchProgress } from '../../core/game/matchProgress';
+import { pregameChoice } from '../../core/game/pregame';
 import type { CardView, GameView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
 import { useEvents } from '../stores/events';
 import { useGames } from '../stores/games';
 import { usePlay } from '../stores/play';
 import { useSettings } from '../stores/settings';
+import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
@@ -17,10 +21,15 @@ import { MatPrint } from '../ui/MatPrint';
 import { SettingsDialog } from '../screens/SettingsDialog';
 import { Stitch } from '../ui/Stitch';
 import { ActionCluster } from './ActionCluster';
+import { AlwaysAnswerMenu, TriggerOrderOptions } from './AutoAnswer';
+import { BetweenGames } from './BetweenGames';
 import { Arrows } from './Arrows';
 import { buildBoard, fitCardWidth, type PermanentGroup, type PlayerBoard } from './boardModel';
 import { CardDetail } from './CardDetail';
 import { CardZoom } from './CardZoom';
+import { DamageAssigner } from './DamageAssigner';
+import { damageCorner, useDamageSplit } from './useDamageSplit';
+import { EmoteBubbles } from './EmoteBubbles';
 import { setCardMotion, useFlipOrigin } from './flip';
 import { GameLog } from './GameLog';
 import { Hand } from './Hand';
@@ -29,12 +38,15 @@ import { useGameCues } from './useGameCues';
 import { useWarmImages } from './useWarmImages';
 import { useAutoPay } from './useAutoPay';
 import { useAutoPass } from './useAutoPass';
+import { useBlockDrag } from './useBlockDrag';
+import { useAutoOrder } from './useAutoOrder';
 import { Vfx } from './Vfx';
 import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
 import { PhaseLadder } from './PhaseLadder';
 import { Piles } from './Piles';
 import { PlayerPlate } from './PlayerPlate';
+import { Reveals } from './Reveals';
 import { StackZone } from './StackZone';
 import { Stage } from './Stage';
 import { STAGE_HEIGHT } from './stageContext';
@@ -92,13 +104,22 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const openViewer = useMatchUi((ui) => ui.openViewer);
   const sleeves = useSleeves();
   const [holding, setHolding] = useState(false);
+  const fullControl = useSettings((settings) => settings.fullControl);
+  const setFullControl = useSettings((settings) => settings.setFullControl);
+  // full control lasts for the match on screen, as on Arena
+  useEffect(() => () => useSettings.getState().setFullControl(false), []);
 
   useEffect(() => setCardMotion(animations), [animations]);
   // a new game starts with a clean table
   useEffect(() => () => useMatchUi.setState({ zoom: null, dragging: null, viewer: null, logOpen: false, detail: null }), []);
 
   const board = useMemo(() => buildBoard(view, playerId), [view, playerId]);
-  const clickable = useMemo(() => new Set(interaction.clickable.keys()), [interaction.clickable]);
+  // combat damage is split on the creatures themselves: clicking one adds a point of damage to it
+  const damageSplit = useDamageSplit(interaction, view);
+  const clickable = useMemo(
+    () => new Set(damageSplit ? damageSplit.assignment.recipients.map((recipient) => recipient.id) : interaction.clickable.keys()),
+    [interaction.clickable, damageSplit],
+  );
   const combat = view?.combat;
   const { attacking, blocking, links, attacks } = useMemo(() => combatSets(combat), [combat]);
   // lands can always tap for mana while you hold priority; glowing them all would drown the real options
@@ -123,12 +144,29 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
     }
     void session.respond(command).catch(() => undefined);
   }, [session]);
+  const onResend = useCallback(() => void session.resend().catch(() => undefined), [session]);
+  const onResync = useCallback(() => {
+    void session.resync().then((resent) => {
+      if (!resent) notify('Nothing to answer', "The game isn't waiting for you. It goes on as soon as the server is ready.");
+    });
+  }, [session]);
   // the blocker just chosen: the server's follow-up question ("Select attacker to block") doesn't say which it is
   const [lastBlocker, setLastBlocker] = useState<string | null>(null);
   const onClick = useCallback((id: string) => {
+    const recipient = damageSplit?.assignment.recipients.findIndex((candidate) => candidate.id === id) ?? -1;
+    if (damageSplit && recipient >= 0) {
+      if (!session.getState().awaitingServer) damageSplit.add(recipient);
+      return;
+    }
     if (session.getState().interaction.mode === 'declareBlockers') setLastBlocker(id);
     session.click(id);
-  }, [session]);
+  }, [session, damageSplit]);
+
+  const blockDrop = useBlockDrag(session, state);
+  const onBlockDrop = useCallback((blockerId: string, attackerId: string) => {
+    setLastBlocker(blockerId);
+    return blockDrop(blockerId, attackerId);
+  }, [blockDrop]);
 
   const myId = board.me?.player.playerId ?? null;
   useWarmImages(view);
@@ -136,6 +174,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   // holding priority means the player wants every stop
   const autoPassing = useAutoPass(session, state, !holding);
   useGameCues(state, myId, !!autoPassing);
+  useAutoOrder(session, state);
   const sleeveOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? sleeves.theirs : sleeves.mine), [myId, sleeves]);
   const originOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? `hand:${card.controllerId}` : undefined), [myId]);
 
@@ -146,6 +185,11 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
     navigate(eventId ? `/event/${eventId}` : '/');
   }, [navigate, state.gameId, eventId]);
   const deckId = usePlay((play) => play.deckId);
+  // between games of a match the server deals the next game by itself: show the score, not a way out
+  const betweenGames = useMemo(() => {
+    const progress = mode === 'play' ? matchProgress(state.endInfo) : null;
+    return progress && !progress.over ? progress : null;
+  }, [mode, state.endInfo]);
   const playAgain = useCallback(() => {
     const { lastOptions } = usePlay.getState();
     leave();
@@ -163,27 +207,38 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const prompt = interaction.prompt;
   const targeting = interaction.mode === 'target' && !awaitingServer;
   // the decision corner names the blocker when the server asks which attacker it blocks
+  // while paying: what is still owed, and for what
+  const payment = useMemo(() => (interaction.mode === 'payMana' && prompt?.kind === 'playMana' ? parsePayment(prompt) : null), [interaction.mode, prompt]);
   const cornerInteraction = useMemo(() => {
+    if (damageSplit) return damageCorner(interaction, damageSplit);
+    if (payment?.cost && !(prompt?.kind === 'playMana' && prompt.isX)) {
+      return { ...interaction, headline: payment.sourceName ? `Pay ${payment.cost} for ${payment.sourceName}` : `Pay ${payment.cost}` };
+    }
     if (interaction.mode !== 'target' || !/attacker to block/i.test(prompt?.text ?? '') || !lastBlocker) return interaction;
     const blocker = board.me?.front.flatMap((group) => group.members).find((card) => card.id === lastBlocker);
     return blocker ? { ...interaction, headline: `Which attacker does ${blocker.name} block?` } : interaction;
-  }, [interaction, prompt, board.me, lastBlocker]);
+  }, [interaction, prompt, board.me, lastBlocker, damageSplit, payment]);
   const pregame = !view?.step;
   const handIds = useMemo(() => new Set(hand.map((card) => card.id!)), [hand]);
+  // the server names the pre-game choices (who starts, the London mulligan's bottom cards); older servers are recognized
+  // by what can be chosen
+  const pregamePick = useMemo(
+    () => (interaction.mode === 'target' ? pregameChoice(prompt, { pregame, clickable, handIds, playerIds: board.players }) : null),
+    [interaction.mode, prompt, pregame, clickable, handIds, board.players],
+  );
   // London mulligan: choose cards from the opening hand to put on the bottom
-  const choosingFromHand = interaction.mode === 'target' && pregame && clickable.size > 0 && [...clickable].every((id) => handIds.has(id));
+  const choosingFromHand = pregamePick === 'mulliganBottom';
   const pickerCards = interaction.mode === 'pickCards' && prompt?.kind === 'target' && prompt.cards
     ? Object.values(prompt.cards)
     : choosingFromHand ? hand : null;
   const canAct = mode === 'play' && !state.gameOver;
-  // before the first turn, a choice among exactly the players is "who starts"
-  const choosingStarter = interaction.mode === 'target' && pregame && clickable.size > 0
-    && [...clickable].every((id) => board.players.has(id));
+  const choosingStarter = pregamePick === 'startingPlayer';
   // one decision, one set of controls: an overlay owns the choice while it's open
   const overlayOpen = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards || interaction.mode === 'panel') && !awaitingServer;
   const handHidden = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards) && !awaitingServer;
   // a choice among cards in hand (discard, reveal...): eligible cards take the decision edge
   const choosingInHand = interaction.mode === 'target' && !pickerCards && [...clickable].some((id) => handIds.has(id));
+  const opponentIds = useMemo(() => board.opponents.map((opponent) => opponent.player.playerId!), [board.opponents]);
   const opponentArt = useMemo(() => {
     const permanent = board.opponents[0]?.front[0]?.lead ?? board.opponents[0]?.back.find((group) => !(group.lead.cardTypes ?? []).includes('LAND'))?.lead;
     return permanent?.expansionSetCode && permanent.cardNumber
@@ -227,7 +282,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
             {board.me && (
               <>
-                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} left={FIELD_LEFT} width={fieldWidth} frontTop={556} backTop={778} />
+                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} onBlockDrop={interaction.mode === 'declareBlockers' && canAct ? onBlockDrop : undefined} left={FIELD_LEFT} width={fieldWidth} frontTop={556} backTop={778} />
                 <div className={styles.myPlate}>
                   <PlayerPlate
                     player={board.me.player}
@@ -237,6 +292,9 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                     selected={interaction.selected.has(board.me.player.playerId!)}
                     deciding={canAct && interaction.mode !== 'waiting'}
                     onClick={() => onClick(board.me!.player.playerId!)}
+                    toPay={canAct && !awaitingServer ? payment?.cost : null}
+                    payable={canAct ? clickable : undefined}
+                    onPay={onClick}
                   />
                 </div>
                 <div className={styles.myPiles}>
@@ -245,6 +303,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
               </>
             )}
 
+            <Reveals view={view} myPlayerId={myId} opponentIds={opponentIds} />
             <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
             <PhaseLadder step={view?.step} myTurn={!!myId && view?.activePlayerId === myId} turn={view?.turn ?? 0} />
 
@@ -270,6 +329,12 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                 special={!!view?.special}
                 holdingPriority={holding}
                 autoPassing={!!autoPassing}
+                extra={prompt?.kind === 'ask' ? <AlwaysAnswerMenu gameId={state.gameId} prompt={prompt} onCommand={onCommand} /> : undefined}
+                fullControl={fullControl}
+                onFullControl={setFullControl}
+                stalled={state.stalled}
+                onResend={onResend}
+                onResync={onResync}
                 onCommand={onCommand}
               />
             ) : (
@@ -279,10 +344,19 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
               </div>
             )}
 
+            {damageSplit && canAct && !awaitingServer && <DamageAssigner split={damageSplit} />}
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
-            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} />
-            <GameMenu canConcede={canAct} onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })} onLeave={leave} />
+            <EmoteBubbles view={view} />
+            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} />
+            <GameMenu
+              canConcede={canAct}
+              onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })}
+              onLeave={leave}
+              rollback={canAct && !!view?.rollbackTurnsAllowed && (view?.turn ?? 0) > 0
+                ? { ready: interaction.mode === 'priority' && !awaitingServer, request: () => onCommand({ type: 'action', action: 'ROLLBACK_TURNS', data: 0 }) }
+                : null}
+            />
 
             {interaction.mode === 'mulligan' && !awaitingServer && (
               <MulliganOverlay hand={hand} interaction={interaction} sleeve={sleeves.mine} onCommand={onCommand} />
@@ -300,12 +374,22 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                 cards={pickerCards}
                 interaction={interaction}
                 sleeve={sleeves.mine}
+                footer={prompt ? <TriggerOrderOptions gameId={state.gameId} prompt={prompt} onCommand={onCommand} /> : undefined}
                 onCommand={onCommand}
               />
             )}
             {interaction.mode === 'panel' && prompt && !awaitingServer && <ChoicePanel prompt={prompt} onCommand={onCommand} />}
             {viewer && <ZoneViewer title={viewer.title} cards={viewer.cards} onClose={() => openViewer(null)} />}
-            {state.gameOver && (
+            {state.gameOver && betweenGames && (
+              <BetweenGames
+                progress={betweenGames}
+                won={state.endInfo?.won ? true : /\bdraw\b/i.test(state.endInfo?.gameInfo ?? '') ? null : false}
+                onLeave={leave}
+                leaveLabel={eventId ? 'Back to the event' : 'Leave match'}
+                concedes={!eventId}
+              />
+            )}
+            {state.gameOver && !betweenGames && (
               <GameOverOverlay
                 message={state.gameOver}
                 endInfo={state.endInfo}
@@ -332,6 +416,7 @@ interface RowProps {
   blocking: ReadonlySet<string>;
   targeting: boolean;
   onClick(id: string): void;
+  onBlockDrop?(blockerId: string, attackerId: string): boolean;
 }
 
 /** One player's two rows of permanents. Rows shrink their cards to fit rather than wrapping. */
@@ -433,11 +518,40 @@ function HiddenHand({ playerId, count, sleeve, left }: { playerId: string; count
   );
 }
 
-function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onConcede(): void; onLeave(): void }) {
+/** Asking to roll the game back to the start of this turn: only while holding priority (the server's rule). */
+interface RollbackOption {
+  ready: boolean;
+  request(): void;
+}
+
+const CONFIRM = {
+  concede: {
+    title: 'Concede this game?',
+    description: 'Your opponent wins this game. You can\'t undo it.',
+    action: 'Concede',
+  },
+  leave: {
+    title: 'Leave this match?',
+    description: 'You concede this game and the rest of the match. You can\'t undo it.',
+    action: 'Leave match',
+  },
+  rollback: {
+    title: 'Go back to the start of this turn?',
+    description: 'Every other player must agree; a game against the computer goes back at once.',
+    action: 'Ask to go back',
+  },
+} as const;
+
+function GameMenu({ canConcede, onConcede, onLeave, rollback }: {
+  canConcede: boolean;
+  onConcede(): void;
+  onLeave(): void;
+  rollback: RollbackOption | null;
+}) {
   // conceding gives up this game; leaving a game in progress gives up the whole match
-  const [confirming, setConfirming] = useState<'concede' | 'leave' | null>(null);
+  const [confirming, setConfirming] = useState<keyof typeof CONFIRM | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const leaving = confirming === 'leave';
+  const copy = confirming ? CONFIRM[confirming] : null;
   return (
     <div className={styles.menu}>
       <DropdownMenu.Root>
@@ -447,6 +561,16 @@ function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onC
         <DropdownMenu.Portal>
           <DropdownMenu.Content className={styles.menuContent} align="end" sideOffset={8}>
             <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>Settings</DropdownMenu.Item>
+            {rollback && (
+              <DropdownMenu.Item
+                className={styles.menuItem}
+                disabled={!rollback.ready}
+                title={rollback.ready ? undefined : 'Available while you have priority'}
+                onSelect={() => setConfirming('rollback')}
+              >
+                Request rollback to start of turn
+              </DropdownMenu.Item>
+            )}
             {canConcede && (
               <DropdownMenu.Item className={styles.menuItem} onSelect={() => setConfirming('concede')}>Concede</DropdownMenu.Item>
             )}
@@ -460,23 +584,23 @@ function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onC
       <Dialog
         open={confirming !== null}
         onOpenChange={(open) => !open && setConfirming(null)}
-        title={leaving ? 'Leave this match?' : 'Concede this game?'}
-        description={leaving
-          ? 'You concede this game and the rest of the match. You can\'t undo it.'
-          : 'Your opponent wins this game. You can\'t undo it.'}
+        title={copy?.title ?? ''}
+        description={copy?.description}
         width="sm"
         footer={(
           <>
             <Button variant="quiet" onClick={() => setConfirming(null)}>Keep playing</Button>
             <Button
-              variant="danger"
+              variant={confirming === 'rollback' ? 'decision' : 'danger'}
               onClick={() => {
+                const choice = confirming;
                 setConfirming(null);
-                if (leaving) onLeave();
-                else onConcede();
+                if (choice === 'leave') onLeave();
+                else if (choice === 'concede') onConcede();
+                else if (choice === 'rollback') rollback?.request();
               }}
             >
-              {leaving ? 'Leave match' : 'Concede'}
+              {copy?.action}
             </Button>
           </>
         )}

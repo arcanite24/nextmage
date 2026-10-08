@@ -94,4 +94,85 @@ describe('ImageResolver', () => {
     expect(printingKey({ expansionSetCode: 'M10', cardNumber: '146' })).toBe('m10/146');
     expect(printingKey({ expansionSetCode: '', cardNumber: '1' })).toBeNull();
   });
+
+  describe('notifications', () => {
+    const BOLT = { name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' };
+    const DELVER = { name: 'Delver of Secrets', expansionSetCode: 'ISD', cardNumber: '51' };
+    const GOLEM = { name: 'Golem', expansionSetCode: 'RIX', isToken: true };
+
+    function deferredLinks() {
+      let release: () => void = () => undefined;
+      const linksReady = new Promise<void>((resolve) => { release = resolve; });
+      return { linksReady, release: () => release() };
+    }
+
+    test('only the subscribers of a printing hear about its links', async () => {
+      const { linksReady, release } = deferredLinks();
+      // Bolt comes from the persistent cache, Delver from the network
+      const store = memoryStore({ 'm10/146': { front: { normal: 'cached-bolt' }, fetchedAt: Date.now() } });
+      const fetchImpl = vi.fn(async (url: RequestInfo | URL) => {
+        if (String(url).endsWith('scryfall-links.json')) {
+          await linksReady;
+          return jsonResponse(LINKS);
+        }
+        return jsonResponse({ data: [{ set: 'isd', collector_number: '51', image_uris: { normal: 'delver' } }] });
+      }) as unknown as typeof fetch;
+      const resolver = createResolver(fetchImpl, store);
+      const bolt = vi.fn();
+      const delver = vi.fn();
+      const token = vi.fn();
+      const any = vi.fn();
+      resolver.subscribeCard(BOLT, bolt);
+      resolver.subscribeCard(DELVER, delver);
+      resolver.subscribeCard(GOLEM, token);
+      resolver.subscribe(any);
+
+      resolver.resolve(BOLT);
+      resolver.resolve(DELVER);
+      await vi.waitFor(() => expect(resolver.resolve(BOLT)).toBe('cached-bolt'));
+      await vi.waitFor(() => expect(resolver.resolve(DELVER)).toBe('delver'));
+      expect(bolt).toHaveBeenCalledTimes(1);
+      expect(delver).toHaveBeenCalledTimes(1);
+      expect(token).not.toHaveBeenCalled();
+      expect(any).toHaveBeenCalledTimes(2);
+
+      // the exported link lists can change any card (exceptions, tokens): everyone hears about them once
+      release();
+      await vi.waitFor(() => expect(token).toHaveBeenCalledTimes(1));
+      expect(bolt).toHaveBeenCalledTimes(2);
+      expect(delver).toHaveBeenCalledTimes(2);
+      expect(any).toHaveBeenCalledTimes(3);
+    });
+
+    test('a listener subscribed to several channels is called once per change', async () => {
+      const fetchImpl = vi.fn(async () => jsonResponse(LINKS)) as unknown as typeof fetch;
+      const resolver = createResolver(fetchImpl);
+      const listener = vi.fn();
+      resolver.subscribeKey('m10/146', listener);
+      resolver.subscribeKey(null, listener);
+      resolver.subscribe(listener);
+      resolver.resolve(GOLEM);
+      await vi.waitFor(() => expect(listener).toHaveBeenCalled());
+      await Promise.resolve();
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    test('unsubscribing stops notifications and failed lookups still notify their printing', async () => {
+      const fetchImpl = vi.fn(async (url: RequestInfo | URL) => {
+        if (String(url).endsWith('scryfall-links.json')) return jsonResponse(LINKS);
+        throw new Error('offline');
+      }) as unknown as typeof fetch;
+      const resolver = createResolver(fetchImpl);
+      const gone = vi.fn();
+      const delver = vi.fn();
+      const unsubscribe = resolver.subscribeCard(BOLT, gone);
+      unsubscribe();
+      resolver.subscribeCard(DELVER, delver);
+      resolver.resolve(BOLT);
+      resolver.resolve(DELVER);
+      await vi.waitFor(() => expect(resolver.resolve(DELVER)).toContain('cards/named'));
+      expect(gone).not.toHaveBeenCalled();
+      expect(delver).toHaveBeenCalled();
+    });
+  });
 });

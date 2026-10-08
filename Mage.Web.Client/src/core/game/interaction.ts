@@ -1,4 +1,6 @@
 import type { GameView, ManaType, PlayerAction } from '../../protocol/generated/views';
+import { assignmentAnswer, lethalFirst, parseDamageAssignment } from './damageAssignment';
+import { poolId, poolTypes } from './payment';
 import type { Prompt } from './prompt';
 
 /** An answer to the server, independent of how the UI produced it. */
@@ -22,6 +24,8 @@ export type InteractionMode =
   /** choose among cards shown in a picker (library search, cards outside the battlefield) */
   | 'pickCards'
   | 'payMana'
+  /** divide an attacker's combat damage among its blockers, on the blockers themselves */
+  | 'assignDamage'
   /** answered with buttons in the prompt bar */
   | 'question'
   /** needs a dedicated panel: modes, piles, numbers, choice lists */
@@ -232,11 +236,14 @@ export function deriveInteraction(view: GameView | null | undefined, prompt: Pro
       if (prompt.specialLabel) {
         secondary.push({ label: prompt.specialLabel, command: { type: 'string', value: 'special' }, tone: 'secondary' });
       }
+      // floating mana pays too: each kind in the pool is clicked like a mana source
+      const clickable = clickMap(playableIds(view));
+      for (const manaType of poolTypes(myPlayer(view))) clickable.set(poolId(manaType), { type: 'manaType', manaType });
       return {
         mode: 'payMana',
         prompt,
         headline: prompt.text,
-        clickable: clickMap(playableIds(view)),
+        clickable,
         selected: EMPTY_SET,
         // X costs finish with any boolean; for normal costs any boolean cancels the spell
         mainButton: prompt.isX
@@ -249,19 +256,37 @@ export function deriveInteraction(view: GameView | null | undefined, prompt: Pro
       };
     }
 
+    case 'multiAmount': {
+      const assignment = parseDamageAssignment(prompt, view);
+      if (!assignment) return panel(prompt);
+      return {
+        mode: 'assignDamage',
+        prompt,
+        headline: assignment.sourceName ? `Assign ${assignment.sourceName}'s combat damage` : 'Assign combat damage',
+        clickable: EMPTY_MAP,
+        selected: EMPTY_SET,
+        // the board edits the split; this answer is the lethal-first default it starts from
+        mainButton: { label: 'Assign damage', command: { type: 'string', value: assignmentAnswer(lethalFirst(assignment)) }, tone: 'primary', shortcut: 'Space' },
+        secondaryButtons: [],
+      };
+    }
+
     case 'chooseAbility':
     case 'choosePile':
     case 'chooseChoice':
     case 'amount':
-    case 'multiAmount':
-      return {
-        mode: 'panel',
-        prompt,
-        headline: prompt.text || 'Make a choice',
-        clickable: EMPTY_MAP,
-        selected: EMPTY_SET,
-        mainButton: null,
-        secondaryButtons: [],
-      };
+      return panel(prompt);
   }
+}
+
+function panel(prompt: Prompt): Interaction {
+  return {
+    mode: 'panel',
+    prompt,
+    headline: prompt.text || 'Make a choice',
+    clickable: EMPTY_MAP,
+    selected: EMPTY_SET,
+    mainButton: null,
+    secondaryButtons: [],
+  };
 }

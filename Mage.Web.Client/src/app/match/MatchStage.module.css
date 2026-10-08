@@ -199,3 +199,8 @@
 .menuItem[data-highlighted] {
   background: rgb(233 228 214 / 0.1);
 }
+
+.menuItem[data-disabled] {
+  opacity: 0.45;
+  cursor: default;
+}

@@ -49,7 +49,8 @@ public class WebClientApiContractTest {
             "disconnectSession", "playerLogout", "sessionGetRestoreToken", // session manager
             "getExpansionSets", "getBasicLandSets", "searchCards", "lookupCards", "deckValidate", // card database services
             "deckImportFromUrl", "deckImportSources", // deck website import service
-            "testEndGame", "testConcedeMatch" // test mode helpers on table manager
+            "testEndGame", "testConcedeMatch", // test mode helpers on table manager
+            "gameResync" // the bridge resends its own copy of the open question
     ));
 
     static {

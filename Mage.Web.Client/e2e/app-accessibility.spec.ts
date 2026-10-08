@@ -4,7 +4,8 @@ import { expect, test, type Page } from '@playwright/test';
 /**
  * Accessibility of the new app's screens against a running local server: axe finds no serious or critical
  * violations on sign-in, Play, Decks, the deck builder, Events, hosting, the match stage and the result screen.
- * Run with MAGE_E2E_REQUIRE_SERVER=1 and the server on its default port.
+ * Run with MAGE_E2E_REQUIRE_SERVER=1 and the server on its default port. The sign-in screen is also checked
+ * without a server, which is what CI runs.
  */
 
 const requireServer = process.env.MAGE_E2E_REQUIRE_SERVER === '1';
@@ -19,9 +20,19 @@ async function serious(page: Page, include?: string) {
 }
 
 test.describe('app accessibility', () => {
-  test.skip(!requireServer, 'needs the local server (MAGE_E2E_REQUIRE_SERVER=1)');
+  test('the sign-in screen has no serious violations (no server needed)', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('heading', { name: 'Take a seat' }).waitFor();
+    expect(await serious(page)).toEqual([]);
+    // the server address field and an error message
+    await page.getByRole('button', { name: /Can't reach|Online|Checking/ }).click();
+    await page.getByLabel('Server address').fill('ws://127.0.0.1:9');
+    await page.getByLabel('Player name').fill('no spaces');
+    expect(await serious(page), 'with the server field and a name error').toEqual([]);
+  });
 
   test('screens have no serious violations', async ({ page }) => {
+    test.skip(!requireServer, 'needs the local server (MAGE_E2E_REQUIRE_SERVER=1)');
     test.setTimeout(180_000);
     await page.goto('/login');
     expect(await serious(page)).toEqual([]);

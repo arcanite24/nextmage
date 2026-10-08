@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Command, Interaction } from '../../core/game/interaction';
 import type { Prompt } from '../../core/game/prompt';
 import { stripMarkup } from '../../core/game/prompt';
@@ -46,11 +46,13 @@ export function MulliganOverlay({ hand, interaction, sleeve, onCommand }: {
  * Choose among cards: off-board cards (library search, revealed cards) or the hand during a London mulligan.
  * Each click toggles a card; the server answers with the updated choice.
  */
-export function CardPicker({ title, cards, interaction, sleeve, onCommand }: {
+export function CardPicker({ title, cards, interaction, sleeve, footer, onCommand }: {
   title: string;
   cards: CardView[];
   interaction: Interaction;
   sleeve: string;
+  /** more ways to answer, beside the main button */
+  footer?: ReactNode;
   onCommand(command: Command): void;
 }) {
   const [hidden, setHidden] = useState(false);
@@ -93,9 +95,10 @@ export function CardPicker({ title, cards, interaction, sleeve, onCommand }: {
             );
           })}
         </div>
-        {main && (
+        {(main || footer) && (
           <footer className={styles.panelFoot}>
-            <Button variant="decision" size="lg" onClick={() => onCommand(main.command)}>{main.label}</Button>
+            {footer}
+            {main && <Button variant="decision" size="lg" onClick={() => onCommand(main.command)}>{main.label}</Button>}
           </footer>
         )}
       </div>

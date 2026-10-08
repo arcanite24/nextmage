@@ -1,6 +1,7 @@
-import { useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
+import { useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import type { CardView } from '../../protocol/generated/views';
 import { CardFace } from '../ui/CardFace';
+import { zoneKeys } from './boardModel';
 import { useFlip } from './flip';
 import { useMatchUi } from './matchUi';
 import { useStage } from './stageContext';
@@ -29,6 +30,7 @@ export function Hand({ cards, choosing = false, clickable, selected, sleeve, onP
   const spread = Math.min(CARD_WIDTH * 0.78, 1000 / Math.max(1, count));
   const arc = Math.min(4, 26 / Math.max(1, count));
   const width = spread * (count - 1) + CARD_WIDTH;
+  const keys = useMemo(() => zoneKeys(cards), [cards]);
 
   return (
     <div className={styles.hand} style={{ width }} role="list" aria-label={`Your hand, ${count} cards`}>
@@ -36,7 +38,7 @@ export function Hand({ cards, choosing = false, clickable, selected, sleeve, onP
         const offset = index - (count - 1) / 2;
         return (
           <HandCard
-            key={card.id}
+            key={keys[index]}
             card={card}
             index={index}
             left={index * spread}

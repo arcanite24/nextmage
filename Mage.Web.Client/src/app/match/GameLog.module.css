@@ -65,6 +65,138 @@
   margin-top: 6px;
 }
 
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mute {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ink-faint);
+  color: var(--ink-soft);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.mute:hover {
+  color: var(--ink-strong);
+}
+
+.mute[aria-pressed='true'] {
+  background: rgb(233 228 214 / 0.1);
+  color: var(--ink-strong);
+}
+
+.line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.icon {
+  flex: none;
+  margin-top: 0.2em;
+  color: var(--ink-faint);
+}
+
+.icon_cast,
+.icon_ability,
+.icon_trigger {
+  color: var(--mana-u);
+}
+
+.icon_attack,
+.icon_damage,
+.icon_lifeLoss,
+.icon_destroy,
+.icon_lose {
+  color: var(--oxblood-ink);
+}
+
+.icon_lifeGain,
+.icon_land {
+  color: var(--sage);
+}
+
+.icon_win,
+.icon_turn {
+  color: var(--decision);
+}
+
+.icon_error {
+  color: var(--danger-text);
+}
+
+.body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.player {
+  color: var(--ink-strong);
+  font-weight: 600;
+}
+
+/* a card named in the log: hover shows it, click opens it */
+.card {
+  display: inline;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 4px;
+  background: rgb(233 228 214 / 0.07);
+  box-shadow: inset 0 -1.5px 0 var(--card-ink, var(--ink-faint));
+  color: var(--ink-strong);
+  font: inherit;
+  font-weight: 600;
+  cursor: zoom-in;
+}
+
+.card:hover,
+.card:focus-visible {
+  background: rgb(233 228 214 / 0.16);
+}
+
+.ink_w { --card-ink: var(--mana-w); }
+.ink_u { --card-ink: var(--mana-u); }
+.ink_b { --card-ink: var(--mana-b); }
+.ink_r { --card-ink: var(--mana-r); }
+.ink_g { --card-ink: var(--mana-g); }
+.ink_multi { --card-ink: var(--decision); }
+.ink_colorless { --card-ink: var(--mana-c); }
+
+/* "Turn 5 · You": a stitched rule across the log */
+.separator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 8px;
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+.lines li.separator {
+  margin-top: 14px;
+}
+
+.separator::before,
+.separator::after {
+  content: '';
+  flex: 1;
+  border-top: 1px dashed var(--ink-faint);
+}
+
+.separatorMine {
+  color: var(--decision);
+}
+
 .game {
   color: var(--ink-soft);
 }
