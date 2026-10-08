@@ -91,7 +91,7 @@ describe('combat damage assignment', () => {
     expect(lethalDamage({ toughness: '8', damage: 3 })).toBe(5);
     expect(lethalDamage({ toughness: '4', damage: 4 })).toBe(0);
     expect(lethalDamage({ toughness: '4' }, true)).toBe(1);
-    const deathtouch = permanent(ATTACKER, 'Typhoid Rats', '6', '1', { rules: ['Deathtouch'] });
+    const deathtouch = permanent(ATTACKER, 'Typhoid Rats', '6', '1', { rules: ['Deathtouch'], cardIcons: [{ cardIconType: 'ABILITY_DEATHTOUCH' }] });
     const assignment = parseDamageAssignment(prompt(), view(deathtouch))!;
     expect(assignment.recipients.map((recipient) => recipient.lethal)).toEqual([1, 1]);
   });
