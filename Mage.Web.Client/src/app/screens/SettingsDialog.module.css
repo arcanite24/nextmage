@@ -244,3 +244,52 @@
 .bookmarkletSteps li + li {
   margin-top: 4px;
 }
+
+.answers + .answers {
+  margin-top: var(--space-4);
+}
+
+.answerList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.answerList li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  background: rgb(233 228 214 / 0.04);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.answerList b {
+  flex: none;
+  color: var(--ink-strong);
+  font-weight: 600;
+}
+
+.volume {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.volume input {
+  width: 160px;
+  accent-color: var(--decision);
+}
+
+.volume span {
+  min-width: 3.5ch;
+  text-align: right;
+}

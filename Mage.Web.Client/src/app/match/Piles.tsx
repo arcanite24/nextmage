@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import type { CardView, PlayerView } from '../../protocol/generated/views';
 import { CardFace } from '../ui/CardFace';
+import { cardKey } from './boardModel';
 import { useFlip, useFlipOrigin } from './flip';
 import { useMatchUi } from './matchUi';
 import styles from './Piles.module.css';
@@ -44,15 +45,22 @@ export function Piles({ player, sleeve, isMe }: { player: PlayerView; sleeve: st
 
 function PileOfCards({ title, label, cards, sleeve, onOpen }: { title: string; label: string; cards: CardView[]; sleeve: string; onOpen(): void }) {
   const top = cards[cards.length - 1];
-  const ref = useRef<HTMLDivElement>(null);
-  useFlip(top ? (top.cardId ?? top.id) : undefined, ref);
   return (
     <button type="button" className={styles.pile} aria-label={`${title}, ${cards.length} cards`} onClick={onOpen} disabled={cards.length === 0}>
-      <div ref={ref} className={[styles.stack, cards.length === 0 ? styles.empty : ''].join(' ')} style={{ ['--depth' as string]: Math.min(4, cards.length) }}>
-        {top && <CardFace card={top} sleeve={sleeve} size="small" />}
-      </div>
+      {/* a new top card is a new element: it lands on the pile from wherever that card was */}
+      <PileTop key={top ? cardKey(top) : 'empty'} top={top} count={cards.length} sleeve={sleeve} />
       <span className={styles.count}>{cards.length}</span>
       <span className={styles.label}>{label}</span>
     </button>
+  );
+}
+
+function PileTop({ top, count, sleeve }: { top: CardView | undefined; count: number; sleeve: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFlip(top ? cardKey(top) : undefined, ref);
+  return (
+    <div ref={ref} className={[styles.stack, count === 0 ? styles.empty : ''].join(' ')} style={{ ['--depth' as string]: Math.min(4, count) }}>
+      {top && <CardFace card={top} sleeve={sleeve} size="small" />}
+    </div>
   );
 }

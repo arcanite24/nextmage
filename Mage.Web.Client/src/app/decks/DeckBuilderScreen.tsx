@@ -1,11 +1,10 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { ArrowLeftRight, Check, ChevronLeft, ClipboardCopy, ClipboardPaste, ListPlus, Minus, Plus, Replace, TriangleAlert } from 'lucide-react';
+import { ArrowLeftRight, Check, ChevronLeft, ClipboardPaste, ListPlus, Minus, Plus, Replace, TriangleAlert } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { CardView } from '../../protocol/generated/views';
 import { appendDeckCardLists } from '../../core/decks/merge';
 import { deckStorage } from '../../core/decks/DeckStorageService';
-import { DeckSerializer } from '../../core/decks/DeckSerializer';
 import type { DeckCardLists } from '../../core/decks/types';
 import { useServerState } from '../queries';
 import { STARTER_PREFIX, useDecks } from '../stores/decks';
@@ -16,6 +15,7 @@ import { CardFace } from '../ui/CardFace';
 import { ManaCost } from '../ui/ManaCost';
 import { useCardInfo, useCardInfoStore } from './cardInfo';
 import { Collection } from './Collection';
+import { ExportMenu } from './ExportMenu';
 import { ManaCurve } from './ManaCurve';
 import { SourceLine } from './import/SourceLine';
 import { useImportPaste } from './import/useImportShortcuts';
@@ -309,18 +309,7 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
-        <Button
-          variant="print"
-          size="sm"
-          icon={<ClipboardCopy size={16} />}
-          onClick={() => {
-            void navigator.clipboard.writeText(DeckSerializer.exportDeck(deck))
-              .then(() => notify('Deck list copied', 'Paste it anywhere that reads deck lists.'))
-              .catch(() => notify("Couldn't copy", 'The browser blocked the clipboard.', 'error'));
-          }}
-        >
-          Copy list
-        </Button>
+        <ExportMenu getDeck={() => deck} side="top" />
         <Button variant="decision" onClick={onPlay} disabled={mainCount === 0}>Play this deck</Button>
       </footer>
     </aside>

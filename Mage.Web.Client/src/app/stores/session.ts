@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { api, DEFAULT_SERVER_URL, rpc } from '../connection';
 import { ConnectionError, RpcError, type ConnectionStatus } from '../../core/rpc/RpcClient';
+import { forgetOpenGames } from './openGames';
 import { readJson, writeJson } from './persist';
 
 export type SessionPhase = 'signedOut' | 'signingIn' | 'signedIn';
@@ -28,6 +29,8 @@ export interface SessionState {
   serverUrl: string;
   userName: string;
   roomId: string | null;
+  /** counts logins, including the silent one after a dropped connection: the server has just handed our games back */
+  loginCount: number;
   error: string | null;
   signIn(serverUrl: string, userName: string, password: string): Promise<boolean>;
   signOut(keepGames?: boolean): Promise<void>;
@@ -68,6 +71,7 @@ export const useSession = create<SessionState>((set, get) => ({
   serverUrl: remembered?.serverUrl ?? DEFAULT_SERVER_URL,
   userName: remembered?.userName ?? '',
   roomId: null,
+  loginCount: 0,
   error: null,
 
   async signIn(serverUrl, userName, password) {
@@ -85,7 +89,7 @@ export const useSession = create<SessionState>((set, get) => ({
       await rememberRestoreToken(serverUrl, userName);
       const roomId = await api.serverGetMainRoomId();
       writeJson<RememberedLogin>(LOGIN_KEY, { serverUrl, userName, passwordless: !password });
-      set({ phase: 'signedIn', roomId });
+      set((state) => ({ phase: 'signedIn', roomId, loginCount: state.loginCount + 1 }));
       return true;
     } catch (error) {
       set({ phase: 'signedOut', error: describeError(error) });
@@ -108,8 +112,11 @@ export const useSession = create<SessionState>((set, get) => ({
       // leaving anyway
     }
     sessionPassword = '';
-    // leaving for good gives the tables up, so the token is of no use any more
-    if (!keepGames) writeJson<RememberedRestore | null>(RESTORE_KEY, null);
+    // leaving for good gives the tables up, so the token (and the games to rejoin) are of no use any more
+    if (!keepGames) {
+      writeJson<RememberedRestore | null>(RESTORE_KEY, null);
+      forgetOpenGames(get().serverUrl, get().userName);
+    }
     writeJson<RememberedLogin>(LOGIN_KEY, { serverUrl: get().serverUrl, userName: get().userName, passwordless: false });
     rpc.disconnect();
     set({ phase: 'signedOut', roomId: null });
@@ -130,6 +137,6 @@ rpc.onStatus((connection) => {
   api.connectUser(state.userName, sessionPassword, restoreToken(state.serverUrl, state.userName))
     .then(() => rememberRestoreToken(state.serverUrl, state.userName))
     .then(() => api.serverGetMainRoomId())
-    .then((roomId) => useSession.setState({ roomId }))
+    .then((roomId) => useSession.setState((current) => ({ roomId, loginCount: current.loginCount + 1 })))
     .catch((error) => useSession.setState({ phase: 'signedOut', error: describeError(error) }));
 });

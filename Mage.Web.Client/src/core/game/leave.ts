@@ -1,5 +1,6 @@
 import type { GameEndView } from '../../protocol/generated/views';
 import type { GameSessionMode } from './gameSession';
+import { matchProgress } from './matchProgress';
 
 /** What the server must hear when the player closes a game, so it stops treating them as present. */
 export type LeaveRequest =
@@ -24,7 +25,8 @@ export interface LeaveContext {
 /** True once one side has won enough games: the table is finished and nothing is left to quit. */
 export function matchIsOver(endInfo: GameEndView | null): boolean {
   if (!endInfo?.winsNeeded) return false;
-  return (endInfo.wins ?? 0) >= endInfo.winsNeeded || (endInfo.loses ?? 0) >= endInfo.winsNeeded;
+  // a single game is over with the game
+  return matchProgress(endInfo)?.over ?? true;
 }
 
 /**

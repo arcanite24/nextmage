@@ -6,7 +6,7 @@ import type { CardView, GameView, PermanentView, PlayerView } from '../../protoc
  */
 
 export interface PermanentGroup {
-  /** stable key: the first permanent's id */
+  /** stable key: the first permanent's physical card (see cardKey) */
   key: string;
   /** the permanent drawn on top; the others peek out behind it */
   lead: PermanentView;
@@ -73,7 +73,7 @@ function groupRow(permanents: PermanentView[], attachmentsByHost: Map<string, Pe
       continue;
     }
     const group: PermanentGroup = {
-      key: permanent.id!,
+      key: cardKey(permanent),
       lead: permanent,
       members: [permanent],
       attachments: attachmentsByHost.get(permanent.id!) ?? [],
@@ -132,6 +132,20 @@ export function buildBoard(view: GameView | null | undefined, myPlayerId: string
 /** The physical card behind a view: stable from hand to stack to battlefield to graveyard. */
 export function cardKey(card: Pick<CardView, 'id' | 'cardId'>): string {
   return card.cardId ?? card.id ?? '';
+}
+
+/**
+ * React keys for a zone's cards: the physical card where it is unique, so an element keeps its identity (and its
+ * flight) when the server gives the card a new object id; the object id for copies that share a card.
+ */
+export function zoneKeys(cards: readonly Pick<CardView, 'id' | 'cardId'>[]): string[] {
+  const used = new Set<string>();
+  return cards.map((card) => {
+    const physical = cardKey(card);
+    const key = used.has(physical) ? `${physical}:${card.id ?? ''}` : physical;
+    used.add(key);
+    return key;
+  });
 }
 
 /** Offset between members of a stack, as a share of card width: wider once some are tapped so they stay readable. */

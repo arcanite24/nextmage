@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../connection';
+import type { TurnCombatStops } from '../../core/game/autoPass';
+import { serverStops } from '../../core/game/stops';
 import type { UserData, UserSkipPrioritySteps } from '../../protocol/generated/views';
 import { readJson, writeJson } from './persist';
 import { useSession } from './session';
@@ -17,6 +19,8 @@ export interface PlaySettings {
   autoTargetLevel: 0 | 1 | 2;
   /** where the game stops to give you priority */
   stops: UserSkipPrioritySteps;
+  /** combat steps where the client doesn't pass for you once creatures attack (local only) */
+  combatStops: TurnCombatStops;
   /** card motion: placed, flown between zones */
   animations: boolean;
   /** opponents may ask to see your hand */
@@ -29,10 +33,12 @@ export interface PlaySettings {
   abilitiesOnTheirTurn: boolean;
   /** don't take priority back after casting a spell or activating an ability: it resolves unless the opponent responds */
   passAfterCasting: boolean;
-  /** game sounds (synthesized, local only) */
+  /** game sounds (synthesized, local only); M toggles it during a game */
   sound: boolean;
-  /** 0 to 1 */
+  /** master volume, 0 to 1 */
   volume: number;
+  /** only your turn, decisions, the clock and the result make a sound */
+  importantCuesOnly: boolean;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -61,6 +67,7 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   passAfterCasting: true,
   sound: true,
   volume: 0.6,
+  importantCuesOnly: false,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },
@@ -71,27 +78,37 @@ export const DEFAULT_SETTINGS: PlaySettings = {
     stopOnAllEndPhases: true,
     stopOnStackNewObjects: true,
   },
+  combatStops: {
+    yourTurn: { attackers: false, blockers: false },
+    opponentTurn: { attackers: false, blockers: false },
+  },
 };
 
 interface SettingsState {
   settings: PlaySettings;
+  /**
+   * Arena's full control, for this visit: the game stops at every step, nothing is passed for the player and priority
+   * comes back after each spell. Not saved, like on Arena.
+   */
+  fullControl: boolean;
+  setFullControl(on: boolean): void;
   update(patch: Partial<PlaySettings>): void;
   syncToServer(): Promise<void>;
 }
 
 /** The complete preference object the server keeps per user (every field is required server side). */
-export function toUserData(settings: PlaySettings): UserData {
+export function toUserData(settings: PlaySettings, fullControl = false): UserData {
   return {
     groupId: 0,
     avatarId: 51,
     allowRequestShowHandCards: settings.allowHandRequests,
-    userSkipPrioritySteps: settings.stops,
+    userSkipPrioritySteps: serverStops(settings.stops, fullControl),
     flagName: 'world.png',
     askMoveToGraveOrder: false,
     manaPoolAutomatic: settings.autoPayMana,
     manaPoolAutomaticRestricted: settings.autoPayRestricted,
-    passPriorityCast: settings.passAfterCasting,
-    passPriorityActivation: settings.passAfterCasting,
+    passPriorityCast: settings.passAfterCasting && !fullControl,
+    passPriorityActivation: settings.passAfterCasting && !fullControl,
     autoOrderTrigger: settings.autoOrderTriggers,
     autoTargetLevel: settings.autoTargetLevel,
     useSameSettingsForReplacementEffects: true,
@@ -103,6 +120,13 @@ export function toUserData(settings: PlaySettings): UserData {
 
 export const useSettings = create<SettingsState>((set, get) => ({
   settings: { ...DEFAULT_SETTINGS, ...readJson<Partial<PlaySettings>>(SETTINGS_KEY, {}) },
+  fullControl: false,
+
+  setFullControl(on) {
+    if (get().fullControl === on) return;
+    set({ fullControl: on });
+    void get().syncToServer();
+  },
 
   update(patch) {
     const settings = { ...get().settings, ...patch };
@@ -113,7 +137,7 @@ export const useSettings = create<SettingsState>((set, get) => ({
 
   async syncToServer() {
     if (useSession.getState().phase !== 'signedIn') return;
-    await api.connectSetUserData(null, toUserData(get().settings), 'web', '').catch(() => undefined);
+    await api.connectSetUserData(null, toUserData(get().settings, get().fullControl), 'web', '').catch(() => undefined);
   },
 }));
 

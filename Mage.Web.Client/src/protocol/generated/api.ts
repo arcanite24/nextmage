@@ -115,6 +115,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('chatFindByRoom', roomId),
     gameJoin: (gameId: UUID) =>
       rpc.call('gameJoin', gameId, SESSION),
+    gameResync: (gameId: UUID) =>
+      rpc.call('gameResync', gameId, SESSION),
     matchQuit: (gameId: UUID) =>
       rpc.call('matchQuit', gameId, SESSION),
     gameWatchStart: (gameId: UUID) =>

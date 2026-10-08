@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameView, PermanentView, PlayerView } from '../../protocol/generated/views';
-import { buildBoard, buildPlayerBoard, fitCardWidth } from './boardModel';
+import { buildBoard, buildPlayerBoard, cardKey, fitCardWidth, zoneKeys } from './boardModel';
 
 function permanent(id: string, overrides: Partial<PermanentView> = {}): PermanentView {
   return { id, name: 'Forest', expansionSetCode: 'M21', cardTypes: ['LAND'], ...overrides };
@@ -69,5 +69,18 @@ describe('fitCardWidth', () => {
     expect(fitCardWidth(groups, 1000, 120, 50)).toBe(120);
     expect(fitCardWidth(groups, 300, 120, 50)).toBeLessThan(120);
     expect(fitCardWidth(groups, 10, 120, 50)).toBe(50);
+  });
+});
+
+describe('card identity across zones', () => {
+  it('keys a card by its physical card, so it stays the same element when its object id changes', () => {
+    expect(cardKey({ id: 'spell-1', cardId: 'card-1' })).toBe('card-1');
+    expect(cardKey({ id: 'ability-1' })).toBe('ability-1');
+    const board = buildPlayerBoard(player('me', [permanent('perm-1', { cardId: 'card-1', cardTypes: ['CREATURE'] })]), true);
+    expect(board.front[0].key).toBe('card-1');
+  });
+
+  it('keeps keys unique when copies share a card', () => {
+    expect(zoneKeys([{ id: 's1', cardId: 'c1' }, { id: 's2', cardId: 'c1' }, { id: 's3' }])).toEqual(['c1', 'c1:s2', 's3']);
   });
 });

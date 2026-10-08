@@ -170,6 +170,25 @@
   gap: var(--space-2);
 }
 
+/* export, duplicate, rename: the deck's housekeeping, quieter than editing it */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.renameForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.renameButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 /* the destructive action stands apart from the rest */
 .remove {
   margin-top: var(--space-4);
