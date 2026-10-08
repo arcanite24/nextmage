@@ -19,7 +19,7 @@ The browser client for this XMage fork: sign in, build decks, play the AI or oth
 | Styling | CSS Modules on the Playmat tokens in `src/app/styles/tokens.css` |
 | Sound | Web Audio (`src/app/match/sound.ts`) |
 | Card images | Scryfall, cached in IndexedDB (`src/core/images`) |
-| Tests | Vitest (unit), an accessibility script, Playwright (e2e and visual, not in CI) |
+| Tests | Vitest (unit in node, components in happy-dom with Testing Library), an accessibility script, Playwright (browser-only e2e and axe in CI; live-server e2e opt-in; visual baselines local) |
 
 ## Layout
 
@@ -101,13 +101,25 @@ Other scripts:
 
 ```bash
 npm run test:watch          # Vitest in watch mode
-npm run test:e2e            # Playwright specs (browser-only, mocked server)
-npm run test:e2e:local      # Playwright against a running local server (MAGE_E2E_SERVER_URL, MAGE_E2E_USERNAME, MAGE_E2E_PASSWORD)
+npm run test:e2e            # Playwright specs against the dev server; specs that need a game server skip
+npm run test:e2e:ci         # what CI runs: the same specs against `vite preview` (run `npm run build` first)
+npm run test:e2e:app        # the new app's live specs (e2e/app-*.spec.ts) against a running local server
+npm run test:e2e:local      # legacy-client specs against a running local server (MAGE_E2E_SERVER_URL, MAGE_E2E_USERNAME, MAGE_E2E_PASSWORD)
+npm run size                # bundle-size budget of the last build (also in CI)
 npm run test:visual         # Playwright visual baselines (macOS only, predate the rebuild, not in CI)
 npm run preview             # serve the production bundle
 ```
 
 Playwright's bundled browsers may not match the installed `@playwright/test`; set `PLAYWRIGHT_CHANNEL=chrome` to use the local Chrome.
+
+Unit tests: `*.test.ts` runs in node; `*.test.tsx` runs in happy-dom with `@testing-library/react` (setup in `src/test/setupDom.ts`). A `.ts` test that needs `localStorage` or the DOM starts with `// @vitest-environment happy-dom`. Stores that wire themselves to the connection at import are tested against `src/test/fakeConnection.ts`.
+
+End-to-end: CI runs every spec that needs no game server (sign-in, the axe check of the sign-in screen, the visual-harness workflows) against `vite preview`. Specs that play on a real server skip unless `MAGE_E2E_REQUIRE_SERVER=1`; they stay opt-in because CI does not build or start the Java server. To run them, start the server (`npm run dev:server`, or `npm run dev:all` for both) and then:
+
+```bash
+PLAYWRIGHT_CHANNEL=chrome npm run test:e2e:app                                    # new app: AI match, decks, tables, full axe pass
+PLAYWRIGHT_CHANNEL=chrome MAGE_WEB_E2E_BASE_URL=http://localhost:5173 npm run test:e2e:app  # against a dev server you already run
+```
 
 ## Conventions
 
