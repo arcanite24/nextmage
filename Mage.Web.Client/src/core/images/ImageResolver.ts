@@ -62,6 +62,8 @@ export class ImageResolver {
   private readonly inFlight = new Set<string>();
   private readonly queue: { key: string; set: string; number: string }[] = [];
   private readonly listeners = new Set<() => void>();
+  private readonly keyListeners = new Map<string, Set<() => void>>();
+  private readonly linkListeners = new Set<() => void>();
   private links: ScryfallLinks | null = null;
   private linksPromise: Promise<void> | null = null;
   private batchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -86,9 +88,39 @@ export class ImageResolver {
     return this.version;
   }
 
+  /** Called after every change (any printing). Prefer {@link subscribeCard} for a single card. */
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  /**
+   * Called only when this card's picture may have changed: its printing's links arrived (or failed), or the
+   * exported link lists loaded. Other cards resolving do not call it, so a board of cards does not re-render
+   * every card for every picture.
+   */
+  subscribeCard(card: CardImageRef | null | undefined, listener: () => void): () => void {
+    return this.subscribeKey(card && !card.isToken ? printingKey(card) : null, listener);
+  }
+
+  /** Per-printing subscription (`set/number`); a null key only hears about the exported link lists loading. */
+  subscribeKey(key: string | null, listener: () => void): () => void {
+    if (key === null) {
+      this.linkListeners.add(listener);
+      return () => this.linkListeners.delete(listener);
+    }
+    let set = this.keyListeners.get(key);
+    if (!set) {
+      set = new Set();
+      this.keyListeners.set(key, set);
+    }
+    set.add(listener);
+    return () => {
+      const current = this.keyListeners.get(key);
+      if (!current) return;
+      current.delete(listener);
+      if (current.size === 0) this.keyListeners.delete(key);
+    };
   }
 
   /**
@@ -138,11 +170,11 @@ export class ImageResolver {
       .then((response) => (response.ok ? response.json() : null))
       .then((links: ScryfallLinks | null) => {
         this.links = links ?? { cards: {}, tokens: {} };
-        this.notify();
+        this.notify(null);
       })
       .catch(() => {
         this.links = { cards: {}, tokens: {} };
-        this.notify();
+        this.notify(null);
       });
   }
 
@@ -162,7 +194,7 @@ export class ImageResolver {
       if (stored && !this.isStale(stored)) {
         this.memory.set(key, stored);
         this.inFlight.delete(key);
-        this.notify();
+        this.notify([key]);
       } else {
         enqueue();
       }
@@ -241,7 +273,7 @@ export class ImageResolver {
       this.inFlight.delete(key);
     }
     this.options.store?.setMany(entries).catch(() => undefined);
-    this.notify();
+    this.notify(batch.map((item) => item.key));
   }
 
   /** Network trouble: fall back to direct links for this session, retry on the next visit. */
@@ -250,11 +282,24 @@ export class ImageResolver {
       this.memory.set(item.key, { notFound: true, fetchedAt: this.options.now() - this.options.maxAgeMs + 60_000 });
       this.inFlight.delete(item.key);
     }
-    this.notify();
+    this.notify(batch.map((item) => item.key));
   }
 
-  private notify(): void {
+  /** keys = the printings that changed; null = the link lists loaded, which can change any card. */
+  private notify(keys: readonly string[] | null): void {
     this.version++;
-    this.listeners.forEach((listener) => listener());
+    const called = new Set<() => void>();
+    const call = (listener: () => void) => {
+      if (called.has(listener)) return;
+      called.add(listener);
+      listener();
+    };
+    if (keys === null) {
+      [...this.linkListeners].forEach(call);
+      for (const set of [...this.keyListeners.values()]) [...set].forEach(call);
+    } else {
+      for (const key of keys) [...(this.keyListeners.get(key) ?? [])].forEach(call);
+    }
+    [...this.listeners].forEach(call);
   }
 }
