@@ -105,8 +105,11 @@ describe.skipIf(!live)('headless game against the AI', () => {
         if (process.env.MAGE_BOT_TRACE) console.log(`[bot] t${state.view?.turn} ${state.view?.step} ${state.interaction.mode} "${state.interaction.headline}" -> ${JSON.stringify(command)} clickable=${state.interaction.clickable.size}`);
         busy = true;
         void session.respond(command).catch(() => undefined).finally(() => {
-          busy = false;
-          queueMicrotask(step);
+          // a human never answers 40 prompts a second; stay well under the bridge's request rate limit
+          setTimeout(() => {
+            busy = false;
+            step();
+          }, 50);
         });
       };
       session.store.subscribe(step);
@@ -123,5 +126,5 @@ describe.skipIf(!live)('headless game against the AI', () => {
     session.dispose();
     await api.disconnectSession(false).catch(() => undefined);
     rpc.disconnect();
-  }, 300_000);
+  }, Number(process.env.MAGE_BOT_TIMEOUT_MS ?? 240_000) + 60_000);
 });

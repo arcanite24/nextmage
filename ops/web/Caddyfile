@@ -4,7 +4,12 @@
 
 	# the game connection: WebSocket upgrade to the server's bridge port
 	handle /ws* {
-		reverse_proxy xmage:17172
+		reverse_proxy xmage:17172 {
+			# The server limits and logs by client address. It trusts these headers only from the
+			# proxy network (XMAGE_TRUSTED_PROXIES). Caddy sets X-Forwarded-For itself and, with no
+			# trusted_proxies of its own, replaces whatever the client sent; X-Real-IP is added here.
+			header_up X-Real-IP {remote_host}
+		}
 	}
 
 	handle {

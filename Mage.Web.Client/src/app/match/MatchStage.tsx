@@ -434,8 +434,10 @@ function HiddenHand({ playerId, count, sleeve, left }: { playerId: string; count
 }
 
 function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onConcede(): void; onLeave(): void }) {
-  const [confirming, setConfirming] = useState(false);
+  // conceding gives up this game; leaving a game in progress gives up the whole match
+  const [confirming, setConfirming] = useState<'concede' | 'leave' | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const leaving = confirming === 'leave';
   return (
     <div className={styles.menu}>
       <DropdownMenu.Root>
@@ -446,9 +448,9 @@ function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onC
           <DropdownMenu.Content className={styles.menuContent} align="end" sideOffset={8}>
             <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>Settings</DropdownMenu.Item>
             {canConcede && (
-              <DropdownMenu.Item className={styles.menuItem} onSelect={() => setConfirming(true)}>Concede</DropdownMenu.Item>
+              <DropdownMenu.Item className={styles.menuItem} onSelect={() => setConfirming('concede')}>Concede</DropdownMenu.Item>
             )}
-            <DropdownMenu.Item className={styles.menuItem} onSelect={() => (canConcede ? setConfirming(true) : onLeave())}>
+            <DropdownMenu.Item className={styles.menuItem} onSelect={() => (canConcede ? setConfirming('leave') : onLeave())}>
               Leave the game
             </DropdownMenu.Item>
           </DropdownMenu.Content>
@@ -456,22 +458,25 @@ function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onC
       </DropdownMenu.Root>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <Dialog
-        open={confirming}
-        onOpenChange={setConfirming}
-        title="Concede this game?"
-        description="Your opponent wins this game. You can't undo it."
+        open={confirming !== null}
+        onOpenChange={(open) => !open && setConfirming(null)}
+        title={leaving ? 'Leave this match?' : 'Concede this game?'}
+        description={leaving
+          ? 'You concede this game and the rest of the match. You can\'t undo it.'
+          : 'Your opponent wins this game. You can\'t undo it.'}
         width="sm"
         footer={(
           <>
-            <Button variant="quiet" onClick={() => setConfirming(false)}>Keep playing</Button>
+            <Button variant="quiet" onClick={() => setConfirming(null)}>Keep playing</Button>
             <Button
               variant="danger"
               onClick={() => {
-                setConfirming(false);
-                onConcede();
+                setConfirming(null);
+                if (leaving) onLeave();
+                else onConcede();
               }}
             >
-              Concede
+              {leaving ? 'Leave match' : 'Concede'}
             </Button>
           </>
         )}

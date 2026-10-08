@@ -2,8 +2,8 @@ import React from 'react';
 import { useActivityStore, useChatStore, useSessionStore, useSettingsStore } from '../../stores';
 import type { ClientActivity, DraftPayload, TournamentMatchPayload, TournamentPayload } from '../../stores/activityStore';
 import { getActivityKindLabel, getActivityDestination } from '../../services/ActivityShellService';
-import { DeckSerializer } from '../../services/DeckSerializer';
-import { deckStorage } from '../../services/DeckStorageService';
+import { DeckSerializer } from '../../core/decks/DeckSerializer';
+import { deckStorage } from '../../core/decks/DeckStorageService';
 import {
     buildLimitedDeckAutosaveDeck,
     shouldAutosaveLimitedDeck,

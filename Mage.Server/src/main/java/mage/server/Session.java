@@ -323,7 +323,9 @@ public class Session {
                 boolean canDisconnectAnonDueSameHost = !managerFactory.configSettings().isAuthenticationActivated()
                         && ANON_IDENTIFY_BY_HOST
                         && Objects.equals(anotherUser.getHost(), host);
-                boolean canDisconnectAnyDueSessionRestore = Objects.equals(restoreSessionId, anotherUser.getRestoreSessionId());
+                // an empty restore id must never match (a user that never finished connecting has an empty one)
+                boolean canDisconnectAnyDueSessionRestore = restoreSessionId != null && !restoreSessionId.isEmpty()
+                        && Objects.equals(restoreSessionId, anotherUser.getRestoreSessionId());
                 if (canDisconnectAuthDueAnotherInstance
                         || canDisconnectAnonDueSameHost
                         || canDisconnectAnyDueSessionRestore) {

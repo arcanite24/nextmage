@@ -3,9 +3,9 @@ import { ArrowLeftRight, Check, ChevronLeft, ClipboardCopy, Minus, Plus, Triangl
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { CardView } from '../../protocol/generated/views';
-import { deckStorage } from '../../services/DeckStorageService';
-import { DeckSerializer } from '../../services/DeckSerializer';
-import type { DeckCardLists } from '../../types/models';
+import { deckStorage } from '../../core/decks/DeckStorageService';
+import { DeckSerializer } from '../../core/decks/DeckSerializer';
+import type { DeckCardLists } from '../../core/decks/types';
 import { api } from '../connection';
 import { useServerState } from '../queries';
 import { STARTER_PREFIX, useDecks } from '../stores/decks';

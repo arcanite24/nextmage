@@ -53,6 +53,8 @@ export function chooseBotCommand(
       return interaction.secondaryButtons.find((button) => button.label === 'Cancel')?.command ?? null;
     }
     case 'question':
+      // the server's "mana will be lost, pass anyway?" confirms a pass the bot already chose; saying no loops forever
+      if (/pass anyway/i.test(interaction.headline)) return { type: 'boolean', value: true };
       return { type: 'boolean', value: false }; // decline optional extras like kicker
 
     case 'panel':
