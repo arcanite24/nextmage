@@ -9,6 +9,7 @@
     "dev:all": "bash scripts/dev-with-server.sh",
     "dev:kill": "bash scripts/kill-dev-servers.sh",
     "build": "tsc -b && vite build",
+    "size": "node scripts/check-bundle-size.mjs",
     "test": "vitest run && npm run test:a11y",
     "test:a11y": "node scripts/check-accessibility.mjs",
     "test:e2e": "playwright test e2e",
