@@ -95,6 +95,28 @@ Common match actions are sent through the game store:
 - `sendPlayerBoolean`, `sendPlayerInteger`, and `sendPlayerString` for prompt responses
 - `sendPlayerManaType` for paying mana from the pool
 
+## Bringing a deck
+
+Players bring decks they already have through one import sheet (`src/app/decks/import`), opened from the Decks
+shelf, Home, the deck builder's "From a list…" menu, or `/import`:
+
+- **A link** from Archidekt, TCGplayer, MTGTop8, Scryfall or ManaBox: the server reads the deck (`deckImportFromUrl`).
+- **A link** from Moxfield, MTGGoldfish, AetherHub, TappedOut or Deckstats: these sites block other apps, so the sheet opens the deck on its site, says where its export is, and finishes when the player pastes the list.
+- **A list** in Arena, MTGO, XMage `.dck`, MTGTop8 `.dec` or a site's text export, or a deck file dropped on the shelf.
+- **"Send to Playmat"**, a bookmarklet from Settings → Import: on a deck page it reads the deck in the player's own browser and opens `/import#deck=…`. The deck travels in the URL fragment, which no server sees.
+
+⌘V / Ctrl+V anywhere on Decks, Home or the builder (outside a text field) opens the sheet with whatever is on the
+clipboard, and dropping a file, link or text on the shelf does the same.
+
+The sheet previews the deck box as it will sit on the shelf, with its curve, card list and a live legality check.
+Cards that don't match the card database become amber rows to fix (with a fuzzy printing search) or leave out;
+fixes are remembered for the next import. Commanders go into the sideboard, the XMage convention. Imported
+decks remember their site, so the Decks screen offers "Update from <site>" with a diff of what changed.
+
+The parsing and matching live in `src/core/deckImport` (pure, unit tested); the site table is
+`src/core/deckImport/sites.ts`, and the server's sources are in `Mage.Server/.../websocket/service/deckimport`
+(see "Deck import" in `docs/WebSocketAPI.md`).
+
 ## Client Settings
 
 The Settings page persists browser-local preferences through `AppConfigService`, which is intentionally adapter-based so a future Electron shell can replace `localStorage` without changing React components.

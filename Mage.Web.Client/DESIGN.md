@@ -160,6 +160,23 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     padding: "12px 16px"
+  import-sheet:
+    backgroundColor: "{colors.mat-700}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.zone}"
+    width: "min(94vw, 980px)"
+    height: "min(88vh, 720px)"
+  site-mark:
+    backgroundColor: "rgb(233 228 214 / 0.1)"
+    textColor: "{colors.ink-strong}"
+    typography: "{typography.label-print}"
+    rounded: "6px"
+    size: "22px / 28px / 56px"
+  fix-row:
+    backgroundColor: "color-mix(in srgb, {colors.decision} 8%, transparent)"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.control}"
+    padding: "8px 10px"
 ---
 
 # Design System: Playmat
@@ -292,6 +309,18 @@ A sleeve-colored shell with a light sheen, a 74px art window and a printed name 
 
 ### Card Face
 Real card proportions in a matte sleeve rim, placed shadow. Until the image loads, a text frame (name, type line, P/T) in container-query sizes. Card backs are the project's own printed weave on mat green, not WotC art.
+
+### Import Sheet
+The one place decks come in: a wide dialog (980 × 720px, same stock, outline and scrim as Dialogs) with steps instead of pages. **Input**: one field takes a link, a list or a dropped file; a recognized site shows as a placed chip in the field's corner ("Archidekt deck · reads in one step"), and the row of every site's mark below lights the matching one. **Loading**: a ghost deck box whose plate shimmers, never a spinner. **Copy and paste** (sites that block other apps): the site's mark large, three numbered steps, and a hatched paste target that turns amber with a soft pulse when the player comes back to the tab, because finishing is now their decision. **Preview**: left, the deck box exactly as it will sit on the shelf over a Mat Print of its cover that fades out before the counts, then counts in Plate numerals, commanders as small printed plates, the curve and any legality problems said in second person in `danger-text` on plain mat; right, the name as a Display-size input, the source line, format and legality chip, printings choice, cards to fix, and the card list grouped like the builder's. Esc steps back before it closes; Enter saves. The footer carries at most one amber button: Save and play when the deck is ready, Save when it can't be played yet (Save and play goes to an empty outline), none while cards need a look. It renders through `ui/Dialog` at `width="xl"` with `onBack`.
+
+### Site Mark
+A deck site is never shown by its logo. Its mark is two letters screen-printed in ivory ink inside a 6px rounded square with an `ink-faint` outline, in three sizes (22, 28, 56px). In the input's site row, marks and names are printed straight on the mat (no pills, since they aren't buttons); a sage link icon means "reads in one step", explained by a visible legend line.
+
+### Fix Row
+A card that didn't match the card database: an amber-tinted plate with an amber outline, count in `decision-strong`, the name, then a small amber "Find it" and a quiet "Leave out". Opening it lays out printings as small mat-600 tiles, closest name first. Amber here is correct: each row is a decision only the player can make.
+
+### Drop Target
+While a deck file, link or list is dragged over a shelf, the zone's printed outline thickens to 2px `ink-strong` and a dark plate says what will happen ("Drop a deck file, link or list"). A deck that has just arrived slides down onto the shelf over 620ms.
 
 ### Mat Print (signature)
 The selected deck's art printed into the mat in three separations (shadow, light, key) under a mat-green dye and a 4px halftone, masked to fade into the plain mat. Selecting a deck re-prints it: separations slide into register over 620ms.

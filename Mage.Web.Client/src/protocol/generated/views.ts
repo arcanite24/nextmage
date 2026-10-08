@@ -222,6 +222,11 @@ export interface DeckCardLists extends Serializable, Copyable<DeckCardLists> {
     sideboardLayout?: DeckCardLayout;
 }
 
+export interface DeckSourceStatus {
+    site?: string;
+    status?: string;
+}
+
 export interface DeckValidationResult {
     commanderBrackets?: BracketInfo[];
     deckType?: string;
@@ -369,6 +374,23 @@ export interface GameView extends Serializable {
     totalErrorsCount?: number;
     turn?: number;
     watchedHands?: { [index: string]: { [index: string]: SimpleCardView } };
+}
+
+export interface ImportedDeck {
+    author?: string;
+    commanders?: DeckCardInfo[];
+    companion?: DeckCardInfo[];
+    cover?: DeckCardInfo;
+    description?: string;
+    format?: string;
+    main?: DeckCardInfo[];
+    maybeboardCount?: number;
+    name?: string;
+    remoteId?: string;
+    remoteUpdatedAt?: number;
+    side?: DeckCardInfo[];
+    site?: string;
+    url?: string;
 }
 
 export interface LookedAtView extends Serializable {

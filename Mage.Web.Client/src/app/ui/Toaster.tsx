@@ -14,6 +14,18 @@ export function Toaster() {
             <strong className={styles.title}>{toast.title}</strong>
             {toast.message && <p className={styles.message}>{toast.message}</p>}
           </div>
+          {toast.action && (
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => {
+                toast.action!.run();
+                dismiss(toast.id);
+              }}
+            >
+              {toast.action.label}
+            </button>
+          )}
           <button type="button" className={styles.close} aria-label="Dismiss" onClick={() => dismiss(toast.id)}>
             <X size={16} />
           </button>

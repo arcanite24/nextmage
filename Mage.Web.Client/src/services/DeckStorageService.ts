@@ -1,4 +1,4 @@
-import type { DeckCardLists } from "../types/index.js";
+import type { DeckCardLists, DeckImportSource } from "../types/index.js";
 import { DeckSerializer } from "./DeckSerializer.js";
 
 export interface DeckSummary {
@@ -21,6 +21,8 @@ export interface DeckSummary {
         red: boolean;
         green: boolean;
     };
+    /** the deck website the deck was imported from */
+    source?: DeckImportSource;
 }
 
 export interface IDeckStorage {
@@ -57,6 +59,8 @@ interface DeckMeta {
         red: boolean;
         green: boolean;
     };
+    /** the deck website the deck was imported from */
+    source?: DeckImportSource;
 }
 
 export class LocalDeckStorage implements IDeckStorage {
@@ -93,6 +97,7 @@ export class LocalDeckStorage implements IDeckStorage {
             sideboardCount: deck.sideboard.reduce((sum, c) => sum + c.amount, 0),
             coverCard: deck.coverCard,
             colors: deck.colors,
+            source: deck.source,
         };
 
         const newMeta = meta.filter(m => m.id !== id);
@@ -143,6 +148,7 @@ export class LocalDeckStorage implements IDeckStorage {
             sideboardCount: m.sideboardCount,
             coverCard: m.coverCard,
             colors: m.colors,
+            source: m.source,
         })).sort((a, b) => b.updatedAt - a.updatedAt);
     }
 

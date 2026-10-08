@@ -1,65 +1,87 @@
-import { FileUp, PencilRuler, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { ClipboardPaste, Download, PencilRuler, RefreshCw, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { siteById } from '../../core/deckImport/sites';
+import { SourceLine } from '../decks/import/SourceLine';
+import { UpdateDialog } from '../decks/import/UpdateDialog';
+import { useImportDrop, useImportPaste } from '../decks/import/useImportShortcuts';
+import { useDegradedSites } from '../decks/import/useImportFlow';
+import { PASTE_KEYS } from '../decks/import/text';
+import { deckStorage } from '../../services/DeckStorageService';
+import { applyUpdate } from '../../core/deckImport/diff';
 import { SLEEVE_COLORS, rosterOf, sleeveFor, useDecks, type RosterDeck } from '../stores/decks';
-import { notify } from '../stores/toasts';
+import { openImport, useImportSheet } from '../stores/importSheet';
 import { Button } from '../ui/Button';
 import { DeckBox } from '../ui/DeckBox';
 import { Dialog } from '../ui/Dialog';
-import { Field } from '../ui/Field';
 import { Zone } from '../ui/Zone';
 import styles from './DecksScreen.module.css';
 
-/** Your deck shelf: import, sleeve and remove decks. */
+/** Your deck shelf: import, sleeve, update and remove decks. */
 export function DecksScreen() {
   const decks = useDecks();
   const roster = useMemo(() => rosterOf(decks), [decks]);
-  const [importOpen, setImportOpen] = useState(false);
   const [removing, setRemoving] = useState<RosterDeck | null>(null);
+  const [updating, setUpdating] = useState<string | null>(null);
   const selected = roster.find((deck) => deck.id === decks.selectedId) ?? null;
-  const fileInput = useRef<HTMLInputElement>(null);
+  const arrivedId = useImportSheet((state) => state.arrivedId);
   const navigate = useNavigate();
+  const degraded = useDegradedSites();
+  const { dragging, dropProps } = useImportDrop();
+  useImportPaste();
 
   useEffect(() => {
     if (!decks.loaded) void decks.refresh();
   }, [decks]);
 
-  async function importFile(file: File) {
-    try {
-      await decks.importText(await file.text(), file.name.replace(/\.[^.]+$/, ''));
-      notify('Deck imported', file.name);
-    } catch (error) {
-      notify(`Couldn't import ${file.name}`, error instanceof Error ? error.message : String(error), 'error');
-    }
+  const source = selected?.source;
+  const sourceSite = siteById(source?.site);
+  const updatable = !!sourceSite && sourceSite.tier === 'direct' && !degraded.has(sourceSite.id);
+
+  /** A site that blocks us: paste a fresh copy of the list, which replaces this deck's cards. */
+  function pasteNewList(deck: RosterDeck) {
+    if (!deck.source) return;
+    openImport({ kind: 'text', text: deck.source.url }, {
+      kind: 'into',
+      mode: 'replace',
+      deckName: deck.name,
+      apply: (fresh) => {
+        void (async () => {
+          const saved = await deckStorage.loadDeck(deck.id);
+          if (!saved) return;
+          await useDecks.getState().saveUpdated({ ...applyUpdate(saved, fresh), id: deck.id });
+        })();
+      },
+    });
   }
 
   return (
     <div className={styles.page}>
       <Zone
         label="Your decks"
-        className={styles.shelf}
+        className={[styles.shelf, dragging ? styles.dropping : ''].join(' ')}
+        {...dropProps}
         aside={
           <>
-            <Button size="sm" icon={<FileUp size={16} />} onClick={() => fileInput.current?.click()}>Import file</Button>
-            <Button size="sm" icon={<Plus size={16} />} onClick={() => setImportOpen(true)}>Paste a list</Button>
-            <Button size="sm" variant="print" icon={<PencilRuler size={16} />} onClick={() => navigate('/decks/new')}>Build a deck</Button>
-            <input
-              ref={fileInput}
-              type="file"
-              accept=".dck,.dec,.txt,.mwdeck,.cod,.o8d,.json,.draft"
-              hidden
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void importFile(file);
-                event.target.value = '';
-              }}
-            />
+            <Button size="sm" icon={<Download size={16} />} onClick={() => openImport()}>Import</Button>
+            <Button size="sm" icon={<PencilRuler size={16} />} onClick={() => navigate('/decks/new')}>Build a deck</Button>
           </>
         }
       >
+        {dragging && (
+          <div className={styles.dropHint} aria-hidden="true">
+            <ClipboardPaste size={22} />
+            <span>Drop a deck file, link or list</span>
+          </div>
+        )}
         <div className={styles.grid} role="list">
+          {decks.loaded && decks.saved.length === 0 && (
+            <p role="listitem" className={styles.emptyShelf}>
+              Bring a deck you already have: press <kbd>{PASTE_KEYS}</kbd> anywhere here with a link from Archidekt, Moxfield or another deck site, or a list.
+            </p>
+          )}
           {roster.map((deck) => (
-            <div key={deck.id} role="listitem" className={styles.cell}>
+            <div key={deck.id} role="listitem" className={[styles.cell, deck.id === arrivedId ? styles.arrived : ''].join(' ')}>
               <div onDoubleClick={() => navigate(`/decks/${encodeURIComponent(deck.id)}`)}>
                 <DeckBox deck={deck} sleeve={sleeveFor(decks.sleeves, deck)} selected={deck.id === decks.selectedId} onSelect={() => decks.select(deck.id)} />
               </div>
@@ -73,6 +95,16 @@ export function DecksScreen() {
           <div className={styles.detailBody}>
             <h2 className={styles.detailName}>{selected.name}</h2>
             <p className={styles.detailNote}>{selected.note}</p>
+            {source && sourceSite && (
+              <div className={styles.source}>
+                <SourceLine source={source} />
+                {updatable ? (
+                  <Button icon={<RefreshCw size={16} />} onClick={() => setUpdating(selected.id)}>Update from {sourceSite.name}</Button>
+                ) : (
+                  <Button icon={<ClipboardPaste size={16} />} onClick={() => pasteNewList(selected)}>Paste a new list</Button>
+                )}
+              </div>
+            )}
             <div>
               <h3 className={styles.subLabel}>Sleeves</h3>
               <div className={styles.sleeves} role="radiogroup" aria-label="Sleeve color">
@@ -94,7 +126,7 @@ export function DecksScreen() {
               {selected.starter ? 'Copy and edit' : 'Edit deck'}
             </Button>
             {!selected.starter && (
-              <Button variant="danger" size="sm" icon={<Trash2 size={16} />} onClick={() => setRemoving(selected)}>Remove deck</Button>
+              <Button variant="danger" size="sm" className={styles.remove} icon={<Trash2 size={16} />} onClick={() => setRemoving(selected)}>Remove deck</Button>
             )}
           </div>
         ) : (
@@ -102,7 +134,7 @@ export function DecksScreen() {
         )}
       </Zone>
 
-      <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <UpdateDialog deckId={updating} onClose={() => setUpdating(null)} />
 
       <Dialog
         open={!!removing}
@@ -130,56 +162,3 @@ export function DecksScreen() {
     </div>
   );
 }
-
-function ImportDialog({ open, onOpenChange }: { open: boolean; onOpenChange(open: boolean): void }) {
-  const importText = useDecks((state) => state.importText);
-  const [name, setName] = useState('');
-  const [text, setText] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function submit() {
-    setBusy(true);
-    setError(null);
-    try {
-      await importText(text, name.trim() || undefined);
-      setText('');
-      setName('');
-      onOpenChange(false);
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Paste a deck list"
-      description="One card per line, like “4 Lightning Bolt”. Arena, MTGO and XMage formats work. Put “Sideboard” on its own line before the sideboard."
-      footer={
-        <>
-          <Button variant="quiet" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button variant="decision" busy={busy} disabled={!text.trim()} onClick={() => void submit()}>Add deck</Button>
-        </>
-      }
-    >
-      <div className={styles.importForm}>
-        <Field label="Deck name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Optional" />
-        <label className={styles.textareaLabel} htmlFor="deck-list">Card list</label>
-        <textarea
-          id="deck-list"
-          className={styles.textarea}
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          placeholder={'4 Lightning Bolt\n4 Monastery Swiftspear\n20 Mountain\n\nSideboard\n2 Smash to Smithereens'}
-          spellCheck={false}
-        />
-        {error && <p className={styles.error} role="alert">{error}</p>}
-      </div>
-    </Dialog>
-  );
-}
-

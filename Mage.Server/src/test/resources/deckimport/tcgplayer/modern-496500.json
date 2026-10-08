@@ -1,0 +1,418 @@
+{
+ "result": {
+  "id": 496500,
+  "deck": {
+   "format": "modern",
+   "imageURL": "https://tcgplayer-cdn.tcgplayer.com/product/579141_in_800x800.jpg",
+   "name": "Rakdos Grief",
+   "eventName": "MTGO Modern Challenge 64",
+   "eventRank": "5th-8th",
+   "playerName": "tzio",
+   "created": "2024-06-03T12:21:13Z",
+   "updated": "2024-06-03T12:21:13Z",
+   "subDecks": {
+    "maindeck": [
+     {
+      "cardID": 9778,
+      "quantity": 3
+     },
+     {
+      "cardID": 7708,
+      "quantity": 4
+     },
+     {
+      "cardID": 13607,
+      "quantity": 1
+     },
+     {
+      "cardID": 3533,
+      "quantity": 4
+     },
+     {
+      "cardID": 56077,
+      "quantity": 4
+     },
+     {
+      "cardID": 59382,
+      "quantity": 4
+     },
+     {
+      "cardID": 10557,
+      "quantity": 2
+     },
+     {
+      "cardID": 55815,
+      "quantity": 4
+     },
+     {
+      "cardID": 1186,
+      "quantity": 1
+     },
+     {
+      "cardID": 20678,
+      "quantity": 1
+     },
+     {
+      "cardID": 10997,
+      "quantity": 2
+     },
+     {
+      "cardID": 69580,
+      "quantity": 2
+     },
+     {
+      "cardID": 67906,
+      "quantity": 4
+     },
+     {
+      "cardID": 66497,
+      "quantity": 4
+     },
+     {
+      "cardID": 56001,
+      "quantity": 4
+     },
+     {
+      "cardID": 73275,
+      "quantity": 1
+     },
+     {
+      "cardID": 62519,
+      "quantity": 2
+     },
+     {
+      "cardID": 5088,
+      "quantity": 3
+     },
+     {
+      "cardID": 59421,
+      "quantity": 1
+     },
+     {
+      "cardID": 6159,
+      "quantity": 1
+     },
+     {
+      "cardID": 10654,
+      "quantity": 4
+     },
+     {
+      "cardID": 20612,
+      "quantity": 4
+     }
+    ],
+    "sideboard": [
+     {
+      "cardID": 1762,
+      "quantity": 1
+     },
+     {
+      "cardID": 13607,
+      "quantity": 1
+     },
+     {
+      "cardID": 9369,
+      "quantity": 1
+     },
+     {
+      "cardID": 20123,
+      "quantity": 1
+     },
+     {
+      "cardID": 1720,
+      "quantity": 2
+     },
+     {
+      "cardID": 59399,
+      "quantity": 1
+     },
+     {
+      "cardID": 1186,
+      "quantity": 1
+     },
+     {
+      "cardID": 6669,
+      "quantity": 2
+     },
+     {
+      "cardID": 3123,
+      "quantity": 1
+     },
+     {
+      "cardID": 18491,
+      "quantity": 1
+     },
+     {
+      "cardID": 18703,
+      "quantity": 1
+     },
+     {
+      "cardID": 60316,
+      "quantity": 2
+     }
+    ]
+   },
+   "game": "magic"
+  },
+  "imageURL": "https://tcgplayer-cdn.tcgplayer.com/product/579141_in_800x800.jpg",
+  "cards": {
+   "10557": {
+    "name": "Fatal Push",
+    "displayName": "Fatal Push",
+    "set": "2XM",
+    "setName": "Double Masters",
+    "tcgPlayerID": 218830,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/6/e/6e9d8fe4-fd9b-4923-92bf-7dd6b8fa02e7.jpg?1783930180"
+   },
+   "10654": {
+    "name": "Thoughtseize",
+    "displayName": "Thoughtseize",
+    "set": "2XM",
+    "setName": "Double Masters",
+    "tcgPlayerID": 218934,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/b/2/b281a308-ab6b-47b6-bec7-632c9aaecede.jpg?1783930173"
+   },
+   "10997": {
+    "name": "Lightning Bolt",
+    "displayName": "Lightning Bolt",
+    "set": "MSC",
+    "setName": "Commander: Marvel Super Heroes",
+    "tcgPlayerID": 697344,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/6/7673784e-db4b-43a1-8d55-1bb9fc1e284f.jpg?1783903008"
+   },
+   "1186": {
+    "name": "Kolaghan's Command",
+    "displayName": "Kolaghan's Command",
+    "set": "2X2",
+    "setName": "Double Masters 2022",
+    "tcgPlayerID": 277058,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/a/0/a0dab027-a475-481b-b012-b6a76e21e494.jpg?1783921822"
+   },
+   "13607": {
+    "name": "Blood Moon",
+    "displayName": "Blood Moon",
+    "set": "2XM",
+    "setName": "Double Masters",
+    "tcgPlayerID": 218848,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/d/0/d072e9ca-aae7-45dc-8025-3ce590bae63f.jpg?1783930171"
+   },
+   "1720": {
+    "name": "Engineered Explosives",
+    "displayName": "Engineered Explosives",
+    "set": "2XM",
+    "setName": "Double Masters",
+    "tcgPlayerID": 218293,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/4/2/420bf1e9-f2ec-4dff-b540-e64de71e58be.jpg?1783930110"
+   },
+   "1762": {
+    "name": "Angrath's Rampage",
+    "displayName": "Angrath's Rampage",
+    "set": "WAR",
+    "setName": "War of the Spark",
+    "tcgPlayerID": 188100,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/5/f5a39379-7313-463a-9a02-e5157b9557f4.jpg?1783933403"
+   },
+   "18491": {
+    "name": "Magus of the Moon",
+    "displayName": "Magus of the Moon",
+    "set": "TSR",
+    "setName": "Time Spiral: Remastered",
+    "tcgPlayerID": 233956,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/c/7c9bd75c-9606-4607-bfa6-d6acdee12820.jpg?1783927794"
+   },
+   "18703": {
+    "name": "Surgical Extraction",
+    "displayName": "Surgical Extraction",
+    "set": "2X2",
+    "setName": "Double Masters 2022",
+    "tcgPlayerID": 276669,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/e/1/e15d76ac-1c23-4503-8225-375ac2bf2fb6.jpg?1783921896"
+   },
+   "20123": {
+    "name": "Cursed Totem",
+    "displayName": "Cursed Totem",
+    "set": "6ED",
+    "setName": "Classic Sixth Edition",
+    "tcgPlayerID": 2515,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/0/4/048ceee4-0a56-4e43-92f2-80058844baba.jpg?1783946150"
+   },
+   "20612": {
+    "name": "Verdant Catacombs",
+    "displayName": "Verdant Catacombs",
+    "set": "MH2",
+    "setName": "Modern Horizons 2",
+    "tcgPlayerID": 238611,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/4/94c229ea-90da-4aa0-bfda-b162fb3b5b8b.jpg?1783926791"
+   },
+   "20678": {
+    "name": "Kroxa, Titan of Death's Hunger",
+    "displayName": "Kroxa, Titan of Death's Hunger",
+    "set": "THB",
+    "setName": "Theros Beyond Death",
+    "tcgPlayerID": 206855,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/e/cee0459b-9aac-4d2f-abe4-4d5fedde7eb8.jpg?1783931520"
+   },
+   "3123": {
+    "name": "Liliana of the Veil",
+    "displayName": "Liliana of the Veil",
+    "set": "INR",
+    "setName": "Innistrad Remastered",
+    "tcgPlayerID": 600472,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/e/f/efbb7256-9337-4183-8bda-a419f3f2c501.jpg?1783907977"
+   },
+   "3533": {
+    "name": "Bloodstained Mire",
+    "displayName": "Bloodstained Mire",
+    "set": "MH3",
+    "setName": "Modern Horizons 3",
+    "tcgPlayerID": 541275,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/7/579743fe-f71e-4cb2-8629-d6b02ed1591d.jpg?1783911241"
+   },
+   "5088": {
+    "name": "Swamp",
+    "displayName": "Swamp",
+    "set": "DDK",
+    "setName": "Duel Decks: Sorin vs. Tibalt",
+    "tcgPlayerID": 67831,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/5/757d7085-fbd1-4343-b09a-5113d749c731.jpg?1783940059"
+   },
+   "55815": {
+    "name": "Grief",
+    "displayName": "Grief",
+    "set": "MH2",
+    "setName": "Modern Horizons 2",
+    "tcgPlayerID": 239402,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/e/6/e6befbc4-1320-4f26-bd9f-b1814fedda10.jpg?1783926861"
+   },
+   "56001": {
+    "name": "Ragavan, Nimble Pilferer",
+    "displayName": "Ragavan, Nimble Pilferer",
+    "set": "MH2",
+    "setName": "Modern Horizons 2",
+    "tcgPlayerID": 239857,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/a/9/a9738cda-adb1-47fb-9f4c-ecd930228c4d.jpg?1783926839"
+   },
+   "56077": {
+    "name": "Dauthi Voidwalker",
+    "displayName": "Dauthi Voidwalker",
+    "set": "TDC",
+    "setName": "Commander: Tarkir: Dragonstorm",
+    "tcgPlayerID": 624420,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/3/5/3573b9a2-7911-475c-8ae7-25bd0dbb7159.jpg?1783907090"
+   },
+   "59382": {
+    "name": "Fable of the Mirror-Breaker",
+    "displayName": "Fable of the Mirror-Breaker",
+    "set": "NEO",
+    "setName": "Kamigawa: Neon Dynasty",
+    "tcgPlayerID": 262222,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/2/4/24c0d87b-0049-4beb-b9cb-6f813b7aa7dc.jpg?1783923875"
+   },
+   "59399": {
+    "name": "Hidetsugu Consumes All",
+    "displayName": "Hidetsugu Consumes All",
+    "set": "NEO",
+    "setName": "Kamigawa: Neon Dynasty",
+    "tcgPlayerID": 262287,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/8/e/8e910464-329a-4de1-930a-be85b1956676.jpg?1783923841"
+   },
+   "59421": {
+    "name": "Takenuma, Abandoned Mire",
+    "displayName": "Takenuma, Abandoned Mire",
+    "set": "NEO",
+    "setName": "Kamigawa: Neon Dynasty",
+    "tcgPlayerID": 262420,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/4/9/499037cc-a577-41cb-8ca2-5e117945634f.jpg?1783923812"
+   },
+   "60316": {
+    "name": "Unlicensed Hearse",
+    "displayName": "Unlicensed Hearse",
+    "set": "SNC",
+    "setName": "Streets of New Capenna",
+    "tcgPlayerID": 268735,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/3/93ee60f7-31dd-4bc6-b71f-57a1a0d19d20.jpg?1783923059"
+   },
+   "6159": {
+    "name": "Terminate",
+    "displayName": "Terminate",
+    "set": "MSC",
+    "setName": "Commander: Marvel Super Heroes",
+    "tcgPlayerID": 698005,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/3/7/379ffc67-4142-4ead-a871-0f851523745e.jpg?1783903230"
+   },
+   "62519": {
+    "name": "Sheoldred, the Apocalypse",
+    "displayName": "Sheoldred, the Apocalypse",
+    "set": "DMU",
+    "setName": "Dominaria United",
+    "tcgPlayerID": 282800,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/d/6/d67be074-cdd4-41d9-ac89-0a0456c4e4b2.jpg?1783921327"
+   },
+   "66497": {
+    "name": "Orcish Bowmasters",
+    "displayName": "Orcish Bowmasters",
+    "set": "LTR",
+    "setName": "Universes Beyond: The Lord of the Rings: Tales of Middle-earth",
+    "tcgPlayerID": 498367,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/c/7c024bae-5631-4e20-ac69-df392ac9e109.jpg?1783916299"
+   },
+   "6669": {
+    "name": "Legion's End",
+    "displayName": "Legion's End",
+    "set": "M20",
+    "setName": "Core Set 2020",
+    "tcgPlayerID": 192565,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/4/9/49a1cd92-9d75-4e22-a934-a26d84967015.jpg?1783932991"
+   },
+   "67906": {
+    "name": "Not Dead After All",
+    "displayName": "Not Dead After All",
+    "set": "WOE",
+    "setName": "Wilds of Eldraine",
+    "tcgPlayerID": 512642,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/d/0/d01a2b68-efe6-4027-846d-db7b19d9eef6.jpg?1783915104"
+   },
+   "69580": {
+    "name": "Molten Collapse",
+    "displayName": "Molten Collapse",
+    "set": "LCI",
+    "setName": "The Lost Caverns of Ixalan",
+    "tcgPlayerID": 525260,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/2/4/2487d124-210b-4808-888c-cd0a78aebd90.jpg?1783913731"
+   },
+   "73275": {
+    "name": "Raucous Theater",
+    "displayName": "Raucous Theater",
+    "set": "MKM",
+    "setName": "Murders at Karlov Manor",
+    "tcgPlayerID": 532911,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/b/5/b598c93e-dae1-4d71-a9e4-917abf76d2d0.jpg?1783912823"
+   },
+   "7708": {
+    "name": "Blood Crypt",
+    "displayName": "Blood Crypt",
+    "set": "PPECL",
+    "setName": "Promo Pack: Lorwyn Eclipsed",
+    "tcgPlayerID": 672258,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/d/5d2bb101-e0b5-4c9c-9f94-ee4f605ddff0.jpg?1783904281"
+   },
+   "9369": {
+    "name": "Bonecrusher Giant",
+    "displayName": "Bonecrusher Giant",
+    "set": "CLB",
+    "setName": "Commander Legends: Battle for Baldur's Gate",
+    "tcgPlayerID": 273681,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/b/5/b5b71cd2-de35-451f-b16e-2e3936169407.jpg?1783922435"
+   },
+   "9778": {
+    "name": "Blackcleave Cliffs",
+    "displayName": "Blackcleave Cliffs",
+    "set": "DSC",
+    "setName": "Commander: Duskmourn: House of Horror",
+    "tcgPlayerID": 579141,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/7/f75715ce-744f-409c-aeb1-e66eb9186a74.jpg?1783909578"
+   }
+  },
+  "canonicalURL": "/magic-the-gathering/deck/Rakdos-Grief/496500"
+ }
+}

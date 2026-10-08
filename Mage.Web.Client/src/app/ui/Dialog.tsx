@@ -1,5 +1,5 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import styles from './Dialog.module.css';
 
@@ -10,24 +10,38 @@ export interface DialogProps {
   description?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  width?: 'sm' | 'md' | 'lg';
+  width?: 'sm' | 'md' | 'lg' | 'xl';
   /** blocking choices can't be dismissed by Escape or clicking outside */
   dismissible?: boolean;
+  /** a step back inside the dialog: shows a back arrow, and Escape steps back before it closes */
+  onBack?: () => void;
 }
 
 /** A printed zone laid over the dimmed mat. Focus is trapped and returned on close. */
-export function Dialog({ open, onOpenChange, title, description, children, footer, width = 'md', dismissible = true }: DialogProps) {
+export function Dialog({ open, onOpenChange, title, description, children, footer, width = 'md', dismissible = true, onBack }: DialogProps) {
   return (
     <RadixDialog.Root open={open} onOpenChange={dismissible ? onOpenChange : undefined}>
       <RadixDialog.Portal>
         <RadixDialog.Overlay className={styles.overlay} />
         <RadixDialog.Content
           className={[styles.content, styles[width]].join(' ')}
-          onEscapeKeyDown={dismissible ? undefined : (event) => event.preventDefault()}
+          onEscapeKeyDown={(event) => {
+            if (onBack) {
+              event.preventDefault();
+              onBack();
+            } else if (!dismissible) {
+              event.preventDefault();
+            }
+          }}
           onPointerDownOutside={dismissible ? undefined : (event) => event.preventDefault()}
           aria-describedby={description ? undefined : undefined}
         >
           <header className={styles.head}>
+            {onBack && (
+              <button type="button" className={styles.back} onClick={onBack} aria-label="Back">
+                <ArrowLeft size={18} />
+              </button>
+            )}
             <RadixDialog.Title className={styles.title}>{title}</RadixDialog.Title>
             {dismissible && (
               <RadixDialog.Close className={styles.close} aria-label="Close">

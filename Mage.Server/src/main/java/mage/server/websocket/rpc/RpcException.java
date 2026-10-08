@@ -18,8 +18,12 @@ public class RpcException extends Exception {
     public static final int SESSION_IN_USE = -32002;
     public static final int RATE_LIMITED = -32003;
     public static final int SERVER_BUSY = -32004;
+    /** a deck couldn't be imported from a deck website; the reason is in the error's data */
+    public static final int DECK_IMPORT_FAILED = -32005;
 
     private final int code;
+    /** a machine-readable reason sent as the error's data ({"reason": ...}), or null */
+    private String reason;
 
     public RpcException(int code, String message) {
         super(message);
@@ -33,6 +37,15 @@ public class RpcException extends Exception {
 
     public int getCode() {
         return code;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public RpcException withReason(String reason) {
+        this.reason = reason;
+        return this;
     }
 
     public static RpcException invalidParams(String message) {
