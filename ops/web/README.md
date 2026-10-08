@@ -78,6 +78,7 @@ Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a me
 - `xmage` is healthy once its bridge port 17172 accepts connections. It opens only after the card database is loaded, and the first start gets 15 minutes for that.
 - `web` checks Caddy's admin API on `localhost:2019`. It starts only after `xmage` is healthy.
 - `docker compose -f ops/web/docker-compose.yml ps` shows both states.
+- If `up` stops with "dependency failed to start: container ... is unhealthy" after a failed earlier start, the server usually becomes healthy a little later: run `up -d` again once `ps` shows `xmage` healthy.
 
 ## Logs
 
@@ -135,9 +136,9 @@ docker compose -f ops/web/docker-compose.yml up -d --build
 - Take a backup first (`xmage-backup once`) when the release notes mention database changes.
 - Settings live in `.env`, so an upgrade never overwrites them.
 
-## Private group on a LAN
+## Without Docker on a LAN
 
-You don't need the proxy for a home network. Build the client with `npm run build`, serve `Mage.Web.Client/dist` from any static server, and run the server as usual. Over plain HTTP the client connects to `ws://<page host>:17172`.
+For the Compose stack on a LAN, see [Private server on a LAN](#private-server-on-a-lan). Without Docker you don't need the proxy at all. Build the client with `npm run build`, serve `Mage.Web.Client/dist` from any static server, and run the server as usual. Over plain HTTP the client connects to `ws://<page host>:17172`.
 
 Add the page origin to `websocketAllowedOrigins` in `config.xml` on the `<server>` element, for example `http://192.168.1.20:8080`.
 
