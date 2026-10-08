@@ -18,6 +18,17 @@ export interface DeckCoverCard {
   name?: string;
 }
 
+export interface DeckImportSource {
+  /** a site id from core/deckImport/sites */
+  site: string;
+  url: string;
+  remoteId: string;
+  importedAt: number;
+  remoteUpdatedAt?: number;
+  /** the deck's name when it was imported; an update renames the deck only if the player kept that name */
+  importedName?: string;
+}
+
 export interface DeckCardLists {
   id?: string;
   name?: string;
@@ -29,6 +40,8 @@ export interface DeckCardLists {
   cardLayout?: DeckCardLayout;
   sideboardLayout?: DeckCardLayout;
   coverCard?: DeckCoverCard;
+  /** the deck website this deck was imported from, so it can be updated later */
+  source?: DeckImportSource;
   colors?: {
     white: boolean;
     blue: boolean;

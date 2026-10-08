@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { deckStorage, type DeckSummary } from '../../core/decks/DeckStorageService';
 import { DeckSerializer } from '../../core/decks/DeckSerializer';
-import type { DeckCardLists } from '../../core/decks/types';
+import type { DeckCardLists, DeckImportSource } from '../../core/decks/types';
 import { readJson, writeJson } from './persist';
 
 export interface StarterDeck {
@@ -20,6 +20,8 @@ export interface RosterDeck {
   cover: { name?: string; setCode: string; cardNumber: string } | null;
   colors: string[];
   starter: StarterDeck | null;
+  /** the deck website it was imported from */
+  source?: DeckImportSource;
 }
 
 const SELECTED_KEY = 'playmat.selectedDeck';
@@ -43,6 +45,7 @@ function summaryToRoster(deck: DeckSummary): RosterDeck {
     cover: deck.coverCard ?? null,
     colors,
     starter: null,
+    source: deck.source,
   };
 }
 
@@ -69,7 +72,10 @@ export interface DeckLibraryState {
   setSleeve(id: string, color: string): void;
   /** the deck list to send to the server; starter decks are saved to the library on first use */
   loadForPlay(id: string): Promise<{ deck: DeckCardLists; id: string }>;
-  importText(text: string, name?: string): Promise<string>;
+  /** a deck from the import sheet, saved as a new deck and selected */
+  saveImported(deck: DeckCardLists): Promise<string>;
+  /** a deck brought up to date with its site, under its own id */
+  saveUpdated(deck: DeckCardLists): Promise<void>;
   remove(id: string): Promise<void>;
 }
 
@@ -134,15 +140,16 @@ export const useDecks = create<DeckLibraryState>((set, get) => ({
     return { deck, id };
   },
 
-  async importText(text, name) {
-    const deck = DeckSerializer.importDeck(text);
-    if (deck.cards.length === 0) throw new Error('No cards found. Paste one card per line, like "4 Lightning Bolt".');
-    if (name) deck.name = name;
-    if (!deck.name) deck.name = 'Imported deck';
-    const id = await deckStorage.saveDeck(deck, { forceNew: true });
+  async saveImported(deck) {
+    const id = await deckStorage.saveDeck({ ...deck, id: undefined }, { forceNew: true });
     await get().refresh();
     get().select(id);
     return id;
+  },
+
+  async saveUpdated(deck) {
+    await deckStorage.saveDeck(deck);
+    await get().refresh();
   },
 
   async remove(id) {

@@ -110,3 +110,87 @@
   color: var(--danger-text);
   font-size: var(--text-sm);
 }
+
+/* something importable is being dragged over the shelf */
+.shelf {
+  position: relative;
+  transition: box-shadow var(--dur-quick) ease;
+}
+
+.dropping {
+  box-shadow: inset 0 0 0 2px var(--ink-strong);
+}
+
+.dropHint {
+  position: absolute;
+  inset: var(--space-4);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  border-radius: calc(var(--radius-zone) - 4px);
+  background: rgb(7 12 10 / 0.82);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: var(--text-xl);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  pointer-events: none;
+  animation: hint var(--dur-place) var(--ease-place);
+}
+
+/* no decks of your own yet: one printed line on the shelf */
+.emptyShelf {
+  grid-column: 1 / -1;
+  margin: 0 0 var(--space-2);
+  color: var(--ink-soft);
+}
+
+.emptyShelf kbd,
+.detailBody kbd {
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--mat-600);
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.35), inset 0 0 0 1px var(--ink-faint);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+}
+
+/* a deck just imported slides onto the shelf */
+.arrived {
+  animation: arrive var(--dur-print) var(--ease-place);
+}
+
+.source {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+/* the destructive action stands apart from the rest */
+.remove {
+  margin-top: var(--space-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrived,
+  .dropHint {
+    animation: none;
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.97);
+  }
+}
+
+@keyframes hint {
+  from {
+    opacity: 0;
+  }
+}

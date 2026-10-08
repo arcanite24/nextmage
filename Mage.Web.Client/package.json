@@ -19,6 +19,7 @@
     "test:e2e:local:replay-watch": "MAGE_E2E_REQUIRE_SERVER=1 playwright test e2e/local-server-sideboard-watch-replay.spec.ts --workers=1",
     "test:e2e:local:tournament": "MAGE_E2E_REQUIRE_SERVER=1 playwright test e2e/local-server-tournament.spec.ts --workers=1",
     "test:e2e:local:draft": "MAGE_E2E_REQUIRE_SERVER=1 playwright test e2e/local-server-draft.spec.ts --workers=1",
+    "test:e2e:local:deck-import": "MAGE_E2E_REQUIRE_SERVER=1 playwright test e2e/deck-import.spec.ts --workers=1",
     "test:visual": "playwright test visual",
     "test:visual:update": "playwright test visual --update-snapshots",
     "lint": "eslint . --max-warnings 114",

@@ -38,11 +38,11 @@ Arena-quality interaction on top of XMage's unrestricted card pool and formats: 
 - Everything the desktop client can do must stay possible (table options, deck formats and import formats, sideboarding, spectating, replays, admin tools), even when presented differently.
 - Rules and prompts come from the server; the client never decides legality.
 - No Wizards of the Coast proprietary assets: no Beleren typeface, no Arena art, sounds or UI chrome. Card images from Scryfall are allowed for a free, non-commercial client.
-- Undecided: the product name. The user wants a new name for the web client instead of "XMage" (not chosen yet).
+- Product name: **Playmat** (chosen 2026-10-07). It replaces "XMage" in the web client UI.
 
 ## Brand Commitments
 
-- A new product name will replace "XMage" in the UI (to be decided). Until then, use a neutral placeholder.
+- The product is called Playmat. Use `APP_NAME` from `src/app/brand.ts`, never a hard-coded string.
 - Interaction model: Arena-like. Visual identity: the product's own.
 
 ## Evidence on Hand

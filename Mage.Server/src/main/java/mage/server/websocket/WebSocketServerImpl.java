@@ -270,6 +270,11 @@ public class WebSocketServerImpl extends WebSocketServer {
         JsonObject errorJson = new JsonObject();
         errorJson.addProperty("code", error.getCode());
         errorJson.addProperty("message", error.getMessage());
+        if (error.getReason() != null) {
+            JsonObject data = new JsonObject();
+            data.addProperty("reason", error.getReason());
+            errorJson.add("data", data);
+        }
         JsonObject response = new JsonObject();
         response.addProperty("jsonrpc", "2.0");
         response.add("id", id);

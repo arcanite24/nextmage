@@ -1,0 +1,2698 @@
+{
+ "id": "019e95e2-7f3c-7e16-a13a-f3511476d74d",
+ "name": "Flash Fire",
+ "format": 4,
+ "editDateUTC": 1786314484436,
+ "colors": "{G}{U}{R}",
+ "coverImageUrl": "https://cards.scryfall.io/art_crop/front/b/5/b5b735e5-da9d-4740-acff-aac9dd24334c.jpg?1783941071",
+ "coverImageCvId": 19132,
+ "coverImageFaceIndex": 0,
+ "cards": [
+  {
+   "cvId": 69225,
+   "collectorNumber": "212",
+   "scryfallId": "b0260e1f-ff6a-4ef3-bef7-8c77f8413500",
+   "name": "Acolyte of Bahamut",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 5,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 1,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 100452,
+   "faces": [
+    {
+     "manaCost": "{1}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/0/b0260e1f-ff6a-4ef3-bef7-8c77f8413500.jpg?1783922722",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/0/b0260e1f-ff6a-4ef3-bef7-8c77f8413500.jpg?1783922722"
+    }
+   ]
+  },
+  {
+   "cvId": 68954,
+   "collectorNumber": "366",
+   "scryfallId": "34761bda-03f9-4607-bb01-10b1598509f7",
+   "name": "Ancient Silver Dragon",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 3,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 8.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{6}{U}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/3/4/34761bda-03f9-4607-bb01-10b1598509f7.jpg?1783922652",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/3/4/34761bda-03f9-4607-bb01-10b1598509f7.jpg?1783922652"
+    }
+   ]
+  },
+  {
+   "cvId": 112140,
+   "collectorNumber": "261",
+   "scryfallId": "d5ace571-0644-40d6-a05f-15f2e47d8861",
+   "name": "Animist's Awakening",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 2,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 148989,
+   "faces": [
+    {
+     "manaCost": "{X}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/d/5/d5ace571-0644-40d6-a05f-15f2e47d8861.jpg?1783903769",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/d/5/d5ace571-0644-40d6-a05f-15f2e47d8861.jpg?1783903769"
+    }
+   ]
+  },
+  {
+   "cvId": 111980,
+   "collectorNumber": "127",
+   "scryfallId": "7811dd72-61b9-4067-ac20-cea153e625d2",
+   "name": "Arcane Signet",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 2,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 1,
+   "collectorNumberGroup": 6,
+   "colorIdentity": "",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 148725,
+   "faces": [
+    {
+     "manaCost": "{2}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/8/7811dd72-61b9-4067-ac20-cea153e625d2.jpg?1783903817",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/8/7811dd72-61b9-4067-ac20-cea153e625d2.jpg?1783903817"
+    }
+   ]
+  },
+  {
+   "cvId": 104937,
+   "collectorNumber": "281",
+   "scryfallId": "c569fab1-6901-40ab-b958-001698819585",
+   "name": "Atarka, World Render",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "tdc",
+   "setName": "Tarkir: Dragonstorm Commander",
+   "setIconId": "tdc",
+   "rarity": 2,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "GR",
+   "manaValue": 7.0,
+   "layout": 0,
+   "cardhoarderId": 138499,
+   "faces": [
+    {
+     "manaCost": "{5}{R}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/c/5/c569fab1-6901-40ab-b958-001698819585.jpg?1783907034",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/c/5/c569fab1-6901-40ab-b958-001698819585.jpg?1783907034"
+    }
+   ]
+  },
+  {
+   "cvId": 70216,
+   "collectorNumber": "103",
+   "scryfallId": "4fb3f1cb-7180-4c5f-8e04-58bb9bf45733",
+   "name": "Backdraft Hellkite",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "2x2",
+   "setName": "Double Masters 2022",
+   "setIconId": "2x2",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 101690,
+   "faces": [
+    {
+     "manaCost": "{3}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/f/4fb3f1cb-7180-4c5f-8e04-58bb9bf45733.jpg?1783921892",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/f/4fb3f1cb-7180-4c5f-8e04-58bb9bf45733.jpg?1783921892"
+    }
+   ]
+  },
+  {
+   "cvId": 2671,
+   "collectorNumber": "45",
+   "scryfallId": "26334142-e9a2-4bf0-983e-dca4b4d817d7",
+   "name": "Borrowing 100,000 Arrows",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "a25",
+   "setName": "Masters 25",
+   "setIconId": "a25",
+   "rarity": 0,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 67004,
+   "faces": [
+    {
+     "manaCost": "{2}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/6/26334142-e9a2-4bf0-983e-dca4b4d817d7.jpg?1783935183",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/6/26334142-e9a2-4bf0-983e-dca4b4d817d7.jpg?1783935183"
+    }
+   ]
+  },
+  {
+   "cvId": 100857,
+   "collectorNumber": "80",
+   "scryfallId": "977dcc50-da10-4281-b522-9240c1204f5d",
+   "name": "Bulk Up",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "fdn",
+   "setName": "Foundations",
+   "setIconId": "fdn",
+   "rarity": 1,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 133728,
+   "faces": [
+    {
+     "manaCost": "{1}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/9/7/977dcc50-da10-4281-b522-9240c1204f5d.jpg?1783909106",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/9/7/977dcc50-da10-4281-b522-9240c1204f5d.jpg?1783909106"
+    }
+   ]
+  },
+  {
+   "cvId": 105055,
+   "collectorNumber": "33",
+   "scryfallId": "f5fab7a4-3612-4b79-b2f5-8a1e52ebe409",
+   "name": "Caldera Pyremaw",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "tdc",
+   "setName": "Tarkir: Dragonstorm Commander",
+   "setIconId": "tdc",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 138083,
+   "faces": [
+    {
+     "manaCost": "{3}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/f/5/f5fab7a4-3612-4b79-b2f5-8a1e52ebe409.jpg?1783907175",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/f/5/f5fab7a4-3612-4b79-b2f5-8a1e52ebe409.jpg?1783907175"
+    }
+   ]
+  },
+  {
+   "cvId": 111867,
+   "collectorNumber": "364",
+   "scryfallId": "22acccd2-4e9d-46de-a060-863b08152e50",
+   "name": "Cascade Bluffs",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "RU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149193,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/2/22acccd2-4e9d-46de-a060-863b08152e50.jpg?1783903736",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/2/22acccd2-4e9d-46de-a060-863b08152e50.jpg?1783903736"
+    }
+   ]
+  },
+  {
+   "cvId": 110469,
+   "collectorNumber": "146",
+   "scryfallId": "306a7feb-f254-4ef1-a813-709601e87905",
+   "name": "Cinder Glade",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "ecc",
+   "setName": "Lorwyn Eclipsed Commander",
+   "setIconId": "ecc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GR",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 146227,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/3/0/306a7feb-f254-4ef1-a813-709601e87905.jpg?1783904529",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/3/0/306a7feb-f254-4ef1-a813-709601e87905.jpg?1783904529"
+    }
+   ]
+  },
+  {
+   "cvId": 112112,
+   "collectorNumber": "129",
+   "scryfallId": "c46a217c-0ed2-4b3c-9a01-ee38d12d76f3",
+   "name": "Command Tower",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 0,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 148729,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/c/4/c46a217c-0ed2-4b3c-9a01-ee38d12d76f3.jpg?1783903817",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/c/4/c46a217c-0ed2-4b3c-9a01-ee38d12d76f3.jpg?1783903817"
+    }
+   ]
+  },
+  {
+   "cvId": 112180,
+   "collectorNumber": "265",
+   "scryfallId": "f1cc00f9-ae7b-4f7b-95f2-bc5c00e4bd72",
+   "name": "Cultivate",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 0,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 148997,
+   "faces": [
+    {
+     "manaCost": "{2}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/f/1/f1cc00f9-ae7b-4f7b-95f2-bc5c00e4bd72.jpg?1783903767",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/f/1/f1cc00f9-ae7b-4f7b-95f2-bc5c00e4bd72.jpg?1783903767"
+    }
+   ]
+  },
+  {
+   "cvId": 84778,
+   "collectorNumber": "214",
+   "scryfallId": "b4b36435-55b3-4615-8812-af41d4fc64d9",
+   "name": "Deflecting Swat",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "cmm",
+   "setName": "Commander Masters",
+   "setIconId": "cmm",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 114655,
+   "faces": [
+    {
+     "manaCost": "{2}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/4/b4b36435-55b3-4615-8812-af41d4fc64d9.jpg?1783915656",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/4/b4b36435-55b3-4615-8812-af41d4fc64d9.jpg?1783915656"
+    }
+   ]
+  },
+  {
+   "cvId": 90519,
+   "collectorNumber": "151",
+   "scryfallId": "c5323fe7-d9df-4287-ae13-d9db35f7973b",
+   "name": "Disrupt Decorum",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "mkc",
+   "setName": "Murders at Karlov Manor Commander",
+   "setIconId": "mkc",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 4.0,
+   "layout": 0,
+   "cardhoarderId": 122442,
+   "faces": [
+    {
+     "manaCost": "{2}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/c/5/c5323fe7-d9df-4287-ae13-d9db35f7973b.jpg?1783912998",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/c/5/c5323fe7-d9df-4287-ae13-d9db35f7973b.jpg?1783912998"
+    }
+   ]
+  },
+  {
+   "cvId": 105161,
+   "collectorNumber": "180",
+   "scryfallId": "bc7692ef-7091-4365-85a8-1edbd374f279",
+   "name": "Dragonclaw Strike",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "tdm",
+   "setName": "Tarkir: Dragonstorm",
+   "setIconId": "tdm",
+   "rarity": 1,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "GRU",
+   "manaValue": 6.0,
+   "layout": 0,
+   "cardhoarderId": 139321,
+   "faces": [
+    {
+     "manaCost": "{2/G}{2/U}{2/R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/c/bc7692ef-7091-4365-85a8-1edbd374f279.jpg?1783907322",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/c/bc7692ef-7091-4365-85a8-1edbd374f279.jpg?1783907322"
+    }
+   ]
+  },
+  {
+   "cvId": 104924,
+   "collectorNumber": "210",
+   "scryfallId": "be6fa0dc-74e7-4fad-9bdd-8e986612577a",
+   "name": "Dragonlord's Servant",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "tdc",
+   "setName": "Tarkir: Dragonstorm Commander",
+   "setIconId": "tdc",
+   "rarity": 1,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 138357,
+   "faces": [
+    {
+     "manaCost": "{1}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/e/be6fa0dc-74e7-4fad-9bdd-8e986612577a.jpg?1783907072",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/e/be6fa0dc-74e7-4fad-9bdd-8e986612577a.jpg?1783907072"
+    }
+   ]
+  },
+  {
+   "cvId": 16198,
+   "collectorNumber": "111",
+   "scryfallId": "230cd568-f7ed-4571-a609-36522add91d0",
+   "name": "Dragonstorm",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "mma",
+   "setName": "Modern Masters",
+   "setIconId": "mma",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 9.0,
+   "layout": 0,
+   "cardhoarderId": 48904,
+   "faces": [
+    {
+     "manaCost": "{8}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/3/230cd568-f7ed-4571-a609-36522add91d0.jpg?1783939984",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/3/230cd568-f7ed-4571-a609-36522add91d0.jpg?1783939984"
+    }
+   ]
+  },
+  {
+   "cvId": 111765,
+   "collectorNumber": "254",
+   "scryfallId": "ef662b92-5a7f-48c9-bcc1-14b55e091aef",
+   "name": "Dreamroot Cascade",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "sos",
+   "setName": "Secrets of Strixhaven",
+   "setIconId": "sos",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 150007,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/e/f/ef662b92-5a7f-48c9-bcc1-14b55e091aef.jpg?1783903621",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/e/f/ef662b92-5a7f-48c9-bcc1-14b55e091aef.jpg?1783903621"
+    }
+   ]
+  },
+  {
+   "cvId": 69077,
+   "collectorNumber": "588",
+   "scryfallId": "67edfb64-2177-442d-bd10-7ed1fdaa3537",
+   "name": "Earthquake Dragon",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 2,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 15.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{14}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/6/7/67edfb64-2177-442d-bd10-7ed1fdaa3537.jpg?1783922558",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/6/7/67edfb64-2177-442d-bd10-7ed1fdaa3537.jpg?1783922558"
+    }
+   ]
+  },
+  {
+   "cvId": 93685,
+   "collectorNumber": "63",
+   "scryfallId": "6eed4fed-e3e9-43fb-970f-424fc72600d2",
+   "name": "Elemental Eruption",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "otc",
+   "setName": "Outlaws of Thunder Junction Commander",
+   "setIconId": "otc",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 6.0,
+   "layout": 0,
+   "cardhoarderId": 124521,
+   "faces": [
+    {
+     "manaCost": "{4}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/6/e/6eed4fed-e3e9-43fb-970f-424fc72600d2.jpg?1783911952",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/6/e/6eed4fed-e3e9-43fb-970f-424fc72600d2.jpg?1783911952"
+    }
+   ]
+  },
+  {
+   "cvId": 111992,
+   "collectorNumber": "369",
+   "scryfallId": "7db2934a-43a0-46ad-8380-ff6703f8fd6d",
+   "name": "Exotic Orchard",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149203,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/d/7db2934a-43a0-46ad-8380-ff6703f8fd6d.jpg?1783903732",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/d/7db2934a-43a0-46ad-8380-ff6703f8fd6d.jpg?1783903732"
+    }
+   ]
+  },
+  {
+   "cvId": 96187,
+   "collectorNumber": "216",
+   "scryfallId": "18e5fdee-1ec4-44a2-b84c-35897f1d2912",
+   "name": "Explore",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "blc",
+   "setName": "Bloomburrow Commander",
+   "setIconId": "blc",
+   "rarity": 0,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 128579,
+   "faces": [
+    {
+     "manaCost": "{1}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/1/8/18e5fdee-1ec4-44a2-b84c-35897f1d2912.jpg?1783910667",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/1/8/18e5fdee-1ec4-44a2-b84c-35897f1d2912.jpg?1783910667"
+    }
+   ]
+  },
+  {
+   "cvId": 107097,
+   "collectorNumber": "50",
+   "scryfallId": "95e0760a-d285-493b-88cd-7556d9b10007",
+   "name": "Farseek",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "eoc",
+   "setName": "Edge of Eternities Commander",
+   "setIconId": "eoc",
+   "rarity": 0,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 142237,
+   "faces": [
+    {
+     "manaCost": "{1}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/9/5/95e0760a-d285-493b-88cd-7556d9b10007.jpg?1783906051",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/9/5/95e0760a-d285-493b-88cd-7556d9b10007.jpg?1783906051"
+    }
+   ]
+  },
+  {
+   "cvId": 112035,
+   "collectorNumber": "370",
+   "scryfallId": "92fa559c-a99b-4bc1-86c4-0c5eeeac9f4f",
+   "name": "Ferrous Lake",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "RU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149205,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/9/2/92fa559c-a99b-4bc1-86c4-0c5eeeac9f4f.jpg?1783903732",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/9/2/92fa559c-a99b-4bc1-86c4-0c5eeeac9f4f.jpg?1783903732"
+    }
+   ]
+  },
+  {
+   "cvId": 99982,
+   "collectorNumber": "1823",
+   "scryfallId": "180679fa-b820-4793-8f2e-a2d8791192d5",
+   "name": "Fierce Guardianship",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "sld",
+   "setName": "Secret Lair Drop",
+   "setIconId": "star",
+   "rarity": 2,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 3.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{2}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/1/8/180679fa-b820-4793-8f2e-a2d8791192d5.jpg?1783909198",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/1/8/180679fa-b820-4793-8f2e-a2d8791192d5.jpg?1783909198"
+    }
+   ]
+  },
+  {
+   "cvId": 94431,
+   "collectorNumber": "119",
+   "scryfallId": "497a10c6-131b-464e-95e4-e47708a24d48",
+   "name": "Flare of Duplication",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "mh3",
+   "setName": "Modern Horizons 3",
+   "setIconId": "mh3",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 126255,
+   "faces": [
+    {
+     "manaCost": "{1}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/9/497a10c6-131b-464e-95e4-e47708a24d48.jpg?1783911272",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/9/497a10c6-131b-464e-95e4-e47708a24d48.jpg?1783911272"
+    }
+   ]
+  },
+  {
+   "cvId": 112157,
+   "collectorNumber": "373",
+   "scryfallId": "df797e0d-8ae2-4fdb-a33d-4ba7852b0172",
+   "name": "Flooded Grove",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149211,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/d/f/df797e0d-8ae2-4fdb-a33d-4ba7852b0172.jpg?1783903731",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/d/f/df797e0d-8ae2-4fdb-a33d-4ba7852b0172.jpg?1783903731"
+    }
+   ]
+  },
+  {
+   "cvId": 112177,
+   "collectorNumber": "280",
+   "scryfallId": "f169dfb2-e4c8-46e9-8591-e51bb82da082",
+   "name": "Forest",
+   "quantity": 7,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "sos",
+   "setName": "Secrets of Strixhaven",
+   "setIconId": "sos",
+   "rarity": 0,
+   "collectorNumberGroup": 8,
+   "colorIdentity": "G",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149497,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/f/1/f169dfb2-e4c8-46e9-8591-e51bb82da082.jpg?1783903611",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/f/1/f169dfb2-e4c8-46e9-8591-e51bb82da082.jpg?1783903611"
+    }
+   ]
+  },
+  {
+   "cvId": 110494,
+   "collectorNumber": "150",
+   "scryfallId": "48810b27-0646-4ff9-9d4d-c6d09b2e0267",
+   "name": "Frontier Bivouac",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "ecc",
+   "setName": "Lorwyn Eclipsed Commander",
+   "setIconId": "ecc",
+   "rarity": 1,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GRU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 146235,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/8/48810b27-0646-4ff9-9d4d-c6d09b2e0267.jpg?1783904530",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/8/48810b27-0646-4ff9-9d4d-c6d09b2e0267.jpg?1783904530"
+    }
+   ]
+  },
+  {
+   "cvId": 19132,
+   "collectorNumber": "135",
+   "scryfallId": "b5b735e5-da9d-4740-acff-aac9dd24334c",
+   "name": "Furyborn Hellkite",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "m12",
+   "setName": "Magic 2012",
+   "setIconId": "m12",
+   "rarity": 3,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 7.0,
+   "layout": 0,
+   "cardhoarderId": 41373,
+   "faces": [
+    {
+     "manaCost": "{4}{R}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/5/b5b735e5-da9d-4740-acff-aac9dd24334c.jpg?1783941071",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/5/b5b735e5-da9d-4740-acff-aac9dd24334c.jpg?1783941071"
+    }
+   ]
+  },
+  {
+   "cvId": 95014,
+   "collectorNumber": "265",
+   "scryfallId": "bbc5995d-6b94-421b-b535-79657e29d70f",
+   "name": "Growth Spiral",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "m3c",
+   "setName": "Modern Horizons 3 Commander",
+   "setIconId": "m3c",
+   "rarity": 0,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "GU",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 127075,
+   "faces": [
+    {
+     "manaCost": "{G}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/b/bbc5995d-6b94-421b-b535-79657e29d70f.jpg?1783911358",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/b/bbc5995d-6b94-421b-b535-79657e29d70f.jpg?1783911358"
+    }
+   ]
+  },
+  {
+   "cvId": 112103,
+   "collectorNumber": "381",
+   "scryfallId": "c13adc8c-03bb-4088-98af-0c06d83369aa",
+   "name": "Hinterland Harbor",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149227,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/c/1/c13adc8c-03bb-4088-98af-0c06d83369aa.jpg?1783903728",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/c/1/c13adc8c-03bb-4088-98af-0c06d83369aa.jpg?1783903728"
+    }
+   ]
+  },
+  {
+   "cvId": 99335,
+   "collectorNumber": "184",
+   "scryfallId": "c175c998-7b80-4187-bdbc-5b6e0d7eac91",
+   "name": "Horrid Vigor",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "dsk",
+   "setName": "Duskmourn: House of Horror",
+   "setIconId": "dsk",
+   "rarity": 0,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 130499,
+   "faces": [
+    {
+     "manaCost": "{1}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/c/1/c175c998-7b80-4187-bdbc-5b6e0d7eac91.jpg?1783909453",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/c/1/c175c998-7b80-4187-bdbc-5b6e0d7eac91.jpg?1783909453"
+    }
+   ]
+  },
+  {
+   "cvId": 106113,
+   "collectorNumber": "37",
+   "scryfallId": "abcfefe3-c66d-4512-bcc3-c9a39cfbb983",
+   "name": "Hraesvelgr of the First Brood",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "fic",
+   "setName": "Final Fantasy Commander",
+   "setIconId": "fic",
+   "rarity": 2,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 140065,
+   "faces": [
+    {
+     "manaCost": "{4}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/a/b/abcfefe3-c66d-4512-bcc3-c9a39cfbb983.jpg?1783906362",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/a/b/abcfefe3-c66d-4512-bcc3-c9a39cfbb983.jpg?1783906362"
+    }
+   ]
+  },
+  {
+   "cvId": 91194,
+   "collectorNumber": "196",
+   "scryfallId": "c64cad22-7532-419d-86de-f77fb2ffb09d",
+   "name": "Hypersonic Dragon",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "clu",
+   "setName": "Ravnica: Clue Edition",
+   "setIconId": "clu",
+   "rarity": 2,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "RU",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 123184,
+   "faces": [
+    {
+     "manaCost": "{3}{U}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/c/6/c64cad22-7532-419d-86de-f77fb2ffb09d.jpg?1783912519",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/c/6/c64cad22-7532-419d-86de-f77fb2ffb09d.jpg?1783912519"
+    }
+   ]
+  },
+  {
+   "cvId": 111979,
+   "collectorNumber": "274",
+   "scryfallId": "77b88bb8-6bd9-4632-b937-89468fcb5e6a",
+   "name": "Island",
+   "quantity": 6,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "sos",
+   "setName": "Secrets of Strixhaven",
+   "setIconId": "sos",
+   "rarity": 0,
+   "collectorNumberGroup": 8,
+   "colorIdentity": "U",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149485,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/7/77b88bb8-6bd9-4632-b937-89468fcb5e6a.jpg?1783903612",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/7/77b88bb8-6bd9-4632-b937-89468fcb5e6a.jpg?1783903612"
+    }
+   ]
+  },
+  {
+   "cvId": 68826,
+   "collectorNumber": "238",
+   "scryfallId": "04ce0b01-7b52-4cb9-86ea-13395cf52312",
+   "name": "Jaheira's Respite",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 2,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 100512,
+   "faces": [
+    {
+     "manaCost": "{4}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/0/4/04ce0b01-7b52-4cb9-86ea-13395cf52312.jpg?1783922710",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/0/4/04ce0b01-7b52-4cb9-86ea-13395cf52312.jpg?1783922710"
+    }
+   ]
+  },
+  {
+   "cvId": 69497,
+   "collectorNumber": "725",
+   "scryfallId": "44d544dc-1d2a-4b33-ae62-d0e0217db0a2",
+   "name": "Keiga, the Tide Star",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 2,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 6.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{5}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/4/44d544dc-1d2a-4b33-ae62-d0e0217db0a2.jpg?1783922470",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/4/44d544dc-1d2a-4b33-ae62-d0e0217db0a2.jpg?1783922470"
+    }
+   ]
+  },
+  {
+   "cvId": 49767,
+   "collectorNumber": "310",
+   "scryfallId": "f5b5b9bb-ee9f-4a52-bd74-fd2759c8e3d3",
+   "name": "Ketria Triome",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "iko",
+   "setName": "Ikoria: Lair of Behemoths",
+   "setIconId": "iko",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GRU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/f/5/f5b5b9bb-ee9f-4a52-bd74-fd2759c8e3d3.jpg?1783930979",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/f/5/f5b5b9bb-ee9f-4a52-bd74-fd2759c8e3d3.jpg?1783930979"
+    }
+   ]
+  },
+  {
+   "cvId": 110568,
+   "collectorNumber": "113",
+   "scryfallId": "90c423cc-1264-4067-9c50-e7c88c68ef2d",
+   "name": "Kodama's Reach",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "ecc",
+   "setName": "Lorwyn Eclipsed Commander",
+   "setIconId": "ecc",
+   "rarity": 0,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 146161,
+   "faces": [
+    {
+     "manaCost": "{2}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/9/0/90c423cc-1264-4067-9c50-e7c88c68ef2d.jpg?1783904544",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/9/0/90c423cc-1264-4067-9c50-e7c88c68ef2d.jpg?1783904544"
+    }
+   ]
+  },
+  {
+   "cvId": 66813,
+   "collectorNumber": "478",
+   "scryfallId": "d765ad05-069b-4224-80ed-2f9bdced2dae",
+   "name": "Kura, the Boundless Sky",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "neo",
+   "setName": "Kamigawa: Neon Dynasty",
+   "setIconId": "neo",
+   "rarity": 3,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 5.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{3}{G}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/d/7/d765ad05-069b-4224-80ed-2f9bdced2dae.jpg?1783923734",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/d/7/d765ad05-069b-4224-80ed-2f9bdced2dae.jpg?1783923734"
+    }
+   ]
+  },
+  {
+   "cvId": 69717,
+   "collectorNumber": "726",
+   "scryfallId": "f57bdaa1-ce8a-4103-8598-fee751e65a53",
+   "name": "Leyline of Anticipation",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 5,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 2,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 4.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{2}{U}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/f/5/f57bdaa1-ce8a-4103-8598-fee751e65a53.jpg?1783922469",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/f/5/f57bdaa1-ce8a-4103-8598-fee751e65a53.jpg?1783922469"
+    }
+   ]
+  },
+  {
+   "cvId": 111136,
+   "collectorNumber": "2500",
+   "scryfallId": "99ad63c7-0686-4f20-bc81-7b06df2bcb4a",
+   "name": "Miirym, Sentinel Wyrm",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "sld",
+   "setName": "Secret Lair Drop",
+   "setIconId": "star",
+   "rarity": 2,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "GRU",
+   "manaValue": 6.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{3}{G}{U}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/9/9/99ad63c7-0686-4f20-bc81-7b06df2bcb4a.jpg?1783904242",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/9/9/99ad63c7-0686-4f20-bc81-7b06df2bcb4a.jpg?1783904242"
+    }
+   ]
+  },
+  {
+   "cvId": 112062,
+   "collectorNumber": "278",
+   "scryfallId": "a642c7b1-d4d1-4125-a66d-560438e5ee51",
+   "name": "Mountain",
+   "quantity": 6,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "sos",
+   "setName": "Secrets of Strixhaven",
+   "setIconId": "sos",
+   "rarity": 0,
+   "collectorNumberGroup": 8,
+   "colorIdentity": "R",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149493,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/a/6/a642c7b1-d4d1-4125-a66d-560438e5ee51.jpg?1783903615",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/a/6/a642c7b1-d4d1-4125-a66d-560438e5ee51.jpg?1783903615"
+    }
+   ]
+  },
+  {
+   "cvId": 103990,
+   "collectorNumber": "325",
+   "scryfallId": "2c0372d8-362d-486e-96c0-5738427a1087",
+   "name": "Mox Jasper",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 2,
+   "setId": "tdm",
+   "setName": "Tarkir: Dragonstorm",
+   "setIconId": "tdm",
+   "rarity": 3,
+   "collectorNumberGroup": 6,
+   "colorIdentity": "",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 139825,
+   "faces": [
+    {
+     "manaCost": "{0}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/c/2c0372d8-362d-486e-96c0-5738427a1087.jpg?1783907239",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/c/2c0372d8-362d-486e-96c0-5738427a1087.jpg?1783907239"
+    }
+   ]
+  },
+  {
+   "cvId": 77856,
+   "collectorNumber": "60",
+   "scryfallId": "36fa9a0b-b0c9-43ea-ba11-99d7982f974e",
+   "name": "Mystical Tutor",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "dmr",
+   "setName": "Dominaria Remastered",
+   "setIconId": "dmr",
+   "rarity": 2,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 107609,
+   "faces": [
+    {
+     "manaCost": "{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/3/6/36fa9a0b-b0c9-43ea-ba11-99d7982f974e.jpg?1783918491",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/3/6/36fa9a0b-b0c9-43ea-ba11-99d7982f974e.jpg?1783918491"
+    }
+   ]
+  },
+  {
+   "cvId": 45974,
+   "collectorNumber": "364",
+   "scryfallId": "b104f257-b3aa-4e7e-987c-7358b6ca7b12",
+   "name": "Opportunistic Dragon",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "eld",
+   "setName": "Throne of Eldraine",
+   "setIconId": "eld",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 4.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{2}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/1/b104f257-b3aa-4e7e-987c-7358b6ca7b12.jpg?1783932531",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/1/b104f257-b3aa-4e7e-987c-7358b6ca7b12.jpg?1783932531"
+    }
+   ]
+  },
+  {
+   "cvId": 111955,
+   "collectorNumber": "392",
+   "scryfallId": "6357d665-2b28-4747-ab43-b90176d78d42",
+   "name": "Overflowing Basin",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149249,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/6/3/6357d665-2b28-4747-ab43-b90176d78d42.jpg?1783903723",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/6/3/6357d665-2b28-4747-ab43-b90176d78d42.jpg?1783903723"
+    }
+   ]
+  },
+  {
+   "cvId": 84166,
+   "collectorNumber": "110",
+   "scryfallId": "2887fc25-22cd-48c9-ad2b-6539c8139e27",
+   "name": "Personal Tutor",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "cmm",
+   "setName": "Commander Masters",
+   "setIconId": "cmm",
+   "rarity": 2,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 115319,
+   "faces": [
+    {
+     "manaCost": "{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/8/2887fc25-22cd-48c9-ad2b-6539c8139e27.jpg?1783915692",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/8/2887fc25-22cd-48c9-ad2b-6539c8139e27.jpg?1783915692"
+    }
+   ]
+  },
+  {
+   "cvId": 94513,
+   "collectorNumber": "198",
+   "scryfallId": "7fc9a10b-c9f9-4129-a671-ced0917ce78b",
+   "name": "Planar Genesis",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "mh3",
+   "setName": "Modern Horizons 3",
+   "setIconId": "mh3",
+   "rarity": 1,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "GU",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 126415,
+   "faces": [
+    {
+     "manaCost": "{G}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/f/7fc9a10b-c9f9-4129-a671-ced0917ce78b.jpg?1783911246",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/f/7fc9a10b-c9f9-4129-a671-ced0917ce78b.jpg?1783911246"
+    }
+   ]
+  },
+  {
+   "cvId": 105002,
+   "collectorNumber": "159",
+   "scryfallId": "dc69f960-68ba-4315-8146-6a7a82047503",
+   "name": "Ponder",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "tdc",
+   "setName": "Tarkir: Dragonstorm Commander",
+   "setIconId": "tdc",
+   "rarity": 0,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 138255,
+   "faces": [
+    {
+     "manaCost": "{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/d/c/dc69f960-68ba-4315-8146-6a7a82047503.jpg?1783907102",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/d/c/dc69f960-68ba-4315-8146-6a7a82047503.jpg?1783907102"
+    }
+   ]
+  },
+  {
+   "cvId": 111716,
+   "collectorNumber": "212",
+   "scryfallId": "767ff9fa-4e7f-421a-b911-45186b520ae1",
+   "name": "Prismari, the Inspiration",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "sos",
+   "setName": "Secrets of Strixhaven",
+   "setIconId": "sos",
+   "rarity": 3,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "RU",
+   "manaValue": 7.0,
+   "layout": 0,
+   "cardhoarderId": 149923,
+   "faces": [
+    {
+     "manaCost": "{5}{U}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/6/767ff9fa-4e7f-421a-b911-45186b520ae1.jpg?1783903636",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/6/767ff9fa-4e7f-421a-b911-45186b520ae1.jpg?1783903636"
+    }
+   ]
+  },
+  {
+   "cvId": 89034,
+   "collectorNumber": "68",
+   "scryfallId": "f5e04597-c1b6-4561-aba2-5a8c3185463d",
+   "name": "Progenitor's Icon",
+   "quantity": 1,
+   "boardCategory": 1,
+   "variant": 0,
+   "proxy": false,
+   "type": 2,
+   "setId": "lcc",
+   "setName": "The Lost Caverns of Ixalan Commander",
+   "setIconId": "lcc",
+   "rarity": 2,
+   "collectorNumberGroup": 6,
+   "colorIdentity": "",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 118522,
+   "faces": [
+    {
+     "manaCost": "{3}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/f/5/f5e04597-c1b6-4561-aba2-5a8c3185463d.jpg?1783913914",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/f/5/f5e04597-c1b6-4561-aba2-5a8c3185463d.jpg?1783913914"
+    }
+   ]
+  },
+  {
+   "cvId": 83206,
+   "collectorNumber": "23",
+   "scryfallId": "7966eb7a-0ef7-470f-9769-0d5f45f0395b",
+   "name": "Raise the Palisade",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "ltc",
+   "setName": "Tales of Middle-earth Commander",
+   "setIconId": "ltc",
+   "rarity": 2,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 113078,
+   "faces": [
+    {
+     "manaCost": "{4}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/9/7966eb7a-0ef7-470f-9769-0d5f45f0395b.jpg?1783916033",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/9/7966eb7a-0ef7-470f-9769-0d5f45f0395b.jpg?1783916033"
+    }
+   ]
+  },
+  {
+   "cvId": 10747,
+   "collectorNumber": "195",
+   "scryfallId": "88f3c600-66f1-4a5e-ba4f-61e9f7f7a1d9",
+   "name": "Reclaim",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "ori",
+   "setName": "Magic Origins",
+   "setIconId": "ori",
+   "rarity": 0,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 57616,
+   "faces": [
+    {
+     "manaCost": "{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/8/8/88f3c600-66f1-4a5e-ba4f-61e9f7f7a1d9.jpg?1783938318",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/8/8/88f3c600-66f1-4a5e-ba4f-61e9f7f7a1d9.jpg?1783938318"
+    }
+   ]
+  },
+  {
+   "cvId": 2972,
+   "collectorNumber": "46",
+   "scryfallId": "4b4f72ef-3939-467c-8fe4-fd1c215f2b1e",
+   "name": "Release to the Wind",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "rix",
+   "setName": "Rivals of Ixalan",
+   "setIconId": "rix",
+   "rarity": 2,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 66545,
+   "faces": [
+    {
+     "manaCost": "{2}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/b/4b4f72ef-3939-467c-8fe4-fd1c215f2b1e.jpg?1783935323",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/b/4b4f72ef-3939-467c-8fe4-fd1c215f2b1e.jpg?1783935323"
+    }
+   ]
+  },
+  {
+   "cvId": 68893,
+   "collectorNumber": "90",
+   "scryfallId": "1c044363-d661-4703-841c-8279fa4aa5e5",
+   "name": "Renari, Merchant of Marvels",
+   "quantity": 1,
+   "boardCategory": 1,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 1,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 4.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{3}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/1/c/1c044363-d661-4703-841c-8279fa4aa5e5.jpg?1783922779",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/1/c/1c044363-d661-4703-841c-8279fa4aa5e5.jpg?1783922779"
+    }
+   ]
+  },
+  {
+   "cvId": 110466,
+   "collectorNumber": "115",
+   "scryfallId": "2fa1dac5-51ba-403e-b48b-d2c0d23a8146",
+   "name": "Return of the Wildspeaker",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "ecc",
+   "setName": "Lorwyn Eclipsed Commander",
+   "setIconId": "ecc",
+   "rarity": 2,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 146165,
+   "faces": [
+    {
+     "manaCost": "{4}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/f/2fa1dac5-51ba-403e-b48b-d2c0d23a8146.jpg?1783904544",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/f/2fa1dac5-51ba-403e-b48b-d2c0d23a8146.jpg?1783904544"
+    }
+   ]
+  },
+  {
+   "cvId": 85872,
+   "collectorNumber": "1368",
+   "scryfallId": "0374cd0e-d06a-4976-9483-202015c845ff",
+   "name": "Rewind",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "sld",
+   "setName": "Secret Lair Drop",
+   "setIconId": "star",
+   "rarity": 2,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 4.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{2}{U}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/0/3/0374cd0e-d06a-4976-9483-202015c845ff.jpg?1783914801",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/0/3/0374cd0e-d06a-4976-9483-202015c845ff.jpg?1783914801"
+    }
+   ]
+  },
+  {
+   "cvId": 105005,
+   "collectorNumber": "387",
+   "scryfallId": "dcdea659-ecaf-4abe-be0f-64e105abb104",
+   "name": "Rockfall Vale",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "tdc",
+   "setName": "Tarkir: Dragonstorm Commander",
+   "setIconId": "tdc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GR",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 138715,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/d/c/dcdea659-ecaf-4abe-be0f-64e105abb104.jpg?1783906974",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/d/c/dcdea659-ecaf-4abe-be0f-64e105abb104.jpg?1783906974"
+    }
+   ]
+  },
+  {
+   "cvId": 110607,
+   "collectorNumber": "163",
+   "scryfallId": "bc0f449a-01e2-4c22-8eb0-17ad1efb62e4",
+   "name": "Rootbound Crag",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "ecc",
+   "setName": "Lorwyn Eclipsed Commander",
+   "setIconId": "ecc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GR",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 146261,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/c/bc0f449a-01e2-4c22-8eb0-17ad1efb62e4.jpg?1783904521",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/c/bc0f449a-01e2-4c22-8eb0-17ad1efb62e4.jpg?1783904521"
+    }
+   ]
+  },
+  {
+   "cvId": 82472,
+   "collectorNumber": "181",
+   "scryfallId": "18484227-b96a-40fb-9788-656d00705d80",
+   "name": "Sarkhan, Soul Aflame",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "mat",
+   "setName": "March of the Machine: The Aftermath",
+   "setIconId": "mat",
+   "rarity": 3,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "RU",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 109100,
+   "faces": [
+    {
+     "manaCost": "{1}{U}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/1/8/18484227-b96a-40fb-9788-656d00705d80.jpg?1783916438",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/1/8/18484227-b96a-40fb-9788-656d00705d80.jpg?1783916438"
+    }
+   ]
+  },
+  {
+   "cvId": 25749,
+   "collectorNumber": "296",
+   "scryfallId": "3927cd85-9ee9-4f3c-b92e-8c860136283b",
+   "name": "Seedborn Muse",
+   "quantity": 1,
+   "boardCategory": 1,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "10e",
+   "setName": "Tenth Edition",
+   "setIconId": "10e",
+   "rarity": 2,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 27536,
+   "faces": [
+    {
+     "manaCost": "{3}{G}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/3/9/3927cd85-9ee9-4f3c-b92e-8c860136283b.jpg?1783942992",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/3/9/3927cd85-9ee9-4f3c-b92e-8c860136283b.jpg?1783942992"
+    }
+   ]
+  },
+  {
+   "cvId": 85827,
+   "collectorNumber": "110",
+   "scryfallId": "f21a70d2-53ec-4fee-b7bc-b459309fe657",
+   "name": "Snap",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "woc",
+   "setName": "Wilds of Eldraine Commander",
+   "setIconId": "woc",
+   "rarity": 0,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 117138,
+   "faces": [
+    {
+     "manaCost": "{1}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/f/2/f21a70d2-53ec-4fee-b7bc-b459309fe657.jpg?1783914955",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/f/2/f21a70d2-53ec-4fee-b7bc-b459309fe657.jpg?1783914955"
+    }
+   ]
+  },
+  {
+   "cvId": 104314,
+   "collectorNumber": "106",
+   "scryfallId": "7b0ccfd4-f118-4497-9c5a-54cf12000e16",
+   "name": "Sol Ring",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 2,
+   "setId": "tdc",
+   "setName": "Tarkir: Dragonstorm Commander",
+   "setIconId": "tdc",
+   "rarity": 1,
+   "collectorNumberGroup": 6,
+   "colorIdentity": "",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 138121,
+   "faces": [
+    {
+     "manaCost": "{1}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/b/7b0ccfd4-f118-4497-9c5a-54cf12000e16.jpg?1783907132",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/b/7b0ccfd4-f118-4497-9c5a-54cf12000e16.jpg?1783907132"
+    }
+   ]
+  },
+  {
+   "cvId": 58131,
+   "collectorNumber": "54",
+   "scryfallId": "66c04ee2-c1e0-45fb-aaf5-1b4459df80fc",
+   "name": "Solve the Equation",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "stx",
+   "setName": "Strixhaven: School of Mages",
+   "setIconId": "stx",
+   "rarity": 1,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "U",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 88585,
+   "faces": [
+    {
+     "manaCost": "{2}{U}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/6/6/66c04ee2-c1e0-45fb-aaf5-1b4459df80fc.jpg?1783927375",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/6/6/66c04ee2-c1e0-45fb-aaf5-1b4459df80fc.jpg?1783927375"
+    }
+   ]
+  },
+  {
+   "cvId": 90600,
+   "collectorNumber": "162",
+   "scryfallId": "ffee18af-1160-46ad-9640-87eac49a5239",
+   "name": "Spectacular Showdown",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "mkc",
+   "setName": "Murders at Karlov Manor Commander",
+   "setIconId": "mkc",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 122464,
+   "faces": [
+    {
+     "manaCost": "{1}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/f/f/ffee18af-1160-46ad-9640-87eac49a5239.jpg?1783912995",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/f/f/ffee18af-1160-46ad-9640-87eac49a5239.jpg?1783912995"
+    }
+   ]
+  },
+  {
+   "cvId": 69469,
+   "collectorNumber": "852",
+   "scryfallId": "361385d8-d9c7-4de8-a5c8-683e682779f4",
+   "name": "Sprite Dragon",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 1,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "RU",
+   "manaValue": 2.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{U}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/3/6/361385d8-d9c7-4de8-a5c8-683e682779f4.jpg?1783922395",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/3/6/361385d8-d9c7-4de8-a5c8-683e682779f4.jpg?1783922395"
+    }
+   ]
+  },
+  {
+   "cvId": 106763,
+   "collectorNumber": "258",
+   "scryfallId": "69be21b4-c613-47c6-ba57-f4785861af3e",
+   "name": "Stomping Ground",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "eoe",
+   "setName": "Edge of Eternities",
+   "setIconId": "eoe",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GR",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 143129,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/6/9/69be21b4-c613-47c6-ba57-f4785861af3e.jpg?1783905913",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/6/9/69be21b4-c613-47c6-ba57-f4785861af3e.jpg?1783905913"
+    }
+   ]
+  },
+  {
+   "cvId": 104004,
+   "collectorNumber": "303",
+   "scryfallId": "c250cbd2-2b78-4721-9977-02de20c3d7d1",
+   "name": "Stormscale Scion",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "tdm",
+   "setName": "Tarkir: Dragonstorm",
+   "setIconId": "tdm",
+   "rarity": 3,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 6.0,
+   "layout": 0,
+   "cardhoarderId": 139767,
+   "faces": [
+    {
+     "manaCost": "{4}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/c/2/c250cbd2-2b78-4721-9977-02de20c3d7d1.jpg?1783907250",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/c/2/c250cbd2-2b78-4721-9977-02de20c3d7d1.jpg?1783907250"
+    }
+   ]
+  },
+  {
+   "cvId": 111943,
+   "collectorNumber": "408",
+   "scryfallId": "56a6df05-f4e4-40d9-a701-6d5adb7ce9fd",
+   "name": "Sulfur Falls",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "soc",
+   "setName": "Secrets of Strixhaven Commander",
+   "setIconId": "soc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "RU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 149281,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/5/6/56a6df05-f4e4-40d9-a701-6d5adb7ce9fd.jpg?1783903718",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/5/6/56a6df05-f4e4-40d9-a701-6d5adb7ce9fd.jpg?1783903718"
+    }
+   ]
+  },
+  {
+   "cvId": 71827,
+   "collectorNumber": "169",
+   "scryfallId": "e8efe72d-3c01-4dd6-b3dd-0382ac09dc52",
+   "name": "Surrak Dragonclaw",
+   "quantity": 1,
+   "boardCategory": 2,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "dmc",
+   "setName": "Dominaria United Commander",
+   "setIconId": "dmc",
+   "rarity": 3,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "GRU",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 103224,
+   "faces": [
+    {
+     "manaCost": "{2}{G}{U}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/e/8/e8efe72d-3c01-4dd6-b3dd-0382ac09dc52.jpg?1783921404",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/e/8/e8efe72d-3c01-4dd6-b3dd-0382ac09dc52.jpg?1783921404"
+    }
+   ]
+  },
+  {
+   "cvId": 37362,
+   "collectorNumber": "188",
+   "scryfallId": "287ba07e-6434-4850-940f-454fcab3f535",
+   "name": "Sylvan Tutor",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 4,
+   "setId": "por",
+   "setName": "Portal",
+   "setIconId": "por",
+   "rarity": 2,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 1.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/8/287ba07e-6434-4850-940f-454fcab3f535.jpg?1783946801",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/8/287ba07e-6434-4850-940f-454fcab3f535.jpg?1783946801"
+    }
+   ]
+  },
+  {
+   "cvId": 84236,
+   "collectorNumber": "264",
+   "scryfallId": "375bc646-942e-4bf5-9c71-2c5471828e35",
+   "name": "Temur Battle Rage",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "cmm",
+   "setName": "Commander Masters",
+   "setIconId": "cmm",
+   "rarity": 0,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 114755,
+   "faces": [
+    {
+     "manaCost": "{1}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/3/7/375bc646-942e-4bf5-9c71-2c5471828e35.jpg?1783915640",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/3/7/375bc646-942e-4bf5-9c71-2c5471828e35.jpg?1783915640"
+    }
+   ]
+  },
+  {
+   "cvId": 77391,
+   "collectorNumber": "164",
+   "scryfallId": "7a517c33-b516-4ad9-8cd8-d2ca27310252",
+   "name": "Thundermaw Hellkite",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "scd",
+   "setName": "Starter Commander Decks",
+   "setIconId": "scd",
+   "rarity": 3,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 103906,
+   "faces": [
+    {
+     "manaCost": "{3}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/a/7a517c33-b516-4ad9-8cd8-d2ca27310252.jpg?1783918668",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/a/7a517c33-b516-4ad9-8cd8-d2ca27310252.jpg?1783918668"
+    }
+   ]
+  },
+  {
+   "cvId": 84512,
+   "collectorNumber": "434",
+   "scryfallId": "78a39d22-5e3b-4ba0-b728-dbf16b61fc8f",
+   "name": "Training Center",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "cmm",
+   "setName": "Commander Masters",
+   "setIconId": "cmm",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "RU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 115097,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/8/78a39d22-5e3b-4ba0-b728-dbf16b61fc8f.jpg?1783915582",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/8/78a39d22-5e3b-4ba0-b728-dbf16b61fc8f.jpg?1783915582"
+    }
+   ]
+  },
+  {
+   "cvId": 85323,
+   "collectorNumber": "195",
+   "scryfallId": "2d5e991f-23b2-4db0-a452-7755125b1fd2",
+   "name": "Up the Beanstalk",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 5,
+   "setId": "woe",
+   "setName": "Wilds of Eldraine",
+   "setIconId": "woe",
+   "rarity": 1,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 116732,
+   "faces": [
+    {
+     "manaCost": "{1}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/d/2d5e991f-23b2-4db0-a452-7755125b1fd2.jpg?1783915075",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/d/2d5e991f-23b2-4db0-a452-7755125b1fd2.jpg?1783915075"
+    }
+   ]
+  },
+  {
+   "cvId": 104387,
+   "collectorNumber": "9",
+   "scryfallId": "f54ecbf1-83df-4486-bd6a-7d1f173b6863",
+   "name": "Ureni of the Unwritten",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "tdc",
+   "setName": "Tarkir: Dragonstorm Commander",
+   "setIconId": "tdc",
+   "rarity": 3,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "GRU",
+   "manaValue": 7.0,
+   "layout": 0,
+   "cardhoarderId": 138035,
+   "faces": [
+    {
+     "manaCost": "{4}{G}{U}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/f/5/f54ecbf1-83df-4486-bd6a-7d1f173b6863.jpg?1783907187",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/f/5/f54ecbf1-83df-4486-bd6a-7d1f173b6863.jpg?1783907187"
+    }
+   ]
+  },
+  {
+   "cvId": 70491,
+   "collectorNumber": "399",
+   "scryfallId": "c91adeef-c1d5-4b14-9d79-ddd0dc035786",
+   "name": "Vedalken Orrery",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 2,
+   "setId": "2x2",
+   "setName": "Double Masters 2022",
+   "setIconId": "2x2",
+   "rarity": 2,
+   "collectorNumberGroup": 6,
+   "colorIdentity": "",
+   "manaValue": 4.0,
+   "layout": 0,
+   "faces": [
+    {
+     "manaCost": "{4}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/c/9/c91adeef-c1d5-4b14-9d79-ddd0dc035786.jpg?1783921753",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/c/9/c91adeef-c1d5-4b14-9d79-ddd0dc035786.jpg?1783921753"
+    }
+   ]
+  },
+  {
+   "cvId": 69685,
+   "collectorNumber": "838",
+   "scryfallId": "e11dc967-ae38-4c19-bf54-b3209e203b39",
+   "name": "Vivien, Champion of the Wilds",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 0,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 2,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 101226,
+   "faces": [
+    {
+     "manaCost": "{2}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/e/1/e11dc967-ae38-4c19-bf54-b3209e203b39.jpg?1783922400",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/e/1/e11dc967-ae38-4c19-bf54-b3209e203b39.jpg?1783922400"
+    }
+   ]
+  },
+  {
+   "cvId": 104863,
+   "collectorNumber": "322",
+   "scryfallId": "a621ea7f-f6d5-4663-897a-bbdc2556d665",
+   "name": "Whirlwing Stormbrood // Dynamic Soar",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "tdm",
+   "setName": "Tarkir: Dragonstorm",
+   "setIconId": "tdm",
+   "rarity": 1,
+   "collectorNumberGroup": 1,
+   "colorIdentity": "GU",
+   "manaValue": 5.0,
+   "layout": 16,
+   "cardhoarderId": 139817,
+   "faces": [
+    {
+     "manaCost": "{4}{U}"
+    },
+    {
+     "manaCost": "{2}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/a/6/a621ea7f-f6d5-4663-897a-bbdc2556d665.jpg?1783907244",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/a/6/a621ea7f-f6d5-4663-897a-bbdc2556d665.jpg?1783907244"
+    }
+   ]
+  },
+  {
+   "cvId": 99173,
+   "collectorNumber": "205",
+   "scryfallId": "5e6c0cb4-f17d-48ae-9bbf-9498505a23b0",
+   "name": "Wilderness Reclamation",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 5,
+   "setId": "dsc",
+   "setName": "Duskmourn: House of Horror Commander",
+   "setIconId": "dsc",
+   "rarity": 1,
+   "collectorNumberGroup": 4,
+   "colorIdentity": "G",
+   "manaValue": 4.0,
+   "layout": 0,
+   "cardhoarderId": 131035,
+   "faces": [
+    {
+     "manaCost": "{3}{G}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/5/e/5e6c0cb4-f17d-48ae-9bbf-9498505a23b0.jpg?1783909598",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/5/e/5e6c0cb4-f17d-48ae-9bbf-9498505a23b0.jpg?1783909598"
+    }
+   ]
+  },
+  {
+   "cvId": 103109,
+   "collectorNumber": "270",
+   "scryfallId": "758d93d5-3f66-4395-a928-000485396c87",
+   "name": "Willowrush Verge",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "dft",
+   "setName": "Aetherdrift",
+   "setIconId": "dft",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "GU",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 136663,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/7/5/758d93d5-3f66-4395-a928-000485396c87.jpg?1783907837",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/7/5/758d93d5-3f66-4395-a928-000485396c87.jpg?1783907837"
+    }
+   ]
+  },
+  {
+   "cvId": 91761,
+   "collectorNumber": "236",
+   "scryfallId": "4e11ea8a-f895-438d-a3b7-f070238e4161",
+   "name": "Wooded Foothills",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "mh3",
+   "setName": "Modern Horizons 3",
+   "setIconId": "mh3",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 126491,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/e/4e11ea8a-f895-438d-a3b7-f070238e4161.jpg?1783911232",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/e/4e11ea8a-f895-438d-a3b7-f070238e4161.jpg?1783911232"
+    }
+   ]
+  },
+  {
+   "cvId": 77851,
+   "collectorNumber": "148",
+   "scryfallId": "33dde6e0-d0a7-4432-a3f4-b48234f4e055",
+   "name": "Worldgorger Dragon",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "dmr",
+   "setName": "Dominaria Remastered",
+   "setIconId": "dmr",
+   "rarity": 3,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 6.0,
+   "layout": 0,
+   "cardhoarderId": 107785,
+   "faces": [
+    {
+     "manaCost": "{3}{R}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/3/3/33dde6e0-d0a7-4432-a3f4-b48234f4e055.jpg?1783918449",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/3/3/33dde6e0-d0a7-4432-a3f4-b48234f4e055.jpg?1783918449"
+    }
+   ]
+  },
+  {
+   "cvId": 69215,
+   "collectorNumber": "207",
+   "scryfallId": "acd207de-eec3-4d82-b8b9-b1e60a7bad12",
+   "name": "Wrathful Red Dragon",
+   "quantity": 1,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "clb",
+   "setName": "Commander Legends: Battle for Baldur's Gate",
+   "setIconId": "clb",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 5.0,
+   "layout": 0,
+   "cardhoarderId": 100440,
+   "faces": [
+    {
+     "manaCost": "{3}{R}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/a/c/acd207de-eec3-4d82-b8b9-b1e60a7bad12.jpg?1783922724",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/a/c/acd207de-eec3-4d82-b8b9-b1e60a7bad12.jpg?1783922724"
+    }
+   ]
+  }
+ ]
+}

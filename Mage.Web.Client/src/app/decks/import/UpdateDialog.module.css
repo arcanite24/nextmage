@@ -1,0 +1,67 @@
+/* what changed on the deck's site: additions in sage, removals in oxblood */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 6px 10px;
+  border-radius: var(--radius-control);
+  background: rgb(233 228 214 / 0.04);
+}
+
+.delta {
+  min-width: 28px;
+  font-family: var(--font-print);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.added .delta {
+  color: var(--sage);
+}
+
+.removed .delta {
+  color: var(--danger-text);
+}
+
+.changed .delta {
+  color: var(--ink-soft);
+}
+
+.removed .name {
+  color: var(--ink-dim);
+  text-decoration: line-through;
+  text-decoration-color: rgb(229 135 124 / 0.6);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+}
+
+.zone {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.total {
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  margin-top: var(--space-3);
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+}

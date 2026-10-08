@@ -7,6 +7,8 @@ import { Button } from '../ui/Button';
 import { DeckBox } from '../ui/DeckBox';
 import { MatPrint } from '../ui/MatPrint';
 import { AiSettingsDialog } from './AiSettingsDialog';
+import { useImportDrop, useImportPaste } from '../decks/import/useImportShortcuts';
+import { openImport } from '../stores/importSheet';
 import { describeAi } from './aiSetup';
 import styles from './HomeScreen.module.css';
 
@@ -29,6 +31,8 @@ export function HomeScreen() {
   const selected = roster.find((deck) => deck.id === decks.selectedId) ?? roster[0] ?? null;
   const sleeve = sleeveFor(decks.sleeves, selected);
   const busy = play.phase !== 'idle';
+  const { dragging, dropProps } = useImportDrop();
+  useImportPaste();
 
   useEffect(() => {
     if (!decks.loaded) void decks.refresh();
@@ -51,9 +55,12 @@ export function HomeScreen() {
       <aside className={styles.roster} aria-label="Your decks">
         <header className={styles.rosterHead}>
           <h2>Your decks</h2>
-          <Button variant="quiet" size="sm" onClick={() => navigate('/decks')}>Manage</Button>
+          <span className={styles.rosterActions}>
+            <Button variant="quiet" size="sm" onClick={() => openImport()}>Import</Button>
+            <Button variant="quiet" size="sm" onClick={() => navigate('/decks')}>Manage</Button>
+          </span>
         </header>
-        <div className={styles.rosterList} role="list">
+        <div className={[styles.rosterList, dragging ? styles.dropping : ''].join(' ')} role="list" {...dropProps}>
           {roster.map((deck) => (
             <div role="listitem" key={deck.id}>
               <DeckBox
@@ -69,7 +76,7 @@ export function HomeScreen() {
             </div>
           ))}
           {decks.loaded && roster.length === 0 && (
-            <p className={styles.empty}>No decks yet. Import one from the Decks page.</p>
+            <p className={styles.empty}>No decks yet. Paste a deck link or list here, or choose Import.</p>
           )}
         </div>
       </aside>

@@ -1,4 +1,7 @@
 import * as Tabs from '@radix-ui/react-tabs';
+import { BookmarkPlus } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import bookmarkletSource from '../decks/import/bookmarklet.source.js?raw';
 import type { SkipPrioritySteps } from '../../protocol/generated/views';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
 import { Button } from '../ui/Button';
@@ -35,6 +38,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <Tabs.Trigger value="play" className={styles.trigger}>Gameplay</Tabs.Trigger>
           <Tabs.Trigger value="stops" className={styles.trigger}>Stops</Tabs.Trigger>
           <Tabs.Trigger value="display" className={styles.trigger}>Motion</Tabs.Trigger>
+          <Tabs.Trigger value="import" className={styles.trigger}>Import</Tabs.Trigger>
         </Tabs.List>
 
         <Tabs.Content value="play" className={styles.panel}>
@@ -107,8 +111,43 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             />
           </Row>
         </Tabs.Content>
+
+        <Tabs.Content value="import" className={styles.panel}>
+          <Bookmarklet />
+        </Tabs.Content>
       </Tabs.Root>
     </Dialog>
+  );
+}
+
+/** "Send to Playmat": a bookmark that brings the deck on the page over in one click. */
+function Bookmarklet() {
+  const link = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    // React won't render javascript: links, so the bookmark's address is set by hand
+    const code = bookmarkletSource
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+      .replace(/\n\s+/g, '\n')
+      .trim()
+      .replaceAll('__PLAYMAT_ORIGIN__', window.location.origin);
+    link.current?.setAttribute('href', `javascript:${encodeURIComponent(code)}`);
+  }, []);
+  return (
+    <div className={styles.bookmarklet}>
+      <p className={styles.intro}>
+        Moxfield, MTGGoldfish, AetherHub, TappedOut and Deckstats don’t let other apps read their decks. This bookmark reads the deck on the page you’re looking at, with your browser, and brings it here.
+      </p>
+      <a ref={link} className={styles.bookmarkletLink} draggable onClick={(event) => event.preventDefault()} title="Drag this to your bookmarks bar">
+        <BookmarkPlus size={18} aria-hidden="true" /> Send to Playmat
+      </a>
+      <ol className={styles.bookmarkletSteps}>
+        <li>Drag <b>Send to Playmat</b> to your bookmarks bar.</li>
+        <li>Open a deck on any deck site.</li>
+        <li>Click the bookmark. The deck opens here, ready to save.</li>
+      </ol>
+      <p className={styles.rowDetail}>It only reads the deck page it runs on, and the deck travels in the link itself: no server sees it.</p>
+    </div>
   );
 }
 

@@ -101,7 +101,7 @@ export interface RoomUsersView {
 // === Deck Models ===
 
 // the deck types live with the deck code in core/decks; re-exported here for the legacy client
-export type { DeckCardInfo, DeckCardLayout, DeckCardLists, DeckCoverCard } from '../core/decks/types';
+export type { DeckCardInfo, DeckCardLayout, DeckCardLists, DeckCoverCard, DeckImportSource } from '../core/decks/types';
 
 // === Match Options ===
 

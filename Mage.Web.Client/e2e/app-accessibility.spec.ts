@@ -36,6 +36,24 @@ test.describe('app accessibility', () => {
     await page.waitForLoadState('networkidle');
     expect(await serious(page), 'Decks').toEqual([]);
 
+    // the import sheet: input, a preview with a card to fix, and the copy-and-paste step
+    await page.getByRole('button', { name: 'Import', exact: true }).click();
+    await page.getByRole('dialog', { name: /import a deck/i }).waitFor();
+    expect(await serious(page, '[role="dialog"]'), 'Import: input').toEqual([]);
+    await page.getByLabel('Deck link or list').fill('4 Lightnig Bolt\n56 Mountain');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByText('1 card needs a look').waitFor({ timeout: 20_000 });
+    await page.getByRole('button', { name: 'Find it' }).click();
+    await page.getByRole('button', { name: /^Lightning Bolt/ }).first().waitFor({ timeout: 20_000 });
+    expect(await serious(page, '[role="dialog"]'), 'Import: preview').toEqual([]);
+    await page.keyboard.press('Escape');
+    await page.getByLabel('Deck link or list').fill('https://moxfield.com/decks/E3zZUHuCBUiC2dExO6wn4A');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('heading', { name: /bring it over from moxfield/i }).waitFor();
+    expect(await serious(page, '[role="dialog"]'), 'Import: copy and paste').toEqual([]);
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+
     await page.goto('/decks/new');
     await page.waitForURL(/\/decks\/[0-9a-f-]{36}/, { timeout: 20_000 });
     await page.getByRole('button', { name: /click to add/i }).first().waitFor({ timeout: 20_000 });

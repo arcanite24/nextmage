@@ -1,0 +1,1226 @@
+{
+ "result": {
+  "id": 496887,
+  "deck": {
+   "format": "commander",
+   "imageURL": "https://tcgplayer-cdn.tcgplayer.com/product/525759_in_800x800.jpg",
+   "name": "Malcolm and Vial Smasher",
+   "eventName": "SCG Con Las Vegas cEDH $8K",
+   "eventRank": "5th-8th",
+   "playerName": "Everett Delfel",
+   "created": "2024-06-11T10:23:30Z",
+   "updated": "2024-06-11T10:23:30Z",
+   "subDecks": {
+    "commandzone": [
+     {
+      "cardID": 53359,
+      "quantity": 1
+     },
+     {
+      "cardID": 4539,
+      "quantity": 1
+     }
+    ],
+    "maindeck": [
+     {
+      "cardID": 76380,
+      "quantity": 1
+     },
+     {
+      "cardID": 73282,
+      "quantity": 1
+     },
+     {
+      "cardID": 68574,
+      "quantity": 1
+     },
+     {
+      "cardID": 67802,
+      "quantity": 1
+     },
+     {
+      "cardID": 66533,
+      "quantity": 1
+     },
+     {
+      "cardID": 65354,
+      "quantity": 1
+     },
+     {
+      "cardID": 66497,
+      "quantity": 1
+     },
+     {
+      "cardID": 59428,
+      "quantity": 1
+     },
+     {
+      "cardID": 56001,
+      "quantity": 1
+     },
+     {
+      "cardID": 53955,
+      "quantity": 1
+     },
+     {
+      "cardID": 54347,
+      "quantity": 1
+     },
+     {
+      "cardID": 53423,
+      "quantity": 1
+     },
+     {
+      "cardID": 53431,
+      "quantity": 1
+     },
+     {
+      "cardID": 21219,
+      "quantity": 1
+     },
+     {
+      "cardID": 21188,
+      "quantity": 1
+     },
+     {
+      "cardID": 21215,
+      "quantity": 1
+     },
+     {
+      "cardID": 15656,
+      "quantity": 1
+     },
+     {
+      "cardID": 20797,
+      "quantity": 1
+     },
+     {
+      "cardID": 16903,
+      "quantity": 1
+     },
+     {
+      "cardID": 13904,
+      "quantity": 1
+     },
+     {
+      "cardID": 13778,
+      "quantity": 1
+     },
+     {
+      "cardID": 17889,
+      "quantity": 1
+     },
+     {
+      "cardID": 14340,
+      "quantity": 1
+     },
+     {
+      "cardID": 14038,
+      "quantity": 1
+     },
+     {
+      "cardID": 18751,
+      "quantity": 1
+     },
+     {
+      "cardID": 398,
+      "quantity": 1
+     },
+     {
+      "cardID": 122,
+      "quantity": 1
+     },
+     {
+      "cardID": 16526,
+      "quantity": 1
+     },
+     {
+      "cardID": 18945,
+      "quantity": 1
+     },
+     {
+      "cardID": 18140,
+      "quantity": 1
+     },
+     {
+      "cardID": 1925,
+      "quantity": 1
+     },
+     {
+      "cardID": 7842,
+      "quantity": 1
+     },
+     {
+      "cardID": 17882,
+      "quantity": 1
+     },
+     {
+      "cardID": 3293,
+      "quantity": 1
+     },
+     {
+      "cardID": 12263,
+      "quantity": 1
+     },
+     {
+      "cardID": 8906,
+      "quantity": 1
+     },
+     {
+      "cardID": 1533,
+      "quantity": 1
+     },
+     {
+      "cardID": 19110,
+      "quantity": 1
+     },
+     {
+      "cardID": 16931,
+      "quantity": 1
+     },
+     {
+      "cardID": 17636,
+      "quantity": 1
+     },
+     {
+      "cardID": 1051,
+      "quantity": 1
+     },
+     {
+      "cardID": 7485,
+      "quantity": 1
+     },
+     {
+      "cardID": 19860,
+      "quantity": 1
+     },
+     {
+      "cardID": 20612,
+      "quantity": 1
+     },
+     {
+      "cardID": 4901,
+      "quantity": 1
+     },
+     {
+      "cardID": 14367,
+      "quantity": 1
+     },
+     {
+      "cardID": 7530,
+      "quantity": 1
+     },
+     {
+      "cardID": 443,
+      "quantity": 1
+     },
+     {
+      "cardID": 9956,
+      "quantity": 1
+     },
+     {
+      "cardID": 7614,
+      "quantity": 1
+     },
+     {
+      "cardID": 7708,
+      "quantity": 1
+     },
+     {
+      "cardID": 5719,
+      "quantity": 1
+     },
+     {
+      "cardID": 791,
+      "quantity": 1
+     },
+     {
+      "cardID": 18515,
+      "quantity": 1
+     },
+     {
+      "cardID": 3075,
+      "quantity": 1
+     },
+     {
+      "cardID": 1081,
+      "quantity": 1
+     },
+     {
+      "cardID": 10464,
+      "quantity": 1
+     },
+     {
+      "cardID": 17263,
+      "quantity": 1
+     },
+     {
+      "cardID": 10902,
+      "quantity": 1
+     },
+     {
+      "cardID": 3533,
+      "quantity": 1
+     },
+     {
+      "cardID": 17047,
+      "quantity": 1
+     },
+     {
+      "cardID": 363,
+      "quantity": 1
+     },
+     {
+      "cardID": 8121,
+      "quantity": 1
+     },
+     {
+      "cardID": 14486,
+      "quantity": 1
+     },
+     {
+      "cardID": 2661,
+      "quantity": 1
+     },
+     {
+      "cardID": 12943,
+      "quantity": 1
+     },
+     {
+      "cardID": 6044,
+      "quantity": 1
+     },
+     {
+      "cardID": 4981,
+      "quantity": 1
+     },
+     {
+      "cardID": 598,
+      "quantity": 1
+     },
+     {
+      "cardID": 1907,
+      "quantity": 1
+     },
+     {
+      "cardID": 2116,
+      "quantity": 1
+     },
+     {
+      "cardID": 7038,
+      "quantity": 1
+     },
+     {
+      "cardID": 11313,
+      "quantity": 1
+     },
+     {
+      "cardID": 8054,
+      "quantity": 1
+     },
+     {
+      "cardID": 4393,
+      "quantity": 1
+     },
+     {
+      "cardID": 603,
+      "quantity": 1
+     },
+     {
+      "cardID": 19927,
+      "quantity": 1
+     },
+     {
+      "cardID": 10422,
+      "quantity": 1
+     },
+     {
+      "cardID": 2746,
+      "quantity": 1
+     },
+     {
+      "cardID": 8014,
+      "quantity": 1
+     },
+     {
+      "cardID": 16315,
+      "quantity": 1
+     },
+     {
+      "cardID": 9739,
+      "quantity": 1
+     },
+     {
+      "cardID": 422,
+      "quantity": 1
+     },
+     {
+      "cardID": 6752,
+      "quantity": 1
+     },
+     {
+      "cardID": 5411,
+      "quantity": 1
+     },
+     {
+      "cardID": 20188,
+      "quantity": 1
+     },
+     {
+      "cardID": 4168,
+      "quantity": 1
+     },
+     {
+      "cardID": 4908,
+      "quantity": 1
+     },
+     {
+      "cardID": 12753,
+      "quantity": 1
+     },
+     {
+      "cardID": 13063,
+      "quantity": 1
+     },
+     {
+      "cardID": 17363,
+      "quantity": 1
+     },
+     {
+      "cardID": 18567,
+      "quantity": 1
+     },
+     {
+      "cardID": 8237,
+      "quantity": 1
+     },
+     {
+      "cardID": 17825,
+      "quantity": 1
+     },
+     {
+      "cardID": 16145,
+      "quantity": 1
+     },
+     {
+      "cardID": 20381,
+      "quantity": 1
+     },
+     {
+      "cardID": 7739,
+      "quantity": 1
+     },
+     {
+      "cardID": 90,
+      "quantity": 1
+     }
+    ]
+   },
+   "game": "magic"
+  },
+  "imageURL": "https://tcgplayer-cdn.tcgplayer.com/product/525759_in_800x800.jpg",
+  "cards": {
+   "10422": {
+    "name": "Mox Diamond",
+    "displayName": "Mox Diamond",
+    "set": "STH",
+    "setName": "Stronghold",
+    "tcgPlayerID": 5382,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/2/8/28028830-83ed-45e2-b495-3b9ad9d3e988.jpg?1783946538"
+   },
+   "10464": {
+    "name": "Chain of Vapor",
+    "displayName": "Chain of Vapor",
+    "set": "C16",
+    "setName": "Commander 2016",
+    "tcgPlayerID": 124193,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/3/8/38f741bf-13ee-4384-98ab-27833ebb9f6d.jpg?1783937074"
+   },
+   "1051": {
+    "name": "Mindbreak Trap",
+    "displayName": "Mindbreak Trap",
+    "set": "ZEN",
+    "setName": "Zendikar",
+    "tcgPlayerID": 33369,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/4/f/4f51140b-6254-431a-8810-94307bfdfbbe.jpg?1783942162"
+   },
+   "1081": {
+    "name": "Wooded Foothills",
+    "displayName": "Wooded Foothills",
+    "set": "MH3",
+    "setName": "Modern Horizons 3",
+    "tcgPlayerID": 541277,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/4/e/4e11ea8a-f895-438d-a3b7-f070238e4161.jpg?1783911232"
+   },
+   "10902": {
+    "name": "Flooded Strand",
+    "displayName": "Flooded Strand",
+    "set": "MH3",
+    "setName": "Modern Horizons 3",
+    "tcgPlayerID": 541276,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/8/f/8f85e12c-196b-4459-b81f-0c9c854e9f57.jpg?1783911240"
+   },
+   "11313": {
+    "name": "Defense Grid",
+    "displayName": "Defense Grid",
+    "set": "9ED",
+    "setName": "9th Edition",
+    "tcgPlayerID": 12620,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/9/f939dac5-ad71-4163-adde-4f435412477c.jpg?1783943901"
+   },
+   "122": {
+    "name": "Niv-Mizzet, Parun",
+    "displayName": "Niv-Mizzet, Parun",
+    "set": "OTC",
+    "setName": "Commander: Outlaws of Thunder Junction",
+    "tcgPlayerID": 545223,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/8/6/86c5c337-d25f-4c3e-9762-09ed0c2d36d7.jpg?1783911897"
+   },
+   "12263": {
+    "name": "Spellskite",
+    "displayName": "Spellskite",
+    "set": "CLB",
+    "setName": "Commander Legends: Battle for Baldur's Gate",
+    "tcgPlayerID": 273477,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/2/72204934-f5aa-4559-8f7e-7b0b223580d0.jpg?1783922383"
+   },
+   "12753": {
+    "name": "Demonic Consultation",
+    "displayName": "Demonic Consultation",
+    "set": "MB2",
+    "setName": "Mystery Booster 2",
+    "tcgPlayerID": 563085,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/8/d/8dd7eac8-d6df-48b2-8e64-bdf198c53264.jpg?1783910565"
+   },
+   "12943": {
+    "name": "Diabolic Intent",
+    "displayName": "Diabolic Intent",
+    "set": "BRO",
+    "setName": "The Brothers' War",
+    "tcgPlayerID": 452124,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/d/7/d72ab698-de67-4ca8-8e42-b05346bf52fa.jpg?1783920094"
+   },
+   "13063": {
+    "name": "Necropotence",
+    "displayName": "Necropotence",
+    "set": "IMA",
+    "setName": "Iconic Masters",
+    "tcgPlayerID": 145298,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/8/c89c6895-b0f8-444a-9c89-c6b4fd027b3e.jpg?1783935537"
+   },
+   "13778": {
+    "name": "Dockside Extortionist",
+    "displayName": "Dockside Extortionist",
+    "set": "2X2",
+    "setName": "Double Masters 2022",
+    "tcgPlayerID": 276301,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/e/9e2e3efb-75cb-430f-b9f4-cb58f3aeb91b.jpg?1783921889"
+   },
+   "13904": {
+    "name": "Arcane Signet",
+    "displayName": "Arcane Signet",
+    "set": "FRC",
+    "setName": "Commander: Reality Fracture",
+    "tcgPlayerID": 717785,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/6/c6b6117c-faab-4bbb-b851-07bd8061ef03.jpg?1789644435"
+   },
+   "14038": {
+    "name": "Force of Negation",
+    "displayName": "Force of Negation",
+    "set": "2X2",
+    "setName": "Double Masters 2022",
+    "tcgPlayerID": 276686,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/1/8/1825a719-1b2a-4af9-9cd2-7cb497cd0317.jpg?1783921916"
+   },
+   "14340": {
+    "name": "Glint-Horn Buccaneer",
+    "displayName": "Glint-Horn Buccaneer",
+    "set": "M20",
+    "setName": "Core Set 2020",
+    "tcgPlayerID": 192896,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/d/f/df2df9cb-14f5-470f-b438-20f4ae8d0d59.jpg?1783932979"
+   },
+   "14367": {
+    "name": "Ad Nauseam",
+    "displayName": "Ad Nauseam",
+    "set": "2XM",
+    "setName": "Double Masters",
+    "tcgPlayerID": 218939,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/a/9/a9f2c53e-ff58-4aa8-89a6-4f45628cc571.jpg?1783930188"
+   },
+   "14486": {
+    "name": "City of Brass",
+    "displayName": "City of Brass",
+    "set": "TMC",
+    "setName": "Commander: Teenage Mutant Ninja Turtles",
+    "tcgPlayerID": 679620,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/2/c21565d0-fc40-4d89-9b27-87c03385e0af.jpg?1783904153"
+   },
+   "1533": {
+    "name": "Praetor's Grasp",
+    "displayName": "Praetor's Grasp",
+    "set": "NPH",
+    "setName": "New Phyrexia",
+    "tcgPlayerID": 39423,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/5/9588be49-d9b5-4491-a5a0-10bcadc9f8b3.jpg?1783941311"
+   },
+   "15656": {
+    "name": "Underworld Breach",
+    "displayName": "Underworld Breach",
+    "set": "THB",
+    "setName": "Theros Beyond Death",
+    "tcgPlayerID": 206642,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/0/e/0e51d796-7279-4c06-87f0-37adbdaa41df.jpg?1783931543"
+   },
+   "16145": {
+    "name": "Sol Ring",
+    "displayName": "Sol Ring",
+    "set": "FRC",
+    "setName": "Commander: Reality Fracture",
+    "tcgPlayerID": 717788,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/8/e/8ee443cc-e17a-493b-9c93-1f9e141a30e4.jpg?1789644446"
+   },
+   "16315": {
+    "name": "Reanimate",
+    "displayName": "Reanimate",
+    "set": "DSC",
+    "setName": "Commander: Duskmourn: House of Horror",
+    "tcgPlayerID": 579066,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/3/6/368b6903-5fc4-43e7-bd44-46b8107c8bb4.jpg?1783909614"
+   },
+   "16526": {
+    "name": "Mox Amber",
+    "displayName": "Mox Amber",
+    "set": "DOM",
+    "setName": "Dominaria",
+    "tcgPlayerID": 162125,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/6/6/66024e69-ad60-4c9a-a0ca-da138d33ad80.jpg?1783934955"
+   },
+   "16903": {
+    "name": "Wishclaw Talisman",
+    "displayName": "Wishclaw Talisman",
+    "set": "FDN",
+    "setName": "Foundations",
+    "tcgPlayerID": 591020,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/6/9/69d0f5bd-ccea-49b2-bd79-ad5e4d850cf5.jpg?1783908926"
+   },
+   "16931": {
+    "name": "Arid Mesa",
+    "displayName": "Arid Mesa",
+    "set": "MH2",
+    "setName": "Modern Horizons 2",
+    "tcgPlayerID": 238607,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/2/5/25ac5405-df7b-4097-914a-022cb18e20d4.jpg?1783926797"
+   },
+   "17047": {
+    "name": "Cabal Ritual",
+    "displayName": "Cabal Ritual",
+    "set": "SLD",
+    "setName": "Secret Lair Drop Series",
+    "tcgPlayerID": 658390,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/b/6/b6f93fe0-76f7-4db7-9315-adc26252c059.jpg?1783905140"
+   },
+   "17263": {
+    "name": "Polluted Delta",
+    "displayName": "Polluted Delta",
+    "set": "MH3",
+    "setName": "Modern Horizons 3",
+    "tcgPlayerID": 541274,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/6/e/6e288374-2b71-4ace-b1d2-a19fee6cb4af.jpg?1783911240"
+   },
+   "17363": {
+    "name": "Red Elemental Blast",
+    "displayName": "Red Elemental Blast",
+    "set": "A25",
+    "setName": "Masters 25",
+    "tcgPlayerID": 161430,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/0/70a45e9b-699e-425a-9f3d-267274830d3e.jpg?1783935140"
+   },
+   "17636": {
+    "name": "Marsh Flats",
+    "displayName": "Marsh Flats",
+    "set": "MH2",
+    "setName": "Modern Horizons 2",
+    "tcgPlayerID": 238608,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/d/9db3ba6d-eb7f-4f5b-9a3b-c6239c3baa42.jpg?1783926796"
+   },
+   "17825": {
+    "name": "Animate Dead",
+    "displayName": "Animate Dead",
+    "set": "SOC",
+    "setName": "Commander: Secrets of Strixhaven",
+    "tcgPlayerID": 687375,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/c/cc0c2bab-4392-4e7b-9d14-2901f4ffbae8.jpg?1783903787"
+   },
+   "17882": {
+    "name": "Command Tower",
+    "displayName": "Command Tower",
+    "set": "FRC",
+    "setName": "Commander: Reality Fracture",
+    "tcgPlayerID": 717733,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/1/a/1ac6cb62-45da-4e9a-84c6-09e6eacf0664.jpg?1789644465"
+   },
+   "17889": {
+    "name": "Spectral Sailor",
+    "displayName": "Spectral Sailor",
+    "set": "FDN",
+    "setName": "Foundations",
+    "tcgPlayerID": 695530,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.jpg?1787563009"
+   },
+   "18140": {
+    "name": "Spire of Industry",
+    "displayName": "Spire of Industry",
+    "set": "EOC",
+    "setName": "Commander: Edge of Eternities",
+    "tcgPlayerID": 642867,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/3/5/35e9ec06-a848-4230-84a2-19cb8034e0f0.jpg?1783906004"
+   },
+   "18515": {
+    "name": "Chrome Mox",
+    "displayName": "Chrome Mox",
+    "set": "2XM",
+    "setName": "Double Masters",
+    "tcgPlayerID": 218811,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/3/f340cbf7-5bbe-45b9-a4bf-d1caa500ff93.jpg?1783930116"
+   },
+   "18567": {
+    "name": "Badlands",
+    "displayName": "Badlands",
+    "set": "30A",
+    "setName": "30th Anniversary Edition",
+    "tcgPlayerID": 449163,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/5/c5335e87-57e3-4da6-aba0-619628120f47.jpg?1783919416"
+   },
+   "18751": {
+    "name": "Bolas's Citadel",
+    "displayName": "Bolas's Citadel",
+    "set": "WAR",
+    "setName": "War of the Spark",
+    "tcgPlayerID": 187187,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/d/2/d2124603-d20e-40eb-97f0-a66323397ac2.jpg?1783933451"
+   },
+   "18945": {
+    "name": "Siren Stormtamer",
+    "displayName": "Siren Stormtamer",
+    "set": "LCC",
+    "setName": "Commander: The Lost Caverns of Ixalan",
+    "tcgPlayerID": 525762,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/0/7/073c301e-5bb6-49fa-bf61-2f662030540f.jpg?1783913883"
+   },
+   "1907": {
+    "name": "Imperial Seal",
+    "displayName": "Imperial Seal",
+    "set": "2X2",
+    "setName": "Double Masters 2022",
+    "tcgPlayerID": 276288,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/e/7/e71a6bd3-7478-4c3a-8ae0-98352ce28492.jpg?1783921904"
+   },
+   "19110": {
+    "name": "Mox Opal",
+    "displayName": "Mox Opal",
+    "set": "2XM",
+    "setName": "Double Masters",
+    "tcgPlayerID": 218602,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/6/56001a36-126b-4c08-af98-a6cc4d84210e.jpg?1783930101"
+   },
+   "1925": {
+    "name": "Swan Song",
+    "displayName": "Swan Song",
+    "set": "EOC",
+    "setName": "Commander: Edge of Eternities",
+    "tcgPlayerID": 642791,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/8/3/83d0b761-d694-4232-9f40-5bd8c82a05f1.jpg?1783906053"
+   },
+   "19860": {
+    "name": "Scalding Tarn",
+    "displayName": "Scalding Tarn",
+    "set": "MH2",
+    "setName": "Modern Horizons 2",
+    "tcgPlayerID": 238610,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/1/71e491c5-8c07-449b-b2f1-ffa052e6d311.jpg?1783926793"
+   },
+   "19927": {
+    "name": "Culling the Weak",
+    "displayName": "Culling the Weak",
+    "set": "EXO",
+    "setName": "Exodus",
+    "tcgPlayerID": 4307,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/0/50c33f18-0a5c-4e46-ab0d-6e450915594f.jpg?1783946521"
+   },
+   "20188": {
+    "name": "Force of Will",
+    "displayName": "Force of Will",
+    "set": "DMR",
+    "setName": "Dominaria Remastered",
+    "tcgPlayerID": 449583,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/8/9/89f612d6-7c59-4a7b-a87d-45f789e88ba5.jpg?1789015964"
+   },
+   "20381": {
+    "name": "Demonic Tutor",
+    "displayName": "Demonic Tutor",
+    "set": "CMM",
+    "setName": "Commander Masters",
+    "tcgPlayerID": 504566,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/a/2/a24b4cb6-cebb-428b-8654-74347a6a8d63.jpg?1783915679"
+   },
+   "20612": {
+    "name": "Verdant Catacombs",
+    "displayName": "Verdant Catacombs",
+    "set": "MH2",
+    "setName": "Modern Horizons 2",
+    "tcgPlayerID": 238611,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/4/94c229ea-90da-4aa0-bfda-b162fb3b5b8b.jpg?1783926791"
+   },
+   "20797": {
+    "name": "Thassa's Oracle",
+    "displayName": "Thassa's Oracle",
+    "set": "THB",
+    "setName": "Theros Beyond Death",
+    "tcgPlayerID": 206926,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/2/726e8b29-13e9-4138-b6a9-d2a0d8188d1c.jpg?1783931575"
+   },
+   "2116": {
+    "name": "Mystical Tutor",
+    "displayName": "Mystical Tutor",
+    "set": "DMR",
+    "setName": "Dominaria Remastered",
+    "tcgPlayerID": 457199,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/3/6/36fa9a0b-b0c9-43ea-ba11-99d7982f974e.jpg?1783918491"
+   },
+   "21188": {
+    "name": "Deflecting Swat",
+    "displayName": "Deflecting Swat",
+    "set": "CMM",
+    "setName": "Commander Masters",
+    "tcgPlayerID": 504494,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/b/4/b4b36435-55b3-4615-8812-af41d4fc64d9.jpg?1783915656"
+   },
+   "21215": {
+    "name": "Fierce Guardianship",
+    "displayName": "Fierce Guardianship",
+    "set": "CMM",
+    "setName": "Commander Masters",
+    "tcgPlayerID": 504561,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/7/f7f3dd95-bd14-4e0f-a388-444f9cf1b0dc.jpg?1783915698"
+   },
+   "21219": {
+    "name": "Deadly Rollick",
+    "displayName": "Deadly Rollick",
+    "set": "CMM",
+    "setName": "Commander Masters",
+    "tcgPlayerID": 503565,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/0/e/0e13f735-54fa-42b6-aea4-ced33811d7d4.jpg?1783915679"
+   },
+   "2661": {
+    "name": "Final Fortune",
+    "displayName": "Final Fortune",
+    "set": "7ED",
+    "setName": "7th Edition",
+    "tcgPlayerID": 2900,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/b/fb80afc3-4887-42a0-afb2-7fa997981fb2.jpg?1783945470"
+   },
+   "2746": {
+    "name": "Lotus Petal",
+    "displayName": "Lotus Petal",
+    "set": "MB2",
+    "setName": "Mystery Booster 2",
+    "tcgPlayerID": 563253,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/7/57c4bd1f-757c-4b62-a87d-73da94f904f3.jpg?1783910552"
+   },
+   "3075": {
+    "name": "Brain Freeze",
+    "displayName": "Brain Freeze",
+    "set": "MB2",
+    "setName": "Mystery Booster 2",
+    "tcgPlayerID": 563180,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/a/6/a654b30c-4af3-48af-b436-d177b53e9c71.jpg?1783910614"
+   },
+   "3293": {
+    "name": "Flusterstorm",
+    "displayName": "Flusterstorm",
+    "set": "IMA",
+    "setName": "Iconic Masters",
+    "tcgPlayerID": 145340,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/9/f900eeb7-7c45-44bc-ad3a-0bbe594ecf50.jpg?1783935548"
+   },
+   "3533": {
+    "name": "Bloodstained Mire",
+    "displayName": "Bloodstained Mire",
+    "set": "MH3",
+    "setName": "Modern Horizons 3",
+    "tcgPlayerID": 541275,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/7/579743fe-f71e-4cb2-8629-d6b02ed1591d.jpg?1783911241"
+   },
+   "363": {
+    "name": "Tainted Pact",
+    "displayName": "Tainted Pact",
+    "set": "ODY",
+    "setName": "Odyssey",
+    "tcgPlayerID": 9439,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/5/c513f51b-a0db-4c08-8acc-1e91060b93b7.jpg?1783945239"
+   },
+   "398": {
+    "name": "Mana Crypt",
+    "displayName": "Mana Crypt",
+    "set": "2XM",
+    "setName": "Double Masters",
+    "tcgPlayerID": 214835,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/4/d/4d960186-4559-4af0-bd22-63baa15f8939.jpg?1783930103"
+   },
+   "4168": {
+    "name": "Pyroblast",
+    "displayName": "Pyroblast",
+    "set": "EMA",
+    "setName": "Eternal Masters",
+    "tcgPlayerID": 118587,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/b/0/b029eb9a-dd7a-40c2-96c4-0063d9cc002c.jpg?1783937576"
+   },
+   "422": {
+    "name": "Last Chance",
+    "displayName": "Last Chance",
+    "set": "DMR",
+    "setName": "Dominaria Remastered",
+    "tcgPlayerID": 457153,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/0/c0efb595-d407-4389-a99d-d97c4d6bdcd0.jpg?1783918459"
+   },
+   "4393": {
+    "name": "Dark Ritual",
+    "displayName": "Dark Ritual",
+    "set": "MSC",
+    "setName": "Commander: Marvel Super Heroes",
+    "tcgPlayerID": 696250,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/1/1/11e12a84-e7be-4afc-a230-c2e644743fa8.jpg?1783903013"
+   },
+   "443": {
+    "name": "Simian Spirit Guide",
+    "displayName": "Simian Spirit Guide",
+    "set": "TSR",
+    "setName": "Time Spiral: Remastered",
+    "tcgPlayerID": 233914,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/0/e/0e57335d-4066-4d73-83cd-67a215e01a4e.jpg?1783927787"
+   },
+   "4539": {
+    "name": "Vial Smasher the Fierce",
+    "displayName": "Vial Smasher the Fierce",
+    "set": "DSC",
+    "setName": "Commander: Duskmourn: House of Horror",
+    "tcgPlayerID": 578922,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/c/cc7be939-2202-40fe-8899-a05682d76190.jpg?1783909586"
+   },
+   "4901": {
+    "name": "Exotic Orchard",
+    "displayName": "Exotic Orchard",
+    "set": "FRC",
+    "setName": "Commander: Reality Fracture",
+    "tcgPlayerID": 717740,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/c/cc14b1ee-5def-42df-8ef6-0d91dba39e3a.jpg?1789599911"
+   },
+   "4908": {
+    "name": "Mystic Remora",
+    "displayName": "Mystic Remora",
+    "set": "DMR",
+    "setName": "Dominaria Remastered",
+    "tcgPlayerID": 458047,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/4/0/40140991-cffa-4b52-9a25-37e9a8aa9ddd.jpg?1783918491"
+   },
+   "4981": {
+    "name": "Daze",
+    "displayName": "Daze",
+    "set": "EMA",
+    "setName": "Eternal Masters",
+    "tcgPlayerID": 118406,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/0/f05e9a3e-8a35-4687-85cb-e31b3927a5e2.jpg?1783937617"
+   },
+   "53359": {
+    "name": "Malcolm, Keen-Eyed Navigator",
+    "displayName": "Malcolm, Keen-Eyed Navigator",
+    "set": "LCC",
+    "setName": "Commander: The Lost Caverns of Ixalan",
+    "tcgPlayerID": 525759,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/1/51187cdb-85ee-4f68-9e29-d84d296f0825.jpg?1783913885"
+   },
+   "53423": {
+    "name": "Jeska's Will",
+    "displayName": "Jeska's Will",
+    "set": "MKC",
+    "setName": "Commander: Murders at Karlov Manor",
+    "tcgPlayerID": 535882,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/9/99e0c371-1024-4432-9fd9-3bc29c8d38e4.jpg?1783912996"
+   },
+   "53431": {
+    "name": "Jeweled Lotus",
+    "displayName": "Jeweled Lotus",
+    "set": "CMM",
+    "setName": "Commander Masters",
+    "tcgPlayerID": 484938,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/d/7/d7183700-6941-4a3d-a581-4f33bea795e9.jpg?1783915595"
+   },
+   "53955": {
+    "name": "Magda, Brazen Outlaw",
+    "displayName": "Magda, Brazen Outlaw",
+    "set": "KHM",
+    "setName": "Kaldheim",
+    "tcgPlayerID": 229232,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/0/7/079e6263-e54c-4899-a336-5315909b9322.jpg?1783928229"
+   },
+   "5411": {
+    "name": "Lion's Eye Diamond",
+    "displayName": "Lion's Eye Diamond",
+    "set": "MIR",
+    "setName": "Mirage",
+    "tcgPlayerID": 5129,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/6/3/63bacc32-d6ba-420c-9b49-299c08e5fb39.jpg?1783947041"
+   },
+   "54347": {
+    "name": "Birgi, God of Storytelling // Harnfel, Horn of Bounty",
+    "displayName": "Birgi, God of Storytelling // Harnfel, Horn of Bounty",
+    "set": "KHM",
+    "setName": "Kaldheim",
+    "tcgPlayerID": 230903,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/4/4/44657ab1-0a6a-4a5f-9688-86f239083821.jpg?1783928241"
+   },
+   "56001": {
+    "name": "Ragavan, Nimble Pilferer",
+    "displayName": "Ragavan, Nimble Pilferer",
+    "set": "MH2",
+    "setName": "Modern Horizons 2",
+    "tcgPlayerID": 239857,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/a/9/a9738cda-adb1-47fb-9f4c-ecd930228c4d.jpg?1783926839"
+   },
+   "5719": {
+    "name": "Steam Vents",
+    "displayName": "Steam Vents",
+    "set": "RTR",
+    "setName": "Return to Ravnica",
+    "tcgPlayerID": 66420,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/d/e/de911c88-f5c8-4955-9fa5-1f28a9b17236.jpg?1783940320"
+   },
+   "59428": {
+    "name": "Otawara, Soaring City",
+    "displayName": "Otawara, Soaring City",
+    "set": "NEO",
+    "setName": "Kamigawa: Neon Dynasty",
+    "tcgPlayerID": 262434,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/4/8/486d7edc-d983-41f0-8b78-c99aecd72996.jpg?1783923816"
+   },
+   "598": {
+    "name": "Grim Tutor",
+    "displayName": "Grim Tutor",
+    "set": "M21",
+    "setName": "Core Set 2021",
+    "tcgPlayerID": 215341,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/2/928558ab-e29a-44cb-ac2f-88443571f41a.jpg?1783930707"
+   },
+   "603": {
+    "name": "Curiosity",
+    "displayName": "Curiosity",
+    "set": "JMP",
+    "setName": "Jumpstart",
+    "tcgPlayerID": 216243,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/5/c5a0be10-c20f-4ac0-89a5-1770ecf48aad.jpg?1783930457"
+   },
+   "6044": {
+    "name": "Rhystic Study",
+    "displayName": "Rhystic Study",
+    "set": "J22",
+    "setName": "Jumpstart 2022",
+    "tcgPlayerID": 454994,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/f/9f37c5b6-a59c-45cd-9a99-e9357fe9ea1b.jpg?1783919146"
+   },
+   "65354": {
+    "name": "The One Ring",
+    "displayName": "The One Ring",
+    "set": "LTR",
+    "setName": "Universes Beyond: The Lord of the Rings: Tales of Middle-earth",
+    "tcgPlayerID": 487805,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/d/5/d5806e68-1054-458e-866d-1f2470f682b2.jpg?1790212038"
+   },
+   "66497": {
+    "name": "Orcish Bowmasters",
+    "displayName": "Orcish Bowmasters",
+    "set": "LTR",
+    "setName": "Universes Beyond: The Lord of the Rings: Tales of Middle-earth",
+    "tcgPlayerID": 498367,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/c/7c024bae-5631-4e20-ac69-df392ac9e109.jpg?1783916299"
+   },
+   "66533": {
+    "name": "Borne Upon a Wind",
+    "displayName": "Borne Upon a Wind",
+    "set": "LTR",
+    "setName": "Universes Beyond: The Lord of the Rings: Tales of Middle-earth",
+    "tcgPlayerID": 498680,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/a/9/a9379675-1a32-4e2b-8aaf-5f908c595f31.jpg?1783916321"
+   },
+   "6752": {
+    "name": "Vampiric Tutor",
+    "displayName": "Vampiric Tutor",
+    "set": "DMR",
+    "setName": "Dominaria Remastered",
+    "tcgPlayerID": 457178,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/3/4/34a0203f-9cce-43a4-9cb7-8ce6647895cd.jpg?1783918468"
+   },
+   "67802": {
+    "name": "Beseech the Mirror",
+    "displayName": "Beseech the Mirror",
+    "set": "WOE",
+    "setName": "Wilds of Eldraine",
+    "tcgPlayerID": 512160,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/1/8/18c59776-e1f1-4197-a128-db1d603f56b7.jpg?1783915111"
+   },
+   "68574": {
+    "name": "Flesh Duplicate",
+    "displayName": "Flesh Duplicate",
+    "set": "WHO",
+    "setName": "Universes Beyond: Doctor Who",
+    "tcgPlayerID": 519221,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/1/512e9bd2-77b9-4c1c-8d30-e6249dbd930e.jpg?1783914670"
+   },
+   "7038": {
+    "name": "Snap",
+    "displayName": "Snap",
+    "set": "DMR",
+    "setName": "Dominaria Remastered",
+    "tcgPlayerID": 458224,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/1/f13406c6-f208-402a-94d3-a94a24f03563.jpg?1783918488"
+   },
+   "73282": {
+    "name": "Undercity Sewers",
+    "displayName": "Undercity Sewers",
+    "set": "MKM",
+    "setName": "Murders at Karlov Manor",
+    "tcgPlayerID": 532905,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/2/b/2b5801fb-2026-4f25-98bc-ebb2f99684b9.jpg?1786507741"
+   },
+   "7485": {
+    "name": "Misty Rainforest",
+    "displayName": "Misty Rainforest",
+    "set": "MH2",
+    "setName": "Modern Horizons 2",
+    "tcgPlayerID": 238609,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/8/8/88231c0d-0cc8-44ec-bf95-81d1710ac141.jpg?1783926795"
+   },
+   "7530": {
+    "name": "Pact of Negation",
+    "displayName": "Pact of Negation",
+    "set": "TSR",
+    "setName": "Time Spiral: Remastered",
+    "tcgPlayerID": 233786,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/1/e/1ed4c0bb-b710-44a1-b8bc-6bd11c27b8b8.jpg?1783927843"
+   },
+   "7614": {
+    "name": "Rite of Flame",
+    "displayName": "Rite of Flame",
+    "set": "CSP",
+    "setName": "Coldsnap",
+    "tcgPlayerID": 14103,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/0/c062caf7-f0eb-44db-9f74-e6711a13fada.jpg?1783943336"
+   },
+   "76380": {
+    "name": "Necrodominance",
+    "displayName": "Necrodominance",
+    "set": "MH3",
+    "setName": "Modern Horizons 3",
+    "tcgPlayerID": 552829,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/f/f/ffc0109c-f939-4424-820e-d6e60cacd794.jpg?1783911278"
+   },
+   "7708": {
+    "name": "Blood Crypt",
+    "displayName": "Blood Crypt",
+    "set": "PPECL",
+    "setName": "Promo Pack: Lorwyn Eclipsed",
+    "tcgPlayerID": 672258,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/5/d/5d2bb101-e0b5-4c9c-9f94-ee4f605ddff0.jpg?1783904281"
+   },
+   "7739": {
+    "name": "Volcanic Island",
+    "displayName": "Volcanic Island",
+    "set": "30A",
+    "setName": "30th Anniversary Edition",
+    "tcgPlayerID": 449173,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/1/2/12f74d08-d020-4c89-a1a2-0815b8b65755.jpg?1783919409"
+   },
+   "7842": {
+    "name": "Cavern of Souls",
+    "displayName": "Cavern of Souls",
+    "set": "LCI",
+    "setName": "The Lost Caverns of Ixalan",
+    "tcgPlayerID": 517603,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/3/a/3aad15a2-8a1b-4460-9b06-e85863081878.jpg?1783913719"
+   },
+   "791": {
+    "name": "Watery Grave",
+    "displayName": "Watery Grave",
+    "set": "GRN",
+    "setName": "Guilds of Ravnica",
+    "tcgPlayerID": 175205,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/d/7d4595f2-9297-40dc-b2dd-7144bbb401f7.jpg?1783934098"
+   },
+   "8014": {
+    "name": "Ancient Tomb",
+    "displayName": "Ancient Tomb",
+    "set": "UMA",
+    "setName": "Ultimate Masters",
+    "tcgPlayerID": 179473,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/b/d/bd3d4b4b-cf31-4f89-8140-9650edb03c7b.jpg?1783933762"
+   },
+   "8054": {
+    "name": "Gamble",
+    "displayName": "Gamble",
+    "set": "DMR",
+    "setName": "Dominaria Remastered",
+    "tcgPlayerID": 461900,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/8/e/8e37fae5-ddd0-4e16-8581-71579f89d9c5.jpg?1783918462"
+   },
+   "8121": {
+    "name": "Entomb",
+    "displayName": "Entomb",
+    "set": "DMR",
+    "setName": "Dominaria Remastered",
+    "tcgPlayerID": 457198,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/3/c/3caa9c55-5e3b-436b-84a9-b7ccebf63799.jpg?1783918480"
+   },
+   "8237": {
+    "name": "Mana Vault",
+    "displayName": "Mana Vault",
+    "set": "2X2",
+    "setName": "Double Masters 2022",
+    "tcgPlayerID": 276291,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/1/c1a31d52-a407-4ded-bfca-cc812f11afa0.jpg?1783921790"
+   },
+   "8906": {
+    "name": "Mental Misstep",
+    "displayName": "Mental Misstep",
+    "set": "NPH",
+    "setName": "New Phyrexia",
+    "tcgPlayerID": 39543,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/6/1/61e9c6df-1c84-4eab-9076-a4feb6347c10.jpg?1783941319"
+   },
+   "90": {
+    "name": "Underground Sea",
+    "displayName": "Underground Sea",
+    "set": "IED",
+    "setName": "International Edition",
+    "tcgPlayerID": 97347,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/9/f/9f99ac99-77c0-4dd2-b7bf-e5d8fa152816.jpg?1783948398"
+   },
+   "9739": {
+    "name": "Intuition",
+    "displayName": "Intuition",
+    "set": "TMP",
+    "setName": "Tempest",
+    "tcgPlayerID": 5593,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/c/9/c99f6785-e5a1-4fdc-9fb5-e1a372e7e848.jpg?1783946654"
+   },
+   "9956": {
+    "name": "Gemstone Caverns",
+    "displayName": "Gemstone Caverns",
+    "set": "TSR",
+    "setName": "Time Spiral: Remastered",
+    "tcgPlayerID": 234032,
+    "scryfallImageURL": "https://cards.scryfall.io/large/front/7/f/7f273641-c5f3-48bc-b89e-3cff52d26a0b.jpg?1783927750"
+   }
+  },
+  "canonicalURL": "/magic-the-gathering/deck/Malcolm-and-Vial-Smasher/496887"
+ }
+}

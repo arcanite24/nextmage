@@ -2,11 +2,18 @@ import { create } from 'zustand';
 import { events } from '../connection';
 import { stripMarkup } from '../../core/game/prompt';
 
+export interface ToastAction {
+  label: string;
+  run(): void;
+}
+
 export interface Toast {
   id: number;
   title: string;
   message: string;
   tone: 'info' | 'error';
+  /** one follow-up, such as Undo; the toast closes when it runs */
+  action?: ToastAction;
 }
 
 interface ToastState {
@@ -29,8 +36,8 @@ export const useToasts = create<ToastState>((set) => ({
   },
 }));
 
-export function notify(title: string, message: string, tone: Toast['tone'] = 'info') {
-  useToasts.getState().push({ title, message, tone });
+export function notify(title: string, message: string, tone: Toast['tone'] = 'info', action?: ToastAction) {
+  useToasts.getState().push({ title, message, tone, action });
 }
 
 events.on('SHOW_USERMESSAGE', (data) => {
