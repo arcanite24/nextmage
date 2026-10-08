@@ -16,7 +16,27 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['src/**/*.test.ts'],
-    environment: 'node',
+    projects: [
+      {
+        // pure logic: stores, protocol, services. A .ts test that needs a DOM opts in per file with
+        // `// @vitest-environment happy-dom`.
+        extends: true,
+        test: {
+          name: 'node',
+          include: ['src/**/*.test.ts'],
+          environment: 'node',
+        },
+      },
+      {
+        // React components and hooks, rendered with @testing-library/react in happy-dom
+        extends: true,
+        test: {
+          name: 'dom',
+          include: ['src/**/*.test.tsx'],
+          environment: 'happy-dom',
+          setupFiles: ['src/test/setupDom.ts'],
+        },
+      },
+    ],
   },
 })
