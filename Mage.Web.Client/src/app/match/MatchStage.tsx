@@ -303,7 +303,14 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
             <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} />
-            <GameMenu canConcede={canAct} onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })} onLeave={leave} />
+            <GameMenu
+              canConcede={canAct}
+              onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })}
+              onLeave={leave}
+              rollback={canAct && !!view?.rollbackTurnsAllowed && (view?.turn ?? 0) > 0
+                ? { ready: interaction.mode === 'priority' && !awaitingServer, request: () => onCommand({ type: 'action', action: 'ROLLBACK_TURNS', data: 0 }) }
+                : null}
+            />
 
             {interaction.mode === 'mulligan' && !awaitingServer && (
               <MulliganOverlay hand={hand} interaction={interaction} sleeve={sleeves.mine} onCommand={onCommand} />
@@ -454,11 +461,40 @@ function HiddenHand({ playerId, count, sleeve, left }: { playerId: string; count
   );
 }
 
-function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onConcede(): void; onLeave(): void }) {
+/** Asking to roll the game back to the start of this turn: only while holding priority (the server's rule). */
+interface RollbackOption {
+  ready: boolean;
+  request(): void;
+}
+
+const CONFIRM = {
+  concede: {
+    title: 'Concede this game?',
+    description: 'Your opponent wins this game. You can\'t undo it.',
+    action: 'Concede',
+  },
+  leave: {
+    title: 'Leave this match?',
+    description: 'You concede this game and the rest of the match. You can\'t undo it.',
+    action: 'Leave match',
+  },
+  rollback: {
+    title: 'Go back to the start of this turn?',
+    description: 'Every other player must agree; a game against the computer goes back at once.',
+    action: 'Ask to go back',
+  },
+} as const;
+
+function GameMenu({ canConcede, onConcede, onLeave, rollback }: {
+  canConcede: boolean;
+  onConcede(): void;
+  onLeave(): void;
+  rollback: RollbackOption | null;
+}) {
   // conceding gives up this game; leaving a game in progress gives up the whole match
-  const [confirming, setConfirming] = useState<'concede' | 'leave' | null>(null);
+  const [confirming, setConfirming] = useState<keyof typeof CONFIRM | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const leaving = confirming === 'leave';
+  const copy = confirming ? CONFIRM[confirming] : null;
   return (
     <div className={styles.menu}>
       <DropdownMenu.Root>
@@ -468,6 +504,16 @@ function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onC
         <DropdownMenu.Portal>
           <DropdownMenu.Content className={styles.menuContent} align="end" sideOffset={8}>
             <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>Settings</DropdownMenu.Item>
+            {rollback && (
+              <DropdownMenu.Item
+                className={styles.menuItem}
+                disabled={!rollback.ready}
+                title={rollback.ready ? undefined : 'Available while you have priority'}
+                onSelect={() => setConfirming('rollback')}
+              >
+                Request rollback to start of turn
+              </DropdownMenu.Item>
+            )}
             {canConcede && (
               <DropdownMenu.Item className={styles.menuItem} onSelect={() => setConfirming('concede')}>Concede</DropdownMenu.Item>
             )}
@@ -481,23 +527,23 @@ function GameMenu({ canConcede, onConcede, onLeave }: { canConcede: boolean; onC
       <Dialog
         open={confirming !== null}
         onOpenChange={(open) => !open && setConfirming(null)}
-        title={leaving ? 'Leave this match?' : 'Concede this game?'}
-        description={leaving
-          ? 'You concede this game and the rest of the match. You can\'t undo it.'
-          : 'Your opponent wins this game. You can\'t undo it.'}
+        title={copy?.title ?? ''}
+        description={copy?.description}
         width="sm"
         footer={(
           <>
             <Button variant="quiet" onClick={() => setConfirming(null)}>Keep playing</Button>
             <Button
-              variant="danger"
+              variant={confirming === 'rollback' ? 'decision' : 'danger'}
               onClick={() => {
+                const choice = confirming;
                 setConfirming(null);
-                if (leaving) onLeave();
-                else onConcede();
+                if (choice === 'leave') onLeave();
+                else if (choice === 'concede') onConcede();
+                else if (choice === 'rollback') rollback?.request();
               }}
             >
-              {leaving ? 'Leave match' : 'Concede'}
+              {copy?.action}
             </Button>
           </>
         )}

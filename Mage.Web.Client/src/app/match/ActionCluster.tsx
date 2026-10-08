@@ -1,7 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronUp } from 'lucide-react';
 import { useEffect } from 'react';
-import type { Command, Interaction } from '../../core/game/interaction';
+import type { Command, Interaction, PromptButton } from '../../core/game/interaction';
 import type { PlayerAction } from '../../protocol/generated/views';
 import { isEditableEventTarget } from '../ui/keys';
 import { Button } from '../ui/Button';
@@ -36,6 +36,8 @@ const PASS_AHEAD: { label: string; action: PlayerAction; key: string }[] = [
   { label: 'Resolve the stack', action: 'PASS_PRIORITY_UNTIL_STACK_RESOLVED', key: 'F10' },
 ];
 
+const UNDO: PromptButton = { label: 'Undo tap', command: { type: 'action', action: 'UNDO' }, tone: 'secondary', shortcut: 'Ctrl+Z' };
+
 /** The decision corner: what the game is asking, and the one big button that answers it. */
 export function ActionCluster({
   interaction, awaiting, status, canAct, special, holdingPriority, autoPassing = false, fullControl = false, onFullControl,
@@ -46,6 +48,9 @@ export function ActionCluster({
   if (special && interaction.mode === 'priority') {
     secondary.unshift({ label: 'Special action', command: { type: 'string', value: 'special' }, tone: 'secondary' });
   }
+  // while paying, the last mana tap can be taken back (the server restores the land and the pool)
+  const undo = interaction.mode === 'payMana' && canAct ? UNDO : null;
+  if (undo) secondary.unshift(undo);
   const cancel = secondary.find((button) => button.label === 'Cancel');
 
   useEffect(() => {
@@ -60,6 +65,9 @@ export function ActionCluster({
       if ((event.code === 'Space' || (event.key === 'Enter' && !onObject)) && main?.shortcut === 'Space' && !awaiting) {
         event.preventDefault();
         onCommand(main.command);
+      } else if (undo && (event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        onCommand(undo.command);
       } else if (event.key === 'Escape' && cancel && !awaiting) {
         onCommand(cancel.command);
       } else {
@@ -72,7 +80,7 @@ export function ActionCluster({
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [main, cancel, awaiting, canAct, onCommand]);
+  }, [main, cancel, undo, awaiting, canAct, onCommand]);
 
   // Ctrl+Shift on its own, as on Arena, locks full control on or off (released without any other key in between)
   useEffect(() => {
@@ -128,6 +136,7 @@ export function ActionCluster({
               key={button.label}
               variant={button.tone === 'danger' ? 'danger' : button.tone === 'attack' ? 'print' : 'print'}
               size="md"
+              title={button.shortcut && button.shortcut !== 'Space' ? `${button.label} (${button.shortcut})` : undefined}
               onClick={() => onCommand(button.command)}
               className={button.tone === 'attack' ? styles.attack : undefined}
             >
