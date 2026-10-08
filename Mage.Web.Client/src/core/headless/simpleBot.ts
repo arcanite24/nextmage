@@ -48,7 +48,8 @@ export function chooseBotCommand(
       return interaction.mainButton?.command ?? (unchosen ? { type: 'uuid', id: unchosen } : null);
     }
     case 'payMana': {
-      const source = [...interaction.clickable.keys()][0];
+      // skip sources that already failed to pay this cost (the server can list a source it then ignores)
+      const source = [...interaction.clickable.keys()].find((id) => !skip.has(id));
       if (source) return { type: 'uuid', id: source };
       return interaction.secondaryButtons.find((button) => button.label === 'Cancel')?.command ?? null;
     }
