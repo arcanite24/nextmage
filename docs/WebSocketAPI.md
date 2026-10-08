@@ -237,6 +237,20 @@ Generated from `ClientCallbackMethod`. Do not edit the table by hand.
 | `REPLAY_DONE` | `string` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
 <!-- END GENERATED: callbacks -->
 
+### Pre-game prompt markers
+
+The bridge names the questions asked before the first turn, so clients don't have to recognize them by their text.
+The marker is added to the JSON prompt only (the desktop client is unaffected), as `data.options.webPrompt`:
+
+| Marker | Event | Question |
+|--------|-------|----------|
+| `mulligan` | `GAME_ASK` | Keep or mulligan the opening hand (`true` = mulligan). |
+| `mulliganBottom` | `GAME_TARGET` | London mulligan: choose a card from hand to put on the bottom of the library. |
+| `startingPlayer` | `GAME_TARGET` | Choose the player who takes the first turn. |
+
+Markers are only set while `gameView.step` is absent (before the first turn). Clients should keep a fallback for
+servers without the bridge marker.
+
 ## Deck import
 
 `deckImportFromUrl(url)` reads a deck from a deck website link and returns an `ImportedDeck`: the site's card names
