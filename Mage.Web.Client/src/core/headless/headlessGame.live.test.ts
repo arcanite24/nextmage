@@ -123,5 +123,5 @@ describe.skipIf(!live)('headless game against the AI', () => {
     session.dispose();
     await api.disconnectSession(false).catch(() => undefined);
     rpc.disconnect();
-  }, 300_000);
+  }, Number(process.env.MAGE_BOT_TIMEOUT_MS ?? 240_000) + 60_000);
 });
