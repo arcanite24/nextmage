@@ -5,8 +5,10 @@
  */
 
 import React from 'react';
+import { Lightbulb } from 'lucide-react';
 import { Modal, Button } from '../common';
 import { useGameStore } from '../../stores';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { CardView } from '../../types';
 import { cardImageService } from '../../services/CardImageService';
 import './PileDialog.css';
@@ -24,7 +26,8 @@ export const PileDialog: React.FC<PileDialogProps> = ({
     pile1,
     pile2,
 }) => {
-    const { sendBoolean } = useGameStore();
+    const sendBoolean = useGameStore(state => state.sendBoolean);
+    const cardImageFallbackMode = useSettingsStore(state => state.settings.cardImageFallbackMode);
 
     const pile1Cards = Object.values(pile1);
     const pile2Cards = Object.values(pile2);
@@ -33,12 +36,23 @@ export const PileDialog: React.FC<PileDialogProps> = ({
         sendBoolean(isPile1);
     };
 
+    const handleSelectButtonClick = (
+        event: React.MouseEvent<HTMLButtonElement>,
+        isPile1: boolean,
+    ) => {
+        event.stopPropagation();
+        handleSelectPile(isPile1);
+    };
+
     return (
         <Modal
             isOpen={isOpen}
             onClose={() => { }} // Can't close without selecting
             title="Choose a Pile"
             size="lg"
+            closeOnBackdrop={false}
+            closeOnEscape={false}
+            showCloseButton={false}
         >
             <div className="pile-dialog">
                 <p className="pile-message" dangerouslySetInnerHTML={{ __html: message }} />
@@ -61,6 +75,9 @@ export const PileDialog: React.FC<PileDialogProps> = ({
                                             src={cardImageService.getImageUrl(card)}
                                             alt={card.name}
                                             className="pile-card-image"
+                                            onError={(event) => {
+                                                event.currentTarget.src = cardImageService.getFallbackImageUrl(card, cardImageFallbackMode);
+                                            }}
                                         />
                                         <div className="pile-card-name">{card.name}</div>
                                     </div>
@@ -73,6 +90,8 @@ export const PileDialog: React.FC<PileDialogProps> = ({
                             variant="primary"
                             size="md"
                             className="pile-select-btn"
+                            onClick={(event) => handleSelectButtonClick(event, true)}
+                            autoFocus
                         >
                             Select Pile 1
                         </Button>
@@ -100,6 +119,9 @@ export const PileDialog: React.FC<PileDialogProps> = ({
                                             src={cardImageService.getImageUrl(card)}
                                             alt={card.name}
                                             className="pile-card-image"
+                                            onError={(event) => {
+                                                event.currentTarget.src = cardImageService.getFallbackImageUrl(card, cardImageFallbackMode);
+                                            }}
                                         />
                                         <div className="pile-card-name">{card.name}</div>
                                     </div>
@@ -112,6 +134,7 @@ export const PileDialog: React.FC<PileDialogProps> = ({
                             variant="primary"
                             size="md"
                             className="pile-select-btn"
+                            onClick={(event) => handleSelectButtonClick(event, false)}
                         >
                             Select Pile 2
                         </Button>
@@ -119,7 +142,8 @@ export const PileDialog: React.FC<PileDialogProps> = ({
                 </div>
 
                 <div className="pile-hint">
-                    💡 Click on a pile or its button to select
+                    <Lightbulb size={14} aria-hidden="true" />
+                    Click on a pile or its button to select
                 </div>
             </div>
         </Modal>

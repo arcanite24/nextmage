@@ -4,7 +4,7 @@
  * Central export for all type definitions.
  */
 
-export * from './api';
+export * from './api.js';
 // Re-export game types, but game.ts overrides SimpleCardView and SimpleCardsView
 export type {
     PlayableObjectStats,
@@ -22,6 +22,7 @@ export type {
     CardsView,
     SimpleCardsView,
     PermanentsView,
+    MutateView,
     PlayerView,
     PlayableObjectsList,
     GameView,
@@ -31,7 +32,6 @@ export type {
     UserSkipPrioritySteps,
     UserData,
     AbilityPickerView,
-} from './game';
-export * from './models';
-export * from './debug';
-
+} from './game.js';
+export * from './models.js';
+export * from './debug.js';

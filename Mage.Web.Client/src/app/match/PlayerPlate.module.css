@@ -1,0 +1,207 @@
+/*
+ * A seat printed on the mat: flat ink, no shadow. The avatar disc is dyed in the player's sleeve color so a seat
+ * reads as the owner of the cards in that color; life is set in big printed numerals.
+ */
+.plate {
+  --sleeve: var(--mat-500);
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 248px;
+  padding: 12px 22px 12px 12px;
+  border-radius: var(--radius-zone);
+  background: rgb(7 12 10 / 0.62);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  z-index: 20;
+  transition: box-shadow var(--dur-quick) linear;
+}
+
+/* whose turn it is: the seat's outline is printed heavy */
+.active {
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong);
+}
+
+/* the player has to decide now: amber, the one decision color */
+.deciding {
+  box-shadow: inset 0 0 0 2.5px var(--decision);
+}
+
+.targetable {
+  cursor: crosshair;
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong), 0 0 0 6px rgb(233 228 214 / 0.16);
+}
+
+.selected {
+  box-shadow: inset 0 0 0 3px var(--decision), 0 0 0 6px rgb(240 177 61 / 0.22);
+}
+
+.left {
+  opacity: 0.5;
+}
+
+.avatar {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sleeve) 62%, var(--mat-900));
+  box-shadow: inset 0 0 0 2px rgb(246 242 232 / 0.55);
+  font-family: var(--font-print);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink-strong);
+}
+
+.deciding .avatar {
+  box-shadow: inset 0 0 0 2.5px var(--decision);
+}
+
+.rope {
+  position: absolute;
+  inset: -8px;
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
+  transform: rotate(-90deg);
+}
+
+.rope circle {
+  fill: none;
+  stroke: var(--danger-text);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1s linear;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.name {
+  max-width: 240px;
+  font-family: var(--font-print);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.active .name {
+  color: var(--ink-strong);
+}
+
+.lifeRow {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+/* life: big printed numerals, like a spindown face */
+.life {
+  font-family: var(--font-print);
+  font-size: 60px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.86;
+  color: var(--ink-strong);
+}
+
+.unit {
+  margin-right: 6px;
+  font-family: var(--font-print);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.hurt {
+  animation: hurt 700ms var(--ease-place);
+}
+
+.healed {
+  animation: healed 700ms var(--ease-place);
+}
+
+.delta {
+  position: absolute;
+  left: 0;
+  top: -26px;
+  font-family: var(--font-print);
+  font-size: 30px;
+  font-weight: 700;
+  pointer-events: none;
+  animation: float 1400ms var(--ease-place) forwards;
+}
+
+.deltaDown {
+  color: var(--danger-text);
+}
+
+.deltaUp {
+  color: var(--sage);
+}
+
+.counter {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(233 228 214 / 0.1);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.pool {
+  display: flex;
+  gap: 8px;
+}
+
+.poolItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 22px;
+}
+
+.poolItem b {
+  font-family: var(--font-print);
+  font-size: 24px;
+}
+
+@keyframes hurt {
+  20% { color: var(--danger-text); transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+}
+
+@keyframes healed {
+  30% { color: var(--sage); transform: scale(1.08); }
+}
+
+@keyframes float {
+  from { opacity: 0; transform: translateY(8px); }
+  20% { opacity: 1; }
+  to { opacity: 0; transform: translateY(-24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hurt,
+  .healed {
+    animation: none;
+  }
+}

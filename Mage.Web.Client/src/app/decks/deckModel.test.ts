@@ -1,0 +1,56 @@
+import { describe, expect, it } from 'vitest';
+import type { CardView } from '../../protocol/generated/views';
+import type { DeckCardLists } from '../../core/decks/types';
+import { addCard, copiesByName, copyLimit, countZone, entryKey, groupDeck, manaCurve, moveCard, removeCard } from './deckModel';
+
+const empty: DeckCardLists = { name: 'Test', cards: [], sideboard: [] };
+const bolt = { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146' };
+const boltAlt = { cardName: 'Lightning Bolt', setCode: '2XM', cardNumber: '129' };
+const mountain = { cardName: 'Mountain', setCode: 'M21', cardNumber: '270' };
+
+describe('deck editing', () => {
+  it('adds copies to the same printing and keeps printings apart', () => {
+    let deck = addCard(empty, 'cards', bolt);
+    deck = addCard(deck, 'cards', bolt);
+    deck = addCard(deck, 'cards', boltAlt);
+    expect(deck.cards).toHaveLength(2);
+    expect(countZone(deck, 'cards')).toBe(3);
+    expect(copiesByName(deck, 'lightning bolt')).toBe(3);
+  });
+
+  it('removes and drops empty entries', () => {
+    const deck = removeCard(addCard(empty, 'cards', bolt), 'cards', entryKey(bolt));
+    expect(deck.cards).toHaveLength(0);
+  });
+
+  it('moves cards between main deck and sideboard', () => {
+    const deck = moveCard(addCard(empty, 'cards', bolt, 3), 'cards', entryKey(bolt), 2);
+    expect(countZone(deck, 'cards')).toBe(1);
+    expect(countZone(deck, 'sideboard')).toBe(2);
+  });
+});
+
+describe('copyLimit', () => {
+  it('allows four of a card, any number of basics and of cards that say so', () => {
+    expect(copyLimit(undefined, 'Lightning Bolt')).toBe(4);
+    expect(copyLimit(undefined, 'Mountain')).toBe(Infinity);
+    expect(copyLimit({ rules: ['A deck can have any number of cards named Relentless Rats.'] }, 'Relentless Rats')).toBe(Infinity);
+    expect(copyLimit({ rules: ['A deck can have up to seven cards named Seven Dwarves.'] }, 'Seven Dwarves')).toBe(7);
+  });
+});
+
+describe('grouping and curve', () => {
+  const info = new Map<string, CardView>([
+    [entryKey(bolt), { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 }],
+    [entryKey(mountain), { name: 'Mountain', cardTypes: ['LAND'], manaValue: 0 }],
+  ]);
+  const deck = addCard(addCard(addCard(empty, 'cards', bolt, 4), 'cards', mountain, 20), 'cards', { cardName: 'Mystery', setCode: '', cardNumber: '' });
+
+  it('groups by type with unknown cards last', () => {
+    expect(groupDeck(deck.cards, info).map((group) => [group.key, group.count])).toEqual([['spells', 4], ['lands', 20], ['unknown', 1]]);
+  });
+
+  it('counts nonland cards by mana value', () => {
+    expect(manaCurve(deck.cards, info)).toEqual([0, 4, 0, 0, 0, 0, 0, 0]);
+  });
+});

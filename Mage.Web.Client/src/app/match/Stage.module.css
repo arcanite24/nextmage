@@ -1,0 +1,25 @@
+.frame {
+  position: fixed;
+  inset: 0;
+  /* clip, not hidden: a focused card near the edge must never scroll the table */
+  overflow: clip;
+  background:
+    radial-gradient(120% 90% at 50% 50%, var(--mat-700), var(--mat-950) 85%),
+    var(--mat-900);
+  touch-action: none;
+}
+
+.frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--mat-grain);
+  pointer-events: none;
+}
+
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: center center;
+}

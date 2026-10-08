@@ -7,6 +7,24 @@
   background: var(--color-bg-darkest);
 }
 
+.global-alert {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.global-alert p {
+  margin: 0;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  text-align: center;
+  white-space: pre-wrap;
+}
+
+.global-alert-actions {
+  display: flex;
+  justify-content: center;
+}
+
 /* Game placeholder (temporary) */
 .game-placeholder {
   flex: 1;

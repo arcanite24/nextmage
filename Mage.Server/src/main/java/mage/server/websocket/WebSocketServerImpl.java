@@ -1,380 +1,354 @@
 package mage.server.websocket;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import mage.MageException;
 import mage.interfaces.MageServer;
-import mage.server.managers.ManagerFactory;
 import mage.server.DisconnectReason;
-import mage.utils.MageVersion;
-import mage.cards.decks.DeckCardLists;
-import mage.constants.ManaType;
-import mage.constants.MatchBufferTime;
-import mage.constants.MatchTimeLimit;
-import mage.constants.PlayerAction;
-import mage.constants.SkillLevel;
-import mage.game.match.MatchOptions;
-import mage.game.tournament.TournamentOptions;
-import mage.players.PlayerType;
-import mage.players.net.UserData;
-import mage.cards.repository.CardCriteria;
-import mage.cards.repository.CardInfo;
-import mage.cards.repository.CardRepository;
-import mage.view.CardView;
-import java.util.List;
-import java.util.stream.Collectors;
+import mage.server.managers.ManagerFactory;
+import mage.server.websocket.api.ApiContext;
+import mage.server.websocket.api.WebClientApi;
+import mage.server.websocket.rpc.JsonCodec;
+import mage.server.websocket.rpc.RpcDispatcher;
+import mage.server.websocket.rpc.RpcException;
+import mage.server.websocket.rpc.RpcSessions;
+import mage.util.ThreadUtils;
 import org.apache.log4j.Logger;
 import org.java_websocket.WebSocket;
+import org.java_websocket.WebSocketImpl;
+import org.java_websocket.drafts.Draft;
+import org.java_websocket.drafts.Draft_6455;
+import org.java_websocket.exceptions.InvalidDataException;
+import org.java_websocket.extensions.permessage_deflate.PerMessageDeflateExtension;
+import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.protocols.Protocol;
+import org.java_websocket.handshake.ServerHandshakeBuilder;
 import org.java_websocket.server.WebSocketServer;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
-import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
+/**
+ * Web client bridge: JSON-RPC 2.0 over WebSocket, next to the desktop client's JBoss remoting port.
+ * <p>
+ * Requests: {@code {"jsonrpc": "2.0", "id": 1, "method": "roomGetAllTables", "params": [...]}} with positional params.
+ * Responses: {@code {"jsonrpc": "2.0", "id": 1, "result": ...}} or {@code {..., "error": {"code": -32602, "message": "..."}}}.
+ * Server events are pushed by {@link WebSocketCallbackHandler}.
+ * <p>
+ * See docs/WebSocketAPI.md (generated from the method registry) for every method.
+ */
 public class WebSocketServerImpl extends WebSocketServer {
+
     private static final Logger logger = Logger.getLogger(WebSocketServerImpl.class);
-    private final MageServer mageServer;
-    private final ManagerFactory managerFactory;
-    private final Map<String, MessageHandler> handlers = new HashMap<>();
 
-    @FunctionalInterface
-    private interface MessageHandler {
-        Object handle(WebSocket conn, JsonArray params) throws Exception;
+    // decks, cubes and options are the biggest requests; anything larger is abuse
+    private static final int MAX_MESSAGE_BYTES = 4 * 1024 * 1024;
+    private static final int WORKER_THREADS = 32;
+    private static final int WORKER_QUEUE = 10_000;
+    private static final int MAX_RATE_LIMIT_STRIKES = 200;
+
+    private final RpcDispatcher dispatcher;
+    private final RpcSessions sessions;
+    private final Set<String> allowedOrigins;
+    private final WebSocketLimits limits;
+    private final ConnectionLimiter connectionLimiter;
+    private final ThreadPoolExecutor workers;
+    private final CountDownLatch startupLatch = new CountDownLatch(1);
+    private volatile Exception startupException;
+
+    public WebSocketServerImpl(InetSocketAddress address, MageServer mageServer, ManagerFactory managerFactory, String allowedOrigins) {
+        this(address, mageServer, managerFactory, allowedOrigins, "");
     }
-    
-    // Custom Gson with UUID serialization as strings
-    private final Gson gson = new GsonBuilder()
-        .registerTypeAdapter(UUID.class, new JsonSerializer<UUID>() {
-            @Override
-            public JsonElement serialize(UUID src, Type typeOfSrc, JsonSerializationContext context) {
-                return src == null ? null : new JsonPrimitive(src.toString());
-            }
-        })
-        .registerTypeAdapter(UUID.class, new JsonDeserializer<UUID>() {
-            @Override
-            public UUID deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
-                return json == null ? null : UUID.fromString(json.getAsString());
-            }
-        })
-        .create();
 
-    public WebSocketServerImpl(InetSocketAddress address, MageServer mageServer, ManagerFactory managerFactory) {
-        super(address);
-        this.mageServer = mageServer;
-        this.managerFactory = managerFactory;
-        registerHandlers();
+    /**
+     * @param adminPassword server admin password; admin login over WebSocket is disabled when it is empty
+     */
+    public WebSocketServerImpl(InetSocketAddress address, MageServer mageServer, ManagerFactory managerFactory,
+                               String allowedOrigins, String adminPassword) {
+        this(address, mageServer, managerFactory, allowedOrigins, adminPassword, WebSocketLimits.fromSystemProperties());
+    }
+
+    WebSocketServerImpl(InetSocketAddress address, MageServer mageServer, ManagerFactory managerFactory,
+                        String allowedOrigins, String adminPassword, WebSocketLimits limits) {
+        super(address, Collections.<Draft>singletonList(
+                // the empty protocol accepts clients that request no subprotocol (all browsers by default)
+                new Draft_6455(Collections.singletonList(new PerMessageDeflateExtension()),
+                        Collections.singletonList(new Protocol("")), MAX_MESSAGE_BYTES)));
+        this.sessions = new ServerRpcSessions(managerFactory);
+        this.dispatcher = WebClientApi.createDispatcher(new ApiContext(mageServer, managerFactory, sessions, adminPassword));
+        this.allowedOrigins = parseOrigins(allowedOrigins);
+        this.limits = limits;
+        this.connectionLimiter = new ConnectionLimiter(limits.maxConnectionsPerIp);
+        if (!limits.addressResolver.hasTrustedProxies()) {
+            logger.info("WebSocket: no trusted reverse proxies (-D" + WebSocketLimits.TRUSTED_PROXIES_PROP
+                    + "), client IPs are the TCP peers");
+        }
+
+        AtomicInteger threadNumber = new AtomicInteger();
+        this.workers = new ThreadPoolExecutor(WORKER_THREADS, WORKER_THREADS, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(WORKER_QUEUE),
+                runnable -> {
+                    Thread thread = new Thread(runnable, "WEB-RPC-" + threadNumber.incrementAndGet());
+                    thread.setDaemon(true);
+                    return thread;
+                });
+        this.workers.allowCoreThreadTimeOut(true);
+        setReuseAddr(true);
+    }
+
+    public RpcDispatcher getDispatcher() {
+        return dispatcher;
+    }
+
+    private static Set<String> parseOrigins(String origins) {
+        if (origins == null || origins.trim().isEmpty() || origins.trim().equals("*")) {
+            return Collections.emptySet(); // any origin
+        }
+        return Arrays.stream(origins.split(","))
+                .map(origin -> origin.trim().toLowerCase(Locale.ENGLISH))
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    @Override
+    public ServerHandshakeBuilder onWebsocketHandshakeReceivedAsServer(WebSocket conn, Draft draft, ClientHandshake request) throws InvalidDataException {
+        ServerHandshakeBuilder builder = super.onWebsocketHandshakeReceivedAsServer(conn, draft, request);
+        if (!allowedOrigins.isEmpty()) {
+            String origin = request.getFieldValue("Origin");
+            // non-browser clients (tests, tools) send no origin and are not subject to cross-site attacks
+            if (origin != null && !origin.isEmpty() && !allowedOrigins.contains(origin.toLowerCase(Locale.ENGLISH))) {
+                logger.warn("Rejected WebSocket connection from origin " + origin);
+                throw new InvalidDataException(CloseFrame.POLICY_VALIDATION, "Origin not allowed");
+            }
+        }
+        return builder;
     }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        logger.info("New WebSocket connection: " + conn.getRemoteSocketAddress());
+        String clientIp = clientIp(conn, handshake);
+        ConnectionState state = new ConnectionState(conn, workers, clientIp, limits.maxOutgoingBytes);
+        conn.setAttachment(state);
+        if (limits.limitLoopback || !isLoopback(clientIp)) {
+            if (!connectionLimiter.tryAcquire(clientIp)) {
+                logger.warn("Closing WebSocket connection over the per-IP limit (" + limits.maxConnectionsPerIp + "): " + clientIp);
+                conn.close(CloseFrame.POLICY_VALIDATION, "Too many connections from your address");
+                return;
+            }
+            state.markConnectionSlotHeld();
+        }
+        logger.debug("WebSocket connection opened: " + clientIp + " via " + conn.getRemoteSocketAddress());
+    }
+
+    private String clientIp(WebSocket conn, ClientHandshake handshake) {
+        InetSocketAddress remote = conn.getRemoteSocketAddress();
+        String peer = remote == null || remote.getAddress() == null ? "" : remote.getAddress().getHostAddress();
+        return limits.addressResolver.resolve(peer,
+                handshake == null ? null : handshake.getFieldValue("X-Forwarded-For"),
+                handshake == null ? null : handshake.getFieldValue("X-Real-IP"));
+    }
+
+    private static boolean isLoopback(String ip) {
+        java.net.InetAddress address = ClientAddressResolver.parseAddress(ip);
+        return address != null && address.isLoopbackAddress();
+    }
+
+    int openConnectionsFrom(String ip) {
+        return connectionLimiter.openConnections(ip);
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        logger.info("Closed WebSocket connection: " + conn.getRemoteSocketAddress());
+        ConnectionState state = conn.getAttachment();
+        logger.debug("WebSocket connection closed: " + describe(conn) + " (" + code + ")");
+        if (state == null) {
+            return;
+        }
+        if (state.releaseConnectionSlot()) {
+            connectionLimiter.release(state.getRemoteHost());
+        }
+        // same as a dropped desktop connection: the user keeps tables for a while and can reconnect
+        state.submit(() -> {
+            String sessionId = state.getSessionId();
+            if (sessionId != null && sessions.exists(sessionId)) {
+                sessions.disconnect(sessionId, DisconnectReason.LostConnection);
+            }
+            state.bindSession(null);
+        });
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
+        ConnectionState state = conn.getAttachment();
+        if (state == null) {
+            return;
+        }
+
+        JsonObject request;
         try {
-            JsonObject json = JsonParser.parseString(message).getAsJsonObject();
-            String method = json.has("method") ? json.get("method").getAsString() : "";
-            JsonElement id = json.get("id");
-            JsonArray params = json.has("params") ? json.get("params").getAsJsonArray() : new JsonArray();
+            request = JsonParser.parseString(message).getAsJsonObject();
+        } catch (RuntimeException e) {
+            sendError(conn, null, new RpcException(RpcException.PARSE_ERROR, "Request is not a JSON object"));
+            return;
+        }
+        JsonElement id = request.get("id");
 
-            MessageHandler handler = handlers.get(method);
-            if (handler == null) {
-                logger.warn("Unknown method: " + method);
-                return;
+        if (!state.tryAcquire()) {
+            sendError(conn, id, new RpcException(RpcException.RATE_LIMITED, "Too many requests, slow down"));
+            if (state.recordRateLimitStrike() > MAX_RATE_LIMIT_STRIKES) {
+                logger.warn("Closing WebSocket connection over request rate limit: " + describe(conn));
+                conn.close(CloseFrame.POLICY_VALIDATION, "Request rate limit exceeded");
             }
+            return;
+        }
 
-            Object result = handler.handle(conn, params);
+        if (!request.has("method") || !request.get("method").isJsonPrimitive()) {
+            sendError(conn, id, new RpcException(RpcException.INVALID_REQUEST, "Request has no method"));
+            return;
+        }
+        String method = request.get("method").getAsString();
+        JsonElement paramsJson = request.get("params");
+        if (paramsJson != null && !paramsJson.isJsonNull() && !paramsJson.isJsonArray()) {
+            sendError(conn, id, new RpcException(RpcException.INVALID_REQUEST, "params must be an array"));
+            return;
+        }
+        JsonArray params = paramsJson == null || paramsJson.isJsonNull() ? new JsonArray() : paramsJson.getAsJsonArray();
 
-            if (id != null) {
+        try {
+            state.submit(() -> execute(conn, state, id, method, params));
+        } catch (RejectedExecutionException e) {
+            sendError(conn, id, new RpcException(RpcException.SERVER_BUSY, "Server is busy, try again"));
+        }
+    }
+
+    private void execute(WebSocket conn, ConnectionState state, JsonElement id, String method, JsonArray params) {
+        try {
+            Object result = dispatcher.dispatch(method, params, state);
+            if (id != null && !id.isJsonNull() && conn.isOpen()) {
                 JsonObject response = new JsonObject();
                 response.addProperty("jsonrpc", "2.0");
                 response.add("id", id);
-                response.add("result", gson.toJsonTree(result));
-                conn.send(gson.toJson(response));
+                response.add("result", JsonCodec.GSON.toJsonTree(result));
+                sendText(conn, JsonCodec.GSON.toJson(response));
             }
+        } catch (RpcException e) {
+            sendError(conn, id, e);
+        } catch (MageException e) {
+            // never log request params: they can contain passwords
+            logger.warn("WebSocket RPC " + method + " failed: " + e.getMessage());
+            sendError(conn, id, new RpcException(RpcException.SERVER_ERROR, safeMessage(e)));
+        } catch (Throwable e) {
+            logger.error("WebSocket RPC " + method + " failed: " + ThreadUtils.findRootException(e), e);
+            sendError(conn, id, new RpcException(RpcException.INTERNAL_ERROR, safeMessage(e)));
+        }
+    }
 
-        } catch (Exception e) {
-            logger.error("Error processing WebSocket message: " + message, e);
-            if (conn.isOpen()) {
-                JsonObject error = new JsonObject();
-                error.addProperty("jsonrpc", "2.0");
-                
-                try {
-                    JsonObject json = JsonParser.parseString(message).getAsJsonObject();
-                    if (json.has("id")) {
-                        error.add("id", json.get("id"));
-                    }
-                } catch (Exception ignore) {}
+    private static String safeMessage(Throwable e) {
+        String message = e.getMessage();
+        return message == null || message.isEmpty() ? e.getClass().getSimpleName() : message;
+    }
 
-                error.addProperty("error", e.getMessage());
-                conn.send(gson.toJson(error));
+    private void sendError(WebSocket conn, JsonElement id, RpcException error) {
+        if (!conn.isOpen()) {
+            return;
+        }
+        JsonObject errorJson = new JsonObject();
+        errorJson.addProperty("code", error.getCode());
+        errorJson.addProperty("message", error.getMessage());
+        JsonObject response = new JsonObject();
+        response.addProperty("jsonrpc", "2.0");
+        response.add("id", id);
+        response.add("error", errorJson);
+        sendText(conn, JsonCodec.GSON.toJson(response));
+    }
+
+    /**
+     * Every outgoing message goes through here. RPC responses and server callbacks are sent from different threads,
+     * and the permessage-deflate encoder keeps per-connection state that is not thread safe ("Deflater has been closed"),
+     * so sends on one connection are serialized.
+     */
+    static void sendText(WebSocket conn, String text) {
+        synchronized (conn) {
+            conn.send(text);
+            ConnectionState state = conn.getAttachment();
+            long limit = state == null ? WebSocketLimits.DEFAULT_MAX_OUTGOING_BYTES : state.getMaxOutgoingBytes();
+            if (limit > 0 && conn instanceof WebSocketImpl && queuedBytesExceed(((WebSocketImpl) conn).outQueue, limit)) {
+                // Java-WebSocket queues without limit: a client that stops reading would grow server memory forever
+                logger.warn("Dropping WebSocket connection with more than " + limit + " bytes of unsent data: "
+                        + (state == null ? conn.getRemoteSocketAddress() : state.getRemoteHost()));
+                conn.closeConnection(CloseFrame.TRY_AGAIN_LATER, "Client is not reading its messages");
             }
         }
+    }
+
+    static boolean queuedBytesExceed(Iterable<ByteBuffer> queue, long limit) {
+        long total = 0;
+        for (ByteBuffer buffer : queue) {
+            total += buffer.remaining();
+            if (total > limit) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        logger.error("WebSocket error", ex);
-    }
-
-    private void registerHandlers() {
-        handlers.put("ping", (conn, params) -> true);
-        handlers.put("authRegister", this::handleAuthRegister);
-        handlers.put("connectUser", this::handleConnectUser);
-        
-        // Room
-        handlers.put("roomGetUsers", (conn, params) -> mageServer.roomGetUsers(getUUID(params, 0)));
-        handlers.put("roomGetAllTables", (conn, params) -> mageServer.roomGetAllTables(getUUID(params, 0)));
-        handlers.put("roomCreateTable", this::handleRoomCreateTable);
-        handlers.put("roomJoinTable", (conn, params) -> mageServer.roomJoinTable(getString(params, 0), getUUID(params, 1), getUUID(params, 2), getString(params, 3), PlayerType.getByDescription(getString(params, 4)), getInt(params, 5), getObject(params, 6, DeckCardLists.class), params.size() > 7 ? getString(params, 7) : ""));
-        handlers.put("roomLeaveTableOrTournament", (conn, params) -> mageServer.roomLeaveTableOrTournament(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
-        handlers.put("roomWatchTable", (conn, params) -> mageServer.roomWatchTable(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
-        handlers.put("roomWatchTournament", (conn, params) -> mageServer.roomWatchTournament(getString(params, 0), getUUID(params, 1)));
-        
-        // Chat
-        handlers.put("chatJoin", (conn, params) -> { mageServer.chatJoin(getUUID(params, 0), getString(params, 1), getString(params, 2)); return true; });
-        handlers.put("chatSendMessage", (conn, params) -> { mageServer.chatSendMessage(getUUID(params, 0), getString(params, 1), getString(params, 2)); return true; });
-        handlers.put("chatLeave", (conn, params) -> { mageServer.chatLeave(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("chatFindByGame", (conn, params) -> mageServer.chatFindByGame(getUUID(params, 0)));
-        handlers.put("chatFindByTable", (conn, params) -> mageServer.chatFindByTable(getUUID(params, 0)));
-        handlers.put("chatFindByTournament", (conn, params) -> mageServer.chatFindByTournament(getUUID(params, 0)));
-        handlers.put("chatFindByRoom", (conn, params) -> mageServer.chatFindByRoom(getUUID(params, 0)));
-
-        // Match
-        handlers.put("matchStart", (conn, params) -> mageServer.matchStart(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
-        handlers.put("matchQuit", (conn, params) -> { mageServer.matchQuit(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("gameJoin", (conn, params) -> { mageServer.gameJoin(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("gameWatchStart", (conn, params) -> mageServer.gameWatchStart(getUUID(params, 0), getString(params, 1)));
-        handlers.put("gameWatchStop", (conn, params) -> { mageServer.gameWatchStop(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("gameGetView", (conn, params) -> mageServer.gameGetView(getUUID(params, 0), getString(params, 1), getUUID(params, 2)));
-
-        // Player Data
-        handlers.put("sendPlayerUUID", (conn, params) -> { mageServer.sendPlayerUUID(getUUID(params, 0), getString(params, 1), getUUID(params, 2)); return true; });
-        handlers.put("sendPlayerString", (conn, params) -> { mageServer.sendPlayerString(getUUID(params, 0), getString(params, 1), getString(params, 2)); return true; });
-        handlers.put("sendPlayerBoolean", (conn, params) -> { mageServer.sendPlayerBoolean(getUUID(params, 0), getString(params, 1), getBoolean(params, 2)); return true; });
-        handlers.put("sendPlayerInteger", (conn, params) -> { mageServer.sendPlayerInteger(getUUID(params, 0), getString(params, 1), getInt(params, 2)); return true; });
-        handlers.put("sendPlayerManaType", (conn, params) -> { mageServer.sendPlayerManaType(getUUID(params, 0), getUUID(params, 1), getString(params, 2), ManaType.valueOf(getString(params, 3))); return true; });
-        handlers.put("sendPlayerAction", this::handleSendPlayerAction);
-        handlers.put("cheatShow", (conn, params) -> { mageServer.cheatShow(getUUID(params, 0), getString(params, 1), getUUID(params, 2)); return true; });
-        
-        // Tournaments & Drafts
-        handlers.put("roomCreateTournament", (conn, params) -> mageServer.roomCreateTournament(getString(params, 0), getUUID(params, 1), getObject(params, 2, TournamentOptions.class)));
-        handlers.put("roomJoinTournament", (conn, params) -> mageServer.roomJoinTournament(getString(params, 0), getUUID(params, 1), getUUID(params, 2), getString(params, 3), PlayerType.getByDescription(getString(params, 4)), getInt(params, 5), getObject(params, 6, DeckCardLists.class), params.size() > 7 ? getString(params, 7) : ""));
-        handlers.put("tournamentStart", (conn, params) -> mageServer.tournamentStart(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
-        handlers.put("tournamentJoin", (conn, params) -> { mageServer.tournamentJoin(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("tournamentQuit", (conn, params) -> { mageServer.tournamentQuit(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("tournamentFindById", (conn, params) -> mageServer.tournamentFindById(getUUID(params, 0)));
-        
-        handlers.put("draftJoin", (conn, params) -> { mageServer.draftJoin(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("draftQuit", (conn, params) -> { mageServer.draftQuit(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("sendDraftCardPick", this::handleSendDraftCardPick);
-        handlers.put("sendDraftCardMark", (conn, params) -> { mageServer.sendDraftCardMark(getUUID(params, 0), getString(params, 1), getUUID(params, 2)); return true; });
-        handlers.put("draftSetBoosterLoaded", (conn, params) -> { mageServer.draftSetBoosterLoaded(getUUID(params, 0), getString(params, 1)); return true; });
-
-        // Decks
-        handlers.put("deckSubmit", (conn, params) -> mageServer.deckSubmit(getString(params, 0), getUUID(params, 1), getObject(params, 2, DeckCardLists.class)));
-        handlers.put("deckSave", (conn, params) -> { mageServer.deckSave(getString(params, 0), getUUID(params, 1), getObject(params, 2, DeckCardLists.class)); return true; });
-
-        // User
-        handlers.put("connectSetUserData", this::handleConnectSetUserData);
-        
-        // Utils
-        handlers.put("serverGetMainRoomId", (conn, params) -> mageServer.serverGetMainRoomId());
-        handlers.put("getServerState", (conn, params) -> mageServer.getServerState());
-        handlers.put("searchCards", this::handleSearchCards);
-        
-        // Replay
-        handlers.put("replayInit", (conn, params) -> { mageServer.replayInit(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("replayStart", (conn, params) -> { mageServer.replayStart(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("replayStop", (conn, params) -> { mageServer.replayStop(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("replayNext", (conn, params) -> { mageServer.replayNext(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("replayPrevious", (conn, params) -> { mageServer.replayPrevious(getUUID(params, 0), getString(params, 1)); return true; });
-        handlers.put("replaySkipForward", (conn, params) -> { mageServer.replaySkipForward(getUUID(params, 0), getString(params, 1), getInt(params, 2)); return true; });
-
-        // Table Utils
-        handlers.put("tableSwapSeats", (conn, params) -> { mageServer.tableSwapSeats(getString(params, 0), getUUID(params, 1), getUUID(params, 2), getInt(params, 3), getInt(params, 4)); return true; });
-        handlers.put("tableRemove", (conn, params) -> { mageServer.tableRemove(getString(params, 0), getUUID(params, 1), getUUID(params, 2)); return true; });
-        handlers.put("tableIsOwner", (conn, params) -> mageServer.tableIsOwner(getString(params, 0), getUUID(params, 1), getUUID(params, 2)));
-        handlers.put("roomGetFinishedMatches", (conn, params) -> mageServer.roomGetFinishedMatches(getUUID(params, 0)));
-        handlers.put("roomGetTableById", (conn, params) -> mageServer.roomGetTableById(getUUID(params, 0), getUUID(params, 1)));
-    }
-
-    private Object handleAuthRegister(WebSocket conn, JsonArray params) throws Exception {
-        String sessionId = getString(params, 0);
-        String userName = getString(params, 1);
-        String password = getString(params, 2);
-        String email = getString(params, 3);
-        
-        if (managerFactory.sessionManager().getSession(sessionId).isPresent()) {
-            managerFactory.sessionManager().disconnect(sessionId, DisconnectReason.LostConnection, false);
+        if (startupLatch.getCount() > 0) {
+            startupException = ex;
+            startupLatch.countDown();
         }
-        managerFactory.sessionManager().createSession(sessionId, new WebSocketCallbackHandler(conn));
-        
-        return mageServer.authRegister(sessionId, userName, password, email);
+        logger.error("WebSocket error" + (conn == null ? "" : " on " + describe(conn)), ex);
     }
 
-    private Object handleConnectUser(WebSocket conn, JsonArray params) throws Exception {
-         String userName = getString(params, 0);
-         String password = getString(params, 1);
-         String sessionId = getString(params, 2);
-         String restoreSessionId = params.size() > 3 ? getString(params, 3) : "";
-         MageVersion version = new MageVersion(mage.server.Main.class);
-         String userIdStr = params.size() > 5 ? getString(params, 5) : "";
-         
-         if (managerFactory.sessionManager().getSession(sessionId).isPresent()) {
-             managerFactory.sessionManager().disconnect(sessionId, DisconnectReason.LostConnection, false);
-         }
-         managerFactory.sessionManager().createSession(sessionId, new WebSocketCallbackHandler(conn));
-         
-         return mageServer.connectUser(userName, password, sessionId, restoreSessionId, version, userIdStr);
-    }
-
-    private Object handleRoomCreateTable(WebSocket conn, JsonArray params) throws Exception {
-        String sessionId = getString(params, 0);
-        UUID roomId = getUUID(params, 1);
-        JsonObject optionsJson = params.get(2).getAsJsonObject();
-        
-        String tableName = optionsJson.has("name") ? optionsJson.get("name").getAsString() : "Game";
-        String gameType = optionsJson.has("gameType") ? optionsJson.get("gameType").getAsString() : "Two Player Duel";
-        boolean multiPlayer = gameType.contains("Free For All") || gameType.contains("Commander");
-        
-        MatchOptions matchOptions = new MatchOptions(tableName, gameType, multiPlayer);
-        
-        if (optionsJson.has("deckType")) matchOptions.setDeckType(optionsJson.get("deckType").getAsString());
-        if (optionsJson.has("winsNeeded")) matchOptions.setWinsNeeded(optionsJson.get("winsNeeded").getAsInt());
-        if (optionsJson.has("freeMulligans")) matchOptions.setFreeMulligans(optionsJson.get("freeMulligans").getAsInt());
-        if (optionsJson.has("password") && !optionsJson.get("password").isJsonNull()) matchOptions.setPassword(optionsJson.get("password").getAsString());
-        if (optionsJson.has("limited")) matchOptions.setLimited(optionsJson.get("limited").getAsBoolean());
-        if (optionsJson.has("rated")) matchOptions.setRated(optionsJson.get("rated").getAsBoolean());
-        if (optionsJson.has("rollbackTurnsAllowed")) matchOptions.setRollbackTurnsAllowed(optionsJson.get("rollbackTurnsAllowed").getAsBoolean());
-        if (optionsJson.has("spectatorsAllowed")) matchOptions.setSpectatorsAllowed(optionsJson.get("spectatorsAllowed").getAsBoolean());
-        if (optionsJson.has("matchTimeLimit")) {
-            try { matchOptions.setMatchTimeLimit(MatchTimeLimit.valueOf(optionsJson.get("matchTimeLimit").getAsString())); } catch (Exception e) {}
+    /**
+     * The client for logs: its real IP (forwarded by a trusted proxy) and the TCP peer it came through.
+     */
+    private static String describe(WebSocket conn) {
+        ConnectionState state = conn.getAttachment();
+        InetSocketAddress peer = conn.getRemoteSocketAddress();
+        if (state == null || peer == null || state.getRemoteHost().equals(peer.getAddress().getHostAddress())) {
+            return String.valueOf(peer);
         }
-        if (optionsJson.has("matchBufferTime")) {
-            try { matchOptions.setMatchBufferTime(MatchBufferTime.valueOf(optionsJson.get("matchBufferTime").getAsString())); } catch (Exception e) {}
-        }
-        if (optionsJson.has("skillLevel")) {
-            try { matchOptions.setSkillLevel(SkillLevel.valueOf(optionsJson.get("skillLevel").getAsString())); } catch (Exception e) {}
-        }
-        
-        // Default quitRatio to 100 (allow everyone) if not specified, to avoid blocking users with >0% quit ratio from creating tables
-        matchOptions.setQuitRatio(optionsJson.has("quitRatio") ? optionsJson.get("quitRatio").getAsInt() : 100);
-        
-        if (optionsJson.has("minimumRating")) matchOptions.setMinimumRating(optionsJson.get("minimumRating").getAsInt());
-        if (optionsJson.has("edhPowerLevel")) matchOptions.setEdhPowerLevel(optionsJson.get("edhPowerLevel").getAsInt());
-        
-        matchOptions.getPlayerTypes().add(PlayerType.HUMAN);
-        matchOptions.getPlayerTypes().add(PlayerType.HUMAN);
-        
-        return mageServer.roomCreateTable(sessionId, roomId, matchOptions);
-    }
-
-    private Object handleSendPlayerAction(WebSocket conn, JsonArray params) throws Exception {
-         PlayerAction action = PlayerAction.valueOf(getString(params, 0));
-         UUID gameId = getUUID(params, 1);
-         String sessionId = getString(params, 2);
-         Object data = null;
-         
-         if (params.size() > 3 && !params.get(3).isJsonNull()) {
-             JsonElement dataElem = params.get(3);
-             if (dataElem.isJsonPrimitive()) {
-                 if (dataElem.getAsJsonPrimitive().isString()) {
-                     String dataStr = dataElem.getAsString();
-                     try { data = UUID.fromString(dataStr); } catch (Exception e) { data = dataStr; }
-                 } else if (dataElem.getAsJsonPrimitive().isNumber()) {
-                     data = dataElem.getAsInt();
-                 } else if (dataElem.getAsJsonPrimitive().isBoolean()) {
-                     data = dataElem.getAsBoolean();
-                 }
-             }
-         }
-         mageServer.sendPlayerAction(action, gameId, sessionId, data);
-         return true;
-    }
-
-    private Object handleSendDraftCardPick(WebSocket conn, JsonArray params) throws Exception {
-       UUID draftId = getUUID(params, 0);
-       String sessionId = getString(params, 1);
-       UUID cardId = getUUID(params, 2);
-       Set<UUID> hiddenCards = new HashSet<>();
-       if (params.size() > 3 && params.get(3).isJsonArray()) {
-           for (JsonElement e : params.get(3).getAsJsonArray()) {
-               hiddenCards.add(UUID.fromString(e.getAsString()));
-           }
-       }
-       return mageServer.sendDraftCardPick(draftId, sessionId, cardId, hiddenCards);
-    }
-
-    private Object handleConnectSetUserData(WebSocket conn, JsonArray params) throws Exception {
-        String userName = getString(params, 0);
-        String sessionId = getString(params, 1);
-        UserData userData = getObject(params, 2, UserData.class);
-        String clientVersion = getString(params, 3);
-        String userIdStr = getString(params, 4);
-        return mageServer.connectSetUserData(userName, sessionId, userData, clientVersion, userIdStr);
-    }
-
-    private Object handleSearchCards(WebSocket conn, JsonArray params) throws Exception {
-        CardCriteria criteria = getObject(params, 0, CardCriteria.class);
-        if (criteria.getCount() == null) criteria.count(100L);
-
-        if (criteria.getFormat() != null && !criteria.getFormat().isEmpty()) {
-            mage.cards.decks.DeckValidator validator = mage.cards.decks.DeckValidatorFactory.instance.createDeckValidator(criteria.getFormat());
-            if (validator instanceof mage.cards.decks.Constructed) {
-                mage.cards.decks.Constructed constructed = (mage.cards.decks.Constructed) validator;
-                if (constructed.getSetCodes() != null && !constructed.getSetCodes().isEmpty()) {
-                    criteria.setCodes(constructed.getSetCodes());
-                }
-            }
-        }
-
-        List<CardInfo> cards = CardRepository.instance.findCards(criteria);
-        return cards.stream().map(info -> new CardView(info.createMockCard())).collect(Collectors.toList());
-    }
-
-    private String getString(JsonArray params, int index) {
-        return params.get(index).getAsString();
-    }
-
-    private UUID getUUID(JsonArray params, int index) {
-        return UUID.fromString(params.get(index).getAsString());
-    }
-
-    private int getInt(JsonArray params, int index) {
-        return params.get(index).getAsInt();
-    }
-
-    private boolean getBoolean(JsonArray params, int index) {
-        return params.get(index).getAsBoolean();
-    }
-
-    private <T> T getObject(JsonArray params, int index, Class<T> classOfT) {
-        return gson.fromJson(params.get(index), classOfT);
+        return state.getRemoteHost() + " via " + peer;
     }
 
     @Override
     public void onStart() {
-        logger.info("WebSocket Server started on " + getAddress());
+        logger.info("WebSocket server started on " + getAddress());
+        startupLatch.countDown();
+    }
+
+    public void awaitStartup(long timeout, TimeUnit unit) throws Exception {
+        if (!startupLatch.await(timeout, unit)) {
+            throw new IllegalStateException("Timed out waiting for WebSocket server startup on " + getAddress());
+        }
+        if (startupException != null) {
+            throw startupException;
+        }
+    }
+
+    public void shutdown() {
+        try {
+            stop(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        workers.shutdown();
     }
 }

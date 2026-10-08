@@ -7,23 +7,43 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { wsService } from '../services';
+import { appConfigService, wsService } from '../services';
+import {
+    applyProfanityFilter,
+    chatCueTitle,
+    handleLocalChatCommand,
+    normalizeChatCallback,
+    readProfanityLevelFromWhisper,
+    shouldSuppressIgnoredMessage,
+    type ChatDisplayType,
+} from '../services/ChatMessageService';
+import { audioFeedbackService } from '../services/AudioFeedbackService';
 import { useSessionStore } from './sessionStore';
+import { useSettingsStore } from './settingsStore';
+import { useLobbyStore } from './lobbyStore';
+import { useNotificationStore } from './notificationStore';
 import { UUID, ClientCallback } from '../types';
 
 export interface ChatMessage {
     id: string;
-    timestamp: Date;
+    timestamp: Date | null;
     userName: string;
     message: string;
-    type: 'user' | 'system' | 'status' | 'error';
+    type: ChatDisplayType;
+    turnInfo: string | null;
+    color: string | null;
+    messageType: string | null;
+    soundToPlay: string | null;
 }
 
-interface ChatChannel {
+export interface ChatChannel {
     id: UUID;
     name: string;
+    kind: 'lobby' | 'table' | 'game' | 'tournament' | 'custom';
     messages: ChatMessage[];
     isJoined: boolean;
+    unreadCount: number;
+    joinedAt: number;
 }
 
 interface ChatState {
@@ -33,6 +53,8 @@ interface ChatState {
     // Quick access to common channels
     lobbyChannelId: UUID | null;
     gameChannelId: UUID | null;
+    tableChannelId: UUID | null;
+    tournamentChannelId: UUID | null;
 }
 
 interface ChatActions {
@@ -44,7 +66,9 @@ interface ChatActions {
     // Special channel lookups
     joinLobbyChat: (roomId: UUID) => Promise<void>;
     joinGameChat: (gameId: UUID) => Promise<void>;
-    joinTableChat: (tableId: UUID) => Promise<void>;
+    joinTableChat: (tableId: UUID) => Promise<UUID | null>;
+    joinTournamentChat: (tournamentId: UUID) => Promise<UUID | null>;
+    recoverJoinedChannels: () => Promise<void>;
 
     // Messaging
     sendMessage: (message: string, channelId?: UUID) => Promise<void>;
@@ -68,6 +92,8 @@ export const useChatStore = create<ChatState & ChatActions>()(
             activeChannelId: null,
             lobbyChannelId: null,
             gameChannelId: null,
+            tableChannelId: null,
+            tournamentChannelId: null,
 
             // Channel management
             joinChannel: async (channelId, name = 'Chat') => {
@@ -78,11 +104,15 @@ export const useChatStore = create<ChatState & ChatActions>()(
                     await wsService.send('chatJoin', [channelId, sessionId, userName]);
 
                     set((state) => {
+                        const existingChannel = state.channels[channelId];
                         state.channels[channelId] = {
                             id: channelId,
                             name,
-                            messages: [],
+                            kind: existingChannel?.kind ?? inferChannelKind(name),
+                            messages: existingChannel?.messages ?? [],
                             isJoined: true,
+                            unreadCount: existingChannel?.unreadCount ?? 0,
+                            joinedAt: existingChannel?.joinedAt ?? Date.now(),
                         };
                         if (!state.activeChannelId) {
                             state.activeChannelId = channelId;
@@ -112,6 +142,9 @@ export const useChatStore = create<ChatState & ChatActions>()(
                         if (state.gameChannelId === channelId) {
                             state.gameChannelId = null;
                         }
+                        if (state.tableChannelId === channelId) {
+                            state.tableChannelId = null;
+                        }
                     });
                 } catch (error) {
                     console.error('Failed to leave channel:', error);
@@ -119,7 +152,12 @@ export const useChatStore = create<ChatState & ChatActions>()(
             },
 
             setActiveChannel: (channelId) => {
-                set((state) => { state.activeChannelId = channelId; });
+                set((state) => {
+                    state.activeChannelId = channelId;
+                    if (channelId && state.channels[channelId]) {
+                        state.channels[channelId].unreadCount = 0;
+                    }
+                });
             },
 
             // Special channel lookups
@@ -127,7 +165,10 @@ export const useChatStore = create<ChatState & ChatActions>()(
                 try {
                     const channelId = await wsService.send<UUID>('chatFindByRoom', [roomId]);
                     await get().joinChannel(channelId, 'Lobby');
-                    set((state) => { state.lobbyChannelId = channelId; });
+                    set((state) => {
+                        state.lobbyChannelId = channelId;
+                        state.channels[channelId].kind = 'lobby';
+                    });
                 } catch (error) {
                     console.error('Failed to join lobby chat:', error);
                 }
@@ -139,6 +180,7 @@ export const useChatStore = create<ChatState & ChatActions>()(
                     await get().joinChannel(channelId, 'Game');
                     set((state) => {
                         state.gameChannelId = channelId;
+                        state.channels[channelId].kind = 'game';
                         state.activeChannelId = channelId;
                     });
                 } catch (error) {
@@ -150,17 +192,68 @@ export const useChatStore = create<ChatState & ChatActions>()(
                 try {
                     const channelId = await wsService.send<UUID>('chatFindByTable', [tableId]);
                     await get().joinChannel(channelId, 'Table');
+                    set((state) => {
+                        state.tableChannelId = channelId;
+                        state.channels[channelId].kind = 'table';
+                    });
+                    return channelId;
                 } catch (error) {
                     console.error('Failed to join table chat:', error);
+                    return null;
+                }
+            },
+
+            joinTournamentChat: async (tournamentId) => {
+                try {
+                    const channelId = await wsService.send<UUID>('chatFindByTournament', [tournamentId]);
+                    await get().joinChannel(channelId, 'Tournament');
+                    set((state) => {
+                        state.tournamentChannelId = channelId;
+                        state.channels[channelId].kind = 'tournament';
+                    });
+                    return channelId;
+                } catch (error) {
+                    console.error('Failed to join tournament chat:', error);
+                    return null;
+                }
+            },
+
+            recoverJoinedChannels: async () => {
+                const channelsToRecover = Object.values(get().channels).filter(channel => channel.isJoined);
+                for (const channel of channelsToRecover) {
+                    await get().joinChannel(channel.id, channel.name);
                 }
             },
 
             // Messaging
             sendMessage: async (message, channelId) => {
                 const targetChannelId = channelId || get().activeChannelId;
-                const { userName } = useSessionStore.getState();
+                const { userName, serverUrl } = useSessionStore.getState();
 
                 if (!targetChannelId || !userName || !message.trim()) return;
+
+                const commandResult = handleLocalChatCommand(message, {
+                    serverUrl,
+                    currentUserName: userName,
+                    ignoredUsers: appConfigService.loadIgnoredUsers(serverUrl),
+                    addIgnoredUser: (targetUser) => {
+                        const nextUsers = appConfigService.addIgnoredUser(serverUrl, targetUser);
+                        useLobbyStore.getState().refreshTableFilters();
+                        return nextUsers;
+                    },
+                    removeIgnoredUser: (targetUser) => {
+                        const nextUsers = appConfigService.removeIgnoredUser(serverUrl, targetUser);
+                        useLobbyStore.getState().refreshTableFilters();
+                        return nextUsers;
+                    },
+                    setProfanityFilterLevel: (level) => {
+                        useSettingsStore.getState().setSetting('chatProfanityFilterLevel', level);
+                    },
+                });
+                if (commandResult.handled) {
+                    get().addSystemMessage(targetChannelId, commandResult.response ?? '');
+                    return;
+                }
 
                 try {
                     await wsService.send('chatSendMessage', [targetChannelId, userName, message]);
@@ -180,6 +273,10 @@ export const useChatStore = create<ChatState & ChatActions>()(
                             userName: 'System',
                             message,
                             type: 'system',
+                            turnInfo: null,
+                            color: 'BLUE',
+                            messageType: 'USER_INFO',
+                            soundToPlay: null,
                         });
                     }
                 });
@@ -187,19 +284,25 @@ export const useChatStore = create<ChatState & ChatActions>()(
 
             // Callbacks
             handleCallback: (callback) => {
-                if (callback.method !== 'chatMessage') return;
+                const normalizedMessage = normalizeChatCallback(callback);
+                if (!normalizedMessage) return;
 
-                // Parse chat message data
-                // The format varies based on the message type
-                const data = callback.data as {
-                    chatId?: UUID;
-                    userName?: string;
-                    message?: string;
-                    type?: string;
-                };
+                const { serverUrl, userName: currentUserName } = useSessionStore.getState();
+                if (shouldSuppressIgnoredMessage(normalizedMessage, serverUrl, appConfigService.isUserIgnored.bind(appConfigService))) {
+                    return;
+                }
 
-                const channelId = callback.objectId || data.chatId;
-                if (!channelId) return;
+                const profanityLevel = readProfanityLevelFromWhisper(normalizedMessage, currentUserName);
+                if (profanityLevel !== null) {
+                    useSettingsStore.getState().setSetting('chatProfanityFilterLevel', profanityLevel);
+                }
+
+                const filteredMessage = applyProfanityFilter(
+                    normalizedMessage,
+                    currentUserName,
+                    useSettingsStore.getState().settings.chatProfanityFilterLevel,
+                );
+                const channelId = filteredMessage.channelId;
 
                 set((state) => {
                     // Ensure channel exists
@@ -207,29 +310,48 @@ export const useChatStore = create<ChatState & ChatActions>()(
                         state.channels[channelId] = {
                             id: channelId,
                             name: 'Chat',
+                            kind: 'custom',
                             messages: [],
                             isJoined: true,
+                            unreadCount: 0,
+                            joinedAt: Date.now(),
                         };
                     }
 
-                    // Add the message
-                    const messageType = data.type === 'STATUS' ? 'status' :
-                        data.type === 'ERROR' ? 'error' :
-                            data.userName === 'System' ? 'system' : 'user';
-
                     state.channels[channelId].messages.push({
                         id: crypto.randomUUID(),
-                        timestamp: new Date(),
-                        userName: data.userName || 'Unknown',
-                        message: typeof data.message === 'string' ? data.message : String(callback.data),
-                        type: messageType,
+                        timestamp: filteredMessage.timestamp,
+                        userName: filteredMessage.userName,
+                        message: filteredMessage.message,
+                        type: filteredMessage.displayType,
+                        turnInfo: filteredMessage.turnInfo,
+                        color: filteredMessage.color,
+                        messageType: filteredMessage.messageType,
+                        soundToPlay: filteredMessage.soundToPlay,
                     });
+                    if (state.activeChannelId !== channelId) {
+                        state.channels[channelId].unreadCount += 1;
+                    }
 
                     // Keep only last 500 messages per channel
                     if (state.channels[channelId].messages.length > 500) {
                         state.channels[channelId].messages = state.channels[channelId].messages.slice(-500);
                     }
                 });
+
+                const cueTitle = chatCueTitle(filteredMessage.soundToPlay);
+                if (cueTitle) {
+                    audioFeedbackService.playChatCue(filteredMessage.soundToPlay!, useSettingsStore.getState().settings);
+                    useNotificationStore.getState().enqueue({
+                        kind: filteredMessage.soundToPlay === 'PlayerWhispered' ? 'message' : 'game',
+                        tone: filteredMessage.soundToPlay === 'PlayerWhispered' ? 'warning' : 'info',
+                        title: cueTitle,
+                        message: filteredMessage.message,
+                        browser: filteredMessage.soundToPlay === 'PlayerWhispered',
+                        dedupeKey: `chat-cue:${filteredMessage.channelId}:${filteredMessage.soundToPlay}:${callback.messageId}`,
+                        sourceMethod: callback.method,
+                    });
+                }
             },
 
             // Helpers
@@ -246,3 +368,12 @@ export const useChatStore = create<ChatState & ChatActions>()(
         { name: 'ChatStore' }
     )
 );
+
+function inferChannelKind(name: string): ChatChannel['kind'] {
+    const normalized = name.toLowerCase();
+    if (normalized.includes('lobby')) return 'lobby';
+    if (normalized.includes('table')) return 'table';
+    if (normalized.includes('game')) return 'game';
+    if (normalized.includes('tournament')) return 'tournament';
+    return 'custom';
+}

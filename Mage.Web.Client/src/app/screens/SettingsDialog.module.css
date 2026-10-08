@@ -1,0 +1,206 @@
+.tabs {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: var(--space-5);
+  min-height: 380px;
+}
+
+.list {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trigger {
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trigger:hover {
+  color: var(--ink-strong);
+}
+
+.trigger[data-state='active'] {
+  background: rgb(233 228 214 / 0.08);
+  color: var(--ink-strong);
+}
+
+.panel {
+  /* every panel sits in the content column; inactive ones stay hidden */
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.intro {
+  margin-bottom: var(--space-3);
+  color: var(--ink-soft);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ink-ghost);
+}
+
+.rowLabel {
+  font-weight: 600;
+}
+
+.rowDetail {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+/* switches: a printed slot with a sliding token */
+.switch {
+  flex: none;
+  position: relative;
+  width: 46px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: rgb(7 12 10 / 0.7);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  cursor: pointer;
+}
+
+.knob {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink-dim);
+  transition: transform var(--dur-place) var(--ease-place), background-color var(--dur-quick) linear;
+}
+
+.switch[aria-checked='true'] {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.switch[aria-checked='true'] .knob {
+  transform: translateX(20px);
+  background: var(--ink-strong);
+}
+
+.stops {
+  width: 100%;
+  margin-bottom: var(--space-3);
+  border-collapse: collapse;
+}
+
+.stops th,
+.stops td {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ink-ghost);
+  text-align: left;
+}
+
+.stops thead th {
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.stops tbody th {
+  font-weight: 600;
+}
+
+/* the switch columns are narrow and centred under their headings */
+.stops th:not(:first-child),
+.stops td {
+  width: 150px;
+  text-align: center;
+}
+
+.stops td > * {
+  margin: 0 auto;
+}
+
+/* the two play styles: one click sets every automation together */
+.style {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--ink-ghost);
+}
+
+.styleLabel {
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+}
+
+.styleChoices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.styleChoice,
+.styleOn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(233 228 214 / 0.04);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  color: var(--ink-soft);
+  text-align: left;
+  cursor: pointer;
+}
+
+.styleChoice strong,
+.styleOn strong {
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+  color: var(--ink-strong);
+}
+
+.styleChoice span,
+.styleOn span {
+  font-size: var(--text-sm);
+}
+
+.styleChoice:hover {
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+
+.styleOn {
+  background: rgb(233 228 214 / 0.08);
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong);
+}

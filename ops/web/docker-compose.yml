@@ -1,0 +1,116 @@
+# Web deployment: XMage server + web client behind Caddy (HTTPS) + nightly backups of the user databases.
+#   cp ops/web/.env.example ops/web/.env   # then edit
+#   docker compose -f ops/web/docker-compose.yml up -d --build
+# Every server setting is documented in ops/web/README.md. Empty values use the image defaults.
+x-server-image: &server-image xmage-web-server:local
+
+services:
+  xmage:
+    image: *server-image
+    build:
+      context: ../..
+      dockerfile: ops/web/Dockerfile.server
+    environment:
+      XMAGE_ALLOWED_ORIGINS: ${XMAGE_ALLOWED_ORIGINS:-https://${DOMAIN:?set DOMAIN}}
+      XMAGE_MEMORY: ${XMAGE_MEMORY:-2g}
+      XMAGE_JAVA_OPTS: ${XMAGE_JAVA_OPTS:-}
+      XMAGE_ADMIN_PASSWORD: ${XMAGE_ADMIN_PASSWORD:-}
+      # the proxy's network: the server trusts X-Forwarded-For only from these addresses
+      XMAGE_TRUSTED_PROXIES: ${XMAGE_TRUSTED_PROXIES:-${CADDY_IP:-10.89.17.10}}
+      XMAGE_SERVER_NAME: ${XMAGE_SERVER_NAME:-}
+      XMAGE_SERVER_ADDRESS: ${XMAGE_SERVER_ADDRESS:-}
+      XMAGE_PORT: ${XMAGE_PORT:-}
+      XMAGE_SECONDARY_PORT: ${XMAGE_SECONDARY_PORT:-}
+      XMAGE_MAX_GAME_THREADS: ${XMAGE_MAX_GAME_THREADS:-}
+      XMAGE_MAX_AI_OPPONENTS: ${XMAGE_MAX_AI_OPPONENTS:-}
+      XMAGE_MAX_SECONDS_IDLE: ${XMAGE_MAX_SECONDS_IDLE:-}
+      XMAGE_MAX_POOL_SIZE: ${XMAGE_MAX_POOL_SIZE:-}
+      XMAGE_AUTH: ${XMAGE_AUTH:-}
+      XMAGE_SAVE_GAMES: ${XMAGE_SAVE_GAMES:-}
+      XMAGE_MAILGUN_API_KEY: ${XMAGE_MAILGUN_API_KEY:-}
+      XMAGE_MAILGUN_DOMAIN: ${XMAGE_MAILGUN_DOMAIN:-}
+      XMAGE_MAIL_SMTP_HOST: ${XMAGE_MAIL_SMTP_HOST:-}
+      XMAGE_MAIL_SMTP_PORT: ${XMAGE_MAIL_SMTP_PORT:-}
+      XMAGE_MAIL_USER: ${XMAGE_MAIL_USER:-}
+      XMAGE_MAIL_PASSWORD: ${XMAGE_MAIL_PASSWORD:-}
+      XMAGE_MAIL_FROM: ${XMAGE_MAIL_FROM:-}
+    volumes:
+      - xmage-db:/opt/xmage/db         # user data only (accounts, stats, table records, feedback)
+      - xmage-cards:/opt/xmage/cards-db # card database cache, rebuilt when the image changes
+      - xmage-logs:/opt/xmage/logs
+      - xmage-saved:/opt/xmage/saved
+    networks:
+      - xmage
+    # the bridge port opens only after the card database is loaded; the first start builds it (minutes)
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/17172"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15m
+    restart: unless-stopped
+    # no published ports: only the proxy reaches the server
+
+  web:
+    build:
+      context: ../..
+      dockerfile: ops/web/Dockerfile.web
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      xmage:
+        # fixed so the server can trust forwarding headers from Caddy alone
+        ipv4_address: ${CADDY_IP:-10.89.17.10}
+    healthcheck:
+      # Caddy's admin API answers on localhost only
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      xmage:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backup:
+    image: *server-image
+    pull_policy: never # built by the xmage service
+    entrypoint: ["xmage-backup"]
+    command: ["daemon"]
+    init: true
+    environment:
+      BACKUP_AT: ${BACKUP_AT:-03:30}
+      BACKUP_KEEP: ${BACKUP_KEEP:-14}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - xmage-db:/opt/xmage/db
+      - xmage-backups:/backups
+    # on the server's network so H2 can join the running database for a consistent online dump
+    networks:
+      - xmage
+    depends_on:
+      - xmage
+    restart: unless-stopped
+
+networks:
+  xmage:
+    ipam:
+      config:
+        - subnet: ${XMAGE_SUBNET:-10.89.17.0/24}
+
+volumes:
+  xmage-db:
+  xmage-cards:
+  xmage-logs:
+  xmage-saved:
+  xmage-backups:
+  caddy-data:
+  caddy-config:

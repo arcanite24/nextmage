@@ -40,6 +40,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
+
 /**
  * @author JayDi85
  */
@@ -51,7 +53,7 @@ public final class SystemUtil {
     public static final DateFormat dateFormat = new SimpleDateFormat("yy-M-dd HH:mm:ss");
 
     private static final String INIT_FILE_PATH = "config" + File.separator + "init.txt";
-    private static final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(SystemUtil.class);
+    private static final Logger logger = Logger.getLogger(SystemUtil.class);
 
     // replace ref group command like @group by real commands from that group
     // example:
@@ -287,6 +289,7 @@ public final class SystemUtil {
                 String mes = String.format("Couldn't find init file: %s", f.getAbsolutePath());
                 logger.warn(mes);
                 errorsList.add(mes);
+                errorsList.add("Look at mage-server-folder/config/init.txt.example for setup and usage instructions");
                 sendCheatCommandsFeedback(game, feedbackPlayer, errorsList);
                 return;
             }

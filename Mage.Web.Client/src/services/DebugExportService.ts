@@ -57,6 +57,7 @@ export class DebugExportService {
 
     lines.push('--- Metadata ---');
     lines.push(`Total Actions: ${data.metadata.totalActions}`);
+    lines.push(`Total Callback Fixtures: ${data.metadata.totalCallbackFixtures}`);
     lines.push(`Match ID: ${data.metadata.matchId || 'N/A'}`);
     lines.push(`Last Update: ${new Date(data.metadata.lastUpdate).toISOString()}`);
     lines.push('');

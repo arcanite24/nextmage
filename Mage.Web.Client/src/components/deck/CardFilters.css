@@ -3,6 +3,8 @@
  */
 
 .card-filters {
+    display: grid;
+    gap: 9px;
     padding: 12px 16px;
     background: rgba(0, 0, 0, 0.3);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -19,6 +21,80 @@
     flex-wrap: nowrap;
 }
 
+.filter-row-advanced {
+    gap: 8px;
+}
+
+.filter-row-active {
+    gap: 6px;
+    min-width: 0;
+    overflow-x: auto;
+    padding: 1px 0 2px;
+    scrollbar-width: thin;
+}
+
+.filter-row-active::-webkit-scrollbar {
+    height: 4px;
+}
+
+.filter-row-active::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(212, 175, 55, 0.36);
+}
+
+.filter-row-active::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.filter-active-count,
+.filter-active-token {
+    flex: 0 0 auto;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.filter-active-count {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.055);
+    color: rgba(255, 255, 255, 0.58);
+    text-transform: uppercase;
+}
+
+.filter-active-token {
+    max-width: 180px;
+    overflow: hidden;
+    border: 1px solid rgba(212, 175, 55, 0.32);
+    background: rgba(212, 175, 55, 0.11);
+    color: #f7d86b;
+    cursor: pointer;
+    text-overflow: ellipsis;
+}
+
+.filter-active-token-excluded {
+    border-color: rgba(255, 107, 122, 0.44);
+    background: rgba(220, 53, 69, 0.14);
+    color: #ffb5bd;
+}
+
+.filter-active-token:hover,
+.filter-active-token:focus-visible {
+    border-color: rgba(255, 255, 255, 0.42);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.filter-active-token:focus-visible {
+    outline: 2px solid rgba(212, 175, 55, 0.44);
+    outline-offset: 2px;
+}
+
 .filter-group {
     display: flex;
     align-items: center;
@@ -29,6 +105,10 @@
     flex: 1;
     min-width: 180px;
     max-width: 280px;
+}
+
+.filter-rules-search {
+    max-width: 220px;
 }
 
 .filter-input {
@@ -69,6 +149,12 @@
     min-width: 120px;
 }
 
+.filter-select-operator {
+    min-width: 54px;
+    width: 54px;
+    padding: 8px 6px;
+}
+
 .filter-select:focus {
     border-color: rgba(212, 175, 55, 0.5);
 }
@@ -76,6 +162,14 @@
 .filter-select option {
     background: #1a1a2e;
     color: #ffffff;
+}
+
+.filter-picker-select {
+    min-width: 90px;
+    width: 112px;
+    max-width: 112px;
+    padding: 8px 6px;
+    font-size: 11px;
 }
 
 /* Color Toggle Buttons */
@@ -109,6 +203,13 @@
     box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
 }
 
+.color-toggle.excluded {
+    opacity: 1;
+    border-color: rgba(255, 107, 122, 0.72);
+    background: rgba(220, 53, 69, 0.18);
+    box-shadow: 0 0 8px rgba(255, 107, 122, 0.28);
+}
+
 .color-toggle .mana-symbol {
     width: 20px;
     height: 20px;
@@ -120,6 +221,142 @@
     display: flex;
     gap: 8px;
     margin-left: auto;
+}
+
+.filter-view-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-chip-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.filter-chip {
+    min-height: 28px;
+    padding: 0 8px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.filter-chip:hover,
+.filter-chip.active {
+    border-color: rgba(212, 175, 55, 0.58);
+    background: rgba(212, 175, 55, 0.14);
+    color: #f7d86b;
+}
+
+.filter-chip.excluded {
+    border-color: rgba(255, 107, 122, 0.58);
+    background: rgba(220, 53, 69, 0.18);
+    color: #ffb5bd;
+}
+
+.filter-rarity-group .filter-chip {
+    min-width: 48px;
+}
+
+.filter-set-codes {
+    flex-wrap: wrap;
+    width: 280px;
+    align-items: flex-start;
+}
+
+.filter-set-codes .filter-input {
+    width: 92px;
+}
+
+.filter-token-list {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: 100%;
+    min-height: 28px;
+}
+
+.filter-token {
+    min-height: 26px;
+    padding: 0 8px;
+    border: 1px solid rgba(212, 175, 55, 0.42);
+    border-radius: 999px;
+    background: rgba(212, 175, 55, 0.12);
+    color: #f7d86b;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.filter-token:hover {
+    border-color: rgba(255, 107, 122, 0.58);
+    background: rgba(220, 53, 69, 0.18);
+    color: #ffb5bd;
+}
+
+.filter-format {
+    min-width: 360px;
+}
+
+.filter-format .filter-input {
+    min-width: 120px;
+}
+
+.filter-format-picker {
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
+    padding: 8px 6px;
+    font-size: 11px;
+}
+
+.filter-check {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 28px;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.filter-check input {
+    accent-color: #d4af37;
+}
+
+.filter-mode-toggles {
+    margin-left: auto;
+}
+
+.filter-icon-button {
+    min-width: 42px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.28);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.filter-icon-button:hover,
+.filter-icon-button.active {
+    border-color: rgba(212, 175, 55, 0.58);
+    background: rgba(212, 175, 55, 0.14);
+    color: #f7d86b;
 }
 
 .btn-search {
@@ -141,4 +378,37 @@
 
 .filter-mana-value input[type=number] {
     -moz-appearance: textfield;
+}
+
+@media (max-width: 720px) {
+    .filter-row-main {
+        flex-wrap: wrap;
+    }
+
+    .filter-search {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .filter-actions {
+        margin-left: 0;
+    }
+
+    .filter-row-advanced {
+        align-items: stretch;
+    }
+
+    .filter-rules-search,
+    .filter-format {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .filter-set-codes {
+        width: 100%;
+    }
+
+    .filter-mode-toggles {
+        margin-left: 0;
+    }
 }

@@ -1,181 +1,238 @@
-# XMage WebSocket API Documentation
+# XMage WebSocket API
 
-This document describes the WebSocket API for connecting custom clients (e.g., web frontends) to the XMage Server.
+The web client talks to the server over a WebSocket bridge that runs next to the desktop client's JBoss remoting port.
+It uses the same server sessions, users and tables as desktop clients, so both kinds of clients can play together.
 
-## Connection Details
+## Connection
 
-- **Default URL**: `ws://<server_address>:17172`
-- **Protocol**: JSON-RPC 2.0 (Simplified)
+- **URL**: `ws://<server>:17172` (`websocketPort` in `config.xml`). Put the server behind a TLS reverse proxy for `wss://` in production.
+- **Protocol**: JSON-RPC 2.0 with positional `params`.
+- **Allowed browser origins**: `websocketAllowedOrigins` in `config.xml`, comma separated (for example `https://play.example.com`). Empty or `*` allows any origin. Clients without an `Origin` header (tests, tools) are always allowed.
+- **Limits**: 4 MB per message, about 40 requests per second per connection (bursts of 120). Messages are compressed with permessage-deflate when the client supports it.
+- Requests of one connection run in order; different connections run in parallel.
 
-## Message Format
+### Server settings (Java system properties, `-Dname=value`)
 
-### Client → Server (Request)
+| Property | Default | Meaning |
+|----------|---------|---------|
+| `xmage.web.trustedProxies` | empty (trust nothing) | Comma separated IPs / CIDR ranges of reverse proxies, e.g. `127.0.0.1,::1,172.16.0.0/12`. Only when the TCP peer is in this list does the server read `X-Forwarded-For` (the client is the right-most address that is not a trusted proxy) or, without it, `X-Real-IP`. The resulting client IP is the session's host (anonymous users are recognized by it on reconnect), the key of the per-IP limits and what the logs show. Behind a proxy this **must** be set, or every client looks like the proxy. |
+| `xmage.web.maxConnectionsPerIp` | `16` | Open WebSocket connections per client IP; more are closed with code 1008. `0` = unlimited. Loopback clients are not limited. |
+| `xmage.web.maxOutgoingBytes` | `16777216` (16 MB) | Unsent data queued for one connection; a client that stops reading is dropped once it is exceeded. `0` = unlimited. |
+| `xmage.adminPassword` (or `-adminPassword=` argument) | empty | Server admin password. `connectAdmin` over WebSocket is refused while it is empty. |
 
-```json
-{
-  "method": "methodName",
-  "params": ["arg1", "arg2", ...],
-  "id": 1
-}
-```
+## Sessions
 
-**Notes:**
-- `method`: The API method to call (case-sensitive)
-- `params`: Array of parameters in the order specified by the method signature
-- `id`: Request ID for correlating responses (integer)
+The server issues the session. Logging in (`connectUser`, `connectAdmin`, `authRegister`, `authSendTokenToEmail`, `authResetPassword`) creates a new server session bound to the connection, and every later request on that connection acts as that session.
 
-### Server → Client (Response)
+Methods still take a `sessionId` parameter in the documented position for compatibility, but **the server ignores the value and uses the connection's own session**. A client can never act on another session by sending its id.
 
-```json
-{
-  "jsonrpc": "2.0",
-  "result": <resultData>,
-  "id": 1
-}
-```
+Closing the socket counts as a lost connection: the user keeps their tables for a few minutes and can come back from a new connection with `connectUser`, passing the **server-issued restore token** as `restoreSessionId`. Get the token with `sessionGetRestoreToken` right after every successful login (it changes with each login) and keep it client side. A wrong or empty token never takes over another user's seat. Without authentication, a user with the same name from the same client IP is still treated as a reconnect (desktop compatibility).
 
-### Server → Client (Error)
+Access levels in the method table:
 
-```json
-{
-  "jsonrpc": "2.0",
-  "error": "Error message description",
-  "id": 1
-}
-```
+- `public`: works before login.
+- `login`: creates the connection's session.
+- `session`: requires a logged in connection.
 
-### Server → Client (Callback/Push)
+## Message format
 
-The server pushes events to clients using `ClientCallback` objects:
+### Request
 
 ```json
-{
-  "messageId": 123,
-  "method": "gameUpdate",
-  "objectId": "uuid-string-or-null",
-  "data": <polymorphic-data>
-}
+{"jsonrpc": "2.0", "id": 1, "method": "roomGetAllTables", "params": ["room-uuid"]}
 ```
 
-**Note:** The `data` field is polymorphic and varies based on the `method` field. See [WebClientDataModels.md](./WebClientDataModels.md) for type definitions.
+A request without `id` is a notification: it runs, but gets no response.
 
----
+### Response
 
-## Supported Methods
+```json
+{"jsonrpc": "2.0", "id": 1, "result": [ ... ]}
+```
 
-### Connection & Authentication
+### Error
 
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `ping` | `[]` | `true` | Heartbeat to keep connection alive. |
-| `authRegister` | `[sessionId, userName, password, email]` | `boolean` | Register a new user account. |
-| `connectUser` | `[userName, password, sessionId, restoreSessionId?, version?, userIdStr?]` | `boolean` | Connect an existing user. Server uses its own version if not provided. |
-| `connectSetUserData` | `[userName, sessionId, userData, clientVersion, userIdStr]` | `boolean` | Set user preferences after login. `userData` is a `UserData` JSON object. |
-| `serverGetMainRoomId` | `[]` | `UUID` | Get the main lobby room ID. |
+```json
+{"jsonrpc": "2.0", "id": 1, "error": {"code": -32602, "message": "Parameter 'roomId' (#0) must be a UUID"}}
+```
 
-### Lobby / Room
+| Code | Meaning |
+|------|---------|
+| -32700 | Request is not JSON |
+| -32600 | Malformed request (no method, params not an array) |
+| -32601 | Unknown method |
+| -32602 | Missing or invalid parameter |
+| -32603 | Unexpected server error |
+| -32000 | The server rejected the request |
+| -32001 | Not logged in, or not allowed (wrong admin password, chat not joined) |
+| -32003 | Too many requests, or locked out after failed admin logins |
+| -32004 | Server busy |
 
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `roomGetUsers` | `[roomId]` | `List<RoomUsersView>` | Get users in a specific room. |
-| `roomGetAllTables` | `[roomId]` | `List<TableView>` | Get all tables in a room. |
-| `roomGetFinishedMatches` | `[roomId]` | `List<MatchView>` | Get finished matches in a room. |
-| `roomGetTableById` | `[roomId, tableId]` | `TableView` | Get a specific table by ID. |
-| `roomCreateTable` | `[sessionId, roomId, matchOptions]` | `TableView` | Create a new match table. `matchOptions` is a `MatchOptions` JSON object. |
-| `roomJoinTable` | `[sessionId, roomId, tableId, name, playerType, skill, deckList, password?]` | `boolean` | Join an existing table. `playerType` is a string like `"Human"`. `deckList` is `DeckCardLists`. |
-| `roomWatchTable` | `[sessionId, roomId, tableId]` | `boolean` | Watch a game at a table. |
-| `roomWatchTournament` | `[sessionId, tableId]` | `boolean` | Watch a tournament. |
-| `roomLeaveTableOrTournament` | `[sessionId, roomId, tableId]` | `boolean` | Leave a table or tournament. |
+### Server events
 
-### Table Utilities
+The server pushes events as plain objects (no `jsonrpc` field):
 
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `tableSwapSeats` | `[sessionId, roomId, tableId, seatNum1, seatNum2]` | `true` | Swap seats in a table (host only). |
-| `tableRemove` | `[sessionId, roomId, tableId]` | `true` | Remove a table (host only). |
-| `tableIsOwner` | `[sessionId, roomId, tableId]` | `boolean` | Check if session owns the table. |
+```json
+{"method": "GAME_UPDATE", "objectId": "game-uuid", "messageId": 12, "data": { ... }}
+```
 
-### Tournament
+`method` is the `ClientCallbackMethod` enum name. `messageId` increases per session; it restarts at 0 after a new login.
 
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `roomCreateTournament` | `[sessionId, roomId, tournamentOptions]` | `TableView` | Create a new tournament table. |
-| `roomJoinTournament` | `[sessionId, roomId, tableId, name, playerType, skill, deckList, password?]` | `boolean` | Join a tournament table. |
-| `tournamentStart` | `[sessionId, roomId, tableId]` | `boolean` | Start a tournament (host only). |
-| `tournamentJoin` | `[draftId, sessionId]` | `true` | Join an active tournament. |
-| `tournamentFindById` | `[tournamentId]` | `TournamentView` | Get tournament details by ID. |
-| `tournamentQuit` | `[tournamentId, sessionId]` | `true` | Quit an active tournament. |
+### Value conventions
 
-### Chat
+- UUIDs are strings.
+- Dates are epoch milliseconds.
+- Java views are serialized field by field; `null` fields are omitted.
+- `SimpleCardView` objects also carry the card `name`.
+- Card views carry `cardId` (the physical card, stable from hand to stack to battlefield), `ownerId` and `controllerId`.
 
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `chatJoin` | `[chatId, sessionId, userName]` | `true` | Join a chat channel. |
-| `chatSendMessage` | `[chatId, userName, message]` | `true` | Send a message to a chat channel. |
-| `chatLeave` | `[chatId, sessionId]` | `true` | Leave a chat channel. |
-| `chatFindByGame` | `[gameId]` | `UUID` | Get chat channel for a game. |
-| `chatFindByTable` | `[tableId]` | `UUID` | Get chat channel for a table. |
-| `chatFindByTournament` | `[tournamentId]` | `UUID` | Get chat channel for a tournament. |
-| `chatFindByRoom` | `[roomId]` | `UUID` | Get chat channel for a room. |
+## Methods
 
-### Match
+Generated from the server's method registry (`mage.server.websocket.api`). Do not edit the table by hand.
 
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `matchStart` | `[sessionId, roomId, tableId]` | `boolean` | Start a match (host only). |
-| `matchQuit` | `[gameId, sessionId]` | `true` | Quit an active match. |
+<!-- BEGIN GENERATED: methods -->
+| Method | Params | Result | Access | Description |
+|--------|--------|--------|--------|-------------|
+| `ping` | `sessionId?: string`, `pingInfo?: string` | `boolean` | public | Keep-alive. Extends the logged in user's session; always succeeds before login. |
+| `connectUser` | `userName: string`, `password: string`, `sessionId: string`, `restoreSessionId?: string`, `clientVersion?: string`, `userIdStr?: string` | `boolean` | login | Log in. Creates the connection's session; restoreSessionId reattaches a user that lost its connection. |
+| `connectAdmin` | `password: string`, `sessionId: string` | `boolean` | login | Log in as server admin. Disabled unless the server was started with a non-empty admin password (-adminPassword=... or -Dxmage.adminPassword=...). After a wrong password the caller's IP is locked out for 1, 2, 4... seconds (at most 5 minutes). |
+| `sessionGetRestoreToken` | `sessionId: string` | `string` | session | Token that reattaches this user (and its tables) from a later connection: pass it as connectUser's restoreSessionId. It changes on every login, so fetch it again after each one. |
+| `authRegister` | `sessionId: string`, `userName: string`, `password: string`, `email: string` | `boolean` | login | Register a new account (servers with authentication enabled). |
+| `authSendTokenToEmail` | `sessionId: string`, `email: string` | `boolean` | login | Send a password reset token by email. |
+| `authResetPassword` | `sessionId: string`, `email: string`, `authToken: string`, `password: string` | `boolean` | login | Set a new password with an emailed token. |
+| `disconnectSession` | `sessionId: string`, `keepGames?: boolean` | `boolean` | session | Log out. With keepGames the user's active tables survive for a later reconnect. |
+| `playerLogout` | `sessionId: string`, `keepGames?: boolean` | `boolean` | session | Alias of `disconnectSession`. |
+| `connectSetUserData` | `userName?: string`, `sessionId: string`, `userData: UserData`, `clientVersion?: string`, `userIdStr?: string` | `boolean` | session | Store user preferences (avatar, flag, auto-pass settings). userName is ignored; the session identifies the user. |
+| `sendFeedback` | `sessionId: string`, `userName: string`, `title: string`, `type: string`, `message: string`, `email?: string` | `boolean` | session | Send feedback to the server admin. |
+| `serverGetMainRoomId` | - | `UUID` | public | Id of the main lobby room. |
+| `serverGetPromotionMessages` | `sessionId?: string` | `unknown` | public | Server news shown after login. |
+| `getServerState` | - | `ServerState` | public | Server version and every game, tournament, player and deck type. Also used as a status probe. |
+| `getGameTypes` | - | `GameTypeView[]` | public | Match game types. |
+| `getTournamentGameTypes` | - | `GameTypeView[]` | public | Game types usable in tournaments. |
+| `getTournamentTypes` | - | `TournamentTypeView[]` | public | Tournament types. |
+| `getPlayerTypes` | - | `string[]` | public | Seat types (human and AI players). |
+| `getDeckTypes` | - | `string[]` | public | Deck formats. |
+| `getDraftCubes` | - | `string[]` | public | Cubes available for cube drafts. |
+| `getExpansionSets` | - | `ExpansionSetInfo[]` | public | All card sets. |
+| `getBasicLandSets` | - | `BasicLandSetInfo[]` | public | Sets with basic lands, newest first. |
+| `searchCards` | `criteria: CardCriteria` | `CardView[]` | session | Search the card database (paged with start/count, at most 1000 per page). |
+| `lookupCards` | `cards: DeckCardInfo[]` | `CardView[]` | public | Card details for deck entries (by set and number, falling back to name), in the same order; null for unknown cards. At most 500 per call. |
+| `deckValidate` | `deckType: string`, `deck: DeckCardLists` | `DeckValidationResult` | session | Check a deck against a format, with EDH power level and Commander brackets. |
+| `roomGetUsers` | `roomId: UUID` | `RoomUsersView[]` | session | Users and server statistics of a room. |
+| `roomGetAllTables` | `roomId: UUID` | `TableView[]` | session | All open and running tables of a room. |
+| `roomGetTableById` | `roomId: UUID`, `tableId: UUID` | `TableView \| null` | session | One table of a room. |
+| `roomGetFinishedMatches` | `roomId: UUID` | `MatchView[]` | session | Recently finished matches of a room. |
+| `roomCreateTable` | `sessionId: string`, `roomId: UUID`, `options: WebMatchOptions` | `TableView` | session | Create a match table. The creator still has to join a seat. |
+| `roomJoinTable` | `sessionId: string`, `roomId: UUID`, `tableId: UUID`, `name: string`, `playerType: string`, `skill: number`, `deck: DeckCardLists`, `password?: string` | `boolean` | session | Take a seat at a table (yourself or an AI player). |
+| `roomLeaveTableOrTournament` | `sessionId: string`, `roomId: UUID`, `tableId: UUID` | `boolean` | session | Leave a table or tournament before it starts. |
+| `roomWatchTable` | `sessionId: string`, `roomId: UUID`, `tableId: UUID` | `boolean` | session | Spectate a running match. |
+| `matchStart` | `sessionId: string`, `roomId: UUID`, `tableId: UUID` | `boolean` | session | Start a match once all seats are filled (table owner only). |
+| `tableSwapSeats` | `sessionId: string`, `roomId: UUID`, `tableId: UUID`, `seatNum1: number`, `seatNum2: number` | `boolean` | session | Reorder seats (table owner only). |
+| `tableRemove` | `sessionId: string`, `roomId: UUID`, `tableId: UUID` | `boolean` | session | Remove a table (table owner only). |
+| `tableIsOwner` | `sessionId: string`, `roomId: UUID`, `tableId: UUID` | `boolean` | session | Whether the caller owns the table. |
+| `deckSubmit` | `sessionId: string`, `tableId: UUID`, `deck: DeckCardLists` | `boolean` | session | Submit a deck for a table in construction or sideboarding. |
+| `submitDeck` | `sessionId: string`, `tableId: UUID`, `deck: DeckCardLists` | `boolean` | session | Alias of `deckSubmit`. |
+| `deckSave` | `sessionId: string`, `tableId: UUID`, `deck: DeckCardLists` | `boolean` | session | Save the in-progress limited deck without submitting it. |
+| `chatJoin` | `chatId: UUID`, `sessionId: string`, `userName?: string` | `boolean` | session | Subscribe to a chat. |
+| `chatLeave` | `chatId: UUID`, `sessionId: string` | `boolean` | session | Unsubscribe from a chat. |
+| `chatSendMessage` | `chatId: UUID`, `userName?: string`, `message: string` | `boolean` | session | Post to a chat as the logged in user, who must have joined it (chatJoin; the lobby chat is joined on login). userName is ignored; the session decides the author. |
+| `chatFindByGame` | `gameId: UUID` | `UUID \| null` | session | Chat of a game. |
+| `chatFindByTable` | `tableId: UUID` | `UUID \| null` | session | Chat of a table. |
+| `chatFindByTournament` | `tournamentId: UUID` | `UUID \| null` | session | Chat of a tournament. |
+| `chatFindByRoom` | `roomId: UUID` | `UUID \| null` | session | Chat of a room. |
+| `gameJoin` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Join a started game as a player (after START_GAME). Also used to resync after a reconnect. |
+| `matchQuit` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Concede the whole match. |
+| `gameWatchStart` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Start spectating a game. |
+| `gameWatchStop` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Stop spectating a game. |
+| `sendPlayerUUID` | `gameId: UUID`, `sessionId: string`, `data?: UUID` | `boolean` | session | Answer a prompt with an object or player id (targets, choices, attackers, blockers). |
+| `sendPlayerString` | `gameId: UUID`, `sessionId: string`, `data: string` | `boolean` | session | Answer a prompt with text (choices, "special" mana payment). |
+| `sendPlayerBoolean` | `gameId: UUID`, `sessionId: string`, `data: boolean` | `boolean` | session | Answer a yes/no prompt, pass priority (false) or cancel mana payment (any value). |
+| `sendPlayerInteger` | `gameId: UUID`, `sessionId: string`, `data: number` | `boolean` | session | Answer an amount prompt. |
+| `sendPlayerManaType` | `gameId: UUID`, `playerId: UUID`, `sessionId: string`, `manaType: ManaType` | `boolean` | session | Pay from the mana pool with one mana type. |
+| `sendPlayerAction` | `action: PlayerAction`, `gameId: UUID`, `sessionId: string`, `data?: unknown` | `boolean` | session | Send a player action: pass modes (F-keys), concede, undo, rollback, auto-answer and trigger-order settings. |
+| `cheatShow` | `gameId: UUID`, `sessionId: string`, `playerId: UUID` | `boolean` | session | Test mode only: reveal a player's library. |
+| `replayInit` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Open a saved game for replay. |
+| `replayStart` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Start the replay. |
+| `replayStop` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Stop the replay. |
+| `replayNext` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Step forward. |
+| `replayPrevious` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Step back. |
+| `replaySkipForward` | `gameId: UUID`, `sessionId: string`, `moves: number` | `boolean` | session | Skip several steps forward. |
+| `roomCreateTournament` | `sessionId: string`, `roomId: UUID`, `options: WebTournamentOptions` | `TableView` | session | Create a tournament table. |
+| `roomJoinTournament` | `sessionId: string`, `roomId: UUID`, `tableId: UUID`, `name: string`, `playerType: string`, `skill: number`, `deck: DeckCardLists`, `password?: string` | `boolean` | session | Join a tournament (yourself or an AI player). |
+| `roomWatchTournament` | `sessionId: string`, `tableId: UUID` | `boolean` | session | Spectate a tournament. |
+| `tournamentStart` | `sessionId: string`, `roomId: UUID`, `tableId: UUID` | `boolean` | session | Start a tournament (owner only). |
+| `tournamentJoin` | `tournamentId: UUID`, `sessionId: string` | `boolean` | session | Open a started tournament (after START_TOURNAMENT). |
+| `tournamentQuit` | `tournamentId: UUID`, `sessionId: string` | `boolean` | session | Leave a running tournament. |
+| `tournamentFindById` | `tournamentId: UUID` | `TournamentView \| null` | session | Tournament standings and rounds. |
+| `draftJoin` | `draftId: UUID`, `sessionId: string` | `boolean` | session | Open a started draft (after START_DRAFT). |
+| `draftQuit` | `draftId: UUID`, `sessionId: string` | `boolean` | session | Leave a running draft. |
+| `sendDraftCardPick` | `draftId: UUID`, `sessionId: string`, `cardId: UUID`, `hiddenCards?: UUID[]` | `DraftPickView \| null` | session | Pick a card from the current booster. |
+| `sendDraftCardMark` | `draftId: UUID`, `sessionId: string`, `cardId?: UUID` | `boolean` | session | Mark (or unmark with null) the card to auto-pick when the timer runs out. |
+| `draftSetBoosterLoaded` | `draftId: UUID`, `sessionId: string` | `boolean` | session | Tell the server the booster is on screen, so the pick timer may start. |
+| `adminGetUsers` | `sessionId: string` | `UserView[]` | session | Admin: all connected users. |
+| `adminDisconnectUser` | `sessionId: string`, `userSessionId: string` | `boolean` | session | Admin: disconnect a user. |
+| `adminEndUserSession` | `sessionId: string`, `userSessionId: string` | `boolean` | session | Admin: end a user's session and remove them from tables. |
+| `adminMuteUser` | `sessionId: string`, `userName: string`, `durationMinutes: number` | `boolean` | session | Admin: mute a user in chats. |
+| `adminLockUser` | `sessionId: string`, `userName: string`, `durationMinutes: number` | `boolean` | session | Admin: lock a user out. |
+| `adminActivateUser` | `sessionId: string`, `userName: string`, `active: boolean` | `boolean` | session | Admin: activate or deactivate an account. |
+| `adminToggleActivateUser` | `sessionId: string`, `userName: string` | `boolean` | session | Admin: toggle an account's active state. |
+| `adminTableRemove` | `sessionId: string`, `tableId: UUID` | `boolean` | session | Admin: remove any table. |
+| `adminSendBroadcastMessage` | `sessionId: string`, `message: string` | `boolean` | session | Admin: message every connected user. |
+| `testEndGame` | `sessionId: string`, `tableId: UUID` | `boolean` | session | Test mode only: end the running game of a table you own. |
+| `testConcedeMatch` | `sessionId: string`, `tableId: UUID`, `losingPlayerIndex?: number` | `boolean` | session | Test mode only: make one player of a table you own concede the match. |
+<!-- END GENERATED: methods -->
 
-### Game
+## Server events
 
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `gameJoin` | `[gameId, sessionId]` | `true` | Join a game instance. |
-| `gameWatchStart` | `[gameId, sessionId]` | `boolean` | Start watching a game. |
-| `gameWatchStop` | `[gameId, sessionId]` | `true` | Stop watching a game. |
-| `gameGetView` | `[gameId, sessionId, playerId]` | `GameView` | Get current game state. |
-| `sendPlayerAction` | `[playerAction, gameId, sessionId, data?]` | `true` | Send a generic player action. `playerAction` is a `PlayerAction` enum string. `data` can be UUID, String, Integer, or Boolean. |
-| `sendPlayerUUID` | `[gameId, sessionId, uuidData]` | `true` | Send a UUID selection (e.g., target selection). |
-| `sendPlayerString` | `[gameId, sessionId, stringData]` | `true` | Send a string selection (e.g., mode choice). |
-| `sendPlayerBoolean` | `[gameId, sessionId, boolData]` | `true` | Send a boolean selection (e.g., optional trigger). |
-| `sendPlayerInteger` | `[gameId, sessionId, intData]` | `true` | Send an integer selection (e.g., X cost amount). |
-| `sendPlayerManaType` | `[gameId, playerId, sessionId, manaType]` | `true` | Send a mana color choice. `manaType` is `"WHITE"`, `"BLUE"`, `"BLACK"`, `"RED"`, `"GREEN"`, or `"COLORLESS"`. |
-| `cheatShow` | `[gameId, sessionId, playerId]` | `true` | Reveal hand/library (debug/cheat mode). |
+Generated from `ClientCallbackMethod`. Do not edit the table by hand.
 
-### Draft
-
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `draftJoin` | `[draftId, sessionId]` | `true` | Join a draft. |
-| `draftQuit` | `[draftId, sessionId]` | `true` | Quit a draft. |
-| `draftSetBoosterLoaded` | `[draftId, sessionId]` | `true` | Signal that client has loaded the booster pack. |
-| `sendDraftCardPick` | `[draftId, sessionId, cardId, hiddenCards]` | `DraftPickView` | Pick a card in draft. `hiddenCards` is a JSON array of UUIDs. |
-| `sendDraftCardMark` | `[draftId, sessionId, cardId]` | `true` | Mark a card in draft. |
-
-### Deck
-
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `deckSubmit` | `[sessionId, tableId, deckList]` | `boolean` | Submit a deck for a table. `deckList` is a `DeckCardLists` JSON object. |
-| `deckSave` | `[sessionId, tableId, deckList]` | `true` | Save a deck without submitting. |
-
-### Replay
-
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `replayInit` | `[gameId, sessionId]` | `true` | Initialize replay for a game. |
-| `replayStart` | `[gameId, sessionId]` | `true` | Start replay playback. |
-| `replayStop` | `[gameId, sessionId]` | `true` | Stop replay playback. |
-| `replayNext` | `[gameId, sessionId]` | `true` | Move to next replay action. |
-| `replayPrevious` | `[gameId, sessionId]` | `true` | Move to previous replay action. |
-| `replaySkipForward` | `[gameId, sessionId, moves]` | `true` | Skip forward by N moves. |
-
-### Server
-
-| Method | Params | Returns | Description |
-|--------|--------|---------|-------------|
-| `getServerState` | `[]` | `ServerState` | Get server configuration and state. |
-
----
+<!-- BEGIN GENERATED: callbacks -->
+| Method | Data | Delivery | Description |
+|--------|------|----------|-------------|
+| `CHATMESSAGE` | `ChatMessage` | MESSAGE (may be dropped when outdated) | Message for the player or a log. |
+| `SHOW_USERMESSAGE` | `string[]` | MESSAGE (may be dropped when outdated) | Message for the player or a log. |
+| `SERVER_MESSAGE` | `ChatMessage` | MESSAGE (may be dropped when outdated) | Message for the player or a log. |
+| `JOINED_TABLE` | `TableClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `START_TOURNAMENT` | `TableClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `TOURNAMENT_INIT` | `TournamentView` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `TOURNAMENT_UPDATE` | `TournamentView` | UPDATE (may be dropped when outdated) | State snapshot; newer ones replace older ones. |
+| `TOURNAMENT_OVER` | `string` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `START_DRAFT` | `TableClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `SIDEBOARD` | `TableClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `CONSTRUCT` | `TableClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `DRAFT_OVER` | `null` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `DRAFT_INIT` | `DraftClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `DRAFT_PICK` | `DraftClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `DRAFT_UPDATE` | `DraftClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `SHOW_TOURNAMENT` | `TableClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `WATCHGAME` | `TableClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `VIEW_LIMITED_DECK` | `TableClientMessage` | MESSAGE (may be dropped when outdated) | Message for the player or a log. |
+| `VIEW_SIDEBOARD` | `TableClientMessage` | MESSAGE (may be dropped when outdated) | Message for the player or a log. |
+| `USER_REQUEST_DIALOG` | `UserRequestMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_REDRAW_GUI` | `null` | CLIENT_SIDE_EVENT (may be dropped when outdated) | Not sent by the server. |
+| `START_GAME` | `TableClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `GAME_INIT` | `GameView` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `GAME_UPDATE_AND_INFORM` | `GameClientMessage` | UPDATE (may be dropped when outdated) | State snapshot; newer ones replace older ones. |
+| `GAME_INFORM_PERSONAL` | `GameClientMessage` | MESSAGE (may be dropped when outdated) | Message for the player or a log. |
+| `GAME_ERROR` | `string` | MESSAGE (may be dropped when outdated) | Message for the player or a log. |
+| `GAME_UPDATE` | `GameView` | UPDATE (may be dropped when outdated) | State snapshot; newer ones replace older ones. |
+| `GAME_TARGET` | `GameClientMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_CHOOSE_ABILITY` | `AbilityPickerView` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_CHOOSE_PILE` | `GameClientMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_CHOOSE_CHOICE` | `GameClientMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_ASK` | `GameClientMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_SELECT` | `GameClientMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_PLAY_MANA` | `GameClientMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_PLAY_XMANA` | `GameClientMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_GET_AMOUNT` | `GameClientMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_GET_MULTI_AMOUNT` | `GameClientMessage` | DIALOG (ordered) | Prompt: the player must answer with a sendPlayer* call. |
+| `GAME_OVER` | `GameClientMessage` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `END_GAME_INFO` | `GameEndView` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `REPLAY_GAME` | `null` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `REPLAY_INIT` | `GameView` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+| `REPLAY_UPDATE` | `GameView` | UPDATE (may be dropped when outdated) | State snapshot; newer ones replace older ones. |
+| `REPLAY_DONE` | `string` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
+<!-- END GENERATED: callbacks -->
 
 ## PlayerAction Enum Values
 
@@ -247,91 +304,24 @@ The `sendPlayerAction` method accepts a `PlayerAction` enum value as a string. C
 - `VIEW_SIDEBOARD`
 - `TOGGLE_RECORD_MACRO`
 
----
-
-## Server Callback Methods
-
-The server pushes events to clients using `ClientCallback` messages. The `method` field determines the type of callback:
-
-### Messages
-| Method | Data Type | Description |
-|--------|-----------|-------------|
-| `chatMessage` | Various | Chat message received. |
-| `showUserMessage` | String | User-facing message. |
-| `serverMessage` | String | Server broadcast message. |
-
-### Table/Tournament Events
-| Method | Data Type | Description |
-|--------|-----------|-------------|
-| `joinedTable` | `TableView` | Successfully joined a table. |
-| `startTournament` | `TournamentView` | Tournament has started. |
-| `tournamentInit` | `TournamentView` | Tournament initialized. |
-| `tournamentUpdate` | `TournamentView` | Tournament state updated. |
-| `tournamentOver` | `TournamentView` | Tournament has ended. |
-
-### Draft/Sideboard Events
-| Method | Data Type | Description |
-|--------|-----------|-------------|
-| `startDraft` | `DraftView` | Draft has started. |
-| `draftInit` | `DraftView` | Draft initialized. |
-| `draftPick` | `DraftPickView` | Draft pick required. |
-| `draftUpdate` | `DraftView` | Draft state updated. |
-| `draftOver` | `DraftView` | Draft has ended. |
-| `sideboard` | Various | Sideboard required. |
-| `construct` | Various | Deck construction required. |
-
-### Game Events
-| Method | Data Type | Description |
-|--------|-----------|-------------|
-| `startGame` | Various | Game has started. |
-| `gameInit` | `GameView` | Game initialized with full state. |
-| `gameInform` | `GameView` | Game update with feedback message. |
-| `gameInformPersonal` | String | Personal message for the player. |
-| `gameError` | String | Game error message. |
-| `gameUpdate` | `GameView` | Game state updated. |
-| `gameTarget` | `GameView` | Targeting required. |
-| `gameChooseAbility` | `AbilityPickerView` | Choose an ability. |
-| `gameChoosePile` | Various | Choose a pile. |
-| `gameChooseChoice` | Various | Make a choice. |
-| `gameAsk` | `GameView` | Yes/No question. |
-| `gameSelect` | `GameView` | Selection required. |
-| `gamePlayMana` | `GameView` | Mana payment required. |
-| `gamePlayXMana` | `GameView` | X mana payment required. |
-| `gameSelectAmount` | Various | Amount selection required. |
-| `gameSelectMultiAmount` | Various | Multiple amount selection required. |
-| `gameOver` | `GameEndView` | Game has ended. |
-| `endGameInfo` | `GameEndView` | End game information. |
-
-### Watch Events
-| Method | Data Type | Description |
-|--------|-----------|-------------|
-| `showTournament` | `TournamentView` | Show tournament viewer. |
-| `watchGame` | `GameView` | Start watching a game. |
-
-### Other Events
-| Method | Data Type | Description |
-|--------|-----------|-------------|
-| `userRequestDialog` | Various | User request dialog (e.g., hand reveal request). |
-| `gameRedrawGUI` | - | Client should redraw the game GUI. |
-| `viewLimitedDeck` | `DeckView` | View limited deck. |
-| `viewSideboard` | Various | View sideboard. |
-
----
-
 ## Example Flows
 
 ### Login Flow
 
 ```json
 // 1. Connect user
-{"method": "connectUser", "params": ["myuser", "mypass", "session-uuid", "", "", ""], "id": 1}
+{"jsonrpc": "2.0", "method": "connectUser", "params": ["myuser", "mypass", "any-id", "", "", ""], "id": 1}
 // Response: {"jsonrpc": "2.0", "result": true, "id": 1}
 
-// 2. Set user data
+// 2. Remember the restore token for a later reconnect (pass it as connectUser's 4th param)
+{"jsonrpc": "2.0", "method": "sessionGetRestoreToken", "params": [""], "id": 4}
+// Response: {"jsonrpc": "2.0", "result": "restore-token", "id": 4}
+
+// 3. Set user data
 {"method": "connectSetUserData", "params": ["myuser", "session-uuid", {"groupId": 0, "avatarId": 51, "confirmEmptyManaPool": true, "userSkipPrioritySteps": {...}, "flagName": "world.png"}, "1.0", ""], "id": 2}
 // Response: {"jsonrpc": "2.0", "result": true, "id": 2}
 
-// 3. Get main room ID
+// 4. Get main room ID
 {"method": "serverGetMainRoomId", "params": [], "id": 3}
 // Response: {"jsonrpc": "2.0", "result": "room-uuid-string", "id": 3}
 ```

@@ -26,7 +26,7 @@ export interface CacheStats {
 const DB_NAME = 'mage-image-cache';
 const DB_VERSION = 1;
 const STORE_NAME = 'images';
-const MAX_CACHE_SIZE = 100 * 1024 * 1024; // 100MB default
+const DEFAULT_MAX_CACHE_SIZE = 100 * 1024 * 1024;
 
 export class ImageCacheManager {
   private db: IDBDatabase | null = null;
@@ -35,6 +35,7 @@ export class ImageCacheManager {
     hitCount: 0,
     missCount: 0,
   };
+  private maxCacheSizeBytes = DEFAULT_MAX_CACHE_SIZE;
 
   constructor() {
     this.ready = this.init();
@@ -150,14 +151,14 @@ export class ImageCacheManager {
   async evictIfNeeded(newSize: number): Promise<void> {
     const stats = await this.getStats();
 
-    if (stats.totalSize + newSize <= MAX_CACHE_SIZE) {
+    if (stats.totalSize + newSize <= this.maxCacheSizeBytes) {
       return; // No eviction needed
     }
 
     console.log('[ImageCache] Cache size limit reached, evicting old entries...');
 
     // Evict entries by LRU (least recently used)
-    await this.evictByLRU(MAX_CACHE_SIZE - newSize);
+    await this.evictByLRU(this.maxCacheSizeBytes - newSize);
   }
 
   private async evictByLRU(targetSize: number): Promise<void> {
@@ -335,6 +336,19 @@ export class ImageCacheManager {
 
     console.log(`[ImageCache] Deleted ${deletedCount} entries older than ${maxAgeMs / (1000 * 60 * 60 * 24)} days`);
     return deletedCount;
+  }
+
+  setMaxSizeBytes(maxSizeBytes: number): void {
+    if (!Number.isFinite(maxSizeBytes) || maxSizeBytes <= 0) return;
+    this.maxCacheSizeBytes = Math.round(maxSizeBytes);
+  }
+
+  getMaxSizeBytes(): number {
+    return this.maxCacheSizeBytes;
+  }
+
+  async enforceSizeLimit(): Promise<void> {
+    await this.evictByLRU(this.maxCacheSizeBytes);
   }
 
   private formatSize(bytes: number): string {

@@ -10,7 +10,11 @@
  * - Request timeout handling (default: 30 seconds)
  */
 
-import { ClientCallback, JsonRpcRequest, JsonRpcResponse, SearchCardView, CardSearchCriteria } from '../types';
+import { RpcError } from '../types/api.js';
+import type { ClientCallback, JsonRpcRequest, JsonRpcResponse, SearchCardView, CardSearchCriteria, BasicLandSetInfo, DeckCardLists, DeckValidationResultView, ExpansionSetInfo } from '../types/index.js';
+
+/** Requests that make the server issue a new session for this connection. */
+const SESSION_START_METHODS = new Set(['connectUser', 'connectAdmin', 'authRegister', 'authSendTokenToEmail', 'authResetPassword']);
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
@@ -46,12 +50,14 @@ class WebSocketService {
     private pendingRequests = new Map<number, PendingRequest>();
     private callbackHandlers: Set<CallbackHandler> = new Set();
     private statusChangeHandlers: Set<StatusChangeHandler> = new Set();
+    private sessionStartHandlers: Set<() => void> = new Set();
     private pingInterval: ReturnType<typeof setInterval> | null = null;
     private reconnectAttempts = 0;
     private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     private intentionalDisconnect = false;
     private config: WebSocketServiceConfig;
     private _status: ConnectionStatus = 'disconnected';
+    private sessionIdProvider: (() => string | null | undefined) | null = null;
 
     constructor(config: Partial<WebSocketServiceConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -157,6 +163,10 @@ class WebSocketService {
             this.pendingRequests.set(id, { resolve: resolve as (value: unknown) => void, reject, timeout });
 
             try {
+                if (SESSION_START_METHODS.has(method)) {
+                    // the server starts a new session (message ids restart at 0) before it answers
+                    this.sessionStartHandlers.forEach(handler => handler());
+                }
                 this.ws!.send(JSON.stringify(request));
                 console.log('[WebSocket] Sent:', method, params);
             } catch (error) {
@@ -164,6 +174,72 @@ class WebSocketService {
                 this.pendingRequests.delete(id);
                 reject(new Error(`Failed to send message: ${error}`));
             }
+        });
+    }
+
+    /**
+     * Send a single JSON-RPC request over an isolated socket.
+     * Useful for unauthenticated probes such as server status checks that must
+     * not mutate the app's active session connection or reconnect state.
+     */
+    requestOnce<T = unknown>(url: string, method: string, params: unknown[] = []): Promise<T> {
+        const id = ++this.requestId;
+
+        return new Promise((resolve, reject) => {
+            let settled = false;
+            let socket: WebSocket;
+
+            const settle = (callback: () => void) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
+                callback();
+                if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+                    socket.close(1000, 'Status probe complete');
+                }
+            };
+
+            const timeout = setTimeout(() => {
+                settle(() => reject(new Error(`Request timeout: ${method} (id: ${id})`)));
+            }, this.config.requestTimeout);
+
+            try {
+                socket = new WebSocket(url);
+            } catch (error) {
+                clearTimeout(timeout);
+                reject(new Error(`Failed to create WebSocket: ${error}`));
+                return;
+            }
+
+            socket.onopen = () => {
+                const request: JsonRpcRequest = { method, params, id };
+                socket.send(JSON.stringify(request));
+                console.log('[WebSocket] Probe sent:', method, params);
+            };
+
+            socket.onerror = () => {
+                settle(() => reject(new Error('WebSocket connection failed')));
+            };
+
+            socket.onclose = () => {
+                settle(() => reject(new Error('Connection closed')));
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const response = JSON.parse(event.data) as JsonRpcResponse<T>;
+                    if (response.id !== id) return;
+
+                    if (response.error) {
+                        settle(() => reject(new RpcError(response.error!)));
+                    } else {
+                        console.log('[WebSocket] Probe response:', response.id, response.result);
+                        settle(() => resolve(response.result as T));
+                    }
+                } catch (error) {
+                    settle(() => reject(new Error(`Failed to parse response: ${error}`)));
+                }
+            };
         });
     }
 
@@ -190,11 +266,28 @@ class WebSocketService {
     }
 
     /**
+     * Register a handler for the start of a new server session (login on this connection).
+     * Server sessions are per connection, so a reconnect also starts a new session.
+     */
+    onSessionStart(handler: () => void): () => void {
+        this.sessionStartHandlers.add(handler);
+        return () => {
+            this.sessionStartHandlers.delete(handler);
+        };
+    }
+
+    setSessionIdProvider(provider: (() => string | null | undefined) | null): void {
+        this.sessionIdProvider = provider;
+    }
+
+    /**
      * Send a ping to keep the connection alive
      */
     async ping(): Promise<boolean> {
         try {
-            return await this.send<boolean>('ping', []);
+            const sessionId = this.sessionIdProvider?.();
+            const params = sessionId ? [sessionId, 'web-client'] : [];
+            return await this.send<boolean>('ping', params);
         } catch (error) {
             console.warn('[WebSocket] Ping failed:', error);
             return false;
@@ -209,6 +302,22 @@ class WebSocketService {
      */
     async searchCards(criteria: CardSearchCriteria): Promise<SearchCardView[]> {
         return this.send<SearchCardView[]>('searchCards', [criteria]);
+    }
+
+    async validateDeck(deckType: string, deck: DeckCardLists): Promise<DeckValidationResultView> {
+        return this.send<DeckValidationResultView>('deckValidate', [deckType, deck]);
+    }
+
+    async getBasicLandSets(): Promise<BasicLandSetInfo[]> {
+        return this.send<BasicLandSetInfo[]>('getBasicLandSets', []);
+    }
+
+    async getDeckTypes(): Promise<string[]> {
+        return this.send<string[]>('getDeckTypes', []);
+    }
+
+    async getExpansionSets(): Promise<ExpansionSetInfo[]> {
+        return this.send<ExpansionSetInfo[]>('getExpansionSets', []);
     }
 
     // === Private Methods ===
@@ -228,7 +337,7 @@ class WebSocketService {
                     // Dispatch as user message so it shows in UI
                     this.handleCallback({
                         method: 'showUserMessage',
-                        data: ['Server Error', message.error],
+                        data: ['Server Error', typeof message.error === 'string' ? message.error : message.error.message],
                         messageId: 0,
                         objectId: null
                     } as any);
@@ -256,7 +365,7 @@ class WebSocketService {
 
         if (response.error) {
             console.error('[WebSocket] Server error:', response.error);
-            pending.reject(new Error(response.error));
+            pending.reject(new RpcError(response.error));
         } else {
             console.log('[WebSocket] Response:', response.id, response.result);
             pending.resolve(response.result);
@@ -320,7 +429,7 @@ class WebSocketService {
     }
 
     private rejectAllPendingRequests(error: Error): void {
-        this.pendingRequests.forEach((pending, id) => {
+        this.pendingRequests.forEach((pending) => {
             clearTimeout(pending.timeout);
             pending.reject(error);
         });

@@ -60,7 +60,9 @@
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
 
 .navbar-nav .nav-item:hover {
@@ -77,15 +79,22 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    min-width: 0;
+    justify-content: flex-end;
 }
 
-.user-info {
+.navbar-support {
+    flex: 0 0 auto;
+}
+
+.navbar .user-info {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
 }
 
-.user-avatar {
+.navbar .user-avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -98,8 +107,96 @@
     color: #fff;
 }
 
-.user-name {
+.navbar .user-name {
+    max-width: 14ch;
+    overflow: hidden;
     font-size: 0.875rem;
     color: #e2e8f0;
     font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+    .navbar {
+        position: static;
+        height: auto;
+        min-height: 64px;
+        display: grid;
+        grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+        grid-template-areas:
+            "brand actions"
+            "nav nav";
+        gap: 8px 12px;
+        padding: 8px 16px;
+    }
+
+    .navbar-left {
+        grid-area: brand;
+        min-width: 0;
+    }
+
+    .navbar-logo {
+        min-width: 0;
+    }
+
+    .navbar-logo .logo-icon-small {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+    }
+
+    .navbar-logo .logo-text {
+        max-width: 96px;
+        overflow: hidden;
+        font-size: 1rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .navbar-center {
+        grid-area: nav;
+        min-width: 0;
+        justify-content: flex-start;
+        overflow: hidden;
+    }
+
+    .navbar-nav {
+        width: 100%;
+        gap: 4px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .navbar-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .navbar-nav .nav-item {
+        flex: 0 0 auto;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    .navbar-right {
+        grid-area: actions;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .navbar .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+
+    .navbar .user-name {
+        display: none;
+    }
+
+    .navbar-right .btn {
+        min-height: 34px;
+        padding: 0 10px;
+        font-size: 0.75rem;
+    }
 }

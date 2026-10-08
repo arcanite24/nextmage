@@ -37,6 +37,9 @@
 }
 
 .mana-payment-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 14px;
     font-weight: 600;
     color: #f8fafc;
@@ -82,7 +85,7 @@
 }
 
 .instruction-icon {
-    font-size: 14px;
+    flex: 0 0 auto;
 }
 
 .mana-pool-section {
@@ -172,6 +175,10 @@
 
 .mana-action-btn {
     flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     padding: 10px 16px;
     font-size: 13px;
     font-weight: 600;
@@ -179,6 +186,11 @@
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s;
+}
+
+.mana-action-btn:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
 }
 
 .mana-action-btn.cancel {
@@ -189,6 +201,17 @@
 .mana-action-btn.cancel:hover {
     background: rgba(255, 255, 255, 0.15);
     color: #e2e8f0;
+}
+
+.mana-action-btn.auto {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fde68a;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.mana-action-btn.auto:hover {
+    background: rgba(245, 158, 11, 0.28);
+    color: #fffbeb;
 }
 
 .mana-action-btn.done {

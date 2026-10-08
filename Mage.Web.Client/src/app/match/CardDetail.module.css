@@ -1,0 +1,343 @@
+/* sizes are stage pixels (the stage is 1080 tall and scaled to the window) */
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  /* a dialog laid over the stage: it portals into the stage, so it tops every stage layer but stays under app dialogs and toasts */
+  z-index: var(--z-dialog);
+  background: rgb(4 7 6 / 0.74);
+  animation: fade var(--dur-place) var(--ease-place);
+}
+
+/* a printed zone laid over the mat; the card on it is a placed object and casts the held shadow */
+.sheet {
+  position: absolute;
+  z-index: calc(var(--z-dialog) + 1);
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: grid;
+  grid-template-columns: 470px minmax(0, 640px);
+  gap: 48px;
+  width: max-content;
+  max-height: 940px;
+  padding: 44px 56px 44px 44px;
+  border-radius: var(--radius-zone);
+  background-color: var(--mat-700);
+  background-image: var(--mat-grain);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint), var(--shadow-held);
+  animation: place var(--dur-place) var(--ease-place);
+}
+
+.sheet:focus {
+  outline: none;
+}
+
+.cardColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.card {
+  width: 470px;
+  border-radius: var(--card-radius) / calc(var(--card-radius) * 63 / 88);
+  box-shadow: var(--shadow-held);
+  animation: lift 420ms var(--ease-place);
+}
+
+.turn {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink);
+  font-family: var(--font-print);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.turn:hover {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+  color: var(--ink-strong);
+}
+
+.turn:focus-visible,
+.close:focus-visible {
+  outline: 2.5px solid var(--ink-strong);
+  outline-offset: 3px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-width: 0;
+  max-height: 852px;
+  padding-right: 12px;
+  overflow-y: auto;
+  scrollbar-color: var(--ink-faint) transparent;
+  scrollbar-width: thin;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 48px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.name {
+  font-family: var(--font-print);
+  font-size: 50px;
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: var(--ink-strong);
+}
+
+.type {
+  font-family: var(--font-print);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-print);
+  color: var(--ink-soft);
+}
+
+/* what the card is doing on the table right now */
+.state {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px;
+  border-radius: var(--radius-zone);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+}
+
+.stats {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.statsLabel,
+.sectionTitle,
+.kind,
+.term dt {
+  font-family: var(--font-print);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+}
+
+.statsLabel {
+  font-size: 17px;
+  color: var(--ink-dim);
+}
+
+.statsValue {
+  font-family: var(--font-print);
+  font-size: 46px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+  color: var(--ink-strong);
+}
+
+.statsBase {
+  font-size: 19px;
+  color: var(--ink-dim);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.chip,
+.chipDamage {
+  padding: 5px 14px;
+  border-radius: var(--radius-chip);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.chip {
+  background: rgb(233 228 214 / 0.1);
+  color: var(--ink);
+}
+
+.chipDamage {
+  background: rgb(138 47 42 / 0.55);
+  color: var(--oxblood-ink);
+}
+
+.note {
+  font-size: 20px;
+  color: var(--ink-soft);
+}
+
+.hints {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.hints li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 19px;
+  line-height: 1.35;
+}
+
+.hints svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.good {
+  color: var(--ink);
+}
+
+.good svg {
+  color: var(--sage);
+}
+
+.bad {
+  color: var(--ink-dim);
+}
+
+.bad svg {
+  color: var(--danger-text);
+}
+
+.neutral {
+  color: var(--ink-soft);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionTitle {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ink-ghost);
+  font-size: 18px;
+  color: var(--ink-dim);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+}
+
+.kind {
+  font-size: 15px;
+  color: var(--ink-dim);
+}
+
+.lineText {
+  max-width: 62ch;
+  font-size: 22px;
+  line-height: 1.4;
+  color: var(--ink-strong);
+}
+
+.terms {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.term {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.term dt {
+  font-size: 19px;
+  color: var(--ink);
+}
+
+.term dd {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 20px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.close {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: rgb(233 228 214 / 0.08);
+  color: var(--ink-strong);
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+
+@keyframes place {
+  from { opacity: 0; scale: 0.97; }
+}
+
+/* the card is picked up off the table */
+@keyframes lift {
+  from { translate: 0 18px; box-shadow: var(--shadow-placed); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim,
+  .sheet,
+  .card {
+    animation: none;
+  }
+}

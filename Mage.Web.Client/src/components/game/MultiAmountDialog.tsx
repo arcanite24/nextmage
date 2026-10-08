@@ -4,7 +4,7 @@
  * Dialog for distributing values among multiple targets (e.g., combat damage, counters).
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Modal, Button } from '../common';
 import { useGameStore, MultiAmountMessage } from '../../stores';
 import './MultiAmountDialog.css';
@@ -22,7 +22,7 @@ export const MultiAmountDialog: React.FC<MultiAmountDialogProps> = ({
     min: totalMin,
     max: totalMax,
 }) => {
-    const { sendString } = useGameStore();
+    const sendString = useGameStore(state => state.sendString);
 
     // Initialize with default values
     const [values, setValues] = useState<number[]>([]);
@@ -73,12 +73,12 @@ export const MultiAmountDialog: React.FC<MultiAmountDialogProps> = ({
         }
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = useCallback(() => {
         if (isValid) {
             // Server expects values as comma-separated string
             sendString(values.join(','));
         }
-    };
+    }, [isValid, sendString, values]);
 
     const handleAutoDistribute = () => {
         // Distribute remaining evenly across items that can accept more
@@ -108,6 +108,9 @@ export const MultiAmountDialog: React.FC<MultiAmountDialogProps> = ({
             onClose={() => { }} // Can't close without selecting
             title="Distribute Amount"
             size="md"
+            closeOnBackdrop={false}
+            closeOnEscape={false}
+            showCloseButton={false}
         >
             <div className="multi-amount-dialog">
                 <div className="multi-amount-summary">
@@ -144,8 +147,15 @@ export const MultiAmountDialog: React.FC<MultiAmountDialogProps> = ({
                                     className="multi-amount-input"
                                     value={values[index]}
                                     onChange={(e) => handleChange(index, parseInt(e.target.value, 10) || 0)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter') {
+                                            event.preventDefault();
+                                            handleSubmit();
+                                        }
+                                    }}
                                     min={msg.min}
                                     max={msg.max}
+                                    autoFocus={index === 0}
                                 />
                                 <button
                                     className="multi-amount-btn"
@@ -178,9 +188,9 @@ export const MultiAmountDialog: React.FC<MultiAmountDialogProps> = ({
                     </Button>
                 </div>
 
-                {!isValid && total !== totalMax && (
+                {!isValid && (
                     <div className="multi-amount-warning">
-                        ⚠️ Total must be exactly {totalMax}
+                        Total must be between {totalMin} and {totalMax}, and every row must stay in range.
                     </div>
                 )}
             </div>

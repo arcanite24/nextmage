@@ -1,0 +1,215 @@
+.slot {
+  /* no width transition: cards that shift when a neighbor taps glide via FLIP */
+  position: relative;
+  flex: none;
+}
+
+.card {
+  position: absolute;
+  border-radius: 6px;
+  transition: transform var(--dur-place) var(--ease-place), box-shadow var(--dur-quick) linear;
+  outline: none;
+}
+
+/* a legal choice: ivory ink printed around the card, breathing */
+.clickable {
+  cursor: pointer;
+}
+
+.clickable::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 9px;
+  /* still ink: on a full board, a dozen breathing halos would drown the one thing that matters */
+  box-shadow: 0 0 0 2px var(--ink-soft);
+  pointer-events: none;
+}
+
+.clickable:hover::after {
+  box-shadow: 0 0 0 3px var(--ink-strong);
+}
+
+.clickable:hover,
+.clickable:focus-visible {
+  z-index: 60 !important;
+}
+
+.clickable:focus-visible::after {
+  box-shadow: 0 0 0 3px var(--ink-strong), 0 0 0 6px rgb(233 228 214 / 0.25);
+}
+
+/* a candidate while choosing a target: a heavy ink ring with a printed halo, lifted above its row */
+.target {
+  z-index: 55 !important;
+}
+
+.target::after {
+  inset: -6px;
+  border-radius: 11px;
+  box-shadow: 0 0 0 3px var(--ink-strong), 0 0 0 9px rgb(233 228 214 / 0.18);
+}
+
+.target:hover::after {
+  box-shadow: 0 0 0 4px var(--ink-strong), 0 0 0 11px rgb(233 228 214 / 0.26);
+}
+
+/* chosen in the current decision: amber, steady */
+.selected::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px var(--decision), 0 0 22px 4px var(--decision-glow);
+  animation: none;
+  pointer-events: none;
+}
+
+.attacking > :first-child {
+  box-shadow: 0 0 0 2px var(--oxblood), var(--shadow-lifted);
+}
+
+.marks {
+  position: absolute;
+  top: 4%;
+  left: 4%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.mark {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgb(7 12 10 / 0.85);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink-faint);
+}
+
+/* keywords down the right edge, under the cost line */
+.keywords {
+  position: absolute;
+  top: 17%;
+  right: 3%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.keyword,
+.keywordGained {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.keyword {
+  background: rgb(7 12 10 / 0.88);
+  color: var(--ink-strong);
+  box-shadow: 0 0 0 1.5px var(--ink-faint);
+}
+
+/* granted by an effect: the card's picture doesn't show it, so it prints solid ivory */
+.keywordGained {
+  background: var(--ink-strong);
+  color: var(--mat-900);
+  box-shadow: 0 0 0 2px var(--mat-900), var(--shadow-placed);
+}
+
+.markAttack {
+  background: var(--oxblood);
+  color: var(--ink-strong);
+}
+
+.counters {
+  position: absolute;
+  left: 4%;
+  bottom: 20%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.counters li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgb(7 12 10 / 0.88);
+  box-shadow: 0 0 0 1px var(--ink-faint);
+  font-family: var(--font-print);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink-strong);
+  white-space: nowrap;
+}
+
+.counters b {
+  color: var(--ink-strong);
+}
+
+/* power/toughness plate printed over the card's corner */
+.pt {
+  position: absolute;
+  right: 3%;
+  bottom: 3%;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: rgb(7 12 10 / 0.9);
+  box-shadow: 0 0 0 1px var(--ink-faint);
+  font-family: var(--font-print);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-strong);
+  pointer-events: none;
+}
+
+.up {
+  color: var(--sage);
+}
+
+.down {
+  color: var(--danger-text);
+}
+
+.damage {
+  font-size: 21px;
+  color: var(--danger-text);
+}
+
+.loyalty {
+  border-radius: 50% 50% 8px 8px;
+  min-width: 30px;
+  justify-content: center;
+}
+
+.count {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--mat-900);
+  font-family: var(--font-print);
+  font-weight: 700;
+  font-size: 21px;
+  box-shadow: var(--shadow-placed);
+}
+
+

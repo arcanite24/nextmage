@@ -7,55 +7,48 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { wsService, ConnectionStatus } from '../services';
-import { UUID, UserData, UserSkipPrioritySteps, SkipPrioritySteps, ClientCallback } from '../types';
+import {
+    appConfigService,
+    clientSettingsToUserData,
+    connectionProfileService,
+    connectionProfileKey,
+    DEFAULT_SERVER_URL,
+    DEFAULT_USER_SKIP_PRIORITY_STEPS,
+    normalizeServerUrl,
+    UserRequestService,
+    webSocketBridgeService,
+    wsService,
+    type ConnectionProfileSnapshot,
+    type ConnectionStatus,
+} from '../services';
+import { UUID, UserData, UserSkipPrioritySteps, ClientCallback, PlayerAction, UserRequestMessage, ServerState } from '../types';
+import { useNotificationStore } from './notificationStore';
 
-// Default user skip priority steps 
-// IMPORTANT: In Java's SkipPrioritySteps, TRUE means STOP (don't skip), FALSE means SKIP (pass through)
-// This is inverted from what you might expect
-const defaultSkipSteps: SkipPrioritySteps = {
-    upkeep: false,     // false = SKIP upkeep
-    draw: false,       // false = SKIP draw
-    main1: true,       // true = STOP on main1 (IMPORTANT: stops to let you play lands, sorceries)
-    beforeCombat: false,
-    endOfCombat: false,
-    main2: true,       // true = STOP on main2 (IMPORTANT: stops to let you play lands, sorceries)
-    endOfTurn: false,
-};
+type UserRequestResponse = 1 | 2 | 3 | null;
 
-const defaultUserSkipPrioritySteps: UserSkipPrioritySteps = {
-    yourTurn: defaultSkipSteps,
-    opponentTurn: { ...defaultSkipSteps, main1: false, main2: false }, // Skip opponent's main phases
-    stopOnDeclareAttackers: true,
-    stopOnDeclareBlockersWithZeroPermanents: false,
-    stopOnDeclareBlockersWithAnyPermanents: true,
-    stopOnAllMainPhases: true,   // true = STOP on all main phases when using F5
-    stopOnAllEndPhases: true,    // true = STOP on all end phases when using F4
-    stopOnStackNewObjects: true, // true = STOP when new objects added to stack during F7
-};
+type ServerStatusKind = 'idle' | 'checking' | 'online' | 'offline';
 
-const defaultUserData: UserData = {
-    groupId: 0,
-    avatarId: 51,
-    allowRequestShowHandCards: false,
-    confirmEmptyManaPool: true,
-    userSkipPrioritySteps: defaultUserSkipPrioritySteps,
-    flagName: 'world.png',
-    askMoveToGraveOrder: false,
-    manaPoolAutomatic: true,
-    manaPoolAutomaticRestricted: false,
-    passPriorityCast: false,
-    passPriorityActivation: false,
-    autoOrderTrigger: true,
-    autoTargetLevel: 0,
-    useSameSettingsForReplacementEffects: true,
-    useFirstManaAbility: false,
-};
+interface ServerStatusSnapshot {
+    status: ServerStatusKind;
+    message: string;
+    checkedAt: string | null;
+    serverState: ServerState | null;
+}
+
+let pendingLocalUserRequestResolver: ((response: UserRequestResponse) => void) | null = null;
+
+function resolveLocalUserRequest(response: UserRequestResponse) {
+    const resolver = pendingLocalUserRequestResolver;
+    pendingLocalUserRequestResolver = null;
+    resolver?.(response);
+}
 
 interface SessionState {
     // Connection state
     serverUrl: string;
     connectionStatus: ConnectionStatus;
+    connectionProfiles: ConnectionProfileSnapshot;
+    serverStatus: ServerStatusSnapshot;
 
     // Session state
     sessionId: string;
@@ -76,22 +69,36 @@ interface SessionState {
         message: string;
         isOpen: boolean;
     };
+    userRequest: {
+        request: UserRequestMessage | null;
+        isOpen: boolean;
+        isExecuting: boolean;
+        error: string | null;
+    };
 }
 
 interface SessionActions {
     // Connection
     setServerUrl: (url: string) => void;
     connect: () => Promise<void>;
-    disconnect: () => void;
+    cancelConnect: () => void;
+    checkServerStatus: () => Promise<boolean>;
+    setAutoConnect: (enabled: boolean) => void;
+    saveServerPreset: (label: string, url?: string) => void;
+    deleteServerPreset: (presetId: string) => void;
+    disconnect: (keepGames?: boolean) => Promise<void>;
 
     // Authentication
     login: (userName: string, password: string) => Promise<boolean>;
     register: (userName: string, password: string, email: string) => Promise<boolean>;
+    requestPasswordResetToken: (email: string) => Promise<boolean>;
+    resetPassword: (email: string, authToken: string, password: string) => Promise<boolean>;
     logout: () => void;
 
     // User data
     setUserData: (userData: Partial<UserData>) => Promise<boolean>;
     updateSkipPrioritySteps: (steps: Partial<UserSkipPrioritySteps>) => Promise<boolean>;
+    sendFeedback: (title: string, type: string, message: string, email: string) => Promise<boolean>;
 
     // Internal
     _setConnectionStatus: (status: ConnectionStatus) => void;
@@ -100,23 +107,41 @@ interface SessionActions {
 
     // Callbacks
     handleCallback: (callback: ClientCallback) => void;
+    showAlert: (title: string, message: string) => void;
+    showUserRequest: (request: UserRequestMessage) => void;
+    showLocalUserRequest: (request: UserRequestMessage) => Promise<UserRequestResponse>;
+    respondToUserRequest: (buttonIndex: 1 | 2 | 3) => Promise<void>;
+    executeUserRequestAction: (action: PlayerAction, request: UserRequestMessage) => Promise<void>;
+    closeUserRequest: () => void;
     closeAlert: () => void;
 
     restoreSession: () => Promise<boolean>;
 }
 
-// Helper to generate UUID
-const generateUUID = (): string => {
-    return crypto.randomUUID();
-};
+const initialConnectionProfiles = connectionProfileService.load();
+
+function formatServerVersion(serverState: ServerState): string {
+    const { version } = serverState;
+    const release = version.release ?? version.patch ?? 0;
+    const releaseInfo = version.releaseInfo ?? version.info ?? '';
+    const baseVersion = `${version.major}.${version.minor}.${release}`;
+    return releaseInfo ? `${baseVersion}-${releaseInfo}` : baseVersion;
+}
 
 export const useSessionStore = create<SessionState & SessionActions>()(
     devtools(
         persist(
             immer((set, get) => ({
                 // Initial state
-                serverUrl: 'ws://localhost:17172',
+                serverUrl: initialConnectionProfiles.lastServerUrl || DEFAULT_SERVER_URL,
                 connectionStatus: 'disconnected',
+                connectionProfiles: initialConnectionProfiles,
+                serverStatus: {
+                    status: 'idle',
+                    message: 'Server status has not been checked.',
+                    checkedAt: null,
+                    serverState: null,
+                },
                 sessionId: crypto.randomUUID(),
                 lastSessionId: null,
                 userName: null,
@@ -131,16 +156,38 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                     message: '',
                     isOpen: false,
                 },
+                userRequest: {
+                    request: null,
+                    isOpen: false,
+                    isExecuting: false,
+                    error: null,
+                },
 
                 // Connection
                 setServerUrl: (url) => {
+                    const normalizedUrl = normalizeServerUrl(url);
+                    const { serverUrl, isAuthenticated, connectionProfiles } = get();
+
+                    if (serverUrl !== normalizedUrl && !isAuthenticated && wsService.status !== 'disconnected') {
+                        wsService.disconnect();
+                    }
+
+                    const nextProfiles = connectionProfileService.withSelectedServer(connectionProfiles, normalizedUrl);
                     set((state) => {
-                        state.serverUrl = url;
+                        state.serverUrl = normalizedUrl;
+                        state.connectionProfiles = nextProfiles;
+                        state.serverStatus = {
+                            status: 'idle',
+                            message: 'Server status has not been checked.',
+                            checkedAt: null,
+                            serverState: null,
+                        };
                     });
                 },
 
                 connect: async () => {
-                    const { serverUrl, connectionStatus, _setError, _initializeCallbackHandler } = get();
+                    const { serverUrl, connectionStatus, _setConnectionStatus, _setError, _initializeCallbackHandler } = get();
+                    const normalizedUrl = normalizeServerUrl(serverUrl);
                     _setError(null);
 
                     if (connectionStatus === 'connected') return;
@@ -163,17 +210,105 @@ export const useSessionStore = create<SessionState & SessionActions>()(
 
                     try {
                         // _setConnectionStatus is internal, but we can set state directly via immer
-                        set((state) => { state.connectionStatus = 'connecting'; });
+                        _setConnectionStatus('connecting');
 
                         if (wsService.status !== 'connected') {
-                            await wsService.connect(serverUrl);
+                            await wsService.connect(normalizedUrl);
                             _initializeCallbackHandler();
                         }
                     } catch (error) {
                         _setError(`Connection failed: ${error}`);
-                        set((state) => { state.connectionStatus = 'disconnected'; });
+                        _setConnectionStatus('disconnected');
                         throw error;
                     }
+                },
+
+                cancelConnect: () => {
+                    if (wsService.status === 'connecting' || get().connectionStatus === 'connecting') {
+                        wsService.disconnect();
+                        set((state) => {
+                            state.serverStatus = {
+                                status: 'idle',
+                                message: 'Connect was canceled.',
+                                checkedAt: null,
+                                serverState: null,
+                            };
+                        });
+                    }
+                },
+
+                checkServerStatus: async () => {
+                    const { serverUrl, _setError } = get();
+                    const checkedAt = new Date().toISOString();
+
+                    set((state) => {
+                        state.serverStatus = {
+                            status: 'checking',
+                            message: `Checking ${serverUrl}...`,
+                            checkedAt: null,
+                            serverState: null,
+                        };
+                    });
+
+                    try {
+                        const serverState = await wsService.requestOnce<ServerState>(
+                            normalizeServerUrl(serverUrl),
+                            'getServerState',
+                        );
+                        const version = formatServerVersion(serverState);
+
+                        set((state) => {
+                            state.serverStatus = {
+                                status: 'online',
+                                message: `Online - ${version}${serverState.testMode ? ' test mode' : ''}`,
+                                checkedAt,
+                                serverState,
+                            };
+                        });
+
+                        return true;
+                    } catch (error) {
+                        const message = error instanceof Error ? error.message : String(error);
+                        _setError(`Server status failed: ${message}`);
+                        set((state) => {
+                            state.serverStatus = {
+                                status: 'offline',
+                                message,
+                                checkedAt,
+                                serverState: null,
+                            };
+                        });
+
+                        return false;
+                    }
+                },
+
+                setAutoConnect: (enabled) => {
+                    const { connectionProfiles, serverUrl } = get();
+                    const nextProfiles = connectionProfileService.withAutoConnect(connectionProfiles, enabled, serverUrl);
+                    set((state) => {
+                        state.connectionProfiles = nextProfiles;
+                    });
+                },
+
+                saveServerPreset: (label, url) => {
+                    const { connectionProfiles, serverUrl } = get();
+                    const nextProfiles = connectionProfileService.saveServerPreset(
+                        connectionProfiles,
+                        label,
+                        url ?? serverUrl,
+                    );
+                    set((state) => {
+                        state.connectionProfiles = nextProfiles;
+                    });
+                },
+
+                deleteServerPreset: (presetId) => {
+                    const { connectionProfiles } = get();
+                    const nextProfiles = connectionProfileService.deleteServerPreset(connectionProfiles, presetId);
+                    set((state) => {
+                        state.connectionProfiles = nextProfiles;
+                    });
                 },
 
                 restoreSession: async () => {
@@ -199,38 +334,70 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                     }
                 },
 
-                disconnect: () => {
+                disconnect: async (keepGames = false) => {
+                    const { sessionId, userName, serverUrl, connectionProfiles } = get();
+                    let nextProfiles: ConnectionProfileSnapshot | null = null;
+
+                    if (userName) {
+                        nextProfiles = keepGames
+                            ? connectionProfileService.rememberRestoreSession(connectionProfiles, serverUrl, userName, sessionId)
+                            : connectionProfileService.clearRestoreSession(connectionProfiles, serverUrl, userName);
+                    }
+
+                    if (wsService.status === 'connected') {
+                        try {
+                            await webSocketBridgeService.disconnectSession(sessionId, keepGames);
+                        } catch (error) {
+                            const message = error instanceof Error ? error.message : String(error);
+                            if (message !== 'Client disconnected') {
+                                console.warn('Failed to notify server about disconnect:', error);
+                            }
+                        }
+                    }
+
                     wsService.disconnect();
                     set((state) => {
                         state.isAuthenticated = false;
                         state.userName = null;
+                        state.userData = null;
                         state.mainRoomId = null;
+                        if (!keepGames) {
+                            state.lastSessionId = null;
+                        }
+                        if (nextProfiles) {
+                            state.connectionProfiles = nextProfiles;
+                        }
                     });
                 },
 
                 // Authentication
                 login: async (userName, password) => {
-                    const { sessionId, lastSessionId, _setError } = get();
+                    const { sessionId, serverUrl, connectionProfiles, _setError } = get();
                     _setError(null);
 
                     try {
+                        const restoreSessionId = connectionProfileService.findRestoreSession(
+                            connectionProfiles,
+                            serverUrl,
+                            userName,
+                        );
+
                         // Connect user
-                        const result = await wsService.send<boolean>('connectUser', [
+                        const result = await webSocketBridgeService.connectUser(
                             userName,
                             password,
                             sessionId,
-                            lastSessionId || '', // restoreSessionId
-                            '', // version (server uses its own)
+                            restoreSessionId,
                             '', // userIdStr
-                        ]);
+                        );
 
                         if (!result) {
                             _setError('Login failed: Invalid credentials');
                             return false;
                         }
 
-                        // Set initial user data
-                        const userData = { ...defaultUserData };
+                        // Set initial user data from the same persisted preferences Java sends on connect.
+                        const userData = clientSettingsToUserData(appConfigService.loadSettings());
                         await wsService.send<boolean>('connectSetUserData', [
                             userName,
                             sessionId,
@@ -240,7 +407,18 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                         ]);
 
                         // Get main room ID (ALWAYS fetch fresh - it changes on server restart)
-                        const mainRoomId = await wsService.send<UUID>('serverGetMainRoomId', []);
+                        const mainRoomId = await webSocketBridgeService.getMainRoomId();
+                        const loginProfiles = connectionProfileService.rememberLogin(
+                            get().connectionProfiles,
+                            get().serverUrl,
+                            userName,
+                        );
+                        const nextProfiles = connectionProfileService.rememberRestoreSession(
+                            loginProfiles,
+                            get().serverUrl,
+                            userName,
+                            sessionId,
+                        );
 
                         set((state) => {
                             state.userName = userName;
@@ -248,6 +426,7 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                             state.isAuthenticated = true;
                             state.mainRoomId = mainRoomId;
                             state.lastSessionId = sessionId;
+                            state.connectionProfiles = nextProfiles;
                         });
 
                         return true;
@@ -274,6 +453,16 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                             return false;
                         }
 
+                        const nextProfiles = connectionProfileService.rememberLogin(
+                            get().connectionProfiles,
+                            get().serverUrl,
+                            userName,
+                            email,
+                        );
+                        set((state) => {
+                            state.connectionProfiles = nextProfiles;
+                        });
+
                         return true;
                     } catch (error) {
                         _setError(`Registration failed: ${error}`);
@@ -281,20 +470,40 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                     }
                 },
 
-                logout: () => {
-                    const { sessionId } = get();
+                requestPasswordResetToken: async (email) => {
+                    const { sessionId, _setError } = get();
+                    _setError(null);
 
-                    // Send disconnect if connected
-                    if (wsService.status === 'connected') {
-                        wsService.send('playerLogout', [sessionId]).catch(() => { });
+                    try {
+                        const result = await webSocketBridgeService.requestAuthToken(sessionId, email);
+                        if (!result) {
+                            _setError('Password reset token request failed');
+                        }
+                        return result;
+                    } catch (error) {
+                        _setError(`Password reset token request failed: ${error}`);
+                        return false;
                     }
+                },
 
-                    set((state) => {
-                        state.isAuthenticated = false;
-                        state.userName = null;
-                        state.userData = null;
-                        state.mainRoomId = null;
-                    });
+                resetPassword: async (email, authToken, password) => {
+                    const { sessionId, _setError } = get();
+                    _setError(null);
+
+                    try {
+                        const result = await webSocketBridgeService.resetPassword(sessionId, email, authToken, password);
+                        if (!result) {
+                            _setError('Password reset failed');
+                        }
+                        return result;
+                    } catch (error) {
+                        _setError(`Password reset failed: ${error}`);
+                        return false;
+                    }
+                },
+
+                logout: () => {
+                    void get().disconnect(false);
                 },
 
                 // User data
@@ -338,11 +547,37 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                     return setUserData({ userSkipPrioritySteps: newSteps });
                 },
 
+                sendFeedback: async (title, type, message, email) => {
+                    const { sessionId, userName, connectionStatus, _setError } = get();
+                    if (!userName || connectionStatus !== 'connected') {
+                        _setError('Feedback can only be sent while connected.');
+                        return false;
+                    }
+
+                    try {
+                        await wsService.send<boolean>('sendFeedback', [
+                            sessionId,
+                            userName,
+                            title,
+                            type,
+                            message,
+                            email,
+                        ]);
+                        return true;
+                    } catch (error) {
+                        _setError(`Feedback failed: ${error}`);
+                        return false;
+                    }
+                },
+
                 // Internal
                 _setConnectionStatus: (status) => {
+                    const previousStatus = get().connectionStatus;
+                    const isAuthenticated = get().isAuthenticated;
                     set((state) => {
                         state.connectionStatus = status;
                     });
+                    useNotificationStore.getState().handleConnectionStatus(previousStatus, status, isAuthenticated);
                 },
 
                 _setError: (error) => {
@@ -352,13 +587,18 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                 },
 
                 _initializeCallbackHandler: () => {
+                    wsService.setSessionIdProvider(() => {
+                        const { isAuthenticated, sessionId } = get();
+                        return isAuthenticated ? sessionId : null;
+                    });
+
                     // Subscribe to connection status changes
                     wsService.onStatusChange((status) => {
                         const { isAuthenticated, restoreSession, _setConnectionStatus } = get();
                         _setConnectionStatus(status);
 
                         // If we reconnected and were previously logged in, try to restore the session
-                        if (status === 'connected' && isAuthenticated) {
+                        if (status === 'connected' && isAuthenticated && appConfigService.loadSettings().restoreSessionOnReconnect) {
                             console.log('[SessionStore] Reconnected, attempting to restore session...');
                             restoreSession().then(success => {
                                 if (success) {
@@ -373,23 +613,192 @@ export const useSessionStore = create<SessionState & SessionActions>()(
 
                 handleCallback: (callback) => {
                     const data = callback.data as any; // Usually [title, message]
+                    if (callback.method === 'userRequestDialog') {
+                        get().showUserRequest(UserRequestService.normalize(callback.data));
+                        return;
+                    }
+
                     if (callback.method === 'showUserMessage') {
+                        if (Array.isArray(data) && data.length >= 2) {
+                            get().showAlert(String(data[0]), String(data[1]));
+                        } else {
+                            get().showAlert('Message', String(data));
+                        }
+                    }
+                },
+
+                showAlert: (title, message) => {
+                    set((state) => {
+                        state.alert = {
+                            title,
+                            message,
+                            isOpen: true,
+                        };
+                    });
+                },
+
+                showUserRequest: (request) => {
+                    resolveLocalUserRequest(null);
+                    set((state) => {
+                        state.userRequest = {
+                            request,
+                            isOpen: true,
+                            isExecuting: false,
+                            error: null,
+                        };
+                    });
+                },
+
+                showLocalUserRequest: (request) => {
+                    resolveLocalUserRequest(null);
+
+                    return new Promise<UserRequestResponse>((resolve) => {
+                        pendingLocalUserRequestResolver = resolve;
                         set((state) => {
-                            if (Array.isArray(data) && data.length >= 2) {
-                                state.alert = {
-                                    title: data[0],
-                                    message: data[1],
-                                    isOpen: true,
-                                };
-                            } else {
-                                state.alert = {
-                                    title: 'Message',
-                                    message: String(data),
-                                    isOpen: true,
-                                };
-                            }
+                            state.userRequest = {
+                                request,
+                                isOpen: true,
+                                isExecuting: false,
+                                error: null,
+                            };
+                        });
+                    });
+                },
+
+                respondToUserRequest: async (buttonIndex) => {
+                    const { userRequest, executeUserRequestAction } = get();
+                    const request = userRequest.request;
+                    if (!request || userRequest.isExecuting) return;
+
+                    const button = UserRequestService.getButton(request, buttonIndex);
+                    if (!button) return;
+
+                    if (pendingLocalUserRequestResolver) {
+                        resolveLocalUserRequest(button.index);
+                        set((state) => {
+                            state.userRequest = {
+                                request: null,
+                                isOpen: false,
+                                isExecuting: false,
+                                error: null,
+                            };
+                        });
+                        return;
+                    }
+
+                    set((state) => {
+                        state.userRequest.isExecuting = true;
+                        state.userRequest.error = null;
+                    });
+
+                    try {
+                        if (button.action) {
+                            await executeUserRequestAction(button.action, request);
+                        }
+
+                        set((state) => {
+                            state.userRequest = {
+                                request: null,
+                                isOpen: false,
+                                isExecuting: false,
+                                error: null,
+                            };
+                        });
+                    } catch (error) {
+                        set((state) => {
+                            state.userRequest.isExecuting = false;
+                            state.userRequest.error = error instanceof Error ? error.message : String(error);
                         });
                     }
+                },
+
+                executeUserRequestAction: async (action, request) => {
+                    const requireId = (value: UUID | undefined, name: string): UUID => {
+                        if (!value) throw new Error(`${name} is required for ${action}`);
+                        return value;
+                    };
+
+                    const { sessionId, disconnect, connect, restoreSession, isAuthenticated } = get();
+
+                    switch (action) {
+                        case 'CLIENT_DOWNLOAD_SYMBOLS':
+                        case 'CLIENT_DOWNLOAD_CARD_IMAGES':
+                            get().showAlert(
+                                'Resources',
+                                'The web client uses bundled web symbols and caches card images through the browser. Use Settings for language, fallback, cache size/age, trim/clear, and missing-image diagnostics; use Card Viewer to preload visible pages with progress and cancel.'
+                            );
+                            break;
+
+                        case 'CLIENT_DISCONNECT_FULL':
+                        case 'CLIENT_DISCONNECT_KEEP_GAMES':
+                        case 'CLIENT_EXIT_FULL':
+                        case 'CLIENT_EXIT_KEEP_GAMES':
+                            await disconnect(action === 'CLIENT_DISCONNECT_KEEP_GAMES' || action === 'CLIENT_EXIT_KEEP_GAMES');
+                            if (action === 'CLIENT_EXIT_FULL' || action === 'CLIENT_EXIT_KEEP_GAMES') {
+                                get().showAlert('Disconnected', 'You are disconnected. Close the browser tab when you are ready.');
+                            }
+                            break;
+
+                        case 'CLIENT_QUIT_TOURNAMENT':
+                            await webSocketBridgeService.quitTournament(requireId(request.tournamentId, 'tournamentId'), sessionId);
+                            break;
+
+                        case 'CLIENT_QUIT_DRAFT_TOURNAMENT':
+                            await webSocketBridgeService.quitDraft(requireId(request.tournamentId, 'tournamentId'), sessionId);
+                            break;
+
+                        case 'CLIENT_CONCEDE_GAME':
+                            await webSocketBridgeService.sendPlayerAction('CONCEDE', requireId(request.gameId, 'gameId'), sessionId, null);
+                            break;
+
+                        case 'CLIENT_CONCEDE_MATCH':
+                            await wsService.send('matchQuit', [requireId(request.gameId, 'gameId'), sessionId]);
+                            break;
+
+                        case 'CLIENT_STOP_WATCHING':
+                            await wsService.send('gameWatchStop', [requireId(request.gameId, 'gameId'), sessionId]);
+                            break;
+
+                        case 'CLIENT_REMOVE_TABLE':
+                            await webSocketBridgeService.removeTable(
+                                sessionId,
+                                requireId(request.roomId, 'roomId'),
+                                requireId(request.tableId, 'tableId'),
+                            );
+                            break;
+
+                        case 'CLIENT_RECONNECT':
+                            await connect();
+                            if (isAuthenticated) {
+                                await restoreSession();
+                            }
+                            break;
+
+                        case 'CLIENT_REPLAY_ACTION':
+                            await webSocketBridgeService.stopReplay(requireId(request.gameId, 'gameId'), sessionId);
+                            break;
+
+                        default:
+                            await webSocketBridgeService.sendPlayerAction(
+                                action,
+                                requireId(request.gameId, 'gameId'),
+                                sessionId,
+                                request.relatedUserId ?? null,
+                            );
+                            break;
+                    }
+                },
+
+                closeUserRequest: () => {
+                    resolveLocalUserRequest(null);
+                    set((state) => {
+                        state.userRequest = {
+                            request: null,
+                            isOpen: false,
+                            isExecuting: false,
+                            error: null,
+                        };
+                    });
                 },
 
                 closeAlert: () => {
@@ -400,9 +809,10 @@ export const useSessionStore = create<SessionState & SessionActions>()(
             })),
             {
                 name: 'xmage-session',
-                version: 2, // Increment to trigger migration
+                version: 4,
                 partialize: (state) => ({
                     serverUrl: state.serverUrl,
+                    connectionProfiles: state.connectionProfiles,
                     lastSessionId: state.lastSessionId,
                     userName: state.userName,
                     userData: state.userData,
@@ -416,10 +826,49 @@ export const useSessionStore = create<SessionState & SessionActions>()(
                         // New (correct): main1: true means STOP, false means SKIP
                         if (persistedState.userData?.userSkipPrioritySteps) {
                             // Reset to correct defaults - don't try to migrate, just replace
-                            persistedState.userData.userSkipPrioritySteps = defaultUserSkipPrioritySteps;
+                            persistedState.userData.userSkipPrioritySteps = DEFAULT_USER_SKIP_PRIORITY_STEPS;
                         }
                     }
+                    if (persistedState.serverUrl) {
+                        persistedState.serverUrl = normalizeServerUrl(persistedState.serverUrl);
+                    }
+                    if (version < 4 && persistedState.lastSessionId && persistedState.userName && persistedState.serverUrl) {
+                        const connectionProfiles = persistedState.connectionProfiles ?? {};
+                        persistedState.connectionProfiles = {
+                            ...connectionProfiles,
+                            restoreSessionsByServerUser: {
+                                ...(connectionProfiles.restoreSessionsByServerUser ?? {}),
+                                [connectionProfileKey(persistedState.serverUrl, persistedState.userName)]: {
+                                    sessionId: persistedState.lastSessionId,
+                                    savedAt: new Date(0).toISOString(),
+                                },
+                            },
+                        };
+                    }
+                    persistedState.connectionProfiles = connectionProfileService.normalize({
+                        lastServerUrl: persistedState.serverUrl ?? DEFAULT_SERVER_URL,
+                        ...(persistedState.connectionProfiles ?? {}),
+                    });
                     return persistedState;
+                },
+                merge: (persistedState, currentState) => {
+                    const persisted = (persistedState ?? {}) as Partial<SessionState>;
+                    const connectionProfiles = connectionProfileService.normalize({
+                        lastServerUrl: persisted.serverUrl ?? currentState.serverUrl,
+                        ...(persisted.connectionProfiles ?? {}),
+                    });
+
+                    return {
+                        ...currentState,
+                        ...persisted,
+                        serverUrl: normalizeServerUrl(persisted.serverUrl ?? connectionProfiles.lastServerUrl),
+                        connectionProfiles,
+                        connectionStatus: currentState.connectionStatus,
+                        serverStatus: currentState.serverStatus,
+                        isRestoring: false,
+                        alert: currentState.alert,
+                        userRequest: currentState.userRequest,
+                    };
                 },
             }
         ),

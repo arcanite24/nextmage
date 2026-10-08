@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useDebugStore } from '../../stores/debugStore';
+import { useSessionStore } from '../../stores';
 import { DebugExportService } from '../../services/DebugExportService';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 
 export const ExportDialog: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { getFullExportData } = useDebugStore();
+  const showAlert = useSessionStore(state => state.showAlert);
   const [format, setFormat] = useState<'json' | 'text'>('json');
   const [content, setContent] = useState<'both' | 'state' | 'history'>('both');
   const [previewExpanded, setPreviewExpanded] = useState(false);
@@ -32,7 +34,7 @@ export const ExportDialog: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       onClose();
     } catch (err) {
       console.error('Export failed:', err);
-      alert('Export failed. See console for details.');
+      showAlert('Debug export', 'Export failed. See console for details.');
     } finally {
       setExporting(false);
     }
@@ -50,10 +52,10 @@ export const ExportDialog: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       };
 
       await DebugExportService.exportToClipboard(exportData);
-      alert('Data copied to clipboard!');
+      showAlert('Debug export', 'Data copied to clipboard.');
     } catch (err) {
       console.error('Clipboard export failed:', err);
-      alert('Failed to copy to clipboard. Permission may have been denied.');
+      showAlert('Debug export', 'Failed to copy to clipboard. Permission may have been denied.');
     } finally {
       setExporting(false);
     }

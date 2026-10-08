@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Test and tool output
+.tmp
+test-results
+playwright-report
+blob-report
+coverage

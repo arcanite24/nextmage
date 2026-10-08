@@ -143,6 +143,7 @@ public class TournamentSession {
     }
 
     public void tournamentOver() {
+        gameOver("Tournament finished.");
         cleanUp();
         removeTournamentForUser();
     }
@@ -163,6 +164,7 @@ public class TournamentSession {
         if (user.isPresent()) {
             user.get().removeTable(playerId);
             user.get().removeTournament(playerId);
+            user.get().removeConstructing(playerId);
         }
     }
 

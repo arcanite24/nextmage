@@ -1,151 +1,98 @@
-# XMage Web Client
+# Mage Web Client
 
-A modern, Magic Arena-inspired web client for XMage. This client provides a beautiful, responsive interface for playing Magic: The Gathering online.
+The browser client for this XMage fork: sign in, build decks, play the AI or other players, draft and run events, in a Playmat-styled table that aims for MTG Arena-level ease of play. It talks to the server over the JSON-RPC WebSocket bridge in `Mage.Server`.
 
-## Features (Phase 1 - Foundation)
+- What it is for and who it serves: [PRODUCT.md](PRODUCT.md)
+- The Playmat design system (tokens, components, rules): [DESIGN.md](DESIGN.md)
+- The WebSocket protocol: [../docs/WebSocketAPI.md](../docs/WebSocketAPI.md)
+- Deploying the client and server: [../ops/web/README.md](../ops/web/README.md)
+- Backlog: the tracker at https://claude.ai/artifact/DAHwcrRiJseP94iUjjhR5A (the old `TODO.md` is archived in [docs/archive](docs/archive/TODO-2026-legacy.md))
 
-- ✅ Modern, glassmorphism-inspired UI design
-- ✅ WebSocket service with auto-reconnection
-- ✅ User authentication (login/register)
-- ✅ Zustand-based state management
-- ✅ Type-safe API integration
+## Stack
 
-## Technology Stack
+| Concern | Used |
+|---|---|
+| UI | React 19, TypeScript, Vite |
+| Routing | react-router (data router, lazy routes for the heavier screens) |
+| State | Zustand v5 stores; TanStack Query for server lookups (server state, tables, card search) |
+| Primitives | Radix (dialog, dropdown menu, tabs, tooltip), lucide icons |
+| Styling | CSS Modules on the Playmat tokens in `src/app/styles/tokens.css` |
+| Sound | Web Audio (`src/app/match/sound.ts`) |
+| Card images | Scryfall, cached in IndexedDB (`src/core/images`) |
+| Tests | Vitest (unit), an accessibility script, Playwright (e2e and visual, not in CI) |
 
-| Component | Technology |
-|-----------|------------|
-| **Framework** | Vite + React 18 |
-| **Language** | TypeScript |
-| **State Management** | Zustand with Immer |
-| **Styling** | Vanilla CSS with Design Tokens |
-| **WebSocket** | Native WebSocket |
-| **Validation** | Zod (for API responses) |
+## Layout
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- XMage Server running with WebSocket support (port 17172)
-
-### Installation
-
-```bash
-cd Mage.Web.Client
-npm install
-```
-
-### Development
-
-```bash
-npm run dev
-```
-
-The development server starts at `http://localhost:5173`
-
-### Production Build
-
-```bash
-npm run build
-npm run preview
-```
-
-## Project Structure
-
-```
+```text
 src/
-├── components/
-│   ├── common/           # Reusable UI components
-│   │   ├── Button.tsx
-│   │   ├── Modal.tsx
-│   │   ├── Card.tsx
-│   │   └── ManaSymbols.tsx
-│   ├── login/            # Login/register page
-│   ├── lobby/            # Game lobby (tables, create game)
-│   ├── chat/             # Chat panel
-│   └── game/             # Game interface (coming soon)
-├── services/
-│   ├── WebSocketService.ts   # WebSocket connection management
-│   └── CardImageService.ts   # Card image loading via Scryfall
-├── stores/
-│   ├── sessionStore.ts       # User session & authentication
-│   ├── lobbyStore.ts         # Lobby tables & room state
-│   ├── gameStore.ts          # Game state management
-│   └── chatStore.ts          # Chat messages & channels
-├── types/
-│   ├── api.ts                # WebSocket API types
-│   ├── game.ts               # Game state types
-│   └── models.ts             # Lobby & deck types
-└── index.css                 # Design system & global styles
+├── app/            the new app (index.html, served at /)
+│   ├── main.tsx    routes, global error hooks
+│   ├── screens/    login, home (Play), decks, events, tables, game route
+│   ├── match/      the match stage: board, hand, stack, prompts, overlays, card detail
+│   ├── decks/      deck builder
+│   ├── events/     draft, deck construction, event (tournament) screens
+│   ├── stores/     the app's Zustand stores (session, games, decks, play, events, settings, toasts)
+│   ├── ui/         shared primitives (Button, Dialog, Field, CardFace, Toaster...)
+│   └── styles/     tokens and base CSS
+├── core/           framework-free logic, unit tested
+│   ├── rpc/        WebSocket JSON-RPC client and event bus
+│   ├── game/       game session, interaction model, auto-pass and auto-pay, leaving games
+│   ├── decks/      deck types, serializer (.dck/.txt/... import and export), local deck storage
+│   ├── images/     card image resolution and cache
+│   ├── telemetry/  error reporter (console by default, ring buffer of recent errors)
+│   └── headless/   a headless game driver for live tests
+└── protocol/generated/   types and API generated from the server's RPC registry (do not edit)
 ```
 
-## Implementation Roadmap
+`src/app` and `src/core` never import the legacy client. The legacy client (`src/components`, `src/services`, `src/stores`, `src/types`, `legacy.html`) and the visual harness (`visual.html`) remain until every screen is replaced; legacy imports deck code from `src/core/decks`.
 
-Based on `docs/WebClientImplementationPlan.md`:
+The protocol files are regenerated from the server: `mvn -pl Mage.Server test -Dtest=WebClientApiDocsTest -Dxmage.updateWebApiDocs=true`.
 
-### Phase 1: Foundation ✅
-- [x] Project setup (Vite + React + TypeScript)
-- [x] WebSocket service with reconnection
-- [x] Session store with authentication
-- [x] Login page UI
-- [x] Basic lobby page structure
+## Dev loop
 
-### Phase 2: Lobby & Chat 🔄
-- [x] Table list component
-- [x] Create table dialog
-- [x] Chat panel
-- [ ] Join table with deck selection
-- [ ] Table filtering
+```bash
+npm install
+npm run dev:all   # builds and starts the Mage server (HTTP 17171, WebSocket 17172) and Vite
+```
 
-### Phase 3: Game Core - Read Only
-- [ ] Game page layout
-- [ ] Battlefield rendering
-- [ ] Hand component
-- [ ] Stack component
-- [ ] Player panel (life, mana)
-- [ ] Phase indicator
+- New app: http://localhost:5173/
+- Legacy client: http://localhost:5173/legacy.html (until it is deleted)
+- `Ctrl-C` stops both. If a server survives a failed shutdown, `npm run dev:kill` frees ports 17171 and 17172.
+- `npm run dev` starts Vite alone, against a server you run yourself (default `ws://localhost:17172`).
 
-### Phase 4: Basic Game Actions
-- [ ] Priority passing (F-keys)
-- [ ] Yes/No dialogs
-- [ ] Target selection
-- [ ] Card selection
+To debug errors in the browser, `window.__mageErrors()` lists the last 50 reported errors.
 
-### Phase 5: Advanced Interactions
-- [ ] Mana payment dialog
-- [ ] Ability picker
-- [ ] Combat assignment
-- [ ] Pile selection
+## Scripts and gates
 
-### Phase 6: Polish
-- [ ] Deck editor
-- [ ] Animations
-- [ ] Sound effects
-- [ ] Mobile responsiveness
+CI (`.github/workflows/web-client.yml`) runs the four gates on every change under `Mage.Web.Client/`:
 
-## Design Philosophy
+```bash
+npm run typecheck   # tsc -b
+npm run lint        # ESLint; zero errors, warnings capped by --max-warnings
+npm test            # Vitest unit tests, then the accessibility check
+npm run build       # tsc -b and the Vite production bundle (new app, legacy, visual harness)
+```
 
-The web client aims to provide a **Magic Arena-like experience**:
+The lint warning cap only goes down: lower `--max-warnings` in `package.json` whenever you remove warnings.
 
-- **Rich Aesthetics**: Dark theme with glassmorphism, gradients, and subtle animations
-- **Premium Feel**: Smooth transitions, hover effects, and polished micro-interactions
-- **Responsive**: Works on desktop and tablets (mobile support planned)
-- **Intuitive**: Clear visual feedback for all game states
+Other scripts:
 
-## Connecting to XMage Server
+```bash
+npm run test:watch          # Vitest in watch mode
+npm run test:e2e            # Playwright specs (browser-only, mocked server)
+npm run test:e2e:local      # Playwright against a running local server (MAGE_E2E_SERVER_URL, MAGE_E2E_USERNAME, MAGE_E2E_PASSWORD)
+npm run test:visual         # Playwright visual baselines (macOS only, predate the rebuild, not in CI)
+npm run preview             # serve the production bundle
+```
 
-The client connects to the XMage WebSocket server. Make sure:
+Playwright's bundled browsers may not match the installed `@playwright/test`; set `PLAYWRIGHT_CHANNEL=chrome` to use the local Chrome.
 
-1. XMage Server is running with WebSocket support enabled
-2. Server is accessible at the configured URL (default: `ws://localhost:17172`)
-3. CORS is properly configured if running on different domains
+## Conventions
 
-## Related Documentation
-
-- [`docs/WebSocketAPI.md`](../docs/WebSocketAPI.md) - Full API specification
-- [`docs/WebClientDataModels.md`](../docs/WebClientDataModels.md) - TypeScript type definitions
-- [`docs/WebClientImplementationPlan.md`](../docs/WebClientImplementationPlan.md) - Detailed implementation plan
+- Zustand v5: a selector that returns a new array or object on every call loops renders. Select raw slices and derive with `useMemo`.
+- Colors, spacing, type and layers come from the tokens (`--z-overlay`, `--z-dialog`, `--z-toast`...), never raw values.
+- Pure logic goes in `src/core` with a unit test next to it.
 
 ## License
 
-Part of the XMage project. See root LICENSE file.
+Part of the Mage/XMage project. See the root license files for project terms.

@@ -41,7 +41,7 @@ public final class MirrormindCrown extends CardImpl {
         this.addAbility(new SimpleStaticAbility(new MirrormindCrownEffect()), new CreatedTokenWatcher());
 
         // Equip {2}
-        this.addAbility(new EquipAbility(2));
+        this.addAbility(new EquipAbility(2, false));
     }
 
     private MirrormindCrown(final MirrormindCrown card) {
@@ -75,7 +75,6 @@ class MirrormindCrownEffect extends ReplacementEffectImpl {
     @Override
     public boolean applies(GameEvent event, Ability source, Game game) {
         return source.isControlledBy(event.getPlayerId())
-                && game.isActivePlayer(source.getControllerId())
                 && !CreatedTokenWatcher.checkPlayer(source.getControllerId(), game)
                 && Optional
                 .ofNullable(source.getSourcePermanentIfItStillExists(game))

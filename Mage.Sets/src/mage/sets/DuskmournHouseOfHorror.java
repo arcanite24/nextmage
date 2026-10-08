@@ -49,8 +49,12 @@ public final class DuskmournHouseOfHorror extends ExpansionSet {
         cards.add(new SetCardInfo("Cackling Slasher", 85, Rarity.COMMON, mage.cards.c.CacklingSlasher.class));
         cards.add(new SetCardInfo("Cathartic Parting", 171, Rarity.UNCOMMON, mage.cards.c.CatharticParting.class));
         cards.add(new SetCardInfo("Cautious Survivor", 172, Rarity.COMMON, mage.cards.c.CautiousSurvivor.class));
+        cards.add(new SetCardInfo("Central Elevator // Promising Stairs", 44, Rarity.RARE, mage.cards.c.CentralElevatorPromisingStairs.class, NON_FULL_USE_VARIOUS));
+        cards.add(new SetCardInfo("Central Elevator // Promising Stairs", 336, Rarity.RARE, mage.cards.c.CentralElevatorPromisingStairs.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Chainsaw", 128, Rarity.RARE, mage.cards.c.Chainsaw.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Chainsaw", 314, Rarity.RARE, mage.cards.c.Chainsaw.class, NON_FULL_USE_VARIOUS));
+        cards.add(new SetCardInfo("Charred Foyer // Warped Space", 340, Rarity.MYTHIC, mage.cards.c.CharredFoyerWarpedSpace.class, NON_FULL_USE_VARIOUS));
+        cards.add(new SetCardInfo("Charred Foyer // Warped Space", 129, Rarity.MYTHIC, mage.cards.c.CharredFoyerWarpedSpace.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Clammy Prowler", 45, Rarity.COMMON, mage.cards.c.ClammyProwler.class));
         cards.add(new SetCardInfo("Clockwork Percussionist", 130, Rarity.COMMON, mage.cards.c.ClockworkPercussionist.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Clockwork Percussionist", 295, Rarity.COMMON, mage.cards.c.ClockworkPercussionist.class, NON_FULL_USE_VARIOUS));
@@ -61,6 +65,7 @@ public final class DuskmournHouseOfHorror extends ExpansionSet {
         cards.add(new SetCardInfo("Conductive Machete", 244, Rarity.UNCOMMON, mage.cards.c.ConductiveMachete.class));
         cards.add(new SetCardInfo("Coordinated Clobbering", 173, Rarity.UNCOMMON, mage.cards.c.CoordinatedClobbering.class));
         cards.add(new SetCardInfo("Cracked Skull", 88, Rarity.COMMON, mage.cards.c.CrackedSkull.class));
+        cards.add(new SetCardInfo("Creeping Peeper", 46, Rarity.COMMON, mage.cards.c.CreepingPeeper.class));
         cards.add(new SetCardInfo("Cryptid Inspector", 174, Rarity.COMMON, mage.cards.c.CryptidInspector.class));
         cards.add(new SetCardInfo("Cult Healer", 2, Rarity.COMMON, mage.cards.c.CultHealer.class));
         cards.add(new SetCardInfo("Cursed Recording", 131, Rarity.RARE, mage.cards.c.CursedRecording.class, NON_FULL_USE_VARIOUS));
@@ -185,6 +190,8 @@ public final class DuskmournHouseOfHorror extends ExpansionSet {
         cards.add(new SetCardInfo("Impossible Inferno", 140, Rarity.COMMON, mage.cards.i.ImpossibleInferno.class));
         cards.add(new SetCardInfo("Infernal Phantom", 141, Rarity.UNCOMMON, mage.cards.i.InfernalPhantom.class));
         cards.add(new SetCardInfo("Innocuous Rat", 103, Rarity.COMMON, mage.cards.i.InnocuousRat.class));
+        cards.add(new SetCardInfo("Inquisitive Glimmer", 217, Rarity.UNCOMMON, mage.cards.i.InquisitiveGlimmer.class, NON_FULL_USE_VARIOUS));
+        cards.add(new SetCardInfo("Inquisitive Glimmer", 415, Rarity.UNCOMMON, mage.cards.i.InquisitiveGlimmer.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Insidious Fungus", 186, Rarity.UNCOMMON, mage.cards.i.InsidiousFungus.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Insidious Fungus", 321, Rarity.UNCOMMON, mage.cards.i.InsidiousFungus.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Intruding Soulrager", 218, Rarity.UNCOMMON, mage.cards.i.IntrudingSoulrager.class));
@@ -258,6 +265,7 @@ public final class DuskmournHouseOfHorror extends ExpansionSet {
         cards.add(new SetCardInfo("Optimistic Scavenger", 288, Rarity.UNCOMMON, mage.cards.o.OptimisticScavenger.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Orphans of the Wheat", 22, Rarity.UNCOMMON, mage.cards.o.OrphansOfTheWheat.class));
         cards.add(new SetCardInfo("Osseous Sticktwister", 112, Rarity.UNCOMMON, mage.cards.o.OsseousSticktwister.class));
+        cards.add(new SetCardInfo("Overgrown Zealot", 193, Rarity.UNCOMMON, mage.cards.o.OvergrownZealot.class));
         cards.add(new SetCardInfo("Overlord of the Balemurk", 113, Rarity.MYTHIC, mage.cards.o.OverlordOfTheBalemurk.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Overlord of the Balemurk", 377, Rarity.MYTHIC, mage.cards.o.OverlordOfTheBalemurk.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Overlord of the Balemurk", 391, Rarity.MYTHIC, mage.cards.o.OverlordOfTheBalemurk.class, NON_FULL_USE_VARIOUS));
@@ -317,6 +325,7 @@ public final class DuskmournHouseOfHorror extends ExpansionSet {
         cards.add(new SetCardInfo("Savior of the Small", 27, Rarity.UNCOMMON, mage.cards.s.SaviorOfTheSmall.class));
         cards.add(new SetCardInfo("Saw", 254, Rarity.UNCOMMON, mage.cards.s.Saw.class));
         cards.add(new SetCardInfo("Sawblade Skinripper", 231, Rarity.UNCOMMON, mage.cards.s.SawbladeSkinripper.class));
+        cards.add(new SetCardInfo("Say Its Name", 197, Rarity.COMMON, mage.cards.s.SayItsName.class));
         cards.add(new SetCardInfo("Scorching Dragonfire", 156, Rarity.COMMON, mage.cards.s.ScorchingDragonfire.class));
         cards.add(new SetCardInfo("Scrabbling Skullcrab", 71, Rarity.UNCOMMON, mage.cards.s.ScrabblingSkullcrab.class));
         cards.add(new SetCardInfo("Screaming Nemesis", 157, Rarity.MYTHIC, mage.cards.s.ScreamingNemesis.class, NON_FULL_USE_VARIOUS));
@@ -332,6 +341,7 @@ public final class DuskmournHouseOfHorror extends ExpansionSet {
         cards.add(new SetCardInfo("Silent Hallcreeper", 72, Rarity.RARE, mage.cards.s.SilentHallcreeper.class, NON_FULL_USE_VARIOUS));
         cards.add(new SetCardInfo("Skullsnap Nuisance", 234, Rarity.UNCOMMON, mage.cards.s.SkullsnapNuisance.class));
         cards.add(new SetCardInfo("Slavering Branchsnapper", 198, Rarity.COMMON, mage.cards.s.SlaveringBranchsnapper.class));
+        cards.add(new SetCardInfo("Smoky Lounge // Misty Salon", 235, Rarity.UNCOMMON, mage.cards.s.SmokyLoungeMistySalon.class));
         cards.add(new SetCardInfo("Spectral Snatcher", 116, Rarity.COMMON, mage.cards.s.SpectralSnatcher.class));
         cards.add(new SetCardInfo("Spineseeker Centipede", 199, Rarity.COMMON, mage.cards.s.SpineseekerCentipede.class));
         cards.add(new SetCardInfo("Split Up", 304, Rarity.RARE, mage.cards.s.SplitUp.class, NON_FULL_USE_VARIOUS));

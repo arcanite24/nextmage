@@ -30,7 +30,6 @@ public class Pauper extends Constructed {
         banned.add("Arcum's Astrolabe");
         banned.add("Atog");
         banned.add("Basking Broodscale");
-        banned.add("Bonder's Ornament");
         banned.add("Chatterstorm");
         banned.add("Cloud of Faeries");
         banned.add("Cloudpost");
@@ -52,10 +51,13 @@ public class Pauper extends Constructed {
         banned.add("Kuldotha Rebirth");
         banned.add("Monastery Swiftspear");
         banned.add("Mystic Sanctuary");
+        banned.add("Narcomoeba");
         banned.add("Peregrine Drake");
+        banned.add("Price of Progress");
+        banned.add("Seeker of Skybreak");
         banned.add("Sinkhole");
-        banned.add("Stirring Bard");
         banned.add("Sojourner's Companion");
+        banned.add("Stirring Bard");
         banned.add("Temporal Fissure");
         banned.add("Treasure Cruise");
         banned.add("Underdark Explorer");

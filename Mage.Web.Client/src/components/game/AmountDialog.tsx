@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Lightbulb } from 'lucide-react';
 import { Modal, Button } from '../common';
 import { useGameStore } from '../../stores';
 import './AmountDialog.css';
@@ -22,7 +23,7 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
     min,
     max
 }) => {
-    const { sendInteger } = useGameStore();
+    const sendInteger = useGameStore(state => state.sendInteger);
     const [value, setValue] = useState(min);
 
     // Reset value when dialog opens
@@ -82,6 +83,9 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
             onClose={() => { }} // Can't close without selecting
             title="Choose a Number"
             size="sm"
+            closeOnBackdrop={false}
+            closeOnEscape={false}
+            showCloseButton={false}
         >
             <div className="amount-dialog">
                 <p className="amount-message" dangerouslySetInnerHTML={{ __html: message }} />
@@ -91,6 +95,7 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
                         className="amount-btn amount-decrement"
                         onClick={handleDecrement}
                         disabled={value <= min}
+                        aria-label="Decrease amount"
                     >
                         −
                     </button>
@@ -109,6 +114,7 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
                         className="amount-btn amount-increment"
                         onClick={handleIncrement}
                         disabled={value >= max}
+                        aria-label="Increase amount"
                     >
                         +
                     </button>
@@ -143,7 +149,8 @@ export const AmountDialog: React.FC<AmountDialogProps> = ({
                 </Button>
 
                 <div className="amount-hint">
-                    💡 Use ↑/↓ arrows or Enter to confirm
+                    <Lightbulb size={14} aria-hidden="true" />
+                    Use ↑/↓ arrows or Enter to confirm
                 </div>
             </div>
         </Modal>

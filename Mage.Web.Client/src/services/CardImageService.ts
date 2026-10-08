@@ -5,15 +5,38 @@
  * Uses IndexedDB for persistent caching to save bandwidth.
  */
 
-import { CardView, SearchCardView, SearchSimpleCardView, SimpleCardView } from '../types';
+import { CardView, GameView } from '../types';
 import { imageCacheManager } from './ImageCacheManager';
 
 type ImageSize = 'small' | 'normal' | 'large' | 'png' | 'art_crop' | 'border_crop';
+export type CardImageFallbackMode = 'card-back' | 'text-card';
 
 interface ImageCache {
   url: string;
   loaded: boolean;
   error: boolean;
+}
+
+interface ImageCard {
+  id?: string;
+  expansionSetCode: string;
+  cardNumber: string;
+  transformed?: boolean;
+  isDoubleFacedCard?: boolean;
+  name?: string;
+  displayName?: string;
+  displayFullName?: string;
+  cardTypes?: string[];
+  manaCostLeftStr?: string[];
+  manaCostRightStr?: string[];
+}
+
+export interface MissingCardImageDiagnostic {
+  cacheKey: string;
+  setCode: string;
+  cardNumber: string;
+  size: ImageSize;
+  language: string;
 }
 
 // Set of known error cache keys to avoid repeated network requests
@@ -22,6 +45,16 @@ const errorCache = new Set<string>();
 class CardImageService {
   private cache = new Map<string, ImageCache>();
   private loadingPromises = new Map<string, Promise<string>>();
+  private preferredLanguage = 'en';
+
+  setPreferredLanguage(language: string): void {
+    const normalized = language.trim().toLowerCase().replace(/[^a-z-]/g, '').slice(0, 8);
+    this.preferredLanguage = normalized || 'en';
+  }
+
+  getPreferredLanguage(): string {
+    return this.preferredLanguage;
+  }
 
   /**
    * Get Scryfall image URL for a card
@@ -30,7 +63,7 @@ class CardImageService {
    * Scryfall API to redirect us to the correct image.
    */
   getImageUrl(
-    card: CardView | SearchCardView | SearchSimpleCardView | SimpleCardView,
+    card: ImageCard,
     size: ImageSize = 'normal',
     face: 'front' | 'back' = 'front'
   ): string {
@@ -44,7 +77,11 @@ class CardImageService {
     }
     number = encodeURIComponent(number);
 
-    return `https://api.scryfall.com/cards/${setCode}/${number}?format=image&version=${size}${face === 'back' ? '&face=back' : ''}`;
+    const shouldUseBackFace = face === 'back' || ('transformed' in card && card.transformed && 'isDoubleFacedCard' in card && card.isDoubleFacedCard);
+    const languagePath = this.preferredLanguage && this.preferredLanguage !== 'en'
+      ? `/${encodeURIComponent(this.preferredLanguage)}`
+      : '';
+    return `https://api.scryfall.com/cards/${setCode}/${number}${languagePath}?format=image&version=${size}${shouldUseBackFace ? '&face=back' : ''}`;
   }
 
   /**
@@ -65,10 +102,10 @@ class CardImageService {
    * Returns placeholder URL for cards that fail to load (silently).
    */
   async preload(
-    card: CardView | SearchCardView | SearchSimpleCardView | SimpleCardView,
+    card: ImageCard,
     size: ImageSize = 'normal'
   ): Promise<string> {
-    const cacheKey = `${card.expansionSetCode}-${card.cardNumber}-${size}`;
+    const cacheKey = this.createCacheKey(card, size);
 
     // Check if we've already seen this error - return placeholder immediately
     if (errorCache.has(cacheKey)) {
@@ -101,7 +138,7 @@ class CardImageService {
 
         return Promise.resolve(objectUrl);
       }
-    } catch (error) {
+    } catch {
       // Silently continue to load from network
     }
 
@@ -118,7 +155,7 @@ class CardImageService {
           // Cache the blob in IndexedDB
           try {
             await imageCacheManager.put(cacheKey, networkUrl, blob);
-          } catch (cacheError) {
+          } catch {
             // Silently continue, we have the blob
           }
 
@@ -153,12 +190,41 @@ class CardImageService {
    * Preload multiple cards in parallel
    */
   preloadMany(
-    cards: (CardView | SearchCardView | SearchSimpleCardView | SimpleCardView)[],
+    cards: ImageCard[],
     size: ImageSize = 'normal'
   ): Promise<string[]> {
     return Promise.all(
       cards.map(card => this.preload(card, size).catch(() => ''))
     );
+  }
+
+  preloadGameViewImages(gameView: GameView, size: ImageSize = 'normal'): Promise<string[]> {
+    const seen = new Set<string>();
+    const cards: CardView[] = [];
+    const addCards = (source?: Record<string, CardView>) => {
+      if (!source) return;
+      Object.values(source).forEach((card) => {
+        const key = `${card.expansionSetCode}-${card.cardNumber}-${card.id}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          cards.push(card);
+        }
+      });
+    };
+
+    addCards(gameView.myHand);
+    addCards(gameView.stack);
+    gameView.players?.forEach((player) => {
+      addCards(player.battlefield);
+      addCards(player.graveyard);
+      addCards(player.exile);
+      addCards(player.sideboard);
+    });
+    gameView.exiles?.forEach((exile) => addCards(exile.cards));
+    gameView.revealed?.forEach((revealed) => addCards(revealed.cards));
+    gameView.lookedAt?.forEach((lookedAt) => addCards(lookedAt.cards));
+
+    return this.preloadMany(cards, size);
   }
 
   /**
@@ -175,6 +241,41 @@ class CardImageService {
     return '/back.webp';
   }
 
+  getFallbackImageUrl(card?: Partial<ImageCard>, mode: CardImageFallbackMode = 'card-back'): string {
+    if (mode !== 'text-card' || !card) {
+      return this.getPlaceholderUrl();
+    }
+
+    const name = escapeSvgText(card.name || card.displayName || card.displayFullName || 'Unknown card');
+    const typeLine = escapeSvgText(card.cardTypes?.join(' ') || 'Card image unavailable');
+    const setLine = escapeSvgText([card.expansionSetCode, card.cardNumber].filter(Boolean).join(' #') || 'Image fallback');
+    const manaCost = escapeSvgText((card.manaCostRightStr?.length ? card.manaCostRightStr : card.manaCostLeftStr)?.join(' ') || '');
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="336" height="470" viewBox="0 0 336 470">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1f2937"/>
+            <stop offset="0.55" stop-color="#0f172a"/>
+            <stop offset="1" stop-color="#312e81"/>
+          </linearGradient>
+        </defs>
+        <rect width="336" height="470" rx="22" fill="#020617"/>
+        <rect x="12" y="12" width="312" height="446" rx="18" fill="url(#bg)" stroke="#94a3b8" stroke-opacity="0.55" stroke-width="2"/>
+        <rect x="28" y="32" width="280" height="54" rx="10" fill="rgba(15,23,42,0.82)" stroke="#cbd5e1" stroke-opacity="0.32"/>
+        <text x="42" y="66" fill="#f8fafc" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="21" font-weight="800">${name}</text>
+        <text x="294" y="66" fill="#fde68a" text-anchor="end" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="15" font-weight="700">${manaCost}</text>
+        <rect x="28" y="104" width="280" height="214" rx="12" fill="rgba(2,6,23,0.55)" stroke="#64748b" stroke-opacity="0.36"/>
+        <text x="168" y="206" fill="#cbd5e1" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="18" font-weight="900">IMAGE FALLBACK</text>
+        <text x="168" y="234" fill="#94a3b8" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="13">Card art could not be loaded</text>
+        <rect x="28" y="340" width="280" height="42" rx="9" fill="rgba(15,23,42,0.82)" stroke="#cbd5e1" stroke-opacity="0.24"/>
+        <text x="42" y="366" fill="#e2e8f0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="700">${typeLine}</text>
+        <text x="42" y="424" fill="#94a3b8" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="700">${setLine}</text>
+      </svg>
+    `;
+
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace(/\s+/g, ' ').trim())}`;
+  }
+
   /**
    * Get card back image URL
    */
@@ -188,6 +289,7 @@ class CardImageService {
   clearInMemoryCache(): void {
     this.cache.clear();
     this.loadingPromises.clear();
+    errorCache.clear();
   }
 
   /**
@@ -208,13 +310,48 @@ class CardImageService {
     return deletedCount;
   }
 
+  async enforceCacheSizeLimit(): Promise<void> {
+    await imageCacheManager.enforceSizeLimit();
+  }
+
   /**
    * Get all cache entries for debugging/management
    */
   async getCacheEntries() {
     return await imageCacheManager.getAllEntries();
   }
+
+  getMissingImageDiagnostics(): MissingCardImageDiagnostic[] {
+    return Array.from(errorCache).map((cacheKey) => {
+      const [setCode = '', cardNumber = '', size = 'normal', language = 'en'] = cacheKey.split('|');
+      return {
+        cacheKey,
+        setCode,
+        cardNumber,
+        size: size as ImageSize,
+        language,
+      };
+    });
+  }
+
+  private createCacheKey(card: ImageCard, size: ImageSize): string {
+    return [
+      card.expansionSetCode,
+      card.cardNumber,
+      size,
+      this.preferredLanguage || 'en',
+    ].join('|');
+  }
 }
 
 export const cardImageService = new CardImageService();
 export { CardImageService };
+
+function escapeSvgText(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .slice(0, 42);
+}

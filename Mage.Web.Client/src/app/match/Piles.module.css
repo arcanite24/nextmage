@@ -1,0 +1,68 @@
+.piles {
+  position: absolute;
+  display: flex;
+  gap: 14px;
+  z-index: 15;
+}
+
+.pile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 112px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.pile:disabled {
+  cursor: default;
+}
+
+/* a printed card zone under each pile */
+.stack {
+  position: relative;
+  width: 92px;
+  aspect-ratio: 63 / 88;
+  border-radius: 7px;
+  box-shadow:
+    0 0 0 1.5px var(--ink-faint),
+    calc(var(--depth, 0) * 1px) calc(var(--depth, 0) * 1.5px) 0 rgb(0 0 0 / 0.35);
+}
+
+.empty {
+  background: rgb(233 228 214 / 0.03);
+}
+
+.pile:hover:not(:disabled) .stack {
+  box-shadow: 0 0 0 2px var(--ink-soft);
+}
+
+.count {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  translate: -50% 0;
+  min-width: 34px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(7 12 10 / 0.88);
+  box-shadow: 0 0 0 1px var(--ink-faint);
+  font-family: var(--font-print);
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.label {
+  font-family: var(--font-print);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}

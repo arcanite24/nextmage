@@ -8,7 +8,8 @@
  * - Special option (e.g., "Remember answer")
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Lightbulb } from 'lucide-react';
 import { Modal } from '../common';
 import { useGameStore } from '../../stores';
 import './ChoiceDialog.css';
@@ -20,10 +21,13 @@ interface ChoiceDialogProps {
     keyChoices?: Record<string, string>;
     hintData?: Record<string, string[]>;
     hintType?: string;
+    required?: boolean;
     specialEnabled?: boolean;
+    specialCanBeEmpty?: boolean;
     specialText?: string;
     specialHint?: string;
     searchEnabled?: boolean;
+    manaColorChoice?: boolean;
 }
 
 export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
@@ -33,14 +37,23 @@ export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
     keyChoices = {},
     hintData,
     hintType,
+    required = true,
     specialEnabled = false,
+    specialCanBeEmpty = false,
     specialText = 'Remember answer',
     specialHint,
     searchEnabled = false,
+    manaColorChoice = false,
 }) => {
-    const { sendString } = useGameStore();
+    const sendString = useGameStore(state => state.sendString);
     const [searchText, setSearchText] = useState('');
     const [specialChecked, setSpecialChecked] = useState(false);
+    const [specialValue, setSpecialValue] = useState('');
+    const specialTextInput = specialEnabled && (
+        specialCanBeEmpty ||
+        hintType === 'TEXT_INPUT' ||
+        /text|input|name|value/i.test(`${specialText} ${specialHint ?? ''}`)
+    );
 
     // Determine if we're using key-value choices or simple string choices
     const isKeyChoice = Object.keys(keyChoices).length > 0;
@@ -73,7 +86,7 @@ export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
     }, [options, searchText]);
 
     // Handle selection
-    const handleSelect = (key: string) => {
+    const handleSelect = useCallback((key: string) => {
         if (isKeyChoice) {
             // For key choices, send the key (possibly with special flag info)
             // The server expects a string for key-based choices
@@ -92,7 +105,20 @@ export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
             const choiceValue = choices[index];
             sendString(choiceValue);
         }
-    };
+    }, [choices, isKeyChoice, sendString, specialChecked, specialEnabled]);
+
+    const handleCancel = useCallback(() => {
+        if (!required) {
+            sendString('');
+        }
+    }, [required, sendString]);
+
+    const handleSpecialSubmit = useCallback(() => {
+        if (!specialCanBeEmpty && specialValue.trim().length === 0) {
+            return;
+        }
+        sendString(specialValue);
+    }, [sendString, specialCanBeEmpty, specialValue]);
 
     // Keyboard shortcuts (1-9 for quick selection)
     useEffect(() => {
@@ -104,19 +130,25 @@ export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
             if (num >= 1 && num <= 9 && num <= filteredOptions.length) {
                 e.preventDefault();
                 handleSelect(filteredOptions[num - 1].key);
+            } else if (e.key === 'Escape' && !required) {
+                e.preventDefault();
+                handleCancel();
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, filteredOptions]);
+    }, [isOpen, filteredOptions, required, handleSelect, handleCancel]);
 
     return (
         <Modal
             isOpen={isOpen}
-            onClose={() => { }} // Can't close without selecting
+            onClose={handleCancel}
             title="Make a Choice"
             size="md"
+            closeOnBackdrop={!required}
+            closeOnEscape={!required}
+            showCloseButton={!required}
         >
             <div className="choice-dialog">
                 <p className="choice-message" dangerouslySetInnerHTML={{ __html: message }} />
@@ -138,11 +170,14 @@ export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
                     {filteredOptions.map((option, index) => (
                         <button
                             key={option.key}
-                            className="choice-option"
+                            className={`choice-option ${manaColorChoice ? 'mana-choice' : ''}`}
                             onClick={() => handleSelect(option.key)}
                             autoFocus={index === 0 && !searchEnabled}
                         >
                             <div className="choice-number">{index + 1}</div>
+                            {manaColorChoice && (
+                                <span className={`choice-mana-dot mana-${option.display.toLowerCase()}`} aria-hidden="true" />
+                            )}
                             <div className="choice-content">
                                 <div className="choice-text">{option.display}</div>
                                 {option.hints.length > 0 && hintType === 'TEXT' && (
@@ -164,22 +199,58 @@ export const ChoiceDialog: React.FC<ChoiceDialogProps> = ({
                 </div>
 
                 {specialEnabled && (
-                    <label className="choice-special">
-                        <input
-                            type="checkbox"
-                            checked={specialChecked}
-                            onChange={(e) => setSpecialChecked(e.target.checked)}
-                        />
-                        <span className="choice-special-text">{specialText}</span>
-                        {specialHint && (
-                            <span className="choice-special-hint" title={specialHint}>ℹ️</span>
+                    <div className="choice-special-group">
+                        <label className="choice-special">
+                            <input
+                                type="checkbox"
+                                checked={specialChecked}
+                                onChange={(e) => setSpecialChecked(e.target.checked)}
+                            />
+                            <span className="choice-special-text">{specialText}</span>
+                            {specialHint && (
+                                <span className="choice-special-hint" title={specialHint}>Info</span>
+                            )}
+                        </label>
+                        {specialTextInput && (
+                            <div className="choice-special-input-row">
+                                <input
+                                    type="text"
+                                    value={specialValue}
+                                    onChange={(event) => setSpecialValue(event.target.value)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter') {
+                                            event.preventDefault();
+                                            handleSpecialSubmit();
+                                        }
+                                    }}
+                                    placeholder={specialHint || specialText}
+                                    className="choice-special-input"
+                                    aria-label={specialText}
+                                />
+                                <button
+                                    type="button"
+                                    className="choice-special-submit"
+                                    onClick={handleSpecialSubmit}
+                                >
+                                    Submit
+                                </button>
+                            </div>
                         )}
-                    </label>
+                    </div>
                 )}
 
                 {filteredOptions.length > 0 && filteredOptions.length <= 9 && (
                     <div className="choice-shortcut-hint">
-                        💡 Tip: Press number key (1-{Math.min(filteredOptions.length, 9)}) to select
+                        <Lightbulb size={14} aria-hidden="true" />
+                        Tip: Press number key (1-{Math.min(filteredOptions.length, 9)}) to select
+                    </div>
+                )}
+
+                {!required && (
+                    <div className="choice-actions">
+                        <button type="button" onClick={handleCancel}>
+                            Cancel
+                        </button>
                     </div>
                 )}
             </div>

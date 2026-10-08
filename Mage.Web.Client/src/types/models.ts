@@ -2,14 +2,22 @@
  * Lobby, Table, Tournament, and Deck Models
  */
 
-import { UUID, TableState, SkillLevel } from './api';
+import { UUID, TableState, SkillLevel } from './api.js';
+import type { DeckCardInfo, DeckCardLists } from '../core/decks/types';
 
 // === Lobby/Table Models ===
 
 export interface SeatView {
-    seatNum: number;
-    name: string;
+    seatNum?: number;
+    name?: string;
+    playerName?: string;
+    playerId?: UUID | null;
     playerType: string;
+    flagName?: string;
+    history?: string;
+    generalRating?: number;
+    constructedRating?: number;
+    limitedRating?: number;
 }
 
 
@@ -20,7 +28,7 @@ export interface TableView {
     gameType: string;
     deckType: string;
     spectatorsAllowed: boolean;
-    createTime: string;
+    createTime: string | number;
     tableState: TableState;
     tableStateText: string;
     seats: SeatView[];
@@ -46,8 +54,8 @@ export interface MatchView {
     games: UUID[];
     result: string;
     players: string;
-    startTime: string;
-    endTime: string;
+    startTime: string | number;
+    endTime: string | number;
     replayAvailable: boolean;
     isTournament: boolean;
     isRated: boolean;
@@ -56,65 +64,44 @@ export interface MatchView {
 // === Users ===
 
 export interface UserView {
-    name: string;
+    userName: string;
+    host: string;
+    sessionId: string;
+    timeConnected: string;
+    lastActivity: string;
+    gameInfo: string;
+    userState: string;
+    muteChatUntil: string | null;
+    clientVersion: string;
+    email: string;
+    userIdStr: string;
+}
+
+export interface UsersView {
+    flagName: string;
+    userName: string;
     matchHistory: string;
     matchQuitRatio: number;
     tourneyHistory: string;
     tourneyQuitRatio: number;
-    flagName: string;
+    infoGames: string;
+    infoPing: string;
     generalRating: number;
     constructedRating: number;
     limitedRating: number;
 }
 
-export interface UsersView {
-    users: UserView[];
-}
-
 export interface RoomUsersView {
-    usersView: UsersView;
+    numberActiveGames: number;
+    numberGameThreads: number;
+    numberMaxGames: number;
+    usersView: UsersView[];
 }
 
 // === Deck Models ===
 
-export interface DeckCardInfo {
-    cardName: string;
-    setCode?: string | null;
-    cardNumber?: string | null;
-    amount: number;
-}
-
-export interface DeckCardLayout {
-    // Layout information for deck editor
-    [key: string]: unknown;
-}
-
-export interface DeckCoverCard {
-    setCode: string;
-    cardNumber: string;
-    name?: string;
-}
-
-export interface DeckCardLists {
-    id?: string;
-    name?: string;
-    author?: string;
-    format?: string; // e.g. "Constructed - Standard", syncs with deckType
-    cards: DeckCardInfo[];
-    sideboard: DeckCardInfo[];
-    cardLayout?: DeckCardLayout;
-    sideboardLayout?: DeckCardLayout;
-    coverCard?: DeckCoverCard;
-    colors?: {
-        white: boolean;
-        blue: boolean;
-        black: boolean;
-        red: boolean;
-        green: boolean;
-    };
-    createdAt?: number;
-    updatedAt?: number;
-}
+// the deck types live with the deck code in core/decks; re-exported here for the legacy client
+export type { DeckCardInfo, DeckCardLayout, DeckCardLists, DeckCoverCard } from '../core/decks/types';
 
 // === Match Options ===
 
@@ -136,71 +123,132 @@ export interface MatchOptions {
     spectatorsAllowed: boolean;
     playerTypes?: string[];
     planesToUse?: string[];
+    perPlayerEmblemCards?: DeckCardInfo[];
+    globalEmblemCards?: DeckCardInfo[];
     customStartLifeEnabled?: boolean;
     customStartLife?: number;
     customStartHandSizeEnabled?: boolean;
     customStartHandSize?: number;
     mulliganType?: string;
+    planeChase?: boolean;
     quitRatio?: number;
     minimumRating?: number;
-    edhPowerLevel?: string;
+    edhPowerLevel?: number;
+    bannedUsers?: string[];
+}
+
+export type DraftTimingOption = 'BEGINNER' | 'REGULAR' | 'PROFESSIONAL' | 'NONE';
+
+export interface LimitedTournamentOptions {
+    sets: string[];
+    constructionTime: number;
+    draftCubeName?: string | null;
+    cubeFromDeck?: DeckCardLists | null;
+    jumpstartPacks?: string;
+    numberBoosters?: number;
+    isRandom?: boolean;
+    isReshuffled?: boolean;
+    isRichMan?: boolean;
+    isJumpstart?: boolean;
+    timing?: DraftTimingOption;
+}
+
+export interface TournamentOptions {
+    name: string;
+    tournamentType: string;
+    matchOptions: MatchOptions;
+    playerTypes: string[];
+    playerSkills?: number[];
+    watchingAllowed: boolean;
+    planeChase?: boolean;
+    numberRounds?: number;
+    password?: string;
+    quitRatio?: number;
+    minimumRating?: number;
+    singleMultiplayerGame?: boolean;
+    limitedOptions?: LimitedTournamentOptions;
 }
 
 
 // === Draft Models ===
 
-export interface DraftPlayerView {
-    playerId: UUID;
-    name: string;
-    picks: number;
-}
-
 export interface DraftView {
     draftId: UUID;
-    players: DraftPlayerView[];
+    players: string[];
+    setNames?: string[];
+    setCodes?: string[];
     boosterNum: number;
     cardNum: number;
+    isCube?: boolean;
+    cube?: boolean;
 }
 
 export interface DraftPickView {
     booster: Record<UUID, unknown>;
     picks: Record<UUID, unknown>;
+    picking: boolean;
     timeout: number;
-    message: string;
+    message?: string;
 }
 
 // === Tournament Models ===
 
 export interface TournamentGameView {
+    roundNum?: number;
     tableId: UUID;
     matchId?: UUID;
+    gameId?: UUID;
     players: string;
     state: string;
     result: string;
 }
 
 export interface RoundView {
-    roundNumber: number;
+    roundNumber?: number;
     games: TournamentGameView[];
 }
 
 export interface TournamentPlayerView {
-    playerId: UUID;
+    playerId?: UUID;
     name: string;
     state: string;
     points: number;
     results: string;
-    isQuit: boolean;
+    flagName?: string;
+    history?: string;
+    quit?: boolean;
+    hasQuit?: boolean;
+    isQuit?: boolean;
 }
 
 export interface TournamentView {
-    tournamentId: UUID;
+    tournamentId?: UUID;
     tournamentName: string;
     tournamentType: string;
-    startTime: string;
-    endTime?: string;
+    tournamentState: string;
+    startTime: string | number;
+    endTime?: string | number | null;
+    stepStartTime?: string | null;
+    serverTime?: string | null;
+    constructionTime: number;
+    watchingAllowed: boolean;
     rounds: RoundView[];
     players: TournamentPlayerView[];
+    runningInfo: string;
+}
+
+export type ChatMessageColor = 'BLACK' | 'RED' | 'GREEN' | 'BLUE' | 'ORANGE' | 'YELLOW';
+export type ChatMessageType = 'USER_INFO' | 'STATUS' | 'GAME' | 'TALK' | 'WHISPER_FROM' | 'WHISPER_TO';
+export type ChatSoundToPlay = 'PlayerLeft' | 'PlayerQuitTournament' | 'PlayerSubmittedDeck' | 'PlayerWhispered';
+
+export interface ChatMessageView {
+    username: string;
+    time: string | null;
+    turnInfo: string | null;
+    message: string;
+    color: ChatMessageColor | null;
+    soundToPlay?: ChatSoundToPlay | null;
+    messageType: ChatMessageType | null;
 }
 
 // === Server State ===
@@ -219,20 +267,37 @@ export interface TournamentTypeView {
     name: string;
     minPlayers: number;
     maxPlayers: number;
-    numSeats: number;
-    isElimination: boolean;
-    isLimited: boolean;
-    isDraft: boolean;
-    isSealed: boolean;
-    isCubeBooster: boolean;
-    isRandomPoolsBooster: boolean;
+    numBoosters?: number;
+    numSeats?: number;
+    isElimination?: boolean;
+    elimination?: boolean;
+    isLimited?: boolean;
+    limited?: boolean;
+    isDraft?: boolean;
+    draft?: boolean;
+    isSealed?: boolean;
+    sealed?: boolean;
+    isCubeBooster?: boolean;
+    cubeBooster?: boolean;
+    isRandomPoolsBooster?: boolean;
+    isRandom?: boolean;
+    random?: boolean;
+    isReshuffled?: boolean;
+    reshuffled?: boolean;
+    isRichMan?: boolean;
+    richMan?: boolean;
+    isJumpstart?: boolean;
+    jumpstart?: boolean;
 }
 
 export interface MageVersion {
     major: number;
     minor: number;
-    patch: number;
-    info: string;
+    release?: number;
+    releaseInfo?: string;
+    buildTime?: string;
+    patch?: number;
+    info?: string;
 }
 
 export interface ServerState {

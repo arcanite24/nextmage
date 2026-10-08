@@ -1,0 +1,36 @@
+name: Web client
+
+on:
+  push:
+    branches: [ "master", "main" ]
+    paths:
+      - "Mage.Web.Client/**"
+      - ".github/workflows/web-client.yml"
+  pull_request:
+    paths:
+      - "Mage.Web.Client/**"
+      - ".github/workflows/web-client.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Mage.Web.Client
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: Mage.Web.Client/.nvmrc
+          cache: npm
+          cache-dependency-path: Mage.Web.Client/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
