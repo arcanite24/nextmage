@@ -18,12 +18,14 @@ import { MatPrint } from '../ui/MatPrint';
 import { SettingsDialog } from '../screens/SettingsDialog';
 import { Stitch } from '../ui/Stitch';
 import { ActionCluster } from './ActionCluster';
+import { AlwaysAnswerMenu, TriggerOrderOptions } from './AutoAnswer';
 import { Arrows } from './Arrows';
 import { buildBoard, fitCardWidth, type PermanentGroup, type PlayerBoard } from './boardModel';
 import { CardDetail } from './CardDetail';
 import { CardZoom } from './CardZoom';
 import { DamageAssigner } from './DamageAssigner';
 import { damageCorner, useDamageSplit } from './useDamageSplit';
+import { EmoteBubbles } from './EmoteBubbles';
 import { setCardMotion, useFlipOrigin } from './flip';
 import { GameLog } from './GameLog';
 import { Hand } from './Hand';
@@ -33,6 +35,7 @@ import { useWarmImages } from './useWarmImages';
 import { useAutoPay } from './useAutoPay';
 import { useAutoPass } from './useAutoPass';
 import { useBlockDrag } from './useBlockDrag';
+import { useAutoOrder } from './useAutoOrder';
 import { Vfx } from './Vfx';
 import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
@@ -157,6 +160,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   // holding priority means the player wants every stop
   const autoPassing = useAutoPass(session, state, !holding);
   useGameCues(state, myId, !!autoPassing);
+  useAutoOrder(session, state);
   const sleeveOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? sleeves.theirs : sleeves.mine), [myId, sleeves]);
   const originOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? `hand:${card.controllerId}` : undefined), [myId]);
 
@@ -302,6 +306,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                 special={!!view?.special}
                 holdingPriority={holding}
                 autoPassing={!!autoPassing}
+                extra={prompt?.kind === 'ask' ? <AlwaysAnswerMenu gameId={state.gameId} prompt={prompt} onCommand={onCommand} /> : undefined}
                 onCommand={onCommand}
               />
             ) : (
@@ -314,7 +319,8 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
             {damageSplit && canAct && !awaitingServer && <DamageAssigner split={damageSplit} />}
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
-            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} />
+            <EmoteBubbles view={view} />
+            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} />
             <GameMenu canConcede={canAct} onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })} onLeave={leave} />
 
             {interaction.mode === 'mulligan' && !awaitingServer && (
@@ -333,6 +339,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                 cards={pickerCards}
                 interaction={interaction}
                 sleeve={sleeves.mine}
+                footer={prompt ? <TriggerOrderOptions gameId={state.gameId} prompt={prompt} onCommand={onCommand} /> : undefined}
                 onCommand={onCommand}
               />
             )}
