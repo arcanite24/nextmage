@@ -36,3 +36,32 @@ jobs:
       - run: npm run build
       # fails when the app's JS grows past the budget in scripts/check-bundle-size.mjs; prints the sizes
       - run: npm run size
+
+  # Playwright: the specs that need no game server (sign-in, axe on the sign-in screen, the visual-harness
+  # workflows) against the production build served by `vite preview`. Specs that play on a live server skip here
+  # (they need MAGE_E2E_REQUIRE_SERVER=1 and a running Java server); see Mage.Web.Client/README.md to run them.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: Mage.Web.Client
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: Mage.Web.Client/.nvmrc
+          cache: npm
+          cache-dependency-path: Mage.Web.Client/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run test:e2e:ci
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            Mage.Web.Client/playwright-report
+            Mage.Web.Client/test-results
+          retention-days: 7
