@@ -21,6 +21,8 @@ import { Arrows } from './Arrows';
 import { buildBoard, fitCardWidth, type PermanentGroup, type PlayerBoard } from './boardModel';
 import { CardDetail } from './CardDetail';
 import { CardZoom } from './CardZoom';
+import { DamageAssigner } from './DamageAssigner';
+import { damageCorner, useDamageSplit } from './useDamageSplit';
 import { setCardMotion, useFlipOrigin } from './flip';
 import { GameLog } from './GameLog';
 import { Hand } from './Hand';
@@ -98,7 +100,12 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   useEffect(() => () => useMatchUi.setState({ zoom: null, dragging: null, viewer: null, logOpen: false, detail: null }), []);
 
   const board = useMemo(() => buildBoard(view, playerId), [view, playerId]);
-  const clickable = useMemo(() => new Set(interaction.clickable.keys()), [interaction.clickable]);
+  // combat damage is split on the creatures themselves: clicking one adds a point of damage to it
+  const damageSplit = useDamageSplit(interaction, view);
+  const clickable = useMemo(
+    () => new Set(damageSplit ? damageSplit.assignment.recipients.map((recipient) => recipient.id) : interaction.clickable.keys()),
+    [interaction.clickable, damageSplit],
+  );
   const combat = view?.combat;
   const { attacking, blocking, links, attacks } = useMemo(() => combatSets(combat), [combat]);
   // lands can always tap for mana while you hold priority; glowing them all would drown the real options
@@ -126,9 +133,14 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   // the blocker just chosen: the server's follow-up question ("Select attacker to block") doesn't say which it is
   const [lastBlocker, setLastBlocker] = useState<string | null>(null);
   const onClick = useCallback((id: string) => {
+    const recipient = damageSplit?.assignment.recipients.findIndex((candidate) => candidate.id === id) ?? -1;
+    if (damageSplit && recipient >= 0) {
+      if (!session.getState().awaitingServer) damageSplit.add(recipient);
+      return;
+    }
     if (session.getState().interaction.mode === 'declareBlockers') setLastBlocker(id);
     session.click(id);
-  }, [session]);
+  }, [session, damageSplit]);
 
   const myId = board.me?.player.playerId ?? null;
   useWarmImages(view);
@@ -164,10 +176,11 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   const targeting = interaction.mode === 'target' && !awaitingServer;
   // the decision corner names the blocker when the server asks which attacker it blocks
   const cornerInteraction = useMemo(() => {
+    if (damageSplit) return damageCorner(interaction, damageSplit);
     if (interaction.mode !== 'target' || !/attacker to block/i.test(prompt?.text ?? '') || !lastBlocker) return interaction;
     const blocker = board.me?.front.flatMap((group) => group.members).find((card) => card.id === lastBlocker);
     return blocker ? { ...interaction, headline: `Which attacker does ${blocker.name} block?` } : interaction;
-  }, [interaction, prompt, board.me, lastBlocker]);
+  }, [interaction, prompt, board.me, lastBlocker, damageSplit]);
   const pregame = !view?.step;
   const handIds = useMemo(() => new Set(hand.map((card) => card.id!)), [hand]);
   // London mulligan: choose cards from the opening hand to put on the bottom
@@ -279,6 +292,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
               </div>
             )}
 
+            {damageSplit && canAct && !awaitingServer && <DamageAssigner split={damageSplit} />}
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
             <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} />
