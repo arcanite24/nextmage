@@ -1,0 +1,50 @@
+/* nonland cards by mana value, 0 to 7+: printed bars on the mat */
+.curve {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+  height: 84px;
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 3px;
+  min-height: 0;
+}
+
+.barTrack {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.barFill {
+  position: absolute;
+  inset: 0;
+  min-height: 2px;
+  border-radius: 4px 4px 1px 1px;
+  background: var(--ink-faint);
+  transform-origin: bottom;
+  transition: transform var(--dur-place) var(--ease-place);
+}
+
+.barValue {
+  position: absolute;
+  left: 0;
+  right: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.barLabel {
+  font-family: var(--font-print);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-dim);
+  text-align: center;
+}

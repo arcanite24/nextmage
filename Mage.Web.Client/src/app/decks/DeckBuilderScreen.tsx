@@ -1,23 +1,28 @@
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeftRight, Check, ChevronLeft, ClipboardCopy, Minus, Plus, TriangleAlert } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { ArrowLeftRight, Check, ChevronLeft, ClipboardCopy, ClipboardPaste, ListPlus, Minus, Plus, Replace, TriangleAlert } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { CardView } from '../../protocol/generated/views';
+import { appendDeckCardLists } from '../../core/decks/merge';
 import { deckStorage } from '../../core/decks/DeckStorageService';
 import { DeckSerializer } from '../../core/decks/DeckSerializer';
 import type { DeckCardLists } from '../../core/decks/types';
-import { api } from '../connection';
 import { useServerState } from '../queries';
 import { STARTER_PREFIX, useDecks } from '../stores/decks';
+import { openImport, type ImportTarget } from '../stores/importSheet';
 import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { ManaCost } from '../ui/ManaCost';
 import { useCardInfo, useCardInfoStore } from './cardInfo';
 import { Collection } from './Collection';
+import { ManaCurve } from './ManaCurve';
+import { SourceLine } from './import/SourceLine';
+import { useImportPaste } from './import/useImportShortcuts';
+import { useValidation } from './useValidation';
 import {
   addCard, copiesByName, copyLimit, countZone, entryKey, finalizeDeck, groupDeck, manaCurve, moveCard,
-  printingOf, removeCard, toWire, type DeckZone,
+  printingOf, removeCard, type DeckZone,
 } from './deckModel';
 import styles from './DeckBuilder.module.css';
 
@@ -78,6 +83,8 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
   const [deck, setDeck] = useState(initial);
   const [zone, setZone] = useState<DeckZone>('cards');
   const [preview, setPreview] = useState<{ card: CardView; anchor: DOMRect; side: 'auto' | 'left' } | null>(null);
+  // a deck pasted here becomes its own deck; "From a list…" brings cards into this one
+  useImportPaste();
   const allEntries = useMemo(() => [...deck.cards, ...deck.sideboard], [deck.cards, deck.sideboard]);
   const info = useCardInfo(allEntries);
   const format = deck.format || DEFAULT_FORMAT;
@@ -172,8 +179,19 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
   const sideCount = countZone(deck, 'sideboard');
   const validation = useValidation(deck, format);
   const [problemsOpen, setProblemsOpen] = useState(false);
-  const peak = Math.max(1, ...curve);
   const problems = validation.data?.errors ?? [];
+
+  /** where the import sheet puts a list for this deck: in place of its cards, or added to them */
+  function intoDeck(mode: 'replace' | 'add'): ImportTarget {
+    return {
+      kind: 'into',
+      mode,
+      deckName: deck.name || 'this deck',
+      apply: (fresh) => onChange((current) => (mode === 'replace'
+        ? { ...current, cards: fresh.cards, sideboard: fresh.sideboard, format: fresh.format || current.format, source: fresh.source ?? current.source }
+        : appendDeckCardLists(current, fresh))),
+    };
+  }
 
   return (
     <aside className={styles.deck} aria-label="Deck">
@@ -268,22 +286,29 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
         ))}
       </div>
 
-      <div className={styles.curve} aria-label="Mana curve">
-        {curve.map((value, index) => (
-          <div key={index} className={styles.bar} title={`${value} ${index === 7 ? '7+' : index}-drops`}>
-            <span className={styles.barTrack}>
-              <span className={styles.barFill} style={{ transform: `scaleY(${value / peak})` }} />
-              {value > 0 && <b className={styles.barValue} style={{ bottom: `calc(${(value / peak) * 100}% + 2px)` }}>{value}</b>}
-            </span>
-            <span className={styles.barLabel}>{index === 7 ? '7+' : index}</span>
-          </div>
-        ))}
-      </div>
+      <ManaCurve curve={curve} className={styles.curve} />
 
       <BasicLands deck={deck} onChange={onChange} />
 
+      {deck.source && <SourceLine source={deck.source} className={styles.source} />}
+
       <footer className={styles.deckFoot}>
         <Button variant="quiet" size="sm" icon={<ChevronLeft size={16} />} onClick={onDone}>Decks</Button>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <Button variant="print" size="sm" icon={<ClipboardPaste size={16} />}>From a list…</Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content className={styles.menu} side="top" align="start" sideOffset={6} onCloseAutoFocus={(event) => event.preventDefault()}>
+              <DropdownMenu.Item className={styles.menuItem} onSelect={() => openImport(null, intoDeck('replace'))}>
+                <Replace size={16} aria-hidden="true" /> Replace deck
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className={styles.menuItem} onSelect={() => openImport(null, intoDeck('add'))}>
+                <ListPlus size={16} aria-hidden="true" /> Add to deck
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
         <Button
           variant="print"
           size="sm"
@@ -336,23 +361,6 @@ function BasicLands({ deck, onChange }: { deck: DeckCardLists; onChange(update: 
       })}
     </div>
   );
-}
-
-/** Server validation for the format, a moment after the deck stops changing. */
-function useValidation(deck: DeckCardLists, format: string) {
-  const [settled, setSettled] = useState(deck);
-  useEffect(() => {
-    const timer = setTimeout(() => setSettled(deck), 600);
-    return () => clearTimeout(timer);
-  }, [deck]);
-  const wire = useMemo(() => toWire(settled), [settled]);
-  return useQuery({
-    queryKey: ['deckValidate', format, wire],
-    queryFn: () => api.deckValidate(format, wire),
-    enabled: settled.cards.length > 0,
-    staleTime: 60_000,
-    placeholderData: (previous) => previous,
-  });
 }
 
 function Preview({ card, anchor, side }: { card: CardView; anchor: DOMRect; side: 'auto' | 'left' }) {

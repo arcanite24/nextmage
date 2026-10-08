@@ -1,0 +1,771 @@
+{
+ "id": 13235048,
+ "name": "Lurrus vualt",
+ "createdAt": "2025-05-19T10:07:17.219448Z",
+ "updatedAt": "2026-04-12T11:27:28.520823Z",
+ "deckFormat": 7,
+ "featured": "https://storage.googleapis.com/archidekt-card-images/dmr/89f612d6-7c59-4a7b-a87d-45f789e88ba5_art_crop.jpg",
+ "customFeatured": "",
+ "private": false,
+ "unlisted": false,
+ "owner": {
+  "id": 322384,
+  "username": "savvydruid-pt2"
+ },
+ "categories": [
+  {
+   "id": 245902174,
+   "name": "Bounce",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148422439,
+   "name": "Maybeboard",
+   "isPremier": false,
+   "includedInDeck": false,
+   "includedInPrice": false
+  },
+  {
+   "id": 148421704,
+   "name": "Tutor",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421678,
+   "name": "Removal",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421645,
+   "name": "Counters",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421624,
+   "name": "Untap",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421599,
+   "name": "Artifact",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421578,
+   "name": "Land",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421575,
+   "name": "Ramp",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421553,
+   "name": "Stax",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421470,
+   "name": "Draw",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421425,
+   "name": "Sideboard",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 148421416,
+   "name": "Recursion",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  }
+ ],
+ "cards": [
+  {
+   "id": 2209207660,
+   "categories": [
+    "Sideboard",
+    "Recursion"
+   ],
+   "companion": true,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 86346,
+    "collectorNumber": "226",
+    "uid": "5ad36fb2-c44e-4085-ba0d-54277841ad3a",
+    "edition": {
+     "editioncode": "iko",
+     "editionname": "Ikoria: Lair of Behemoths"
+    },
+    "oracleCard": {
+     "name": "Lurrus of the Dream-Den",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{W/B}{W/B}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209207939,
+   "categories": [
+    "Draw"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 71938,
+    "collectorNumber": "48",
+    "uid": "2dd41293-d7c8-4422-9f0c-b3e96350f5c9",
+    "edition": {
+     "editioncode": "2ed",
+     "editionname": "Unlimited Edition"
+    },
+    "oracleCard": {
+     "name": "Ancestral Recall",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209209108,
+   "categories": [
+    "Counters"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 108423,
+    "collectorNumber": "50",
+    "uid": "89f612d6-7c59-4a7b-a87d-45f789e88ba5",
+    "edition": {
+     "editioncode": "dmr",
+     "editionname": "Dominaria Remastered"
+    },
+    "oracleCard": {
+     "name": "Force of Will",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{3}{U}{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209208735,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 134736,
+    "collectorNumber": "114",
+    "uid": "c7658ec0-3207-4c7e-b31a-30a2a9249595",
+    "edition": {
+     "editioncode": "mb2",
+     "editionname": "Mystery Booster 2"
+    },
+    "oracleCard": {
+     "name": "Urza's Saga",
+     "layout": "saga",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land",
+      "Enchantment"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209209261,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 130502,
+    "collectorNumber": "224",
+    "uid": "6e288374-2b71-4ace-b1d2-a19fee6cb4af",
+    "edition": {
+     "editioncode": "mh3",
+     "editionname": "Modern Horizons 3"
+    },
+    "oracleCard": {
+     "name": "Polluted Delta",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209209573,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 3,
+   "card": {
+    "id": 72153,
+    "collectorNumber": "263",
+    "uid": "70d6c02e-0f48-4fb0-94f3-1fc92ee1814f",
+    "edition": {
+     "editioncode": "2ed",
+     "editionname": "Unlimited Edition"
+    },
+    "oracleCard": {
+     "name": "Mox Jet",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{0}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209208821,
+   "categories": [
+    "Artifact"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 72165,
+    "collectorNumber": "275",
+    "uid": "0b64dd0f-2e99-41bd-87aa-f623582d64d0",
+    "edition": {
+     "editioncode": "2ed",
+     "editionname": "Unlimited Edition"
+    },
+    "oracleCard": {
+     "name": "Time Vault",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209209554,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 72156,
+    "collectorNumber": "266",
+    "uid": "f7d82f1d-631e-4668-9d10-7bf0ee515267",
+    "edition": {
+     "editioncode": "2ed",
+     "editionname": "Unlimited Edition"
+    },
+    "oracleCard": {
+     "name": "Mox Sapphire",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{0}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209208552,
+   "categories": [
+    "Stax"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 132655,
+    "collectorNumber": "212",
+    "uid": "29f11089-658f-42e6-aeb0-09b512ad2479",
+    "edition": {
+     "editioncode": "mh3",
+     "editionname": "Modern Horizons 3"
+    },
+    "oracleCard": {
+     "name": "Vexing Bauble",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209208678,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 72123,
+    "collectorNumber": "233",
+    "uid": "4a2e428c-dd25-484c-bbc8-2d6ce10ef42c",
+    "edition": {
+     "editioncode": "2ed",
+     "editionname": "Unlimited Edition"
+    },
+    "oracleCard": {
+     "name": "Black Lotus",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{0}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209208960,
+   "categories": [
+    "Untap"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 2,
+   "card": {
+    "id": 104292,
+    "collectorNumber": "319",
+    "uid": "0f5a15cd-a359-48c9-9280-ce139f1fb061",
+    "edition": {
+     "editioncode": "clb",
+     "editionname": "Commander Legends: Battle for Baldur's Gate"
+    },
+    "oracleCard": {
+     "name": "Manifold Key",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209209141,
+   "categories": [
+    "Counters"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 134820,
+    "collectorNumber": "30",
+    "uid": "09113591-df5c-403d-982e-c4e8ba14c5cd",
+    "edition": {
+     "editioncode": "mb2",
+     "editionname": "Mystery Booster 2"
+    },
+    "oracleCard": {
+     "name": "Mental Misstep",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{U/P}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209209202,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 71466,
+    "collectorNumber": "290",
+    "uid": "1f35877c-e66c-4ef0-842a-f68cd233ae4b",
+    "edition": {
+     "editioncode": "3ed",
+     "editionname": "Revised Edition"
+    },
+    "oracleCard": {
+     "name": "Underground Sea",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209209433,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 2,
+   "card": {
+    "id": 132574,
+    "collectorNumber": "241",
+    "uid": "5358b87a-1a29-426d-b165-40c97da2c14d",
+    "edition": {
+     "editioncode": "mh3",
+     "editionname": "Modern Horizons 3"
+    },
+    "oracleCard": {
+     "name": "Sink into Stupor // Soporific Springs",
+     "layout": "modal_dfc",
+     "faces": [
+      {
+       "name": "Sink into Stupor"
+      },
+      {
+       "name": "Soporific Springs"
+      }
+     ],
+     "manaCost": "",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209212039,
+   "categories": [
+    "Sideboard",
+    "Counters"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 105432,
+    "collectorNumber": "50",
+    "uid": "1825a719-1b2a-4af9-9cd2-7cb497cd0317",
+    "edition": {
+     "editioncode": "2x2",
+     "editionname": "Double Masters 2022"
+    },
+    "oracleCard": {
+     "name": "Force of Negation",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{U}{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209216087,
+   "categories": [
+    "Sideboard",
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 120506,
+    "collectorNumber": "103",
+    "uid": "7c024bae-5631-4e20-ac69-df392ac9e109",
+    "edition": {
+     "editioncode": "ltr",
+     "editionname": "The Lord of the Rings: Tales of Middle-earth"
+    },
+    "oracleCard": {
+     "name": "Orcish Bowmasters",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{B}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209217291,
+   "categories": [
+    "Recursion"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 66212,
+    "collectorNumber": "171",
+    "uid": "6d3e3c3a-d351-4d91-8884-312d4b6f540d",
+    "edition": {
+     "editioncode": "usg",
+     "editionname": "Urza's Saga"
+    },
+    "oracleCard": {
+     "name": "Yawgmoth's Will",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{B}",
+     "types": [
+      "Sorcery"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209215866,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 105123,
+    "collectorNumber": "308",
+    "uid": "c1a31d52-a407-4ded-bfca-cc812f11afa0",
+    "edition": {
+     "editioncode": "2x2",
+     "editionname": "Double Masters 2022"
+    },
+    "oracleCard": {
+     "name": "Mana Vault",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209210428,
+   "categories": [
+    "Draw"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 2,
+   "card": {
+    "id": 141531,
+    "collectorNumber": "67",
+    "uid": "0a786855-6eb4-42c0-a528-4842db46809d",
+    "edition": {
+     "editioncode": "dft",
+     "editionname": "Aetherdrift"
+    },
+    "oracleCard": {
+     "name": "Stock Up",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{U}",
+     "types": [
+      "Sorcery"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209217871,
+   "categories": [
+    "Draw"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 130495,
+    "collectorNumber": "199",
+    "uid": "68924203-c3d9-41ce-8ca8-c6dd491eb3ca",
+    "edition": {
+     "editioncode": "mh3",
+     "editionname": "Modern Horizons 3"
+    },
+    "oracleCard": {
+     "name": "Psychic Frog",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{U}{B}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209209711,
+   "categories": [
+    "Tutor"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 115361,
+    "collectorNumber": "108",
+    "uid": "34a0203f-9cce-43a4-9cb7-8ce6647895cd",
+    "edition": {
+     "editioncode": "dmr",
+     "editionname": "Dominaria Remastered"
+    },
+    "oracleCard": {
+     "name": "Vampiric Tutor",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{B}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209209649,
+   "categories": [
+    "Tutor"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 4,
+   "card": {
+    "id": 122069,
+    "collectorNumber": "150",
+    "uid": "a24b4cb6-cebb-428b-8654-74347a6a8d63",
+    "edition": {
+     "editioncode": "cmm",
+     "editionname": "Commander Masters"
+    },
+    "oracleCard": {
+     "name": "Demonic Tutor",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{B}",
+     "types": [
+      "Sorcery"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2857900782,
+   "categories": [
+    "Sideboard",
+    "Bounce"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 3,
+   "card": {
+    "id": 114180,
+    "collectorNumber": "MM2-48",
+    "uid": "0d6439c1-9969-4fd0-b6ad-1a88c1aa6e31",
+    "edition": {
+     "editioncode": "plst",
+     "editionname": "The List"
+    },
+    "oracleCard": {
+     "name": "Hurkyl's Recall",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 2209216499,
+   "categories": [
+    "Sideboard",
+    "Stax"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 3,
+   "card": {
+    "id": 134876,
+    "collectorNumber": "222",
+    "uid": "1b9a5015-9066-4150-8fce-79601d6612ca",
+    "edition": {
+     "editioncode": "mb2",
+     "editionname": "Mystery Booster 2"
+    },
+    "oracleCard": {
+     "name": "Grafdigger's Cage",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  }
+ ]
+}

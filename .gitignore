@@ -67,3 +67,6 @@ mage-bundle.zip
 
 # personal notes
 /TODO.md
+
+# design review screenshots (regenerate with node e2e/review-shots.mjs)
+Mage.Web.Client/.impeccable/review/

@@ -1,9 +1,10 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { LogOut, Settings, UserRound, WifiOff } from 'lucide-react';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { APP_NAME } from './brand';
 import { SettingsDialog } from './screens/SettingsDialog';
+import { useImportSheet } from './stores/importSheet';
 import { useSession } from './stores/session';
 import { Toaster } from './ui/Toaster';
 import { IconButton } from './ui/Button';
@@ -17,6 +18,14 @@ const NAV = [
   { to: '/events', label: 'Events' },
   { to: '/tables', label: 'Tables' },
 ];
+
+// the import sheet loads the first time it opens, then stays mounted so it can animate out
+const ImportSheet = lazy(() => import('./decks/import/ImportSheet').then((module) => ({ default: module.ImportSheet })));
+
+function ImportSheetHost() {
+  const opened = useImportSheet((state) => state.session > 0);
+  return opened ? <Suspense fallback={null}><ImportSheet /></Suspense> : null;
+}
 
 /** The mat every screen outside a match is printed on. */
 export function AppShell() {
@@ -76,6 +85,7 @@ export function AppShell() {
         <Outlet />
       </main>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <ImportSheetHost />
       <Toaster />
     </div>
   );

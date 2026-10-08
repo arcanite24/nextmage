@@ -48,6 +48,7 @@ public class WebClientApiContractTest {
     private static final Set<String> NOT_MAPPED_TO_SERVER = new HashSet<>(Arrays.asList(
             "disconnectSession", "playerLogout", "sessionGetRestoreToken", // session manager
             "getExpansionSets", "getBasicLandSets", "searchCards", "lookupCards", "deckValidate", // card database services
+            "deckImportFromUrl", "deckImportSources", // deck website import service
             "testEndGame", "testConcedeMatch" // test mode helpers on table manager
     ));
 

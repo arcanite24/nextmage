@@ -65,6 +65,10 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('lookupCards', cards),
     deckValidate: (deckType: string, deck: DeckCardLists) =>
       rpc.call('deckValidate', deckType, deck),
+    deckImportFromUrl: (url: string) =>
+      rpc.call('deckImportFromUrl', url),
+    deckImportSources: () =>
+      rpc.call('deckImportSources'),
     roomGetUsers: (roomId: UUID) =>
       rpc.call('roomGetUsers', roomId),
     roomGetAllTables: (roomId: UUID) =>

@@ -204,3 +204,43 @@
   background: rgb(233 228 214 / 0.08);
   box-shadow: inset 0 0 0 2.5px var(--ink-strong);
 }
+
+.bookmarklet {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* a bookmark to drag, printed like a deck box tab */
+.bookmarkletLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+  background: var(--mat-600);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint), var(--shadow-placed);
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: grab;
+}
+
+.bookmarkletLink:active {
+  cursor: grabbing;
+}
+
+.bookmarkletSteps {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-soft);
+}
+
+.bookmarkletSteps li + li {
+  margin-top: 4px;
+}
