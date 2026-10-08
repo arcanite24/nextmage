@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { GameSession, GameSessionState } from '../../core/game/gameSession';
 import type { Command } from '../../core/game/interaction';
+import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
 import type { CardView, GameView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
@@ -19,6 +20,7 @@ import { MatPrint } from '../ui/MatPrint';
 import { SettingsDialog } from '../screens/SettingsDialog';
 import { Stitch } from '../ui/Stitch';
 import { ActionCluster } from './ActionCluster';
+import { BetweenGames } from './BetweenGames';
 import { Arrows } from './Arrows';
 import { buildBoard, fitCardWidth, type PermanentGroup, type PlayerBoard } from './boardModel';
 import { CardDetail } from './CardDetail';
@@ -158,6 +160,11 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
     navigate(eventId ? `/event/${eventId}` : '/');
   }, [navigate, state.gameId, eventId]);
   const deckId = usePlay((play) => play.deckId);
+  // between games of a match the server deals the next game by itself: show the score, not a way out
+  const betweenGames = useMemo(() => {
+    const progress = mode === 'play' ? matchProgress(state.endInfo) : null;
+    return progress && !progress.over ? progress : null;
+  }, [mode, state.endInfo]);
   const playAgain = useCallback(() => {
     const { lastOptions } = usePlay.getState();
     leave();
@@ -333,7 +340,16 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
             )}
             {interaction.mode === 'panel' && prompt && !awaitingServer && <ChoicePanel prompt={prompt} onCommand={onCommand} />}
             {viewer && <ZoneViewer title={viewer.title} cards={viewer.cards} onClose={() => openViewer(null)} />}
-            {state.gameOver && (
+            {state.gameOver && betweenGames && (
+              <BetweenGames
+                progress={betweenGames}
+                won={state.endInfo?.won ? true : /\bdraw\b/i.test(state.endInfo?.gameInfo ?? '') ? null : false}
+                onLeave={leave}
+                leaveLabel={eventId ? 'Back to the event' : 'Leave match'}
+                concedes={!eventId}
+              />
+            )}
+            {state.gameOver && !betweenGames && (
               <GameOverOverlay
                 message={state.gameOver}
                 endInfo={state.endInfo}

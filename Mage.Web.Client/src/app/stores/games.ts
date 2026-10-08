@@ -33,6 +33,8 @@ interface GamesState {
   open(gameId: string, playerId: string | null, mode: GameSessionMode, table?: GameTable): GameSession;
   /** Leave a game: tells the server (stop watching, quit the match...) and drops the local session. */
   close(gameId: string): void;
+  /** Drops the local session only (the server has moved on, e.g. to the next game of the match). */
+  forget(gameId: string): void;
 }
 
 export const useGames = create<GamesState>((set, get) => ({
@@ -68,8 +70,12 @@ export const useGames = create<GamesState>((set, get) => ({
       });
       // best effort: the player is leaving either way, and the server also cleans up when the session ends
       if (request) send(request).catch(() => undefined);
-      session.dispose();
     }
+    get().forget(gameId);
+  },
+
+  forget(gameId) {
+    get().sessions[gameId]?.dispose();
     set((state) => {
       const sessions = { ...state.sessions };
       delete sessions[gameId];
@@ -83,6 +89,13 @@ export const useGames = create<GamesState>((set, get) => ({
 events.on('START_GAME', (message) => {
   const gameId = message?.gameId;
   if (!gameId) return;
+  // the next game of a match replaces the finished one at the same table, once the player has moved on to it
+  const { sessions, tables } = useGames.getState();
+  const finished = Object.entries(sessions)
+    .filter(([previousId, session]) => previousId !== gameId && !!session.getState().gameOver
+      && !!message.currentTableId && tables[previousId]?.tableId === message.currentTableId)
+    .map(([previousId]) => previousId);
+  if (finished.length > 0) setTimeout(() => finished.forEach((previousId) => useGames.getState().forget(previousId)), 2000);
   useGames.getState().open(gameId, message.playerId ?? null, 'play', {
     tableId: message.currentTableId ?? null,
     parentTableId: message.parentTableId ?? null,
