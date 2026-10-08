@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "Mage.Web.Client", "run", "dev", "--", "--port", "5173", "--strictPort"],
+      "port": 5173
+    },
+    {
+      "name": "web-client-5174",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "Mage.Web.Client", "run", "dev", "--", "--port", "5174", "--strictPort"],
+      "port": 5174
+    }
+  ]
+}
