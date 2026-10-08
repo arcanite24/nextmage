@@ -34,3 +34,5 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      # fails when the app's JS grows past the budget in scripts/check-bundle-size.mjs; prints the sizes
+      - run: npm run size
