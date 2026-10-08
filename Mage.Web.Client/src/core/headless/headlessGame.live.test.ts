@@ -71,6 +71,7 @@ describe.skipIf(!live)('headless game against the AI', () => {
       let busy = false;
       const unaffordable = new Set<string>();
       let lastCast: string | null = null;
+      let lastPay: { headline: string; id: string } | null = null;
       let skipTurn = -1;
       const step = () => {
         const state = session.getState();
@@ -91,7 +92,12 @@ describe.skipIf(!live)('headless game against the AI', () => {
           unaffordable.clear();
           skipTurn = state.view?.turn ?? 0;
         }
+        // the same payment prompt after clicking a source: that source paid nothing, so don't click it again
+        if (state.interaction.mode === 'payMana' && lastPay && lastPay.headline === state.interaction.headline) unaffordable.add(lastPay.id);
         const command = chooseBotCommand(state.view, state.interaction, unaffordable);
+        lastPay = state.interaction.mode === 'payMana' && command?.type === 'uuid' && command.id
+          ? { headline: state.interaction.headline, id: command.id }
+          : null;
         if (state.interaction.mode === 'payMana' && command?.type === 'boolean' && lastCast) unaffordable.add(lastCast);
         if (state.interaction.mode === 'priority' && command?.type === 'uuid' && command.id) lastCast = command.id;
         if (!command) return;
