@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { POOL_MANA, poolId } from '../../core/game/payment';
 import type { PlayerView } from '../../protocol/generated/views';
+import { ManaCost } from '../ui/ManaCost';
 import styles from './PlayerPlate.module.css';
 
 export interface PlayerPlateProps {
@@ -13,19 +15,16 @@ export interface PlayerPlateProps {
   /** the player's sleeve color: their seat is dyed to match their cards */
   sleeve?: string;
   onClick(): void;
+  /** while paying a cost: what is still owed */
+  toPay?: string | null;
+  /** board ids of the floating mana that can pay right now (see poolId) */
+  payable?: ReadonlySet<string>;
+  /** spend a kind of floating mana (its board id) */
+  onPay?(id: string): void;
 }
 
-const MANA: { key: keyof NonNullable<PlayerView['manaPool']>; symbol: string }[] = [
-  { key: 'white', symbol: 'w' },
-  { key: 'blue', symbol: 'u' },
-  { key: 'black', symbol: 'b' },
-  { key: 'red', symbol: 'r' },
-  { key: 'green', symbol: 'g' },
-  { key: 'colorless', symbol: 'c' },
-];
-
 /** A player's seat: who they are, their life, counters, floating mana and clock. */
-export function PlayerPlate({ player, isMe, targetable, selected, deciding, sleeve, onClick }: PlayerPlateProps) {
+export function PlayerPlate({ player, isMe, targetable, selected, deciding, sleeve, onClick, toPay, payable, onPay }: PlayerPlateProps) {
   const life = player.life ?? 0;
   const previous = useRef(life);
   const [delta, setDelta] = useState<{ value: number; key: number } | null>(null);
@@ -37,7 +36,7 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
   }, [life]);
 
   const counters = (player.counters ?? []).filter((counter) => (counter.count ?? 0) > 0);
-  const pool = MANA.filter(({ key }) => (player.manaPool?.[key] ?? 0) > 0);
+  const pool = POOL_MANA.filter(({ key }) => (player.manaPool?.[key] ?? 0) > 0);
   const timeLeft = player.priorityTimeLeftSecs ?? 0;
   const ticking = player.timerActive && player.hasPriority && timeLeft > 0 && timeLeft < 30;
   const initial = (player.name ?? '?').slice(0, 1).toUpperCase();
@@ -92,14 +91,40 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
           {player.monarch && <span className={styles.counter}>Monarch</span>}
           {player.initiative && <span className={styles.counter}>Initiative</span>}
         </div>
+        {toPay && (
+          <div className={styles.toPay}>
+            <span className={styles.toPayLabel}>To pay</span>
+            <ManaCost cost={toPay} size="lg" />
+          </div>
+        )}
         {pool.length > 0 && (
           <div className={styles.pool} aria-label="Mana pool">
-            {pool.map(({ key, symbol }) => (
-              <span key={key} className={styles.poolItem}>
-                <i className={`ms ms-cost ms-${symbol}`} aria-hidden="true" />
-                <b>{player.manaPool?.[key]}</b>
-              </span>
-            ))}
+            {pool.map(({ key, symbol, manaType }) => {
+              const id = poolId(manaType);
+              const content = (
+                <>
+                  <i className={`ms ms-cost ms-${symbol}`} aria-hidden="true" />
+                  <b>{player.manaPool?.[key]}</b>
+                </>
+              );
+              // floating mana pays the cost being paid: click it like a land
+              return payable?.has(id) && onPay ? (
+                <button
+                  key={key}
+                  type="button"
+                  className={[styles.poolItem, styles.poolPay].join(' ')}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onPay(id);
+                  }}
+                  aria-label={`Pay with ${key} mana from your pool, ${player.manaPool?.[key]} floating`}
+                >
+                  {content}
+                </button>
+              ) : (
+                <span key={key} className={styles.poolItem}>{content}</span>
+              );
+            })}
           </div>
         )}
       </div>
