@@ -144,6 +144,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `chatFindByTournament` | `tournamentId: UUID` | `UUID \| null` | session | Chat of a tournament. |
 | `chatFindByRoom` | `roomId: UUID` | `UUID \| null` | session | Chat of a room. |
 | `gameJoin` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Join a started game as a player (after START_GAME). Also used to resync after a reconnect. |
+| `gameResync` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Send this connection the game's open question again, when a reply or the question seems lost. Returns false when nothing is waiting for the player's answer. |
 | `matchQuit` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Concede the whole match. |
 | `gameWatchStart` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Start spectating a game. |
 | `gameWatchStop` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Stop spectating a game. |

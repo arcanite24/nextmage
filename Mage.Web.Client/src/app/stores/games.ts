@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { api, events } from '../connection';
 import { GameSession, type GameSessionMode } from '../../core/game/gameSession';
 import { leaveRequest, type LeaveRequest } from '../../core/game/leave';
+import { stripMarkup } from '../../core/game/prompt';
 import { useSession } from './session';
 import { notify } from './toasts';
 
@@ -87,6 +88,13 @@ events.on('START_GAME', (message) => {
     parentTableId: message.parentTableId ?? null,
   });
   api.gameJoin(gameId).catch((error) => notify('Could not join the game', String(error?.message ?? error), 'error'));
+});
+
+// errors also reach the game log, but a log line is easy to miss when an action silently fails
+events.on('GAME_ERROR', (message, event) => {
+  if (event.objectId && !useGames.getState().sessions[event.objectId]) return;
+  const text = stripMarkup(message);
+  if (text) notify('Game error', text, 'error');
 });
 
 events.on('WATCHGAME', (message) => {
