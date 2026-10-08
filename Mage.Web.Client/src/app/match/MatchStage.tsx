@@ -31,6 +31,7 @@ import { useGameCues } from './useGameCues';
 import { useWarmImages } from './useWarmImages';
 import { useAutoPay } from './useAutoPay';
 import { useAutoPass } from './useAutoPass';
+import { useBlockDrag } from './useBlockDrag';
 import { Vfx } from './Vfx';
 import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
@@ -142,6 +143,12 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
     session.click(id);
   }, [session, damageSplit]);
 
+  const blockDrop = useBlockDrag(session, state);
+  const onBlockDrop = useCallback((blockerId: string, attackerId: string) => {
+    setLastBlocker(blockerId);
+    return blockDrop(blockerId, attackerId);
+  }, [blockDrop]);
+
   const myId = board.me?.player.playerId ?? null;
   useWarmImages(view);
   useAutoPay(session, state, board.me?.isMe ? board.me : null, autoPay && mode === 'play');
@@ -240,7 +247,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
             {board.me && (
               <>
-                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} left={FIELD_LEFT} width={fieldWidth} frontTop={556} backTop={778} />
+                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} onBlockDrop={interaction.mode === 'declareBlockers' && canAct ? onBlockDrop : undefined} left={FIELD_LEFT} width={fieldWidth} frontTop={556} backTop={778} />
                 <div className={styles.myPlate}>
                   <PlayerPlate
                     player={board.me.player}
@@ -346,6 +353,7 @@ interface RowProps {
   blocking: ReadonlySet<string>;
   targeting: boolean;
   onClick(id: string): void;
+  onBlockDrop?(blockerId: string, attackerId: string): boolean;
 }
 
 /** One player's two rows of permanents. Rows shrink their cards to fit rather than wrapping. */

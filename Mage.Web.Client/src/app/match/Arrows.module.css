@@ -25,6 +25,15 @@
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
 }
 
+/* a block being dragged, over an attacker it can be dropped on: the block line, lit as the decision */
+.blockLive {
+  stroke: var(--decision);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 12 10;
+  filter: drop-shadow(0 0 8px var(--decision-glow)) drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
+}
+
 .live {
   fill: none;
   stroke: var(--decision);

@@ -46,6 +46,8 @@ export function Arrows({ sourceId, targetIds, live, links, attacks }: {
   const [, setTick] = useState(0);
   const [pointer, setPointer] = useState<Point | null>(null);
   const dragging = useMatchUi((state) => state.dragging);
+  // a creature dragged toward an attacker to block it: a live line that snaps to the attacker under the pointer
+  const blockDrag = useMatchUi((state) => state.blockDrag);
 
   const targetKey = targetIds.join(',') + '|' + [...links, ...attacks].map((link) => link.join('>')).join(',');
   // positions change as cards fly in; re-measure for a moment after changes
@@ -61,15 +63,16 @@ export function Arrows({ sourceId, targetIds, live, links, attacks }: {
     // a resized window moves everything: measure again
   }, [sourceId, targetKey, stage.scale, stage.width]);
 
+  const tracking = live || !!blockDrag;
   useEffect(() => {
-    if (!live) {
+    if (!tracking) {
       setPointer(null);
       return;
     }
     const onMove = (event: PointerEvent) => setPointer(toStagePoint(stage, event.clientX, event.clientY));
     window.addEventListener('pointermove', onMove);
     return () => window.removeEventListener('pointermove', onMove);
-  }, [live, stage]);
+  }, [tracking, stage]);
 
   const from = sourceId ? center(sourceId) : null;
   const targets = from ? targetIds.map(center).filter((point): point is Point => !!point) : [];
@@ -79,7 +82,10 @@ export function Arrows({ sourceId, targetIds, live, links, attacks }: {
   const assault = attacks
     .map(([attacker, defender]) => [center(attacker), center(defender)] as const)
     .filter((pair): pair is readonly [Point, Point] => !!pair[0] && !!pair[1]);
-  if (dragging || (combat.length === 0 && assault.length === 0 && (!from || (targets.length === 0 && !(live && pointer))))) return null;
+  const blockFrom = blockDrag ? center(blockDrag.blockerId) : null;
+  const blockTo = blockDrag?.attackerId ? center(blockDrag.attackerId) : pointer;
+  const blockLine = blockFrom && blockTo ? [blockFrom, blockTo] as const : null;
+  if (dragging || (!blockLine && combat.length === 0 && assault.length === 0 && (!from || (targets.length === 0 && !(live && pointer))))) return null;
 
   return (
     <svg className={styles.arrows} width={stage.width} height={STAGE_HEIGHT} aria-hidden="true">
@@ -110,6 +116,15 @@ export function Arrows({ sourceId, targetIds, live, links, attacks }: {
       {from && targets.map((to, index) => (
         <path key={index} className={styles.ink} d={curve(from, to)} markerEnd="url(#arrow-ink)" />
       ))}
+      {blockLine && (
+        <line
+          className={blockDrag?.attackerId ? styles.blockLive : styles.live}
+          x1={blockLine[0].x}
+          y1={blockLine[0].y}
+          x2={blockLine[1].x}
+          y2={blockLine[1].y}
+        />
+      )}
       {from && live && pointer && <path className={styles.live} d={curve(from, pointer)} markerEnd="url(#arrow-decision)" />}
     </svg>
   );
