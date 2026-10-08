@@ -11,6 +11,7 @@ import { useEvents } from '../stores/events';
 import { useGames } from '../stores/games';
 import { usePlay } from '../stores/play';
 import { useSettings } from '../stores/settings';
+import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
@@ -123,6 +124,12 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
       setHolding(command.action === 'HOLD_PRIORITY');
     }
     void session.respond(command).catch(() => undefined);
+  }, [session]);
+  const onResend = useCallback(() => void session.resend().catch(() => undefined), [session]);
+  const onResync = useCallback(() => {
+    void session.resync().then((resent) => {
+      if (!resent) notify('Nothing to answer', "The game isn't waiting for you. It goes on as soon as the server is ready.");
+    });
   }, [session]);
   // the blocker just chosen: the server's follow-up question ("Select attacker to block") doesn't say which it is
   const [lastBlocker, setLastBlocker] = useState<string | null>(null);
@@ -275,6 +282,9 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                 special={!!view?.special}
                 holdingPriority={holding}
                 autoPassing={!!autoPassing}
+                stalled={state.stalled}
+                onResend={onResend}
+                onResync={onResync}
                 onCommand={onCommand}
               />
             ) : (

@@ -38,6 +38,13 @@ final class GameApi {
                             return true;
                         }),
 
+                RpcMethod.named("gameResync")
+                        .session(1)
+                        .params(gameId(), of("sessionId", STRING))
+                        .doc("Send this connection the game's open question again, when a reply or the question seems lost. "
+                                + "Returns false when nothing is waiting for the player's answer.")
+                        .handler(call -> call.getConnection().resendPrompt(call.uuid(0))),
+
                 RpcMethod.named("matchQuit")
                         .session(1)
                         .params(gameId(), of("sessionId", STRING))
@@ -67,6 +74,7 @@ final class GameApi {
                         .params(gameId(), of("sessionId", STRING), optional("data", mage.server.websocket.rpc.RpcParam.Type.UUID))
                         .doc("Answer a prompt with an object or player id (targets, choices, attackers, blockers).")
                         .handler(call -> {
+                            answered(call, 0);
                             ctx.server.sendPlayerUUID(call.uuid(0), call.string(1), call.optUuid(2));
                             return true;
                         }),
@@ -76,6 +84,7 @@ final class GameApi {
                         .params(gameId(), of("sessionId", STRING), of("data", STRING))
                         .doc("Answer a prompt with text (choices, \"special\" mana payment).")
                         .handler(call -> {
+                            answered(call, 0);
                             ctx.server.sendPlayerString(call.uuid(0), call.string(1), call.string(2));
                             return true;
                         }),
@@ -85,6 +94,7 @@ final class GameApi {
                         .params(gameId(), of("sessionId", STRING), of("data", BOOLEAN))
                         .doc("Answer a yes/no prompt, pass priority (false) or cancel mana payment (any value).")
                         .handler(call -> {
+                            answered(call, 0);
                             ctx.server.sendPlayerBoolean(call.uuid(0), call.string(1), call.bool(2));
                             return true;
                         }),
@@ -94,6 +104,7 @@ final class GameApi {
                         .params(gameId(), of("sessionId", STRING), of("data", INT))
                         .doc("Answer an amount prompt.")
                         .handler(call -> {
+                            answered(call, 0);
                             ctx.server.sendPlayerInteger(call.uuid(0), call.string(1), call.integer(2));
                             return true;
                         }),
@@ -104,6 +115,7 @@ final class GameApi {
                                 of("manaType", STRING).typed("ManaType"))
                         .doc("Pay from the mana pool with one mana type.")
                         .handler(call -> {
+                            answered(call, 0);
                             ctx.server.sendPlayerManaType(call.uuid(0), call.uuid(1), call.string(2), manaType(call, 3));
                             return true;
                         }),
@@ -113,7 +125,12 @@ final class GameApi {
                         .params(of("action", STRING).typed("PlayerAction"), gameId(), of("sessionId", STRING), optional("data", ANY))
                         .doc("Send a player action: pass modes (F-keys), concede, undo, rollback, auto-answer and trigger-order settings.")
                         .handler(call -> {
-                            ctx.server.sendPlayerAction(playerAction(call, 0), call.uuid(1), call.string(2),
+                            PlayerAction action = playerAction(call, 0);
+                            if (action == PlayerAction.UNDO || action == PlayerAction.CONCEDE || action.name().startsWith("PASS_PRIORITY_")) {
+                                // these answer (or replace) the open question
+                                answered(call, 1);
+                            }
+                            ctx.server.sendPlayerAction(action, call.uuid(1), call.string(2),
                                     call.has(3) ? actionData(call.raw(3)) : null);
                             return true;
                         }),
@@ -142,6 +159,13 @@ final class GameApi {
                             return true;
                         })
         );
+    }
+
+    /**
+     * Forgets the open question before the answer is passed on, so the next question can't be cleared by mistake.
+     */
+    private static void answered(RpcCall call, int gameIdIndex) throws RpcException {
+        call.getConnection().promptAnswered(call.uuid(gameIdIndex));
     }
 
     private static mage.server.websocket.rpc.RpcParam gameId() {

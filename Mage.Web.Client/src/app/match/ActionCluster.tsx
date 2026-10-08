@@ -19,6 +19,10 @@ export interface ActionClusterProps {
   holdingPriority: boolean;
   /** the client is answering for the player (nothing to do): show that instead of a button to press */
   autoPassing?: boolean;
+  /** the last answer got no reaction from the server in time */
+  stalled?: boolean;
+  onResend?(): void;
+  onResync?(): void;
   onCommand(command: Command): void;
 }
 
@@ -30,7 +34,9 @@ const PASS_AHEAD: { label: string; action: PlayerAction; key: string }[] = [
 ];
 
 /** The decision corner: what the game is asking, and the one big button that answers it. */
-export function ActionCluster({ interaction, awaiting, status, canAct, special, holdingPriority, autoPassing = false, onCommand }: ActionClusterProps) {
+export function ActionCluster({
+  interaction, awaiting, status, canAct, special, holdingPriority, autoPassing = false, stalled = false, onResend, onResync, onCommand,
+}: ActionClusterProps) {
   const main = interaction.mainButton;
   const secondary = [...interaction.secondaryButtons];
   if (special && interaction.mode === 'priority') {
@@ -73,6 +79,15 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
   return (
     <section className={styles.cluster} aria-label="Your decision" aria-live="polite">
       {headline && <p className={[styles.headline, deciding ? styles.deciding : ''].join(' ')}><PromptText text={headline} /></p>}
+      {stalled && canAct && (
+        <div className={styles.stalled} role="alert">
+          <p>The server hasn't answered.</p>
+          <div className={styles.stalledButtons}>
+            {onResend && <Button variant="quiet" size="md" onClick={onResend}>Send again</Button>}
+            {onResync && <Button variant="print" size="md" onClick={onResync}>Refresh board</Button>}
+          </div>
+        </div>
+      )}
       {secondary.length > 0 && deciding && (
         <div className={styles.secondary}>
           {secondary.map((button) => (
