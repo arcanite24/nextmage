@@ -312,7 +312,8 @@ public final class Main {
                 // WebSocket Server
                 int websocketPort = config.getWebsocketPort();
                 mage.server.websocket.WebSocketServerImpl webSocketServer = new mage.server.websocket.WebSocketServerImpl(
-                        new java.net.InetSocketAddress(websocketPort), mageServerImpl, managerFactory, config.getWebsocketAllowedOrigins());
+                        new java.net.InetSocketAddress(websocketPort), mageServerImpl, managerFactory, config.getWebsocketAllowedOrigins(),
+                        adminPassword);
                 try {
                     webSocketServer.start();
                     webSocketServer.awaitStartup(10, java.util.concurrent.TimeUnit.SECONDS);

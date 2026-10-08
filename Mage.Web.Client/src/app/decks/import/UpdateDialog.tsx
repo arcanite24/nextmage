@@ -5,8 +5,8 @@ import { describeFailure, readingFromServer } from '../../../core/deckImport/rem
 import { browserFixStore } from '../../../core/deckImport/resolve';
 import { siteById, type DeckSiteId } from '../../../core/deckImport/sites';
 import type { CardView } from '../../../protocol/generated/views';
-import { deckStorage } from '../../../services/DeckStorageService';
-import type { DeckCardLists } from '../../../types/models';
+import { deckStorage } from '../../../core/decks/DeckStorageService';
+import type { DeckCardLists } from '../../../core/decks/types';
 import { api } from '../../connection';
 import { useDecks } from '../../stores/decks';
 import { notify } from '../../stores/toasts';

@@ -6,7 +6,7 @@ import { toDeck, type CardIssue, type ImportDraft } from '../../../core/deckImpo
 import { alternatesFor } from '../../../core/deckImport/resolve';
 import { DECK_SITES, exportLinkFor, siteById, type DeckSite } from '../../../core/deckImport/sites';
 import type { CardView } from '../../../protocol/generated/views';
-import type { DeckCardInfo } from '../../../types/models';
+import type { DeckCardInfo } from '../../../core/decks/types';
 import { useServerState } from '../../queries';
 import { sleeveFor, useDecks, type RosterDeck } from '../../stores/decks';
 import { useImportSheet } from '../../stores/importSheet';

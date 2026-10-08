@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useRouteError } from 'react-router-dom';
+import { reportError } from '../../core/telemetry/reporter';
 import { Button } from '../ui/Button';
 import styles from './GameScreen.module.css';
 
@@ -6,6 +8,9 @@ import styles from './GameScreen.module.css';
 export function RouteError() {
   const error = useRouteError();
   const message = error instanceof Error ? error.message : typeof error === 'string' ? error : 'Unknown error';
+  useEffect(() => {
+    reportError(error, 'react', { boundary: 'route', path: window.location.pathname });
+  }, [error]);
   return (
     <div className={styles.missing} role="alert">
       <h1>Something broke</h1>

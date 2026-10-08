@@ -1,5 +1,5 @@
-import { DeckSerializer } from '../../services/DeckSerializer';
-import type { DeckCardInfo } from '../../types/models';
+import { DeckSerializer } from '../decks/DeckSerializer';
+import type { DeckCardInfo } from '../decks/types';
 
 export type ListSection = 'main' | 'side' | 'commander' | 'companion' | 'maybe';
 

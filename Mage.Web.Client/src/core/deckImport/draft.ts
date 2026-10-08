@@ -1,5 +1,5 @@
 import type { CardView } from '../../protocol/generated/views';
-import type { DeckCardInfo, DeckCardLists, DeckCoverCard, DeckImportSource } from '../../types/models';
+import type { DeckCardInfo, DeckCardLists, DeckCoverCard, DeckImportSource } from '../decks/types';
 import type { DeckSiteId } from './sites';
 import { importKey, resolveCards, type CardLookup, type FixStore, type PrintingPolicy } from './resolve';
 import { parseList, type ListSection, type ParsedList } from './parseList';

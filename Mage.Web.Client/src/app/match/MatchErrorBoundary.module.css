@@ -1,0 +1,48 @@
+/* the bare mat, as the stage draws it, with the board cleared off it */
+.fallback {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-4);
+  background:
+    var(--mat-grain),
+    radial-gradient(120% 90% at 50% 50%, var(--mat-700), var(--mat-950) 85%),
+    var(--mat-900);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 560px;
+  text-align: center;
+}
+
+.title {
+  font-family: var(--font-print);
+  font-size: var(--text-3xl);
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.body {
+  color: var(--ink-soft);
+}
+
+.detail {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}

@@ -1,5 +1,5 @@
 import type { CardView, DeckCardLists as WireDeck } from '../../protocol/generated/views';
-import type { DeckCardInfo, DeckCardLists } from '../../types/models';
+import type { DeckCardInfo, DeckCardLists } from '../../core/decks/types';
 
 /**
  * Pure deck editing: entries are counted by printing (set + collector number), zones are main and side.

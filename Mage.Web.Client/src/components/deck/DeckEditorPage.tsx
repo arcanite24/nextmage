@@ -8,8 +8,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDeckStore } from '../../stores/deckStore';
-import { DeckSerializer } from '../../services/DeckSerializer';
-import { deckStorage } from '../../services/DeckStorageService';
+import { DeckSerializer } from '../../core/decks/DeckSerializer';
+import { deckStorage } from '../../core/decks/DeckStorageService';
 import {
     buildLimitedDeckAutosaveDeck,
     shouldAutosaveLimitedDeck,

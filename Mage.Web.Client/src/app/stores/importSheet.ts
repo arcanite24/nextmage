@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { DeckPayload } from '../../core/deckImport/payload';
-import type { DeckCardLists } from '../../types/models';
+import type { DeckCardLists } from '../../core/decks/types';
 
 /** What the import sheet opens with: typed or pasted text, a dropped file, or a deck the bookmarklet sent. */
 export type ImportSeed =

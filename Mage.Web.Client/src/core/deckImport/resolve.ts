@@ -1,5 +1,5 @@
 import type { CardCriteria, CardView, DeckCardInfo as WireCard } from '../../protocol/generated/views';
-import type { DeckCardInfo } from '../../types/models';
+import type { DeckCardInfo } from '../decks/types';
 
 /**
  * Matches imported cards against the server's card database in a few batched lookups

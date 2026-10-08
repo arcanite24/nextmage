@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { deckStorage, type DeckSummary } from '../../services/DeckStorageService';
-import { DeckSerializer } from '../../services/DeckSerializer';
-import type { DeckCardLists, DeckImportSource } from '../../types/models';
+import { deckStorage, type DeckSummary } from '../../core/decks/DeckStorageService';
+import { DeckSerializer } from '../../core/decks/DeckSerializer';
+import type { DeckCardLists, DeckImportSource } from '../../core/decks/types';
 import { readJson, writeJson } from './persist';
 
 export interface StarterDeck {

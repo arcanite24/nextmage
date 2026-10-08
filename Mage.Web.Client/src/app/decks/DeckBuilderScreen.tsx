@@ -3,10 +3,10 @@ import { ArrowLeftRight, Check, ChevronLeft, ClipboardCopy, ClipboardPaste, List
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { CardView } from '../../protocol/generated/views';
-import { appendDeckCardLists } from '../../services/DeckImportWorkflowService';
-import { deckStorage } from '../../services/DeckStorageService';
-import { DeckSerializer } from '../../services/DeckSerializer';
-import type { DeckCardLists } from '../../types/models';
+import { appendDeckCardLists } from '../../core/decks/merge';
+import { deckStorage } from '../../core/decks/DeckStorageService';
+import { DeckSerializer } from '../../core/decks/DeckSerializer';
+import type { DeckCardLists } from '../../core/decks/types';
 import { useServerState } from '../queries';
 import { STARTER_PREFIX, useDecks } from '../stores/decks';
 import { openImport, type ImportTarget } from '../stores/importSheet';

@@ -1,4 +1,4 @@
-import type { DeckCardInfo, DeckCardLists } from '../../types/models';
+import type { DeckCardInfo, DeckCardLists } from '../decks/types';
 
 export type DiffZone = 'main' | 'side';
 

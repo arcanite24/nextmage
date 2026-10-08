@@ -1,5 +1,5 @@
 import type { DeckCardInfo as WireCard, ImportedDeck } from '../../protocol/generated/views';
-import type { DeckCardInfo } from '../../types/models';
+import type { DeckCardInfo } from '../decks/types';
 import { RPC_ERROR, RpcError } from '../rpc/RpcClient';
 import type { DeckReading } from './draft';
 import { siteById, type DeckSiteId } from './sites';
