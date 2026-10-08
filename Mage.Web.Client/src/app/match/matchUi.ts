@@ -11,6 +11,8 @@ interface MatchUiState {
   arrowFrom: { x: number; y: number } | null;
   /** a hand card being dragged toward the battlefield */
   dragging: string | null;
+  /** a creature being dragged onto an attacker to block it, and the attacker under the pointer */
+  blockDrag: { blockerId: string; attackerId: string | null } | null;
   /** zone viewer (graveyard, exile...) */
   viewer: { title: string; cards: CardView[] } | null;
   logOpen: boolean;
@@ -20,6 +22,7 @@ interface MatchUiState {
   setPointer(pointer: MatchUiState['pointer']): void;
   setArrowFrom(point: MatchUiState['arrowFrom']): void;
   setDragging(id: string | null): void;
+  setBlockDrag(blockDrag: MatchUiState['blockDrag']): void;
   openViewer(viewer: MatchUiState['viewer']): void;
   toggleLog(open?: boolean): void;
   openDetail(detail: MatchUiState['detail']): void;
@@ -30,6 +33,7 @@ export const useMatchUi = create<MatchUiState>((set) => ({
   pointer: null,
   arrowFrom: null,
   dragging: null,
+  blockDrag: null,
   viewer: null,
   logOpen: false,
   detail: null,
@@ -37,6 +41,7 @@ export const useMatchUi = create<MatchUiState>((set) => ({
   setPointer: (pointer) => set({ pointer }),
   setArrowFrom: (arrowFrom) => set({ arrowFrom }),
   setDragging: (dragging) => set({ dragging }),
+  setBlockDrag: (blockDrag) => set({ blockDrag }),
   openViewer: (viewer) => set({ viewer }),
   toggleLog: (open) => set((state) => ({ logOpen: open ?? !state.logOpen })),
   // the zoomed copy would sit on top of the detail view
