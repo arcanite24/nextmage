@@ -58,6 +58,7 @@ A request without `id` is a notification: it runs, but gets no response.
 | -32001 | Not logged in |
 | -32003 | Too many requests |
 | -32004 | Server busy |
+| -32005 | Deck import failed; `data.reason` says why (see Deck import) |
 
 ### Server events
 
@@ -108,6 +109,8 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `searchCards` | `criteria: CardCriteria` | `CardView[]` | session | Search the card database (paged with start/count, at most 1000 per page). |
 | `lookupCards` | `cards: DeckCardInfo[]` | `CardView[]` | public | Card details for deck entries (by set and number, falling back to name), in the same order; null for unknown cards. At most 500 per call. |
 | `deckValidate` | `deckType: string`, `deck: DeckCardLists` | `DeckValidationResult` | session | Check a deck against a format, with EDH power level and Commander brackets. |
+| `deckImportFromUrl` | `url: string` | `ImportedDeck` | session | Read the deck behind a deck website link. Ten imports a minute per session; results are cached for five minutes. Fails with code -32005 and data {reason}: private, not_found, blocked, rate_limited, site_changed, unsupported, too_large, timeout or unavailable. |
+| `deckImportSources` | - | `DeckSourceStatus[]` | public | Deck websites the server imports from by link, and whether each works right now (ok or degraded). |
 | `roomGetUsers` | `roomId: UUID` | `RoomUsersView[]` | session | Users and server statistics of a room. |
 | `roomGetAllTables` | `roomId: UUID` | `TableView[]` | session | All open and running tables of a room. |
 | `roomGetTableById` | `roomId: UUID`, `tableId: UUID` | `TableView \| null` | session | One table of a room. |
@@ -223,6 +226,47 @@ Generated from `ClientCallbackMethod`. Do not edit the table by hand.
 | `REPLAY_UPDATE` | `GameView` | UPDATE (may be dropped when outdated) | State snapshot; newer ones replace older ones. |
 | `REPLAY_DONE` | `string` | TABLE_CHANGE (ordered) | Lifecycle event: open, switch or close a screen. |
 <!-- END GENERATED: callbacks -->
+
+## Deck import
+
+`deckImportFromUrl(url)` reads a deck from a deck website link and returns an `ImportedDeck`: the site's card names
+with set codes and, where the site has them, collector numbers, split into `main`, `side`, `commanders` and
+`companion`, plus name, author, format (as an XMage deck type), cover card and when the deck last changed on the site.
+The web client matches the cards against the card database itself (`lookupCards`), so a site's spelling never
+decides what the server accepts.
+
+The server reads Archidekt, TCGplayer Infinite, MTGTop8, Scryfall and ManaBox (`mage.server.websocket.service.deckimport`,
+one `DeckSource` per site). Moxfield, MTGGoldfish, AetherHub, TappedOut and Deckstats block automated reads; the client
+handles them by copy and paste, or with its "Send to Playmat" bookmarklet.
+
+Rules the server keeps:
+
+- It fetches only from the sites' own hosts, over https on port 443, following redirects only to those hosts. GET only, no cookies, an 8 second deadline and a 2 MB cap.
+- Ten imports a minute per session. Results are cached for five minutes, and cached reads don't count.
+- A site that fails three times in a row in a way that means it changed or blocks the server (`site_changed`, `blocked`) is reported as `degraded` by `deckImportSources` for 30 minutes; the client sends players to copy and paste instead.
+- The log keeps per-site success and failure counts only, never links, deck contents or user names.
+
+Failures come back as error `-32005` with `data: {"reason": ...}`:
+
+| Reason | Meaning |
+|---|---|
+| `private` | The deck exists but isn't shared. |
+| `not_found` | No deck at that link. |
+| `blocked` | The site turned the server away (bot protection). |
+| `rate_limited` | Too many imports from this session, or the site asked us to slow down. |
+| `site_changed` | The site answered in a shape the server doesn't read. |
+| `unsupported` | Not a deck link the server reads. |
+| `too_large` | More than 2 MB. |
+| `timeout` | The site didn't answer in time. |
+| `unavailable` | The site is down or unreachable. |
+
+Recorded responses from every site live in `Mage.Server/src/test/resources/deckimport` and back the unit tests.
+To find out whether a site changed, run the live canary weekly (it imports one known public deck per site over
+the network, and is skipped in normal builds):
+
+```
+mvn -pl Mage.Server test -Dtest=DeckImportLiveCanaryTest -Dxmage.deckImportCanary=true
+```
 
 ## PlayerAction Enum Values
 

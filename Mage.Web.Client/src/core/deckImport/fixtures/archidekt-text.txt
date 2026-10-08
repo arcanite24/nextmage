@@ -1,0 +1,5 @@
+1x Atraxa, Praetors' Voice (2x2) 190 [Commander{top}]
+1x Sol Ring (cmr) 472 [Ramp] ^Have,#37d67a^
+1x Doubling Season (2xm) 152 [Maybeboard{noDeck}{noPrice}]
+1x Smothering Tithe (rna) 22 [Sideboard]
+97x Forest (ust) 216 [Land]

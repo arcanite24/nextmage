@@ -14,6 +14,7 @@ public final class WebClientApi {
         RpcDispatcher dispatcher = new RpcDispatcher(ctx.sessions);
         dispatcher.registerAll(SessionApi.methods(ctx));
         dispatcher.registerAll(CatalogApi.methods(ctx));
+        dispatcher.registerAll(DeckImportApi.methods(ctx));
         dispatcher.registerAll(LobbyApi.methods(ctx));
         dispatcher.registerAll(GameApi.methods(ctx));
         dispatcher.registerAll(EventApi.methods(ctx));

@@ -1,0 +1,10 @@
+//Main
+4 Thoughtseize
+4 Fatal Push
+52 Swamp
+
+//Sideboard
+3 Duress
+
+//Maybeboard
+1 Liliana of the Veil

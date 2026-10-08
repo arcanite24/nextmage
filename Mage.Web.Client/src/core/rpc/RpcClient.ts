@@ -25,12 +25,15 @@ export interface ServerEvent<M extends CallbackMethodName = CallbackMethodName> 
 export class RpcError extends Error {
   readonly code: number;
   readonly method: string;
+  /** the error's data, when the server sent one (e.g. {reason} for deck imports) */
+  readonly data: unknown;
 
-  constructor(method: string, code: number, message: string) {
+  constructor(method: string, code: number, message: string, data?: unknown) {
     super(message);
     this.name = 'RpcError';
     this.code = code;
     this.method = method;
+    this.data = data;
   }
 }
 
@@ -49,6 +52,7 @@ export const RPC_ERROR = {
   NOT_AUTHORIZED: -32001,
   RATE_LIMITED: -32003,
   SERVER_BUSY: -32004,
+  DECK_IMPORT_FAILED: -32005,
 } as const;
 
 /** The subset of the browser WebSocket the client needs (replaceable in tests). */
@@ -294,11 +298,11 @@ export class RpcClient implements RpcCaller {
       }
       clearTimeout(call.timer);
       this.pending.delete(id!);
-      const error = message.error as { code?: number; message?: string } | string | undefined;
+      const error = message.error as { code?: number; message?: string; data?: unknown } | string | undefined;
       if (error) {
         call.reject(typeof error === 'string'
           ? new RpcError(call.method, RPC_ERROR.SERVER_ERROR, error)
-          : new RpcError(call.method, error.code ?? RPC_ERROR.SERVER_ERROR, error.message ?? 'Server error'));
+          : new RpcError(call.method, error.code ?? RPC_ERROR.SERVER_ERROR, error.message ?? 'Server error', error.data));
       } else {
         call.resolve(message.result ?? null);
       }

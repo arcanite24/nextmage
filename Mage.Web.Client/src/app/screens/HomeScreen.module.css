@@ -216,3 +216,14 @@
     grid-row: 2;
   }
 }
+
+.rosterActions {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+/* a deck file, link or list dragged over the roster */
+.dropping {
+  border-radius: var(--radius-zone);
+  box-shadow: inset 0 0 0 2px var(--ink-strong);
+}

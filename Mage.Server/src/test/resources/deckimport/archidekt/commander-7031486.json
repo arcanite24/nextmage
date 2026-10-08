@@ -1,0 +1,2341 @@
+{
+ "id": 7031486,
+ "name": "Buffs by Hans",
+ "createdAt": "2024-03-15T05:33:33.893574Z",
+ "updatedAt": "2025-01-15T18:48:33.082658Z",
+ "deckFormat": 3,
+ "featured": "https://storage.googleapis.com/archidekt-card-images/dmc/af0db1d6-5cb1-4917-8e8f-69d5dc184404_art_crop.jpg",
+ "customFeatured": "",
+ "private": false,
+ "unlisted": false,
+ "owner": {
+  "id": 59324,
+  "username": "SalubriousSnail"
+ },
+ "categories": [
+  {
+   "id": 67295201,
+   "name": "Creature",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295200,
+   "name": "Commander",
+   "isPremier": true,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295199,
+   "name": "Engines",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295198,
+   "name": "Instant",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295197,
+   "name": "Buff",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295196,
+   "name": "Removal",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295195,
+   "name": "Sorcery",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295194,
+   "name": "Big Draw",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295193,
+   "name": "Artifact",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295192,
+   "name": "Enchantment",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295191,
+   "name": "Planeswalker",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295190,
+   "name": "Land",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295189,
+   "name": "Beats",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  },
+  {
+   "id": 67295188,
+   "name": "Ramp",
+   "isPremier": false,
+   "includedInDeck": true,
+   "includedInPrice": true
+  }
+ ],
+ "cards": [
+  {
+   "id": 1629965358,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 112825,
+    "collectorNumber": "182",
+    "uid": "5503186a-46fe-4956-8ae3-5ab3343f8a93",
+    "edition": {
+     "editioncode": "bro",
+     "editionname": "The Brothers' War"
+    },
+    "oracleCard": {
+     "name": "Gaea's Gift",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965334,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 115904,
+    "collectorNumber": "190",
+    "uid": "c7b362a5-382a-4016-b4f2-aa7b683354c4",
+    "edition": {
+     "editioncode": "one",
+     "editionname": "Phyrexia: All Will Be One"
+    },
+    "oracleCard": {
+     "name": "Tyvar's Stand",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{X}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965335,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 33815,
+    "collectorNumber": "173",
+    "uid": "9678c71b-585b-41ba-a038-8027f818e839",
+    "edition": {
+     "editioncode": "a25",
+     "editionname": "Masters 25"
+    },
+    "oracleCard": {
+     "name": "Invigorate",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965336,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 92720,
+    "collectorNumber": "157",
+    "uid": "89db7256-3bd0-4c1d-9c6f-de81f7d3c1a2",
+    "edition": {
+     "editioncode": "tsr",
+     "editionname": "Time Spiral Remastered"
+    },
+    "oracleCard": {
+     "name": "Brute Force",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{R}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965372,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 122081,
+    "collectorNumber": "300",
+    "uid": "ababe16b-9359-44cb-81fb-e0b3a42b46bd",
+    "edition": {
+     "editioncode": "cmm",
+     "editionname": "Commander Masters"
+    },
+    "oracleCard": {
+     "name": "Kodama's Reach",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}",
+     "types": [
+      "Sorcery"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965400,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 123433,
+    "collectorNumber": "156",
+    "uid": "aed61bbb-83fd-452b-b940-c8eb1e1ebdac",
+    "edition": {
+     "editioncode": "woc",
+     "editionname": "Wilds of Eldraine Commander"
+    },
+    "oracleCard": {
+     "name": "Command Tower",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965375,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 10,
+   "card": {
+    "id": 118594,
+    "collectorNumber": "281",
+    "uid": "80716ed1-8d0e-44e6-8b18-606e80d22181",
+    "edition": {
+     "editioncode": "mom",
+     "editionname": "March of the Machine"
+    },
+    "oracleCard": {
+     "name": "Forest",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965399,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 81786,
+    "collectorNumber": "C18-150",
+    "uid": "01330778-5dcf-463f-ad8e-7468530c5f80",
+    "edition": {
+     "editioncode": "plst",
+     "editionname": "The List"
+    },
+    "oracleCard": {
+     "name": "Harrow",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965311,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 90549,
+    "collectorNumber": "232",
+    "uid": "4e1448cf-3ddc-437b-a21e-4f4086492ec6",
+    "edition": {
+     "editioncode": "cmr",
+     "editionname": "Commander Legends"
+    },
+    "oracleCard": {
+     "name": "Hunter's Insight",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965312,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 45165,
+    "collectorNumber": "57",
+    "uid": "6f9caaa9-7d8d-459a-8d6b-75f85877c426",
+    "edition": {
+     "editioncode": "ddm",
+     "editionname": "Duel Decks: Jace vs. Vraska"
+    },
+    "oracleCard": {
+     "name": "Ohran Viper",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}{G}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965314,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 108856,
+    "collectorNumber": "155",
+    "uid": "0eacd3de-b803-4322-8d88-d533761aa748",
+    "edition": {
+     "editioncode": "dmu",
+     "editionname": "Dominaria United"
+    },
+    "oracleCard": {
+     "name": "Bite Down",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965315,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 86714,
+    "collectorNumber": "170",
+    "uid": "ac0b24e7-14e7-45ee-b5d8-bdb8674b669c",
+    "edition": {
+     "editioncode": "iko",
+     "editionname": "Ikoria: Lair of Behemoths"
+    },
+    "oracleCard": {
+     "name": "Ram Through",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965316,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 99673,
+    "collectorNumber": "69",
+    "uid": "a3ff628a-ef8e-45c4-84e7-a33ec28f025a",
+    "edition": {
+     "editioncode": "vow",
+     "editionname": "Innistrad: Crimson Vow"
+    },
+    "oracleCard": {
+     "name": "Mischievous Catgeist // Catlike Curiosity",
+     "layout": "transform",
+     "faces": [
+      {
+       "name": "Mischievous Catgeist"
+      },
+      {
+       "name": "Catlike Curiosity"
+      }
+     ],
+     "manaCost": "",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965317,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 119237,
+    "collectorNumber": "182",
+    "uid": "b8eef541-6851-4312-ad2b-74f45c7ede6c",
+    "edition": {
+     "editioncode": "mom",
+     "editionname": "March of the Machine"
+    },
+    "oracleCard": {
+     "name": "Cosmic Hunger",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965318,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 52179,
+    "collectorNumber": "104",
+    "uid": "4ca76e9a-672f-49eb-86c6-00fac60d3065",
+    "edition": {
+     "editioncode": "wwk",
+     "editionname": "Worldwake"
+    },
+    "oracleCard": {
+     "name": "Groundswell",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965319,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 108767,
+    "collectorNumber": "153",
+    "uid": "7d0ae655-c64e-470d-a7ae-e06b89c77e57",
+    "edition": {
+     "editioncode": "dmc",
+     "editionname": "Dominaria United Commander"
+    },
+    "oracleCard": {
+     "name": "Growth Spiral",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965320,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 93122,
+    "collectorNumber": "184",
+    "uid": "e400c9b7-c789-49dd-9f72-b9d1df03fcca",
+    "edition": {
+     "editioncode": "stx",
+     "editionname": "Strixhaven: School of Mages"
+    },
+    "oracleCard": {
+     "name": "Eureka Moment",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965321,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 119395,
+    "collectorNumber": "303",
+    "uid": "897404de-93d8-433e-8e5f-5964d9cc2c2a",
+    "edition": {
+     "editioncode": "moc",
+     "editionname": "March of the Machine Commander"
+    },
+    "oracleCard": {
+     "name": "Inscription of Abundance",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965322,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 43704,
+    "collectorNumber": "130",
+    "uid": "5e17b65e-56c3-4e12-a774-780514dfd8ba",
+    "edition": {
+     "editioncode": "ktk",
+     "editionname": "Khans of Tarkir"
+    },
+    "oracleCard": {
+     "name": "Become Immense",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{5}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965323,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 53483,
+    "collectorNumber": "104",
+    "uid": "5ab2ba75-e52e-46f5-8a34-3fe1e07446fd",
+    "edition": {
+     "editioncode": "arb",
+     "editionname": "Alara Reborn"
+    },
+    "oracleCard": {
+     "name": "Vedalken Heretic",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}{U}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965324,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 93142,
+    "collectorNumber": "177",
+    "uid": "b2e9d132-95f7-4ee7-9c91-be19e4ad7a5d",
+    "edition": {
+     "editioncode": "stx",
+     "editionname": "Strixhaven: School of Mages"
+    },
+    "oracleCard": {
+     "name": "Decisive Denial",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965325,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 118675,
+    "collectorNumber": "184",
+    "uid": "b4066d41-0eb5-4dfd-93ec-2f242c3a27a4",
+    "edition": {
+     "editioncode": "mom",
+     "editionname": "March of the Machine"
+    },
+    "oracleCard": {
+     "name": "Deeproot Wayfinder",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965326,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 108607,
+    "collectorNumber": "56",
+    "uid": "b25ab334-1060-457e-b212-3d7a697c545e",
+    "edition": {
+     "editioncode": "dmu",
+     "editionname": "Dominaria United"
+    },
+    "oracleCard": {
+     "name": "Joint Exploration",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965327,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 86482,
+    "collectorNumber": "230",
+    "uid": "009c5aac-194f-4b95-8f69-cc74aa15c3a5",
+    "edition": {
+     "editioncode": "c20",
+     "editionname": "Commander 2020"
+    },
+    "oracleCard": {
+     "name": "Temur Charm",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}{U}{R}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965328,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 119290,
+    "collectorNumber": "402",
+    "uid": "ebf683a1-d5f4-47ca-9c49-739642935107",
+    "edition": {
+     "editioncode": "moc",
+     "editionname": "March of the Machine Commander"
+    },
+    "oracleCard": {
+     "name": "Frontier Bivouac",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965329,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 119270,
+    "collectorNumber": "424",
+    "uid": "9a49fb7a-81f5-4d68-ac16-5a7703809db4",
+    "edition": {
+     "editioncode": "moc",
+     "editionname": "March of the Machine Commander"
+    },
+    "oracleCard": {
+     "name": "Simic Growth Chamber",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965330,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 95857,
+    "collectorNumber": "243",
+    "uid": "c3543b96-43de-4abc-a1be-39a5224778f7",
+    "edition": {
+     "editioncode": "afc",
+     "editionname": "Forgotten Realms Commander"
+    },
+    "oracleCard": {
+     "name": "Gruul Turf",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965331,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 86439,
+    "collectorNumber": "283",
+    "uid": "2d96b00c-8b73-4b4a-b784-4c7e779f8fd7",
+    "edition": {
+     "editioncode": "c20",
+     "editionname": "Commander 2020"
+    },
+    "oracleCard": {
+     "name": "Izzet Boilerworks",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965332,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 122998,
+    "collectorNumber": "256",
+    "uid": "74f9c819-719a-461b-8e7e-a26c88e8099b",
+    "edition": {
+     "editioncode": "woe",
+     "editionname": "Wilds of Eldraine"
+    },
+    "oracleCard": {
+     "name": "Evolving Wilds",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965333,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 119258,
+    "collectorNumber": "439",
+    "uid": "66639e5d-8a74-4d58-a77d-0bb9d6d62bb1",
+    "edition": {
+     "editioncode": "moc",
+     "editionname": "March of the Machine Commander"
+    },
+    "oracleCard": {
+     "name": "Terramorphic Expanse",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965337,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 119265,
+    "collectorNumber": "433",
+    "uid": "11a9a808-4ad1-45ab-9ef6-b6eb39414e25",
+    "edition": {
+     "editioncode": "moc",
+     "editionname": "March of the Machine Commander"
+    },
+    "oracleCard": {
+     "name": "Temple of Epiphany",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965338,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 119262,
+    "collectorNumber": "430",
+    "uid": "0203d093-a060-47d7-876b-e7ce8e444bc6",
+    "edition": {
+     "editioncode": "moc",
+     "editionname": "March of the Machine Commander"
+    },
+    "oracleCard": {
+     "name": "Temple of Abandon",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965339,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 78844,
+    "collectorNumber": "255",
+    "uid": "0c284acd-4407-42ad-9f4c-359041223609",
+    "edition": {
+     "editioncode": "m20",
+     "editionname": "Core Set 2020"
+    },
+    "oracleCard": {
+     "name": "Temple of Mystery",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965340,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 47166,
+    "collectorNumber": "195",
+    "uid": "97c27bdd-77f5-4e93-8f54-93a204fc980a",
+    "edition": {
+     "editioncode": "gtc",
+     "editionname": "Gatecrash"
+    },
+    "oracleCard": {
+     "name": "Simic Charm",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965341,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 6,
+   "card": {
+    "id": 118596,
+    "collectorNumber": "278",
+    "uid": "988bfa94-0c83-4057-a0c7-0ad885b8919c",
+    "edition": {
+     "editioncode": "mom",
+     "editionname": "March of the Machine"
+    },
+    "oracleCard": {
+     "name": "Island",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965342,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 6,
+   "card": {
+    "id": 118597,
+    "collectorNumber": "280",
+    "uid": "21041ed6-8f13-4909-a2c3-fa4894a2d1e3",
+    "edition": {
+     "editioncode": "mom",
+     "editionname": "March of the Machine"
+    },
+    "oracleCard": {
+     "name": "Mountain",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965343,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 114630,
+    "collectorNumber": "173",
+    "uid": "bf65fcd0-5f4e-4e65-ac86-2f14d5c7d527",
+    "edition": {
+     "editioncode": "scd",
+     "editionname": "Starter Commander Decks"
+    },
+    "oracleCard": {
+     "name": "Blossoming Defense",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965344,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 76297,
+    "collectorNumber": "252",
+    "uid": "fc36bb2a-115d-4e24-a1e9-02b21773e945",
+    "edition": {
+     "editioncode": "grn",
+     "editionname": "Guilds of Ravnica"
+    },
+    "oracleCard": {
+     "name": "Izzet Guildgate",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965345,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 77490,
+    "collectorNumber": "250",
+    "uid": "8fffd445-de4f-45de-95b9-6e0855926a6a",
+    "edition": {
+     "editioncode": "rna",
+     "editionname": "Ravnica Allegiance"
+    },
+    "oracleCard": {
+     "name": "Gruul Guildgate",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965346,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 77483,
+    "collectorNumber": "258",
+    "uid": "62537433-3c49-417d-89ef-c12d5288bb6f",
+    "edition": {
+     "editioncode": "rna",
+     "editionname": "Ravnica Allegiance"
+    },
+    "oracleCard": {
+     "name": "Simic Guildgate",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965347,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 45977,
+    "collectorNumber": "145",
+    "uid": "3db6ee53-c5e6-4344-9f35-084cd8cc9cd3",
+    "edition": {
+     "editioncode": "ths",
+     "editionname": "Theros"
+    },
+    "oracleCard": {
+     "name": "Titan's Strength",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{R}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965348,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 79929,
+    "collectorNumber": "167",
+    "uid": "9fb4e77f-e189-4ad3-9fca-8da04289e396",
+    "edition": {
+     "editioncode": "eld",
+     "editionname": "Throne of Eldraine"
+    },
+    "oracleCard": {
+     "name": "Oakhame Adversary",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{3}{G}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965349,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 90607,
+    "collectorNumber": "200",
+    "uid": "239a9f2e-145b-4f31-8128-4d376af1079d",
+    "edition": {
+     "editioncode": "cmr",
+     "editionname": "Commander Legends"
+    },
+    "oracleCard": {
+     "name": "Soul's Fire",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{R}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965350,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 108889,
+    "collectorNumber": "64",
+    "uid": "9d933bf1-14f0-4150-a0d2-6b845b9624cf",
+    "edition": {
+     "editioncode": "dmu",
+     "editionname": "Dominaria United"
+    },
+    "oracleCard": {
+     "name": "Shore Up",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{U}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965351,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 41903,
+    "collectorNumber": "168",
+    "uid": "6203e3d4-8998-41d6-9f7e-b68af0f1f8b5",
+    "edition": {
+     "editioncode": "mm2",
+     "editionname": "Modern Masters 2015"
+    },
+    "oracleCard": {
+     "name": "Vines of Vastwood",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965352,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 122635,
+    "collectorNumber": "323",
+    "uid": "2ad012c2-e6d9-448f-b204-14a2c55ff74f",
+    "edition": {
+     "editioncode": "cmm",
+     "editionname": "Commander Masters"
+    },
+    "oracleCard": {
+     "name": "Snakeskin Veil",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965353,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 101621,
+    "collectorNumber": "211",
+    "uid": "fd4b7ee2-de65-4288-872d-486065a4f226",
+    "edition": {
+     "editioncode": "neo",
+     "editionname": "Kamigawa: Neon Dynasty"
+    },
+    "oracleCard": {
+     "name": "Tamiyo's Safekeeping",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965354,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 86503,
+    "collectorNumber": "210",
+    "uid": "7c784b00-dcef-4640-a305-5ff1baf2e6fd",
+    "edition": {
+     "editioncode": "c20",
+     "editionname": "Commander 2020"
+    },
+    "oracleCard": {
+     "name": "Djinn Illuminatus",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{5}{U/R}{U/R}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965361,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 86506,
+    "collectorNumber": "204",
+    "uid": "7fece0e9-92ac-4fef-9682-6d2797f7c6cb",
+    "edition": {
+     "editioncode": "c20",
+     "editionname": "Commander 2020"
+    },
+    "oracleCard": {
+     "name": "Cold-Eyed Selkie",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G/U}{G/U}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965362,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 99740,
+    "collectorNumber": "82",
+    "uid": "3dd5c860-9d27-40d9-af38-aaf40bd52423",
+    "edition": {
+     "editioncode": "vow",
+     "editionname": "Innistrad: Crimson Vow"
+    },
+    "oracleCard": {
+     "name": "Stormchaser Drake",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{U}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965364,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 89288,
+    "collectorNumber": "192",
+    "uid": "99535539-aa73-41ed-86ab-21c97b92620d",
+    "edition": {
+     "editioncode": "znr",
+     "editionname": "Zendikar Rising"
+    },
+    "oracleCard": {
+     "name": "Khalni Ambush // Khalni Territory",
+     "layout": "modal_dfc",
+     "faces": [
+      {
+       "name": "Khalni Ambush"
+      },
+      {
+       "name": "Khalni Territory"
+      }
+     ],
+     "manaCost": "",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965365,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 115638,
+    "collectorNumber": "61",
+    "uid": "cf28c75d-1fb3-44cc-b651-5b2830e22add",
+    "edition": {
+     "editioncode": "one",
+     "editionname": "Phyrexia: All Will Be One"
+    },
+    "oracleCard": {
+     "name": "Mercurial Spelldancer",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{U}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965366,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 119046,
+    "collectorNumber": "295",
+    "uid": "66a82a81-9b3e-421c-b916-15f40f359bf8",
+    "edition": {
+     "editioncode": "moc",
+     "editionname": "March of the Machine Commander"
+    },
+    "oracleCard": {
+     "name": "Cultivate",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}",
+     "types": [
+      "Sorcery"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965367,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 108457,
+    "collectorNumber": "158",
+    "uid": "d9142f35-75f4-44c7-b03c-79c4a2d43c88",
+    "edition": {
+     "editioncode": "dmu",
+     "editionname": "Dominaria United"
+    },
+    "oracleCard": {
+     "name": "Colossal Growth",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965368,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 49922,
+    "collectorNumber": "116",
+    "uid": "af2d23da-70a1-49ba-91bf-c110cc4bbedc",
+    "edition": {
+     "editioncode": "nph",
+     "editionname": "New Phyrexia"
+    },
+    "oracleCard": {
+     "name": "Mutagenic Growth",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G/P}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965369,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 102970,
+    "collectorNumber": "124",
+    "uid": "3678fa3d-d41f-4b7a-b25e-6fc5f78876c7",
+    "edition": {
+     "editioncode": "snc",
+     "editionname": "Streets of New Capenna"
+    },
+    "oracleCard": {
+     "name": "Sticky Fingers",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{R}",
+     "types": [
+      "Enchantment"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965371,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 89365,
+    "collectorNumber": "201",
+    "uid": "fa259096-b24f-414c-af59-301bed4b4627",
+    "edition": {
+     "editioncode": "znr",
+     "editionname": "Zendikar Rising"
+    },
+    "oracleCard": {
+     "name": "Roiling Regrowth",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965373,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 91825,
+    "collectorNumber": "239",
+    "uid": "9bf5e4ad-a6e9-4b7c-a1ec-8246d3a3b6ca",
+    "edition": {
+     "editioncode": "khm",
+     "editionname": "Kaldheim"
+    },
+    "oracleCard": {
+     "name": "Goldvein Pick",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965374,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 118643,
+    "collectorNumber": "131",
+    "uid": "2443cb94-b27e-4a96-93cb-ac7880149bcc",
+    "edition": {
+     "editioncode": "mom",
+     "editionname": "March of the Machine"
+    },
+    "oracleCard": {
+     "name": "Beamtown Beatstick",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{R}",
+     "types": [
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965376,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 123451,
+    "collectorNumber": "133",
+    "uid": "00b60638-bea3-4c27-9819-da5ac2be1ca1",
+    "edition": {
+     "editioncode": "woc",
+     "editionname": "Wilds of Eldraine Commander"
+    },
+    "oracleCard": {
+     "name": "Snake Umbra",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}",
+     "types": [
+      "Enchantment"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965377,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 108896,
+    "collectorNumber": "44",
+    "uid": "6c44738c-706f-40b2-a09d-b21cd0889049",
+    "edition": {
+     "editioncode": "dmu",
+     "editionname": "Dominaria United"
+    },
+    "oracleCard": {
+     "name": "Combat Research",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{U}",
+     "types": [
+      "Enchantment"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965378,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 122423,
+    "collectorNumber": "386",
+    "uid": "fa912283-c28e-4594-aca9-21d82d8cf006",
+    "edition": {
+     "editioncode": "cmm",
+     "editionname": "Commander Masters"
+    },
+    "oracleCard": {
+     "name": "Geode Golem",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{5}",
+     "types": [
+      "Creature",
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965379,
+   "categories": [
+    "Commander"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 108751,
+    "collectorNumber": "175",
+    "uid": "af0db1d6-5cb1-4917-8e8f-69d5dc184404",
+    "edition": {
+     "editioncode": "dmc",
+     "editionname": "Dominaria United Commander"
+    },
+    "oracleCard": {
+     "name": "Xyris, the Writhing Storm",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}{U}{R}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965380,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 85993,
+    "collectorNumber": "154",
+    "uid": "0b683d3f-025c-4b8d-89d7-3513488649d5",
+    "edition": {
+     "editioncode": "iko",
+     "editionname": "Ikoria: Lair of Behemoths"
+    },
+    "oracleCard": {
+     "name": "Fully Grown",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965383,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 77638,
+    "collectorNumber": "210",
+    "uid": "9bb6a8bb-9eec-4f9b-a5a8-604631e4b823",
+    "edition": {
+     "editioncode": "rna",
+     "editionname": "Ravnica Allegiance"
+    },
+    "oracleCard": {
+     "name": "Sunder Shaman",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{R}{R}{G}{G}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965384,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 77662,
+    "collectorNumber": "223",
+    "uid": "9bd15da6-2b86-4dba-951d-318c7d9a5dde",
+    "edition": {
+     "editioncode": "rna",
+     "editionname": "Ravnica Allegiance"
+    },
+    "oracleCard": {
+     "name": "Collision // Colossus",
+     "layout": "split",
+     "faces": [
+      {
+       "name": "Collision"
+      },
+      {
+       "name": "Colossus"
+      }
+     ],
+     "manaCost": "{1}{R/G} // {R}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965385,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 51825,
+    "collectorNumber": "90",
+    "uid": "9a4199be-e1ec-4f0e-a31f-29a7007128a5",
+    "edition": {
+     "editioncode": "roe",
+     "editionname": "Rise of the Eldrazi"
+    },
+    "oracleCard": {
+     "name": "Surrakar Spellblade",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{U}{U}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965386,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 87291,
+    "collectorNumber": "210",
+    "uid": "6da62557-9783-4e6c-9b5f-2b77dbf96909",
+    "edition": {
+     "editioncode": "m21",
+     "editionname": "Core Set 2021"
+    },
+    "oracleCard": {
+     "name": "Titanic Growth",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965387,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 90427,
+    "collectorNumber": "300",
+    "uid": "b3c9b4fb-cfb6-4e5a-b23a-9aad9f69710e",
+    "edition": {
+     "editioncode": "cmr",
+     "editionname": "Commander Legends"
+    },
+    "oracleCard": {
+     "name": "Bladegriff Prototype",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{5}",
+     "types": [
+      "Creature",
+      "Artifact"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965388,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 122669,
+    "collectorNumber": "264",
+    "uid": "375bc646-942e-4bf5-9c71-2c5471828e35",
+    "edition": {
+     "editioncode": "cmm",
+     "editionname": "Commander Masters"
+    },
+    "oracleCard": {
+     "name": "Temur Battle Rage",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{R}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965390,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 77610,
+    "collectorNumber": "229",
+    "uid": "2eefd8c1-96ce-4d7a-8aaf-29c35d634dda",
+    "edition": {
+     "editioncode": "rna",
+     "editionname": "Ravnica Allegiance"
+    },
+    "oracleCard": {
+     "name": "Thrash // Threat",
+     "layout": "split",
+     "faces": [
+      {
+       "name": "Thrash"
+      },
+      {
+       "name": "Threat"
+      }
+     ],
+     "manaCost": "{R/G}{R/G} // {2}{R}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965392,
+   "categories": [
+    "Ramp"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 37055,
+    "collectorNumber": "157",
+    "uid": "19719b9b-a384-4ebe-9a5a-7f51132f3c44",
+    "edition": {
+     "editioncode": "mm3",
+     "editionname": "Modern Masters 2017"
+    },
+    "oracleCard": {
+     "name": "Coiling Oracle",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}{U}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965393,
+   "categories": [
+    "Land"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 104527,
+    "collectorNumber": "898",
+    "uid": "814e1393-34e1-4a31-98c5-97a3290a105b",
+    "edition": {
+     "editioncode": "clb",
+     "editionname": "Commander Legends: Battle for Baldur's Gate"
+    },
+    "oracleCard": {
+     "name": "Kessig Wolf Run",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "",
+     "types": [
+      "Land"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965394,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 86484,
+    "collectorNumber": "232",
+    "uid": "06879efa-46ca-46bc-9acd-d48ad343fe5f",
+    "edition": {
+     "editioncode": "c20",
+     "editionname": "Commander 2020"
+    },
+    "oracleCard": {
+     "name": "Trygon Predator",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}{U}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965395,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 112735,
+    "collectorNumber": "183",
+    "uid": "aeece336-e5e8-4455-a297-c3739198d011",
+    "edition": {
+     "editioncode": "bro",
+     "editionname": "The Brothers' War"
+    },
+    "oracleCard": {
+     "name": "Giant Growth",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965396,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 123296,
+    "collectorNumber": "61",
+    "uid": "742f2d20-0f6b-488e-ae37-54a41522c191",
+    "edition": {
+     "editioncode": "wot",
+     "editionname": "Wilds of Eldraine: Enchanting Tales"
+    },
+    "oracleCard": {
+     "name": "Season of Growth",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Enchantment"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965397,
+   "categories": [
+    "Engines"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 108794,
+    "collectorNumber": "125",
+    "uid": "a8cbc3ba-f552-43fd-a59b-f3d8e3edd12f",
+    "edition": {
+     "editioncode": "dmc",
+     "editionname": "Dominaria United Commander"
+    },
+    "oracleCard": {
+     "name": "Neheb, Dreadhorde Champion",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{R}{R}",
+     "types": [
+      "Creature"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965398,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 101600,
+    "collectorNumber": "202",
+    "uid": "7d42ca7c-5b36-45a9-b235-4f90e66f4377",
+    "edition": {
+     "editioncode": "neo",
+     "editionname": "Kamigawa: Neon Dynasty"
+    },
+    "oracleCard": {
+     "name": "Master's Rebuke",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{G}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965401,
+   "categories": [
+    "Buff"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 116205,
+    "collectorNumber": "123",
+    "uid": "d6bfc16a-2871-40a4-b279-636b80491a06",
+    "edition": {
+     "editioncode": "one",
+     "editionname": "Phyrexia: All Will Be One"
+    },
+    "oracleCard": {
+     "name": "Blazing Crescendo",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{1}{R}",
+     "types": [
+      "Instant"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965402,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 46844,
+    "collectorNumber": "122",
+    "uid": "ff7f4fc2-6f76-44e7-a30b-7166a0d10d2a",
+    "edition": {
+     "editioncode": "dgm",
+     "editionname": "Dragon's Maze"
+    },
+    "oracleCard": {
+     "name": "Armed // Dangerous",
+     "layout": "split",
+     "faces": [
+      {
+       "name": "Armed"
+      },
+      {
+       "name": "Dangerous"
+      }
+     ],
+     "manaCost": "{1}{R} // {3}{G}",
+     "types": [
+      "Sorcery"
+     ]
+    }
+   }
+  },
+  {
+   "id": 1629965403,
+   "categories": [
+    "Removal"
+   ],
+   "companion": false,
+   "modifier": "Normal",
+   "quantity": 1,
+   "card": {
+    "id": 43719,
+    "collectorNumber": "145",
+    "uid": "83456f8f-8a1a-403c-816b-25e454ba1edf",
+    "edition": {
+     "editioncode": "ktk",
+     "editionname": "Khans of Tarkir"
+    },
+    "oracleCard": {
+     "name": "Roar of Challenge",
+     "layout": "normal",
+     "faces": [],
+     "manaCost": "{2}{G}",
+     "types": [
+      "Sorcery"
+     ]
+    }
+   }
+  }
+ ]
+}

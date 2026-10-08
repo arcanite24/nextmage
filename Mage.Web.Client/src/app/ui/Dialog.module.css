@@ -26,6 +26,19 @@
 .sm { --dialog-w: 420px; }
 .md { --dialog-w: 560px; }
 .lg { --dialog-w: 860px; }
+/* a workspace in a dialog (the import sheet): fixed height, the body lays out its own scrolling */
+.xl {
+  --dialog-w: 980px;
+  height: min(88vh, 720px);
+}
+
+.xl .body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: var(--space-5);
+}
 
 .head {
   display: flex;
@@ -36,11 +49,14 @@
 }
 
 .title {
+  flex: 1;
+  min-width: 0;
   font-size: var(--text-2xl);
   text-transform: uppercase;
   letter-spacing: var(--tracking-print);
 }
 
+.back,
 .close {
   display: inline-grid;
   place-items: center;
@@ -53,6 +69,7 @@
   cursor: pointer;
 }
 
+.back:hover,
 .close:hover {
   color: var(--ink-strong);
   background: rgb(233 228 214 / 0.08);

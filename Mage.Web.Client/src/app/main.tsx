@@ -6,6 +6,7 @@ import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation, use
 import './styles/base.css';
 import { AppShell } from './AppShell';
 import { queryClient } from './queries';
+import { ImportRoute } from './decks/import/ImportRoute';
 import { DecksScreen } from './screens/DecksScreen';
 import { EventsScreen } from './screens/EventsScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -42,7 +43,7 @@ function SignedIn() {
   }, [redirect, navigate]);
 
   // come back here after signing in
-  if (phase !== 'signedIn') return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  if (phase !== 'signedIn') return <Navigate to="/login" replace state={{ from: location.pathname + location.search + location.hash }} />;
   return (
     <>
       <Outlet />
@@ -67,6 +68,7 @@ const router = createBrowserRouter([
         children: [
           { path: '/', element: <HomeScreen /> },
           { path: '/decks', element: <DecksScreen /> },
+          { path: '/import', element: <ImportRoute /> },
           { path: '/decks/:deckId', lazy: () => import('./decks/DeckBuilderScreen').then((m) => ({ Component: m.DeckBuilderScreen })) },
           { path: '/events', element: <EventsScreen /> },
           { path: '/event/:tournamentId', lazy: () => import('./events/EventScreen').then((m) => ({ Component: m.EventScreen })) },

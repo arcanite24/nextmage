@@ -1,0 +1,573 @@
+{
+ "id": "3735a7b3-6b9e-4de3-bca7-44b498312457",
+ "name": "Mazo 1",
+ "format": null,
+ "editDateUTC": 1725554300985,
+ "colors": "{R}{W}",
+ "coverImageUrl": "https://cards.scryfall.io/art_crop/front/1/f/1f3013bf-9647-4bdb-a638-d299ae00f88e.jpg?1783915135",
+ "coverImageCvId": 85292,
+ "coverImageFaceIndex": 0,
+ "cards": [
+  {
+   "cvId": 96208,
+   "collectorNumber": "293",
+   "scryfallId": "24323a73-8c9a-4cd4-a98f-9ea0d1f33bf6",
+   "name": "Battlefield Forge",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "blc",
+   "setName": "Bloomburrow Commander",
+   "setIconId": "blc",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "RW",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 128733,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/4/24323a73-8c9a-4cd4-a98f-9ea0d1f33bf6.jpg?1783910644",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/4/24323a73-8c9a-4cd4-a98f-9ea0d1f33bf6.jpg?1783910644"
+    }
+   ]
+  },
+  {
+   "cvId": 85292,
+   "collectorNumber": "7",
+   "scryfallId": "1f3013bf-9647-4bdb-a638-d299ae00f88e",
+   "name": "Cheeky House-Mouse // Squeak By",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "woe",
+   "setName": "Wilds of Eldraine",
+   "setIconId": "woe",
+   "rarity": 1,
+   "collectorNumberGroup": 0,
+   "colorIdentity": "W",
+   "manaValue": 1.0,
+   "layout": 16,
+   "cardhoarderId": 116304,
+   "faces": [
+    {
+     "manaCost": "{W}"
+    },
+    {
+     "manaCost": "{W}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/1/f/1f3013bf-9647-4bdb-a638-d299ae00f88e.jpg?1783915135",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/1/f/1f3013bf-9647-4bdb-a638-d299ae00f88e.jpg?1783915135"
+    }
+   ]
+  },
+  {
+   "cvId": 71434,
+   "collectorNumber": "17",
+   "scryfallId": "4f7862ef-2c8d-4d28-9e50-7cc41861f245",
+   "name": "Destroy Evil",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "dmu",
+   "setName": "Dominaria United",
+   "setIconId": "dmu",
+   "rarity": 0,
+   "collectorNumberGroup": 0,
+   "colorIdentity": "W",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 102510,
+   "faces": [
+    {
+     "manaCost": "{1}{W}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/f/4f7862ef-2c8d-4d28-9e50-7cc41861f245.jpg?1783921366",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/f/4f7862ef-2c8d-4d28-9e50-7cc41861f245.jpg?1783921366"
+    }
+   ]
+  },
+  {
+   "cvId": 95888,
+   "collectorNumber": "133",
+   "scryfallId": "0035082e-bb86-4f95-be48-ffc87fe5286d",
+   "name": "Emberheart Challenger",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 129511,
+   "faces": [
+    {
+     "manaCost": "{1}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/0/0/0035082e-bb86-4f95-be48-ffc87fe5286d.jpg?1783910821",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/0/0/0035082e-bb86-4f95-be48-ffc87fe5286d.jpg?1783910821"
+    }
+   ]
+  },
+  {
+   "cvId": 95812,
+   "collectorNumber": "14",
+   "scryfallId": "97ff118f-9c3c-43a2-8085-980c7fe7d227",
+   "name": "Flowerfoot Swordmaster",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 1,
+   "collectorNumberGroup": 0,
+   "colorIdentity": "W",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 129273,
+   "faces": [
+    {
+     "manaCost": "{W}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/9/7/97ff118f-9c3c-43a2-8085-980c7fe7d227.jpg?1783910861",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/9/7/97ff118f-9c3c-43a2-8085-980c7fe7d227.jpg?1783910861"
+    }
+   ]
+  },
+  {
+   "cvId": 95870,
+   "collectorNumber": "138",
+   "scryfallId": "48ace959-66b2-40c8-9bff-fd7ed9c99a82",
+   "name": "Heartfire Hero",
+   "quantity": 2,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 1,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 129521,
+   "faces": [
+    {
+     "manaCost": "{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/8/48ace959-66b2-40c8-9bff-fd7ed9c99a82.jpg?1783910820",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/8/48ace959-66b2-40c8-9bff-fd7ed9c99a82.jpg?1783910820"
+    }
+   ]
+  },
+  {
+   "cvId": 93242,
+   "collectorNumber": "269",
+   "scryfallId": "85df6b6a-2dcf-4828-a4a8-e07d52e1fddd",
+   "name": "Inspiring Vantage",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "otj",
+   "setName": "Outlaws of Thunder Junction",
+   "setIconId": "otj",
+   "rarity": 2,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "RW",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 124451,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/8/5/85df6b6a-2dcf-4828-a4a8-e07d52e1fddd.jpg?1783911772",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/8/5/85df6b6a-2dcf-4828-a4a8-e07d52e1fddd.jpg?1783911772"
+    }
+   ]
+  },
+  {
+   "cvId": 90820,
+   "collectorNumber": "218",
+   "scryfallId": "4101e3fe-b0e7-4f0f-b9ac-9b61a4d628b3",
+   "name": "Lightning Helix",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "mkm",
+   "setName": "Murders at Karlov Manor",
+   "setIconId": "mkm",
+   "rarity": 1,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "RW",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 121910,
+   "faces": [
+    {
+     "manaCost": "{R}{W}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/1/4101e3fe-b0e7-4f0f-b9ac-9b61a4d628b3.jpg?1783912843",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/1/4101e3fe-b0e7-4f0f-b9ac-9b61a4d628b3.jpg?1783912843"
+    }
+   ]
+  },
+  {
+   "cvId": 95634,
+   "collectorNumber": "256",
+   "scryfallId": "8ab9d56f-9178-4ec9-a5f6-b934f50d8d9d",
+   "name": "Lupinflower Village",
+   "quantity": 3,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 1,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "W",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 129757,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/8/a/8ab9d56f-9178-4ec9-a5f6-b934f50d8d9d.jpg?1783910784",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/8/a/8ab9d56f-9178-4ec9-a5f6-b934f50d8d9d.jpg?1783910784"
+    }
+   ]
+  },
+  {
+   "cvId": 91707,
+   "collectorNumber": "224",
+   "scryfallId": "be6627fd-729d-44f2-b6bf-5299f49d1e3d",
+   "name": "Mabel, Heir to Cragflame",
+   "quantity": 3,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 2,
+   "collectorNumberGroup": 5,
+   "colorIdentity": "RW",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 129693,
+   "faces": [
+    {
+     "manaCost": "{1}{R}{W}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/e/be6627fd-729d-44f2-b6bf-5299f49d1e3d.jpg?1783910794",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/e/be6627fd-729d-44f2-b6bf-5299f49d1e3d.jpg?1783910794"
+    }
+   ]
+  },
+  {
+   "cvId": 95881,
+   "collectorNumber": "143",
+   "scryfallId": "db3832b5-e83f-4569-bd49-fb7b86fa2d47",
+   "name": "Manifold Mouse",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 129531,
+   "faces": [
+    {
+     "manaCost": "{1}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/d/b/db3832b5-e83f-4569-bd49-fb7b86fa2d47.jpg?1783910819",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/d/b/db3832b5-e83f-4569-bd49-fb7b86fa2d47.jpg?1783910819"
+    }
+   ]
+  },
+  {
+   "cvId": 95627,
+   "collectorNumber": "144",
+   "scryfallId": "509bf254-8a2b-4dfa-9ae5-386321b35e8b",
+   "name": "Might of the Meek",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 0,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 129533,
+   "faces": [
+    {
+     "manaCost": "{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/5/0/509bf254-8a2b-4dfa-9ae5-386321b35e8b.jpg?1783910819",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/5/0/509bf254-8a2b-4dfa-9ae5-386321b35e8b.jpg?1783910819"
+    }
+   ]
+  },
+  {
+   "cvId": 85819,
+   "collectorNumber": "142",
+   "scryfallId": "eef5a0ae-5907-42c9-a097-3f973737e392",
+   "name": "Monstrous Rage",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "woe",
+   "setName": "Wilds of Eldraine",
+   "setIconId": "woe",
+   "rarity": 1,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 1.0,
+   "layout": 0,
+   "cardhoarderId": 116610,
+   "faces": [
+    {
+     "manaCost": "{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.jpg?1783915091",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.jpg?1783915091"
+    }
+   ]
+  },
+  {
+   "cvId": 96014,
+   "collectorNumber": "147",
+   "scryfallId": "2f815bae-820a-49f6-8eed-46f658e7b6ff",
+   "name": "Rabid Gnaw",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 3,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 1,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 129539,
+   "faces": [
+    {
+     "manaCost": "{1}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/2/f/2f815bae-820a-49f6-8eed-46f658e7b6ff.jpg?1783910819",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/2/f/2f815bae-820a-49f6-8eed-46f658e7b6ff.jpg?1783910819"
+    }
+   ]
+  },
+  {
+   "cvId": 85385,
+   "collectorNumber": "143",
+   "scryfallId": "4d0ab162-540e-4999-902c-9dacd6687aca",
+   "name": "Raging Battle Mouse",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "woe",
+   "setName": "Wilds of Eldraine",
+   "setIconId": "woe",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 116612,
+   "faces": [
+    {
+     "manaCost": "{1}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/4/d/4d0ab162-540e-4999-902c-9dacd6687aca.jpg?1783915090",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/4/d/4d0ab162-540e-4999-902c-9dacd6687aca.jpg?1783915090"
+    }
+   ]
+  },
+  {
+   "cvId": 95629,
+   "collectorNumber": "259",
+   "scryfallId": "62799d24-39a6-4e66-8ac3-7cafa99e6e6d",
+   "name": "Rockface Village",
+   "quantity": 3,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 6,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 1,
+   "collectorNumberGroup": 7,
+   "colorIdentity": "R",
+   "manaValue": 0.0,
+   "layout": 0,
+   "cardhoarderId": 129763,
+   "faces": [
+    {
+     "manaCost": null
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/6/2/62799d24-39a6-4e66-8ac3-7cafa99e6e6d.jpg?1783910782",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/6/2/62799d24-39a6-4e66-8ac3-7cafa99e6e6d.jpg?1783910782"
+    }
+   ]
+  },
+  {
+   "cvId": 78603,
+   "collectorNumber": "153",
+   "scryfallId": "68f9f9d8-9ea0-4608-a79c-a09a87918186",
+   "name": "Urabrask's Forge",
+   "quantity": 4,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 2,
+   "setId": "one",
+   "setName": "Phyrexia: All Will Be One",
+   "setIconId": "one",
+   "rarity": 2,
+   "collectorNumberGroup": 3,
+   "colorIdentity": "R",
+   "manaValue": 3.0,
+   "layout": 0,
+   "cardhoarderId": 106521,
+   "faces": [
+    {
+     "manaCost": "{2}{R}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/6/8/68f9f9d8-9ea0-4608-a79c-a09a87918186.jpg?1783918022",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/6/8/68f9f9d8-9ea0-4608-a79c-a09a87918186.jpg?1783918022"
+    }
+   ]
+  },
+  {
+   "cvId": 95826,
+   "collectorNumber": "36",
+   "scryfallId": "ba629ca8-a368-4282-8a61-9bf6a5c217f0",
+   "name": "Valley Questcaller",
+   "quantity": 3,
+   "boardCategory": 0,
+   "variant": 0,
+   "proxy": false,
+   "type": 1,
+   "setId": "blb",
+   "setName": "Bloomburrow",
+   "setIconId": "blb",
+   "rarity": 2,
+   "collectorNumberGroup": 0,
+   "colorIdentity": "W",
+   "manaValue": 2.0,
+   "layout": 0,
+   "cardhoarderId": 129317,
+   "faces": [
+    {
+     "manaCost": "{1}{W}"
+    }
+   ],
+   "images": [
+    {
+     "imageUrlSmall": "https://cards.scryfall.io/small/front/b/a/ba629ca8-a368-4282-8a61-9bf6a5c217f0.jpg?1783910855",
+     "imageUrlNormal": "https://cards.scryfall.io/normal/front/b/a/ba629ca8-a368-4282-8a61-9bf6a5c217f0.jpg?1783910855"
+    }
+   ]
+  }
+ ]
+}
