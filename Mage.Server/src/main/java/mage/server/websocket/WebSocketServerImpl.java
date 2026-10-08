@@ -175,7 +175,7 @@ public class WebSocketServerImpl extends WebSocketServer {
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         ConnectionState state = conn.getAttachment();
-        logger.debug("WebSocket connection closed: " + conn.getRemoteSocketAddress() + " (" + code + ")");
+        logger.debug("WebSocket connection closed: " + describe(conn) + " (" + code + ")");
         if (state == null) {
             return;
         }
@@ -211,7 +211,7 @@ public class WebSocketServerImpl extends WebSocketServer {
         if (!state.tryAcquire()) {
             sendError(conn, id, new RpcException(RpcException.RATE_LIMITED, "Too many requests, slow down"));
             if (state.recordRateLimitStrike() > MAX_RATE_LIMIT_STRIKES) {
-                logger.warn("Closing WebSocket connection over request rate limit: " + conn.getRemoteSocketAddress());
+                logger.warn("Closing WebSocket connection over request rate limit: " + describe(conn));
                 conn.close(CloseFrame.POLICY_VALIDATION, "Request rate limit exceeded");
             }
             return;
@@ -313,7 +313,19 @@ public class WebSocketServerImpl extends WebSocketServer {
             startupException = ex;
             startupLatch.countDown();
         }
-        logger.error("WebSocket error" + (conn == null ? "" : " on " + conn.getRemoteSocketAddress()), ex);
+        logger.error("WebSocket error" + (conn == null ? "" : " on " + describe(conn)), ex);
+    }
+
+    /**
+     * The client for logs: its real IP (forwarded by a trusted proxy) and the TCP peer it came through.
+     */
+    private static String describe(WebSocket conn) {
+        ConnectionState state = conn.getAttachment();
+        InetSocketAddress peer = conn.getRemoteSocketAddress();
+        if (state == null || peer == null || state.getRemoteHost().equals(peer.getAddress().getHostAddress())) {
+            return String.valueOf(peer);
+        }
+        return state.getRemoteHost() + " via " + peer;
     }
 
     @Override
