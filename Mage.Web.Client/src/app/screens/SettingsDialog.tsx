@@ -7,6 +7,7 @@ import { resetCommand, type AutoRule, type AutoRuleKind } from '../../core/game/
 import { useAutoAnswers } from '../stores/autoAnswers';
 import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
+import { previewCue } from '../match/sound';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import styles from './SettingsDialog.module.css';
@@ -42,6 +43,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <Tabs.Trigger value="stops" className={styles.trigger}>Stops</Tabs.Trigger>
           <Tabs.Trigger value="answers" className={styles.trigger}>Auto answers</Tabs.Trigger>
           <Tabs.Trigger value="display" className={styles.trigger}>Motion</Tabs.Trigger>
+          <Tabs.Trigger value="sound" className={styles.trigger}>Sound</Tabs.Trigger>
           <Tabs.Trigger value="import" className={styles.trigger}>Import</Tabs.Trigger>
         </Tabs.List>
 
@@ -104,20 +106,29 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
 
         <Tabs.Content value="display" className={styles.panel}>
           <Row label="Card motion" detail="Cards fly between zones and settle on the mat. Your system's reduced-motion setting always wins.">{toggle('animations')}</Row>
-          <Row label="Sound" detail="Short cues for your turn, decisions, spells, damage and the result.">{toggle('sound')}</Row>
+        </Tabs.Content>
+
+        <Tabs.Content value="sound" className={styles.panel}>
+          <Row label="Sound effects" detail="Short cues for your turn, decisions, spells, combat, life changes and the result. Press M during a game to mute.">{toggle('sound')}</Row>
           <Row label="Volume">
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={settings.volume}
-              disabled={!settings.sound}
-              onChange={(event) => update({ volume: Number(event.target.value) })}
-              aria-label="Sound volume"
-              style={{ accentColor: 'var(--decision)', width: 160 }}
-            />
+            <div className={styles.volume}>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={settings.volume}
+                disabled={!settings.sound}
+                onChange={(event) => update({ volume: Number(event.target.value) })}
+                onPointerUp={() => previewCue('turn')}
+                onKeyUp={() => previewCue('turn')}
+                aria-label="Sound volume"
+                aria-valuetext={`${Math.round(settings.volume * 100)}%`}
+              />
+              <span aria-hidden="true">{Math.round(settings.volume * 100)}%</span>
+            </div>
           </Row>
+          <Row label="Only important cues" detail="Just your turn, decisions, your clock running low and the result.">{toggle('importantCuesOnly')}</Row>
         </Tabs.Content>
 
         <Tabs.Content value="import" className={styles.panel}>
