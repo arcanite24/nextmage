@@ -60,6 +60,7 @@ export interface RpcMethods {
   chatFindByTournament: { params: [tournamentId: UUID]; result: UUID | null };
   chatFindByRoom: { params: [roomId: UUID]; result: UUID | null };
   gameJoin: { params: [gameId: UUID, sessionId: string]; result: boolean };
+  gameResync: { params: [gameId: UUID, sessionId: string]; result: boolean };
   matchQuit: { params: [gameId: UUID, sessionId: string]; result: boolean };
   gameWatchStart: { params: [gameId: UUID, sessionId: string]; result: boolean };
   gameWatchStop: { params: [gameId: UUID, sessionId: string]; result: boolean };
@@ -155,6 +156,7 @@ export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: Rp
   chatFindByTournament: { access: 'session', sessionParam: -1 },
   chatFindByRoom: { access: 'session', sessionParam: -1 },
   gameJoin: { access: 'session', sessionParam: 1 },
+  gameResync: { access: 'session', sessionParam: 1 },
   matchQuit: { access: 'session', sessionParam: 1 },
   gameWatchStart: { access: 'session', sessionParam: 1 },
   gameWatchStop: { access: 'session', sessionParam: 1 },

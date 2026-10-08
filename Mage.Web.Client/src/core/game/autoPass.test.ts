@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GameView } from '../../protocol/generated/views';
-import { autoAnswer, meaningfulPlays } from './autoPass';
+import { autoAnswer, combatStopHere, meaningfulPlays } from './autoPass';
+import { serverStops } from './stops';
 import { parsePrompt } from './prompt';
 
 const record = [{}] as never;
@@ -69,5 +70,43 @@ describe('autoAnswer', () => {
   it('never answers other decisions', () => {
     const target = parsePrompt('GAME_TARGET', { message: 'Choose a target', targets: ['x'], flag: true });
     expect(autoAnswer(view({}), target, on)).toBeNull();
+  });
+});
+
+describe('full control and combat stops', () => {
+  const attacking: GameView = {
+    myPlayerId: 'me', activePlayerId: 'them', step: 'DECLARE_ATTACKERS',
+    combat: [{ attackers: { bear: { id: 'bear' } }, defenderId: 'me' }],
+  };
+  const stops = { yourTurn: { attackers: false, blockers: false }, opponentTurn: { attackers: true, blockers: false } };
+
+  it('never answers for the player under full control', () => {
+    expect(autoAnswer(view({}), priority, { ...on, fullControl: true })).toBeNull();
+    const noAttackers = parsePrompt('GAME_SELECT', { message: 'Select attackers', options: { possibleAttackers: [] } });
+    expect(autoAnswer(view({}), noAttackers, { ...on, fullControl: true })).toBeNull();
+    expect(autoAnswer(view({}), noAttackers, on)).toBe('noAttacks');
+  });
+
+  it('stops in a combat step the player marked, once creatures attack', () => {
+    expect(combatStopHere(attacking, stops)).toBe(true);
+    expect(autoAnswer(attacking, priority, { ...on, combatStops: stops })).toBeNull();
+    // without the stop, nothing to cast means pass
+    expect(autoAnswer(attacking, priority, on)).toBe('pass');
+    // the stop is per side and per step
+    expect(combatStopHere({ ...attacking, activePlayerId: 'me' }, stops)).toBe(false);
+    expect(combatStopHere({ ...attacking, step: 'DECLARE_BLOCKERS' }, stops)).toBe(false);
+    // no attackers: nothing to stop for
+    expect(combatStopHere({ ...attacking, combat: [] }, stops)).toBe(false);
+  });
+
+  it('asks the server for every stop under full control', () => {
+    const own = {
+      yourTurn: { upkeep: false, main1: true }, opponentTurn: { endOfTurn: true }, stopOnDeclareAttackers: false, stopOnStackNewObjects: false,
+    };
+    expect(serverStops(own, false)).toBe(own);
+    const full = serverStops(own, true);
+    expect(full.yourTurn).toMatchObject({ upkeep: true, draw: true, main1: true, beforeCombat: true, endOfCombat: true, main2: true, endOfTurn: true });
+    expect(full.opponentTurn).toEqual(full.yourTurn);
+    expect(full).toMatchObject({ stopOnDeclareAttackers: true, stopOnStackNewObjects: true, stopOnDeclareBlockersWithZeroPermanents: true });
   });
 });

@@ -56,3 +56,9 @@ describe('leaveRequest', () => {
     expect(leaveRequest({ ...base, gameOver: true, tableId: null })).toBeNull();
   });
 });
+
+describe('matchIsOver with the server real end info', () => {
+  it('sees a match the opponent won, though the server leaves "loses" at 0', () => {
+    expect(matchIsOver({ winsNeeded: 2, wins: 1, loses: 0, clientPlayer: { playerId: 'me' }, players: [{ playerId: 'me', wins: 1 }, { playerId: 'them', wins: 2 }] })).toBe(true);
+  });
+});
