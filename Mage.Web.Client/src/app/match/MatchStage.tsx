@@ -21,6 +21,7 @@ import { Arrows } from './Arrows';
 import { buildBoard, fitCardWidth, type PermanentGroup, type PlayerBoard } from './boardModel';
 import { CardDetail } from './CardDetail';
 import { CardZoom } from './CardZoom';
+import { EmoteBubbles } from './EmoteBubbles';
 import { setCardMotion, useFlipOrigin } from './flip';
 import { GameLog } from './GameLog';
 import { Hand } from './Hand';
@@ -281,6 +282,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
+            <EmoteBubbles view={view} />
             <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} />
             <GameMenu canConcede={canAct} onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })} onLeave={leave} />
 
