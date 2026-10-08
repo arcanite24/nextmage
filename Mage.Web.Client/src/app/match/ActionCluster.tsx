@@ -1,6 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronUp } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import type { Command, Interaction } from '../../core/game/interaction';
 import type { PlayerAction } from '../../protocol/generated/views';
 import { isEditableEventTarget } from '../ui/keys';
@@ -19,6 +19,8 @@ export interface ActionClusterProps {
   holdingPriority: boolean;
   /** the client is answering for the player (nothing to do): show that instead of a button to press */
   autoPassing?: boolean;
+  /** more ways to answer, beside the secondary buttons (e.g. "Always…") */
+  extra?: ReactNode;
   onCommand(command: Command): void;
 }
 
@@ -30,7 +32,7 @@ const PASS_AHEAD: { label: string; action: PlayerAction; key: string }[] = [
 ];
 
 /** The decision corner: what the game is asking, and the one big button that answers it. */
-export function ActionCluster({ interaction, awaiting, status, canAct, special, holdingPriority, autoPassing = false, onCommand }: ActionClusterProps) {
+export function ActionCluster({ interaction, awaiting, status, canAct, special, holdingPriority, autoPassing = false, extra, onCommand }: ActionClusterProps) {
   const main = interaction.mainButton;
   const secondary = [...interaction.secondaryButtons];
   if (special && interaction.mode === 'priority') {
@@ -73,8 +75,9 @@ export function ActionCluster({ interaction, awaiting, status, canAct, special, 
   return (
     <section className={styles.cluster} aria-label="Your decision" aria-live="polite">
       {headline && <p className={[styles.headline, deciding ? styles.deciding : ''].join(' ')}><PromptText text={headline} /></p>}
-      {secondary.length > 0 && deciding && (
+      {(secondary.length > 0 || extra) && deciding && (
         <div className={styles.secondary}>
+          {extra}
           {secondary.map((button) => (
             <Button
               key={button.label}

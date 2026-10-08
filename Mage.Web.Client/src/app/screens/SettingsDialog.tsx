@@ -1,8 +1,11 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { BookmarkPlus } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import bookmarkletSource from '../decks/import/bookmarklet.source.js?raw';
 import type { SkipPrioritySteps } from '../../protocol/generated/views';
+import { resetCommand, type AutoRule, type AutoRuleKind } from '../../core/game/autoAnswer';
+import { useAutoAnswers } from '../stores/autoAnswers';
+import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
@@ -37,6 +40,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
         <Tabs.List className={styles.list} aria-label="Settings sections">
           <Tabs.Trigger value="play" className={styles.trigger}>Gameplay</Tabs.Trigger>
           <Tabs.Trigger value="stops" className={styles.trigger}>Stops</Tabs.Trigger>
+          <Tabs.Trigger value="answers" className={styles.trigger}>Auto answers</Tabs.Trigger>
           <Tabs.Trigger value="display" className={styles.trigger}>Motion</Tabs.Trigger>
           <Tabs.Trigger value="import" className={styles.trigger}>Import</Tabs.Trigger>
         </Tabs.List>
@@ -94,6 +98,10 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           </Row>
         </Tabs.Content>
 
+        <Tabs.Content value="answers" className={styles.panel}>
+          <AutoAnswers />
+        </Tabs.Content>
+
         <Tabs.Content value="display" className={styles.panel}>
           <Row label="Card motion" detail="Cards fly between zones and settle on the mat. Your system's reduced-motion setting always wins.">{toggle('animations')}</Row>
           <Row label="Sound" detail="Short cues for your turn, decisions, spells, damage and the result.">{toggle('sound')}</Row>
@@ -117,6 +125,63 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
         </Tabs.Content>
       </Tabs.Root>
     </Dialog>
+  );
+}
+
+const CHOICE_LABEL: Record<AutoRule['choice'], string> = { yes: 'Always yes', no: 'Always no', first: 'Always first', last: 'Always last' };
+
+/** Standing answers set with "Always…" in the games in progress, and resetting them. */
+function AutoAnswers() {
+  const rules = useAutoAnswers((state) => state.rules);
+  const forget = useAutoAnswers((state) => state.forget);
+  const sessions = useGames((state) => state.sessions);
+  const games = useMemo(() => Object.entries(sessions)
+    .filter(([, session]) => session.getState().mode === 'play')
+    .map(([gameId]) => ({ gameId, rules: rules.filter((rule) => rule.gameId === gameId) })), [sessions, rules]);
+
+  const reset = (gameId: string, kind: AutoRuleKind) => {
+    const session = useGames.getState().sessions[gameId];
+    if (session) void session.respond(resetCommand(kind)).catch(() => undefined);
+    forget(gameId, kind);
+  };
+
+  return (
+    <>
+      <p className={styles.intro}>
+        When the game asks a yes/no question, or the order of your triggers, “Always…” answers it the same way for the rest of that game.
+      </p>
+      {games.length === 0 && <p className={styles.rowDetail}>You’re not in a game. Answers you set during a game show here.</p>}
+      {games.map((game, index) => (
+        <section key={game.gameId} className={styles.answers} aria-label={games.length > 1 ? `Game ${index + 1}` : 'This game'}>
+          {(['answer', 'trigger'] as const).map((kind) => {
+            const list = game.rules.filter((rule) => rule.kind === kind);
+            return (
+              <div key={kind}>
+                <div className={styles.row}>
+                  <div>
+                    <div className={styles.rowLabel}>{kind === 'answer' ? 'Questions' : 'Trigger order'}{games.length > 1 ? ` · game ${index + 1}` : ''}</div>
+                    <div className={styles.rowDetail}>
+                      {list.length === 0 ? 'None set from here. Resetting also clears any set elsewhere.' : `${list.length} set`}
+                    </div>
+                  </div>
+                  <Button variant="print" size="sm" onClick={() => reset(game.gameId, kind)}>Reset</Button>
+                </div>
+                {list.length > 0 && (
+                  <ul className={styles.answerList}>
+                    {list.map((rule) => (
+                      <li key={rule.label}>
+                        <span>{rule.label}</span>
+                        <b>{CHOICE_LABEL[rule.choice]}</b>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      ))}
+    </>
   );
 }
 

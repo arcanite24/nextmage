@@ -1,0 +1,53 @@
+.triggerOptions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+}
+
+.menu {
+  z-index: var(--z-dialog);
+  min-width: 280px;
+  max-width: 440px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: var(--radius-control);
+  background: var(--mat-600);
+  box-shadow: inset 0 0 0 1px var(--ink-ghost), var(--shadow-held);
+}
+
+.menuLabel {
+  padding: 6px 12px 4px;
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+.menuTrigger {
+  padding: 8px 12px 2px;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+}
+
+.menuItem {
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+
+.menuItem[data-highlighted] {
+  background: rgb(233 228 214 / 0.1);
+}
+
+.menuRule {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--ink-ghost);
+}
