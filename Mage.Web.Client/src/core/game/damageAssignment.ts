@@ -1,5 +1,4 @@
 import type { GameView, PermanentView } from '../../protocol/generated/views';
-import { keywordMarks } from './keywords';
 import { stripMarkup, type MultiAmountPrompt } from './prompt';
 
 /**
@@ -53,8 +52,13 @@ function permanentsById(view: GameView | null | undefined): Map<string, Permanen
   return map;
 }
 
+/**
+ * The server's ability icons cover deathtouch, granted or printed; reading them here keeps the rules glossary
+ * (keywords.ts) out of the interaction model, which loads with every screen.
+ */
 function hasDeathtouch(permanent: PermanentView | undefined): boolean {
-  return !!permanent && keywordMarks(permanent).some((mark) => mark.name === 'Deathtouch');
+  return !!permanent && ((permanent.cardIcons ?? []) as { cardIconType?: string }[])
+    .some((icon) => icon.cardIconType === 'ABILITY_DEATHTOUCH');
 }
 
 /** Damage that destroys this creature now: what its toughness has left, or a single point from a deathtouch source. */

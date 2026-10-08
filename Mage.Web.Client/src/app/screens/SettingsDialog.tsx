@@ -7,7 +7,6 @@ import { resetCommand, type AutoRule, type AutoRuleKind } from '../../core/game/
 import { useAutoAnswers } from '../stores/autoAnswers';
 import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
-import { previewCue } from '../match/sound';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import styles from './SettingsDialog.module.css';
@@ -120,8 +119,8 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                 value={settings.volume}
                 disabled={!settings.sound}
                 onChange={(event) => update({ volume: Number(event.target.value) })}
-                onPointerUp={() => previewCue('turn')}
-                onKeyUp={() => previewCue('turn')}
+                onPointerUp={previewTurnCue}
+                onKeyUp={previewTurnCue}
                 aria-label="Sound volume"
                 aria-valuetext={`${Math.round(settings.volume * 100)}%`}
               />
@@ -245,4 +244,9 @@ function Switch({ checked, onChange, label }: { checked: boolean; onChange(value
       <span className={styles.knob} />
     </button>
   );
+}
+
+/** the synthesizer belongs to the match screen; load it only when someone tries the volume */
+function previewTurnCue() {
+  void import('../match/sound').then(({ previewCue }) => previewCue('turn'));
 }
