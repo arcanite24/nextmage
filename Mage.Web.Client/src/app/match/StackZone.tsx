@@ -1,8 +1,9 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import type { CardView } from '../../protocol/generated/views';
 import { isStackAbility } from '../../core/game/cards';
 import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
+import { zoneKeys } from './boardModel';
 import { useFlip } from './flip';
 import { useMatchUi } from './matchUi';
 import styles from './StackZone.module.css';
@@ -20,6 +21,8 @@ export interface StackZoneProps {
 
 /** Spells and abilities waiting to resolve, stacked at the right of the table; the top one resolves first. */
 export function StackZone({ items, clickable, selected, sleeveOf, onClick, originOf }: StackZoneProps) {
+  // a spell keeps its card's identity (abilities have no card of their own): it is the card that left the hand
+  const keys = useMemo(() => zoneKeys(items.map((item) => (isStackAbility(item) ? { id: item.id } : item))), [items]);
   if (items.length === 0) return null;
   return (
     <section className={styles.zone} aria-label={`Stack, ${items.length} ${items.length === 1 ? 'object' : 'objects'}`}>
@@ -27,7 +30,7 @@ export function StackZone({ items, clickable, selected, sleeveOf, onClick, origi
       <ol className={styles.list}>
         {items.map((item, index) => (
           <StackItem
-            key={item.id}
+            key={keys[index]}
             item={item}
             index={index}
             total={items.length}

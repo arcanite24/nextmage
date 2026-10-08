@@ -6,7 +6,7 @@ import { memo, useMemo, useRef, type CSSProperties, type PointerEvent as ReactPo
 import { keywordMarks, type MarkedKeyword } from '../../core/game/keywords';
 import type { PermanentView } from '../../protocol/generated/views';
 import { CardFace } from '../ui/CardFace';
-import { stackOffsetRatio, type PermanentGroup } from './boardModel';
+import { cardKey, stackOffsetRatio, type PermanentGroup } from './boardModel';
 import { useFlip } from './flip';
 import { useMatchUi } from './matchUi';
 import { useStage } from './stageContext';
@@ -78,7 +78,7 @@ export const PermanentStack = memo(function PermanentStack(props: PermanentStack
     <div className={styles.slot} style={{ width: slotWidth, height: slotHeight }}>
       {group.attachments.map((attachment, index) => (
         <PlacedCard
-          key={attachment.id}
+          key={cardKey(attachment)}
           permanent={attachment}
           {...props}
           left={(group.attachments.length - 1 - index) * attachOffset}
@@ -88,7 +88,7 @@ export const PermanentStack = memo(function PermanentStack(props: PermanentStack
       ))}
       {[...group.members].reverse().map((permanent, index, reversed) => (
         <PlacedCard
-          key={permanent.id}
+          key={cardKey(permanent)}
           permanent={permanent}
           {...props}
           left={group.attachments.length * attachOffset + (reversed.length - 1 - index) * stackOffset}
@@ -120,7 +120,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
   const isBlocking = blocking.has(id);
   const setZoom = useMatchUi((state) => state.setZoom);
   const keywords = useMemo(() => keywordMarks(permanent), [permanent]);
-  useFlip(permanent.cardId ?? id, ref, { rotation: tapped ? 90 : 0 });
+  useFlip(cardKey(permanent), ref, { rotation: tapped ? 90 : 0 });
   const stage = useStage();
   const setBlockDrag = useMatchUi((state) => state.setBlockDrag);
   // drag a creature onto an attacker to block it; a press without moving stays a click
