@@ -116,3 +116,33 @@ describe('GameSession reply timeout', () => {
     expect(session.getState()).toMatchObject({ awaitingServer: false, stalled: false });
   });
 });
+
+describe('GameSession after a reload or a dropped connection', () => {
+  it('is stale until the server sends the game again', () => {
+    const { bus, emit } = fakeBus();
+    const session = new GameSession({} as never, bus, { gameId: 'g1', playerId: 'me', mode: 'play' });
+    session.markResyncing();
+    expect(session.getState().resyncing).toBe(true);
+    emit('GAME_INIT', base);
+    expect(session.getState().resyncing).toBe(false);
+    // a game that comes back can't be "absent"
+    session.endAbsent();
+    expect(session.getState().gameOver).toBeNull();
+  });
+
+  it('ends a game the server never sends back', () => {
+    const { bus } = fakeBus();
+    const session = new GameSession({} as never, bus, { gameId: 'g1', playerId: 'me', mode: 'play' });
+    session.markResyncing();
+    session.endAbsent();
+    expect(session.getState()).toMatchObject({ resyncing: false, gameOver: 'This game ended while you were away.' });
+  });
+
+  it('leaves finished games alone', () => {
+    const { bus, emit } = fakeBus();
+    const session = new GameSession({} as never, bus, { gameId: 'g1', playerId: 'me', mode: 'play' });
+    emit('GAME_OVER', { message: 'You won', gameView: base });
+    session.markResyncing();
+    expect(session.getState()).toMatchObject({ resyncing: false, gameOver: 'You won' });
+  });
+});

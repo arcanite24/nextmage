@@ -28,6 +28,8 @@ export interface GameSessionState {
   awaitingServer: boolean;
   /** an answer got no reaction from the server in time: input is open again, and the player may resend or resync */
   stalled: boolean;
+  /** the connection was lost or the page reloaded: the board is stale until the server sends the game again */
+  resyncing: boolean;
   /** latest status line from the server ("Waiting for Bob", "Bob casts ...") */
   status: string | null;
   notices: GameNotice[];
@@ -79,6 +81,7 @@ export class GameSession {
       interaction: deriveInteraction(null, null),
       awaitingServer: false,
       stalled: false,
+      resyncing: false,
       status: null,
       notices: [],
       gameOver: null,
@@ -151,6 +154,22 @@ export class GameSession {
 
   private heard(): void {
     if (this.replyTimer) this.armReplyTimer();
+  }
+
+  /** The board may be out of date (connection lost, page reloaded) until the server sends the game again. */
+  markResyncing(): void {
+    if (this.store.getState().gameOver) return;
+    this.clearReplyTimer();
+    this.clearHold();
+    this.store.setState({ resyncing: true, awaitingServer: false, stalled: false });
+  }
+
+  /** The server never sent the game back: it ended (or was given up) while we were away. */
+  endAbsent(message = 'This game ended while you were away.'): void {
+    const state = this.store.getState();
+    if (!state.resyncing || state.gameOver) return;
+    this.store.setState({ resyncing: false, gameOver: message, prompt: null, awaitingServer: false });
+    this.refreshInteraction();
   }
 
   /** Sends the last answer again, after a stall. */
@@ -248,6 +267,7 @@ export class GameSession {
       ? { ...incoming, canPlayObjects: previous!.canPlayObjects }
       : incoming;
     const next = previous ? structuralShare(previous, view) : view;
+    if (this.store.getState().resyncing) this.store.setState({ resyncing: false });
     if (next === previous) return;
     const playerId = this.store.getState().playerId ?? (this.store.getState().mode === 'play' ? view.myPlayerId ?? null : null);
     this.store.setState({ view: next, playerId });
@@ -260,7 +280,7 @@ export class GameSession {
     const prompt = parsePrompt(method, data as never);
     this.clearHold();
     this.clearReplyTimer();
-    this.store.setState({ prompt, awaitingServer: false, stalled: false });
+    this.store.setState({ prompt, awaitingServer: false, stalled: false, resyncing: false });
     this.refreshInteraction();
   }
 

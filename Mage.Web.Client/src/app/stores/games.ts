@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { api, events } from '../connection';
+import { api, events, rpc } from '../connection';
 import { GameSession, type GameSessionMode } from '../../core/game/gameSession';
 import { leaveRequest, type LeaveRequest } from '../../core/game/leave';
 import { stripMarkup } from '../../core/game/prompt';
+import { forgetOpenGame, openGamesToRestore, rememberOpenGame } from './openGames';
 import { useSession } from './session';
 import { notify } from './toasts';
 
@@ -46,6 +47,13 @@ export const useGames = create<GamesState>((set, get) => ({
     const existing = get().sessions[gameId];
     if (existing) return existing;
     const session = new GameSession(api, events, { gameId, playerId, mode });
+    // remembered so a reload can rejoin it (replays are not worth it)
+    const { serverUrl, userName } = useSession.getState();
+    if (mode !== 'replay') {
+      rememberOpenGame(serverUrl, userName, {
+        gameId, playerId, mode, tableId: table?.tableId ?? null, parentTableId: table?.parentTableId ?? null, openedAt: Date.now(),
+      });
+    }
     set((state) => ({
       sessions: { ...state.sessions, [gameId]: session },
       tables: table ? { ...state.tables, [gameId]: table } : state.tables,
@@ -76,6 +84,8 @@ export const useGames = create<GamesState>((set, get) => ({
 
   forget(gameId) {
     get().sessions[gameId]?.dispose();
+    const { serverUrl, userName } = useSession.getState();
+    forgetOpenGame(serverUrl, userName, gameId);
     set((state) => {
       const sessions = { ...state.sessions };
       delete sessions[gameId];
@@ -114,4 +124,64 @@ events.on('WATCHGAME', (message) => {
   const gameId = message?.gameId;
   if (!gameId) return;
   useGames.getState().open(gameId, null, 'watch');
+});
+
+/**
+ * After a reload or a dropped connection, the server sends our games back by itself (START_GAME, then the game and
+ * its open question) once the restore token has reattached us; watched games must be asked for again. A game that
+ * doesn't come back within this time has ended (or our seat was given up) while we were away.
+ */
+const REJOIN_TIMEOUT_MS = 12_000;
+let rejoinTimer: ReturnType<typeof setTimeout> | null = null;
+
+function awaitRejoin(): void {
+  if (rejoinTimer) clearTimeout(rejoinTimer);
+  rejoinTimer = setTimeout(() => {
+    rejoinTimer = null;
+    // still offline: the countdown starts again with the next login
+    if (rpc.getStatus() !== 'open' || useSession.getState().phase !== 'signedIn') return;
+    Object.values(useGames.getState().sessions).forEach((session) => session.endAbsent());
+  }, REJOIN_TIMEOUT_MS);
+}
+
+function watchAgain(session: GameSession): void {
+  const { gameId } = session.getState();
+  api.gameWatchStart(gameId)
+    .then((ok) => { if (!ok) session.endAbsent('This game has ended.'); })
+    .catch(() => session.endAbsent('This game has ended.'));
+}
+
+/** Reopens the games remembered for this player (page reload); returns how many. */
+function restoreOpenGames(): number {
+  const { serverUrl, userName } = useSession.getState();
+  const records = openGamesToRestore(serverUrl, userName);
+  for (const record of records) {
+    const known = useGames.getState().sessions[record.gameId];
+    // the server may already have sent it back (START_GAME arrives as soon as the restore token is accepted)
+    if (known) continue;
+    const session = useGames.getState().open(record.gameId, record.playerId, record.mode, {
+      tableId: record.tableId, parentTableId: record.parentTableId,
+    });
+    session.markResyncing();
+  }
+  return records.length;
+}
+
+// the connection dropped: every board is stale until the server sends its game again
+rpc.onStatus((status) => {
+  if (status === 'open') return;
+  Object.values(useGames.getState().sessions).forEach((session) => {
+    if (session.getState().mode !== 'replay') session.markResyncing();
+  });
+});
+
+// every login (after a reload, or the silent one after a dropped connection) gets our games back
+useSession.subscribe((state, previous) => {
+  if (state.phase !== 'signedIn' || state.loginCount === previous.loginCount) return;
+  restoreOpenGames();
+  // the server restores the games we play by itself, not the ones we watch
+  for (const session of Object.values(useGames.getState().sessions)) {
+    if (session.getState().mode === 'watch' && session.getState().resyncing) watchAgain(session);
+  }
+  awaitRejoin();
 });

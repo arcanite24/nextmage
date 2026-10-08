@@ -4,6 +4,8 @@ import { useEvents } from '../stores/events';
 import { useGames } from '../stores/games';
 import { MatchErrorBoundary } from '../match/MatchErrorBoundary';
 import { MatchStage } from '../match/MatchStage';
+import { ReconnectScrim } from '../match/ReconnectScrim';
+import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
 import styles from './GameScreen.module.css';
 
@@ -31,13 +33,30 @@ export function GameScreen() {
       onBack={() => navigate(eventId ? `/event/${eventId}` : '/')}
     >
       {/* each game of a match gets a fresh stage */}
-      <ConnectedStage key={gameId} gameId={gameId} />
+      <ConnectedStage
+        key={gameId}
+        gameId={gameId}
+        leaveLabel={eventId ? 'Back to the event' : 'Back to Play'}
+        onLeave={() => {
+          useGames.getState().close(gameId);
+          navigate(eventId ? `/event/${eventId}` : '/');
+        }}
+      />
     </MatchErrorBoundary>
   );
 }
 
-function ConnectedStage({ gameId }: { gameId: string }) {
+function ConnectedStage({ gameId, leaveLabel, onLeave }: { gameId: string; leaveLabel: string; onLeave(): void }) {
   const session = useGames((state) => state.sessions[gameId])!;
   const state = useStore(session.store);
-  return <MatchStage session={session} state={state} />;
+  const connection = useSession((session) => session.connection);
+  const offline = connection !== 'open';
+  return (
+    <>
+      <MatchStage session={session} state={state} />
+      {(offline || state.resyncing) && !state.gameOver && state.mode !== 'replay' && (
+        <ReconnectScrim offline={offline} onLeave={onLeave} leaveLabel={leaveLabel} />
+      )}
+    </>
+  );
 }
