@@ -145,6 +145,9 @@
 }
 
 .feature-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     padding: var(--space-1) var(--space-2);
     font-size: var(--text-xs);
     color: var(--color-text-secondary);

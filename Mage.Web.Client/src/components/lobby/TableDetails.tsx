@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { Eye, Lock, Star, Trophy, X } from 'lucide-react';
 import { TableView, TableState } from '../../types';
 import { Button } from '../common';
 import './TableDetails.css';
@@ -40,8 +41,16 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
         switch (state) {
             case TableState.WAITING:
                 return { label: 'Waiting for players', color: 'success' };
+            case TableState.READY_TO_START:
+                return { label: 'Ready to start', color: 'warning' };
             case TableState.STARTING:
                 return { label: 'Starting soon', color: 'warning' };
+            case TableState.DRAFTING:
+                return { label: 'Drafting', color: 'warning' };
+            case TableState.SIDEBOARDING:
+                return { label: 'Sideboarding', color: 'warning' };
+            case TableState.CONSTRUCTING:
+                return { label: 'Constructing', color: 'warning' };
             case TableState.DUELING:
                 return { label: 'Game in progress', color: 'primary' };
             case TableState.FINISHED:
@@ -56,17 +65,17 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
     const canWatch = table.tableState === TableState.DUELING && table.spectatorsAllowed;
 
     return (
-        <div className="table-details">
+        <div className="table-details" data-testid="table-details" data-table-id={table.tableId}>
             <div className="details-header">
-                <h3>{table.tableName}</h3>
+                <h3 data-testid="table-details-name">{table.tableName}</h3>
                 <button className="close-btn" onClick={onClose} aria-label="Close">
-                    ×
+                    <X size={16} aria-hidden="true" />
                 </button>
             </div>
 
             <div className="details-content">
                 {/* Status */}
-                <div className={`status-banner status-${stateInfo.color}`}>
+                <div className={`status-banner status-${stateInfo.color}`} data-testid="table-details-status">
                     {stateInfo.label}
                 </div>
 
@@ -103,16 +112,16 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
                 {/* Features */}
                 <div className="details-features">
                     {table.passworded && (
-                        <span className="feature-badge">🔒 Password Required</span>
+                        <span className="feature-badge"><Lock size={14} aria-hidden="true" /> Password Required</span>
                     )}
                     {table.rated && (
-                        <span className="feature-badge">⭐ Rated</span>
+                        <span className="feature-badge"><Star size={14} aria-hidden="true" /> Rated</span>
                     )}
                     {table.spectatorsAllowed && (
-                        <span className="feature-badge">👁️ Spectators Allowed</span>
+                        <span className="feature-badge"><Eye size={14} aria-hidden="true" /> Spectators Allowed</span>
                     )}
                     {table.isTournament && (
-                        <span className="feature-badge">🏆 Tournament</span>
+                        <span className="feature-badge"><Trophy size={14} aria-hidden="true" /> Tournament</span>
                     )}
                 </div>
 
@@ -151,7 +160,7 @@ export const TableDetails: React.FC<TableDetailsProps> = ({
                     </Button>
                 )}
                 {canWatch && (
-                    <Button variant="secondary" fullWidth onClick={onWatch}>
+                    <Button variant="secondary" fullWidth onClick={onWatch} data-testid="watch-table-button">
                         Watch Game
                     </Button>
                 )}

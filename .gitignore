@@ -30,13 +30,8 @@ Mage.Verify/*.zip
 Mage.Verify/*.json
 
 # Utils
-# TODO: remove outdated files and scripts
-releases
-Utils/author.txt
-
-# TODO: remove with outdated perl scripts
-Utils/*_tracker.txt
-Utils/*implemented.txt
+__pycache__
+Utils/data
 
 # dev environments, IDE and OS
 # IntelliJ IDEA
@@ -62,3 +57,13 @@ Utils/*implemented.txt
 # build tools
 mage-bundle.zip
 .env
+
+# build targets
+/deploy
+/temp
+
+# dev tools
+.devcontainer/**/*lock.json
+
+# personal notes
+/TODO.md

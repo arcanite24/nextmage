@@ -29,6 +29,9 @@ public class CardCriteria {
     private final List<SuperType> notSupertypes;
     private final List<SubType> subtypes;
     private final List<Rarity> rarities;
+    private final List<Rarity> excludedRarities;
+    private final List<String> webColors;
+    private final List<String> webExcludedColors;
     private Boolean variousArt;
     private Boolean doubleFaced;
     private Boolean modalDoubleFaced;
@@ -43,6 +46,13 @@ public class CardCriteria {
     private String sortBy;
     private Long start;
     private Long count;
+    private String searchText;
+    private Boolean searchNames;
+    private Boolean searchTypes;
+    private Boolean searchRules;
+    private Boolean uniqueNames;
+    private String colorMatch;
+    private String manaValueOperator;
     // compare numerical card numbers (123b -> 123)
     private int minCardNumber;
     private int maxCardNumber;
@@ -57,6 +67,9 @@ public class CardCriteria {
         this.supertypes = new ArrayList<>();
         this.notSupertypes = new ArrayList<>();
         this.subtypes = new ArrayList<>();
+        this.excludedRarities = new ArrayList<>();
+        this.webColors = new ArrayList<>();
+        this.webExcludedColors = new ArrayList<>();
         this.nightCard = false;
 
         this.black = true;
@@ -447,6 +460,18 @@ public class CardCriteria {
         return rarities;
     }
 
+    public List<Rarity> getExcludedRarities() {
+        return excludedRarities;
+    }
+
+    public List<String> getWebColors() {
+        return webColors;
+    }
+
+    public List<String> getWebExcludedColors() {
+        return webExcludedColors;
+    }
+
     public Boolean getVariousArt() {
         return variousArt;
     }
@@ -514,6 +539,34 @@ public class CardCriteria {
 
     public String getFormat() {
         return format;
+    }
+
+    public String getSearchText() {
+        return searchText;
+    }
+
+    public boolean isSearchNames() {
+        return searchNames != null && searchNames;
+    }
+
+    public boolean isSearchTypes() {
+        return searchTypes != null && searchTypes;
+    }
+
+    public boolean isSearchRules() {
+        return searchRules != null && searchRules;
+    }
+
+    public boolean isUniqueNames() {
+        return uniqueNames != null && uniqueNames;
+    }
+
+    public String getColorMatch() {
+        return colorMatch;
+    }
+
+    public String getManaValueOperator() {
+        return manaValueOperator;
     }
 
 }

@@ -5,7 +5,9 @@ import com.google.gson.GsonBuilder;
 import mage.MageObject;
 import mage.abilities.costs.Cost;
 import mage.cards.Card;
+import mage.constants.MultiplayerAttackOption;
 import mage.constants.PhaseStep;
+import mage.constants.RangeOfInfluence;
 import mage.constants.TurnPhase;
 import mage.constants.Zone;
 import mage.designations.Designation;
@@ -29,6 +31,7 @@ import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author BetaSteward_at_googlemail.com, JayDi85
@@ -38,6 +41,13 @@ public class GameView implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = Logger.getLogger(GameView.class);
+
+    // enable special cache to protect from non-game calls, e.g. fix/concede/watch/etc
+    // TODO: implement RepeatedGameView to send back ref number instead full game view on non-changeable
+    public static final boolean ENABLE_GAME_VIEW_CACHE = true;
+
+    // test only: how many views were built, see GameViewTest
+    public static final AtomicLong CREATED_COUNT = new AtomicLong();
 
     private final int priorityTime;
     private final int bufferTime;
@@ -62,6 +72,8 @@ public class GameView implements Serializable {
     private final int turn;
     private boolean special = false;
     private final boolean rollbackTurnsAllowed;
+    private final MultiplayerAttackOption attackOption;
+    private final RangeOfInfluence rangeOfInfluence;
 
     // for debug only
     // TODO: implement and support in admin tools
@@ -70,6 +82,14 @@ public class GameView implements Serializable {
     private int gameCycle;
 
     public GameView(GameState state, Game game, UUID createdForPlayerId, UUID watcherUserId) {
+        // debug only
+        // LOGGER.info("GameView create: game cycle " + game.getState().getApplyEffectsCounter() 
+        //     + ", player " + createdForPlayerId 
+        //     + ", watcher " + watcherUserId 
+        //     + ", thread " + Thread.currentThread().getName()
+        // );
+        CREATED_COUNT.incrementAndGet();
+
         Player createdForPlayer = null;
         this.priorityTime = game.getPriorityTime();
         this.bufferTime = game.getBufferTime();
@@ -213,6 +233,8 @@ public class GameView implements Serializable {
             this.special = false;
         }
         this.rollbackTurnsAllowed = game.getOptions().rollbackTurnsAllowed;
+        this.attackOption = game.getAttackOption();
+        this.rangeOfInfluence = game.getRangeOfInfluence();
         this.totalErrorsCount = game.getTotalErrorsCount();
         this.totalEffectsCount = game.getTotalEffectsCount();
         this.gameCycle = game.getState().getApplyEffectsCounter();
@@ -346,6 +368,14 @@ public class GameView implements Serializable {
 
     public boolean isRollbackTurnsAllowed() {
         return rollbackTurnsAllowed;
+    }
+
+    public MultiplayerAttackOption getAttackOption() {
+        return attackOption;
+    }
+
+    public RangeOfInfluence getRangeOfInfluence() {
+        return rangeOfInfluence;
     }
 
     public String toJson() {

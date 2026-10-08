@@ -12,12 +12,25 @@ import {
     MageObjectType,
     Rarity,
     ObjectColor,
-} from './api';
+} from './api.js';
 
 // === Card Views ===
 
 export interface PlayableObjectStats {
     playableAmount: number;
+}
+
+export interface CardIconView {
+    iconType?: string | {
+        name?: string;
+        category?: string;
+        resourceName?: string;
+        sortOrder?: number;
+    };
+    text?: string;
+    hint?: string;
+    combinedInfo?: string;
+    canBeCombined?: boolean;
 }
 
 export interface SimpleCardView {
@@ -57,6 +70,9 @@ export interface CardView extends SimpleCardView {
     isToken: boolean;
     isAbility: boolean;
     abilityType?: string;
+    imageFileName?: string;
+    imageNumber?: number;
+    extraDeckCard?: boolean;
 
     // Transform/Flip info
     transformable: boolean;
@@ -77,9 +93,12 @@ export interface CardView extends SimpleCardView {
     rightSplitRules?: string[];
     rightSplitTypeLine?: string;
     isDoubleFacedCard: boolean;
+    artRect?: string;
 
     // Interactive state
     targets?: UUID[];
+    pairedCard?: UUID;
+    bandedCards?: UUID[];
     paid: boolean;
     counters?: CounterView[];
     controlledByOwner: boolean;
@@ -89,6 +108,11 @@ export interface CardView extends SimpleCardView {
     canAttack: boolean;
     canBlock: boolean;
     inViewerOnly: boolean;
+    cardIcons?: CardIconView[];
+    originalPower?: unknown;
+    originalToughness?: unknown;
+    originalColorIdentity?: string | null;
+    originalIsCopy?: boolean;
 }
 
 export interface PermanentView extends CardView {
@@ -112,6 +136,8 @@ export interface PermanentView extends CardView {
     manifested: boolean;
     disguised: boolean;
     cloaked: boolean;
+    mutateView?: MutateView;
+    mutated?: boolean;
 }
 
 export interface StackAbilityView extends CardView {
@@ -171,6 +197,12 @@ export type CardsView = Record<UUID, CardView>;
 export type SimpleCardsView = Record<UUID, SimpleCardView>;
 export type PermanentsView = Record<UUID, PermanentView>;
 
+export interface MutateView {
+    id?: UUID;
+    name?: string;
+    [cardId: string]: CardView | UUID | undefined;
+}
+
 // === Player View ===
 
 export interface PlayerView {
@@ -188,11 +220,14 @@ export interface PlayerView {
     graveyard: CardsView;
     exile: CardsView;
     sideboard: CardsView;
+    helperCards?: CardsView;
     battlefield: PermanentsView;
     topCard?: CardView;
     userData: UserData;
-    commandObjectList: CommandObjectView[];
+    commandList: CommandObjectView[];
+    commandObjectList?: CommandObjectView[];
     attachments: UUID[];
+    statesSavedSize: number;
 
     // Timer state
     priorityTimeLeftSecs: number;
@@ -248,6 +283,8 @@ export interface GameView {
     turn: number;
     special: boolean;
     rollbackTurnsAllowed: boolean;
+    attackOption?: string;
+    rangeOfInfluence?: string;
 
     // Debug info
     totalErrorsCount: number;
@@ -267,14 +304,14 @@ export interface GameEndView {
 export interface EndGameInfo {
     additionalInfo: string;
     clientPlayer: PlayerView;
-    endTime: string;
+    endTime: string | number;
     gameInfo: string;
     loses: number;
     matchInfo: string;
     // matchView: MatchView; // avoiding circular dependency if possible, or just use any/object for now
     matchView: any;
     players: PlayerView[];
-    startTime: string;
+    startTime: string | number;
     wins: number;
     winsNeeded: number;
     won: boolean;

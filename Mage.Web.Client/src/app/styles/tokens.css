@@ -1,0 +1,109 @@
+/*
+ * Playmat world: the app is the player's own mat.
+ * Dyed neoprene ground, screen-printed ivory ink for zones and labels, a stitched edge,
+ * and one amber reserved for "your decision now".
+ */
+:root {
+  color-scheme: dark;
+
+  /* neoprene, darkest to lightest */
+  --mat-950: #070c0a;
+  --mat-900: #0b120f;
+  --mat-800: #0f1714;
+  --mat-700: #142019;
+  --mat-600: #1c2d27;
+  --mat-500: #27403a;
+  --mat-400: #3a5a51;
+
+  /* screen-print ink (ivory) and its printed densities */
+  --ink: #e9e4d6;
+  --ink-strong: #f6f2e8;
+  --ink-soft: rgb(233 228 214 / 0.78);
+  --ink-dim: rgb(233 228 214 / 0.62);
+  --ink-faint: rgb(233 228 214 / 0.3);
+  --ink-ghost: rgb(233 228 214 / 0.12);
+  --thread: #d4ccb6;
+
+  /* the only highlight: your decision now */
+  --decision: #f0b13d;
+  --decision-strong: #ffc65a;
+  --decision-ink: #1d1406;
+  --decision-glow: rgb(240 177 61 / 0.35);
+
+  /* damage, destructive actions, errors */
+  --oxblood: #8a2f2a;
+  --oxblood-ink: #f0b3a9;
+  /* oxblood lit for strokes drawn over the dark mat (attack arrows) */
+  --oxblood-lit: #c9473b;
+  --danger-text: #e5877c;
+
+  /* positive outcomes (victory, legal) */
+  --sage: #8fc19a;
+
+  /* mana pips */
+  --mana-w: #f3ecd0;
+  --mana-u: #6aa3e3;
+  --mana-b: #a998b6;
+  --mana-r: #e86c4c;
+  --mana-g: #6fbb7c;
+  --mana-c: #c4bfb3;
+
+  /* type */
+  --font-ui: 'Barlow', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-print: 'Barlow Condensed', 'Barlow', ui-sans-serif, system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 3rem;
+  --text-4xl: 4.5rem;
+
+  --tracking-print: 0.08em;
+  --tracking-print-wide: 0.16em;
+
+  /* space (4px grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* printed zones have the rounded corners of a mat's card zones */
+  --radius-zone: 14px;
+  --radius-control: 8px;
+  --radius-chip: 999px;
+  --stitch-inset: 10px;
+
+  /* cards: real proportions, sleeve rim from the deck's sleeve color */
+  --card-ratio: 63 / 88;
+  --card-radius: 4.6%;
+
+  /* depth: things placed on the mat cast real shadows */
+  --shadow-placed: 0 1px 1px rgb(0 0 0 / 0.35), 0 4px 10px rgb(0 0 0 / 0.35);
+  --shadow-lifted: 0 2px 3px rgb(0 0 0 / 0.35), 0 14px 32px rgb(0 0 0 / 0.5);
+  --shadow-held: 0 6px 8px rgb(0 0 0 / 0.35), 0 28px 60px rgb(0 0 0 / 0.55);
+
+  /* layers */
+  --z-mat: 0;
+  --z-board: 10;
+  --z-rail: 40;
+  --z-overlay: 100;
+  --z-dialog: 200;
+  --z-toast: 300;
+
+  /* motion: placed, then settles */
+  --ease-place: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-lift: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-quick: 140ms;
+  --dur-place: 260ms;
+  --dur-print: 620ms;
+
+  /* printed grain of the mat (authored SVG noise) */
+  --mat-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.95  0 0 0 0 0.9  0 0 0 0.09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}

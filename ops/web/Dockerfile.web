@@ -1,0 +1,12 @@
+# The web client, built and served by Caddy (automatic HTTPS), which also proxies /ws to the XMage server.
+# Build context: the repository root.  docker build -f ops/web/Dockerfile.web .
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY Mage.Web.Client/package.json Mage.Web.Client/package-lock.json ./
+RUN npm ci
+COPY Mage.Web.Client/ ./
+RUN npm run build
+
+FROM caddy:2-alpine
+COPY --from=build /app/dist /srv
+COPY ops/web/Caddyfile /etc/caddy/Caddyfile

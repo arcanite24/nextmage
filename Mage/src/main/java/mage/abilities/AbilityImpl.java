@@ -31,6 +31,7 @@ import mage.game.command.Emblem;
 import mage.game.command.Plane;
 import mage.game.events.BatchEvent;
 import mage.game.events.GameEvent;
+import mage.game.events.NumberOfTriggersEvent;
 import mage.game.events.ZoneChangeEvent;
 import mage.game.permanent.Permanent;
 import mage.game.permanent.PermanentToken;
@@ -213,9 +214,20 @@ public abstract class AbilityImpl implements Ability {
             if (this instanceof TriggeredAbility) {
                 for (UUID modeId : this.getModes().getSelectedModes()) {
                     this.getModes().setActiveMode(modeId);
+                    logger.debug("AbilityImpl.resolve as triggered ability: " + this.getModes().getMode());
+                    result = resolveMode(game);
+                }
+            } else if (this instanceof ActivatedAbility && !(this instanceof SpellAbility)) {
+                // 2026-08-09
+                // there aren't any cards with multiple modes in activated ability (except spells)
+                // but support added for future releases, see ChooseModalAbilityAITest
+                for (UUID modeId : this.getModes().getSelectedModes()) {
+                    this.getModes().setActiveMode(modeId);
+                    logger.debug("AbilityImpl.resolve as activated and non-spell ability: " + this.getModes().getMode());
                     result = resolveMode(game);
                 }
             } else {
+                logger.debug("AbilityImpl.resolve as other ability: " + this.getModes().getMode());
                 result = resolveMode(game);
             }
         }
@@ -449,18 +461,13 @@ public abstract class AbilityImpl implements Ability {
             game.getContinuousEffects().costModification(this, game);
         }
 
-        UUID activatorId = controllerId;
-        if ((this instanceof ActivatedAbilityImpl) && ((ActivatedAbilityImpl) this).getActivatorId() != null) {
-            activatorId = ((ActivatedAbilityImpl) this).getActivatorId();
-        }
-
         //20100716 - 601.2f  (noMana is not used here, because mana costs were cleared for this ability before adding additional costs and applying cost modification effects)
-        if (!getManaCostsToPay().pay(this, game, this, activatorId, false, null)) {
+        if (!getManaCostsToPay().pay(this, game, this, controllerId, false, null)) {
             return false; // cancel during mana payment
         }
 
         //20100716 - 601.2g
-        if (!getCosts().pay(this, game, this, activatorId, noMana, null)) {
+        if (!getCosts().pay(this, game, this, controllerId, noMana, null)) {
             logger.debug("activate failed - non mana costs");
             return false;
         }
@@ -509,6 +516,7 @@ public abstract class AbilityImpl implements Ability {
                 case MORPH:
                 case DISGUISE:
                 case PLOT:
+                case MUTATE:
                     // from Snapcaster Mage:
                     // If you cast a spell from a graveyard using its flashback ability, you can't pay other alternative costs
                     // (such as that of Foil). (2018-12-07)
@@ -648,7 +656,7 @@ public abstract class AbilityImpl implements Ability {
             if (!(variableCost instanceof VariableManaCost) && !((Cost) variableCost).isPaid()) {
                 int xValue = variableCost.announceXValue(this, game);
                 Cost fixedCost = variableCost.getFixedCostsFromAnnouncedValue(xValue);
-                addCost(fixedCost);
+                addCost(fixedCost, this.getCosts().indexOf(variableCost));
                 // set the xcosts to paid
                 variableCost.setAmount(xValue, xValue, false);
                 ((Cost) variableCost).setPaid();
@@ -768,7 +776,7 @@ public abstract class AbilityImpl implements Ability {
     }
 
     /**
-     * 601.2b Choose targets for costs that have to be chosen early.
+     * 601.5 Choose targets for costs that have to be chosen early.
      */
     private void handleChooseCostTargets(Game game, Player controller) {
         for (Cost cost : getCosts()) {
@@ -999,10 +1007,11 @@ public abstract class AbilityImpl implements Ability {
     }
 
     @Override
-    public void addWatcher(Watcher watcher) {
+    public Ability addWatcher(Watcher watcher) {
         watcher.setSourceId(this.sourceId);
         watcher.setControllerId(this.controllerId);
         getWatchers().add(watcher);
+        return this;
     }
 
     @Override
@@ -1097,6 +1106,10 @@ public abstract class AbilityImpl implements Ability {
 
     @Override
     public void addCost(Cost cost) {
+        this.addCost(cost, -1);
+    }
+
+    public void addCost(Cost cost, int index) {
         if (cost == null) {
             return;
         }
@@ -1112,7 +1125,11 @@ public abstract class AbilityImpl implements Ability {
                 manaCosts.add((ManaCost) cost);
                 manaCostsToPay.add((ManaCost) cost);
             } else {
-                costs.add(cost);
+                if (index < 0) {
+                    costs.add(cost);
+                } else {
+                    costs.add(index, cost);
+                }
             }
         }
     }
@@ -1384,6 +1401,8 @@ public abstract class AbilityImpl implements Ability {
         List<GameEvent> allEvents = new ArrayList<>();
         if (event instanceof BatchEvent) {
             allEvents.addAll(((BatchEvent) event).getEvents());
+        } else if (event instanceof NumberOfTriggersEvent) {
+            allEvents.add(((NumberOfTriggersEvent) event).getSourceEvent());
         } else {
             allEvents.add(event);
         }
@@ -1395,6 +1414,7 @@ public abstract class AbilityImpl implements Ability {
             //   - ability's task: code like ability.setLookBackInTime
             //   - event's task: code like current switch
             // TODO: alternative solution: replace check by source.isLeavesTheBattlefieldTrigger?
+
             switch (e.getType()) {
                 case DESTROYED_PERMANENT:
                 case EXPLOITED_CREATURE:
@@ -1733,6 +1753,19 @@ public abstract class AbilityImpl implements Ability {
             permanent = (Permanent) game.getLastKnownInformation(getSourceId(), Zone.BATTLEFIELD, getStackMomentSourceZCC());
         }
         return permanent;
+    }
+
+    @Override
+    public Permanent getPermanentSourceAttachedToIfItStillExists(Game game) {
+        Permanent aura = getSourcePermanentIfItStillExists(game);
+        if (aura == null) {
+            return null;
+        }
+        Permanent enchanted = game.getPermanent(aura.getAttachedTo());
+        if (enchanted == null || enchanted.getZoneChangeCounter(game) != aura.getAttachedToZoneChangeCounter()) {
+            return null;
+        }
+        return enchanted;
     }
 
     @Override

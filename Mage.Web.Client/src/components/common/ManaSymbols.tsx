@@ -14,6 +14,8 @@ interface ManaSymbolProps {
 }
 
 export const ManaSymbol: React.FC<ManaSymbolProps> = ({ symbol, size = 'md' }) => {
+    const normalizedSymbol = symbol.replace(/[{}]/g, '').trim();
+
     const getSymbolClass = (s: string): string => {
         const lower = s.toLowerCase();
         switch (lower) {
@@ -35,10 +37,10 @@ export const ManaSymbol: React.FC<ManaSymbolProps> = ({ symbol, size = 'md' }) =
         }
     };
 
-    const displaySymbol = symbol.toUpperCase();
+    const displaySymbol = normalizedSymbol.toUpperCase();
 
     return (
-        <span className={`mana-symbol mana-${size} ${getSymbolClass(symbol)}`}>
+        <span className={`mana-symbol mana-${size} ${getSymbolClass(normalizedSymbol)}`}>
             {displaySymbol}
         </span>
     );
@@ -51,10 +53,14 @@ interface ManaCostProps {
 
 export const ManaCost: React.FC<ManaCostProps> = ({ cost, size = 'md' }) => {
     if (!cost || cost.length === 0) return null;
+    const symbols = cost.flatMap((part) => {
+        const matches = part.match(/\{[^}]+\}|[WUBRGCX]|\d+/gi);
+        return matches && matches.length > 0 ? matches : [part];
+    });
 
     return (
         <span className="mana-cost">
-            {cost.map((symbol, index) => (
+            {symbols.map((symbol, index) => (
                 <ManaSymbol key={index} symbol={symbol} size={size} />
             ))}
         </span>

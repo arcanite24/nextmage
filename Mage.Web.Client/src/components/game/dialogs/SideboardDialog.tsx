@@ -12,8 +12,16 @@ interface SideboardDialogProps {
 }
 
 // Helper to convert SimpleCardsView (Record<UUID, SimpleCardView>) to array for rendering
+const getCardLabel = (card: SimpleCardView): string => {
+    return card.displayName ?? card.name ?? `${card.expansionSetCode} ${card.cardNumber}`;
+};
+
+const sortCardsByLabel = (cards: SimpleCardView[]): SimpleCardView[] => {
+    return cards.sort((a, b) => getCardLabel(a).localeCompare(getCardLabel(b)));
+};
+
 const toArray = (cards: SimpleCardsView): SimpleCardView[] => {
-    return Object.values(cards).sort((a, b) => a.name.localeCompare(b.name));
+    return sortCardsByLabel(Object.values(cards));
 };
 
 export const SideboardDialog: React.FC<SideboardDialogProps> = ({
@@ -61,7 +69,7 @@ export const SideboardDialog: React.FC<SideboardDialogProps> = ({
     const moveToSideboard = () => {
         const toMove = mainDeck.filter(c => selectedMain.has(c.id));
         const newMain = mainDeck.filter(c => !selectedMain.has(c.id));
-        const newSide = [...sideboard, ...toMove].sort((a, b) => a.name.localeCompare(b.name));
+        const newSide = sortCardsByLabel([...sideboard, ...toMove]);
 
         setMainDeck(newMain);
         setSideboard(newSide);
@@ -71,7 +79,7 @@ export const SideboardDialog: React.FC<SideboardDialogProps> = ({
     const moveToMain = () => {
         const toMove = sideboard.filter(c => selectedSide.has(c.id));
         const newSide = sideboard.filter(c => !selectedSide.has(c.id));
-        const newMain = [...mainDeck, ...toMove].sort((a, b) => a.name.localeCompare(b.name));
+        const newMain = sortCardsByLabel([...mainDeck, ...toMove]);
 
         setSideboard(newSide);
         setMainDeck(newMain);
@@ -100,6 +108,7 @@ export const SideboardDialog: React.FC<SideboardDialogProps> = ({
     const renderCard = (card: SimpleCardView, isSideboard: boolean) => {
         const isSelected = isSideboard ? selectedSide.has(card.id) : selectedMain.has(card.id);
         const imageUrl = cardImageService.getImageUrl({ ...card, expansionSetCode: card.expansionSetCode, cardNumber: card.cardNumber });
+        const cardLabel = getCardLabel(card);
 
         return (
             <div
@@ -107,7 +116,7 @@ export const SideboardDialog: React.FC<SideboardDialogProps> = ({
                 className={`card-item ${isSelected ? 'selected' : ''}`}
                 onClick={() => handleCardClick(card.id, isSideboard)}
             >
-                <img src={imageUrl} alt={card.name} loading="lazy" />
+                <img src={imageUrl} alt={cardLabel} loading="lazy" />
                 {/* Overlay or border for selection */}
             </div>
         );

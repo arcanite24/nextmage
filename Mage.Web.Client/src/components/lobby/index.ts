@@ -6,5 +6,7 @@ export { LobbyPage } from './LobbyPage';
 export { TableList } from './TableList';
 export { TableFilters } from './TableFilters';
 export { TableDetails } from './TableDetails';
+export { LobbyInfoPanels } from './LobbyInfoPanels';
 export { CreateTableDialog } from './CreateTableDialog';
 export { JoinTableDialog } from './JoinTableDialog';
+export { DeckPicker } from './DeckPicker';

@@ -1,0 +1,213 @@
+.match-action-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.match-action-watch-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 7px 9px;
+    border: 1px solid rgba(56, 189, 248, 0.34);
+    border-radius: 6px;
+    background: rgba(8, 47, 73, 0.58);
+    color: #bae6fd;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.match-action-watch-dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.72);
+}
+
+.match-action-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.match-action-section:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.match-action-section h5 {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.match-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.match-action-grid button,
+.match-rollback-shortcuts button,
+.match-rollback-row button,
+.match-action-section select,
+.match-rollback-row input {
+    min-width: 0;
+    min-height: 30px;
+    border-radius: 6px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(15, 23, 42, 0.82);
+    color: #e2e8f0;
+    font: inherit;
+    font-size: 11px;
+}
+
+.match-action-grid button,
+.match-rollback-shortcuts button,
+.match-rollback-row button {
+    cursor: pointer;
+    font-weight: 700;
+    padding: 5px 7px;
+}
+
+.match-action-grid button:hover:not(:disabled),
+.match-rollback-shortcuts button:hover:not(:disabled),
+.match-rollback-row button:hover:not(:disabled) {
+    border-color: rgba(96, 165, 250, 0.65);
+    background: rgba(30, 41, 59, 0.95);
+}
+
+.match-action-grid button:disabled,
+.match-rollback-shortcuts button:disabled,
+.match-rollback-row button:disabled,
+.match-action-section select:disabled,
+.match-rollback-row input:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+}
+
+.match-action-section select,
+.match-rollback-row input {
+    width: 100%;
+    padding: 5px 7px;
+}
+
+.match-action-section input[type='range'] {
+    width: 100%;
+    min-height: 24px;
+    accent-color: #60a5fa;
+}
+
+.match-rollback-row {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 6px;
+}
+
+.match-rollback-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.match-rollback-shortcuts button {
+    font-size: 10px;
+}
+
+.match-action-toggle {
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #dbeafe;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.match-action-toggle input {
+    width: 14px;
+    height: 14px;
+    accent-color: #60a5fa;
+}
+
+.match-action-toggle input:disabled {
+    cursor: not-allowed;
+}
+
+.match-action-hint {
+    margin: 0;
+    color: #93c5fd;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.match-action-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #dbeafe;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.match-action-field-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.match-action-field-label strong {
+    min-width: 2.5ch;
+    color: #bfdbfe;
+    font-size: 10px;
+    font-weight: 900;
+    line-height: 1;
+    text-align: right;
+}
+
+.match-option-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.match-option-chip {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 7px;
+    border: 1px solid rgba(96, 165, 250, 0.28);
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.72);
+}
+
+.match-option-chip span {
+    color: #93c5fd;
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.match-option-chip strong {
+    overflow: hidden;
+    color: #e0f2fe;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -2,8 +2,8 @@
  * Debug Interface Types
  */
 
-import { UUID, TurnPhase, PhaseStep, ClientCallbackMethod } from './api';
-import { GameView, ManaPoolView } from './game';
+import { UUID, TurnPhase, PhaseStep, ClientCallbackMethod } from './api.js';
+import { GameView, ManaPoolView } from './game.js';
 
 export interface DebugAction {
   id: string;
@@ -12,6 +12,14 @@ export interface DebugAction {
   method: ClientCallbackMethod;
   summary: string;
   gameView?: GameView;
+  data: unknown;
+}
+
+export interface DebugCallbackFixture {
+  capturedAt: number;
+  messageId: number;
+  method: ClientCallbackMethod;
+  objectId: UUID | null;
   data: unknown;
 }
 
@@ -66,8 +74,10 @@ export interface DebugExportData {
   currentGameView: GameView | null;
   boardStateSummary: BoardStateSummary | null;
   actionHistory: DebugAction[];
+  callbackFixtures: DebugCallbackFixture[];
   metadata: {
     totalActions: number;
+    totalCallbackFixtures: number;
     matchId: string | null;
     lastUpdate: number;
   };

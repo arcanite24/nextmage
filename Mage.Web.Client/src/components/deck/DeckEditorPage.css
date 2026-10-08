@@ -16,10 +16,34 @@
 
 /* Two-panel Layout */
 .deck-editor-layout {
+    position: relative;
     display: flex;
     flex: 1;
     overflow: hidden;
     min-height: 0;
+}
+
+.deck-editor-layout-drop-active {
+    outline: 2px solid rgba(212, 175, 55, 0.72);
+    outline-offset: -8px;
+}
+
+.deck-editor-drop-overlay {
+    position: absolute;
+    inset: 18px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(212, 175, 55, 0.74);
+    border-radius: 8px;
+    background: rgba(5, 8, 18, 0.78);
+    color: #f3d872;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    pointer-events: none;
 }
 
 /* Left Panel - Collection Browser (scrollable) */
@@ -35,18 +59,223 @@
 .deck-editor-right {
     display: flex;
     flex-direction: column;
-    width: 320px;
+    width: var(--deck-panel-width, 320px);
     flex-shrink: 0;
     height: 100%;
-    overflow: hidden;
+    /* The fixed-height panels below the deck list can outgrow short windows; scroll the
+       column instead of squeezing the deck list to nothing. */
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.deck-editor-right > .deck-panel {
+    flex: 1 1 0;
+    min-height: 340px;
 }
 
 /* Done Button */
 .deck-editor-actions {
+    display: grid;
+    gap: 10px;
     padding: 12px 16px;
     background: rgba(0, 0, 0, 0.3);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
+}
+
+.deck-editor-status {
+    padding: 9px 12px;
+    border: 1px solid rgba(43, 191, 136, 0.35);
+    border-radius: 6px;
+    background: rgba(43, 191, 136, 0.12);
+    color: #b8f4df;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.deck-editor-status-error {
+    border-color: rgba(255, 107, 122, 0.45);
+    background: rgba(220, 53, 69, 0.16);
+    color: #ffb5bd;
+}
+
+.deck-editor-command-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.deck-layout-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 8px;
+    min-width: 0;
+}
+
+.deck-layout-control {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.deck-layout-control input[type="range"] {
+    width: 100%;
+    accent-color: #d4af37;
+}
+
+.deck-layout-reset-button {
+    min-height: 30px;
+    padding-inline: 10px;
+    white-space: nowrap;
+}
+
+.deck-load-dialog {
+    display: grid;
+    min-height: 180px;
+}
+
+.deck-load-list {
+    display: grid;
+    gap: 6px;
+    max-height: min(56vh, 520px);
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.deck-load-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(120px, 0.85fr) auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    background: rgba(10, 12, 24, 0.72);
+    color: #ffffff;
+    text-align: left;
+    cursor: pointer;
+}
+
+.deck-load-row:hover,
+.deck-load-row:focus-visible {
+    border-color: rgba(212, 175, 55, 0.58);
+    background: rgba(212, 175, 55, 0.12);
+    outline: none;
+}
+
+.deck-load-row-current {
+    border-color: rgba(43, 191, 136, 0.52);
+    background: rgba(43, 191, 136, 0.11);
+}
+
+.deck-load-name {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.deck-load-meta,
+.deck-load-updated {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.deck-load-updated {
+    justify-self: end;
+}
+
+.deck-load-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.deck-import-source-chooser {
+    display: grid;
+    gap: 10px;
+}
+
+.deck-import-source-option {
+    display: grid;
+    gap: 5px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    background: rgba(8, 10, 22, 0.82);
+    color: #ffffff;
+    text-align: left;
+    cursor: pointer;
+}
+
+.deck-import-source-option:hover,
+.deck-import-source-option:focus-visible {
+    border-color: rgba(212, 175, 55, 0.62);
+    background: rgba(212, 175, 55, 0.12);
+    outline: none;
+}
+
+.deck-import-source-option:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.deck-import-source-option strong {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.deck-import-source-option span,
+.deck-import-source-note {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.deck-import-source-note {
+    margin: 2px 0 0;
+}
+
+.deck-save-as-form label {
+    display: grid;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.deck-save-as-form input {
+    width: 100%;
+    height: 38px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+    font-size: 14px;
+    outline: none;
+}
+
+.deck-save-as-form input:focus {
+    border-color: rgba(212, 175, 55, 0.65);
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.14);
 }
 
 .btn-done {
@@ -80,6 +309,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .deck-editor-page .btn:disabled {
@@ -115,7 +345,55 @@
 
     .deck-editor-right {
         width: 100%;
-        height: 45vh;
+        height: 57vh;
         flex-shrink: 0;
+    }
+
+    .deck-layout-control {
+        display: none;
+    }
+
+    .deck-layout-controls {
+        display: none;
+    }
+
+    .deck-editor-actions {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+    }
+
+    .deck-editor-status,
+    .deck-editor-command-row {
+        grid-column: 1 / -1;
+    }
+
+    .deck-editor-command-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .deck-load-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 3px;
+    }
+
+    .deck-load-updated {
+        justify-self: start;
+    }
+
+    .deck-editor-page .btn {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+
+    .deck-editor-page .deck-section-sideboard {
+        flex: 0 0 42px;
+        min-height: 42px;
+        max-height: 42px;
+        overflow: hidden;
+    }
+
+    .deck-editor-page .deck-section-sideboard .deck-card-list {
+        display: none;
     }
 }

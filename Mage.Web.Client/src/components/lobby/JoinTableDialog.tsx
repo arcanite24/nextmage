@@ -4,10 +4,11 @@
  * Modal for joining a game table with deck selection.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button } from '../common';
 import { useLobbyStore, useSessionStore } from '../../stores';
-import { TableView, DeckCardLists, DeckCardInfo } from '../../types';
+import { TableView, DeckCardLists } from '../../types';
+import { DeckPicker } from './DeckPicker';
 import './JoinTableDialog.css';
 
 interface JoinTableDialogProps {
@@ -17,32 +18,13 @@ interface JoinTableDialogProps {
     onJoined: () => void;
 }
 
-import { DeckSerializer } from '../../services/DeckSerializer';
-import { cardResolverService } from '../../services';
-import { DeckSelector } from './DeckSelector';
-
-// Sample starter deck for default init
-const SAMPLE_DECK: DeckCardLists = {
-    name: 'Sample Deck',
-    cards: [
-        { cardName: 'Mountain', setCode: 'M21', cardNumber: '269', amount: 20 },
-        { cardName: 'Lightning Bolt', setCode: 'M21', cardNumber: '152', amount: 4 },
-        { cardName: 'Shock', setCode: 'M21', cardNumber: '159', amount: 4 },
-        { cardName: 'Goblin Guide', setCode: 'ZNE', cardNumber: '4', amount: 4 },
-        { cardName: 'Monastery Swiftspear', setCode: 'KTK', cardNumber: '118', amount: 4 },
-        { cardName: 'Eidolon of the Great Revel', setCode: 'JOU', cardNumber: '94', amount: 4 },
-    ],
-    sideboard: [],
-};
-
 export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
     isOpen,
     onClose,
     table,
     onJoined,
 }) => {
-    const [deckText, setDeckText] = useState(() => DeckSerializer.exportDeck(SAMPLE_DECK));
-    const [deckName, setDeckName] = useState('My Deck');
+    const [selectedDeck, setSelectedDeck] = useState<DeckCardLists | null>(null);
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -50,39 +32,34 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
     const { userName } = useSessionStore();
     const { joinTable } = useLobbyStore();
 
+    // Reset state when dialog opens/closes
+    useEffect(() => {
+        if (!isOpen) {
+            setSelectedDeck(null);
+            setPassword('');
+            setError(null);
+        }
+    }, [isOpen]);
+
     const handleJoin = async () => {
-        if (!table || !userName) return;
+        if (!table || !userName || !selectedDeck) return;
 
         setError(null);
         setIsLoading(true);
 
         try {
-            // Parse the deck
-            let deck = DeckSerializer.importDeck(deckText);
-            deck.name = deckName;
-
             // Validate deck has at least some cards
-            const totalCards = deck.cards.reduce((sum, c) => sum + c.amount, 0);
+            const totalCards = selectedDeck.cards.reduce((sum, c) => sum + c.amount, 0);
             if (totalCards < 40) {
                 setError(`Deck has only ${totalCards} cards. Most formats require at least 40-60 cards.`);
                 setIsLoading(false);
                 return;
             }
 
-            // Check if any cards need resolution (missing setCode or cardNumber)
-            const needsResolution = [...deck.cards, ...deck.sideboard].some(
-                card => !card.setCode || !card.cardNumber
-            );
-
-            if (needsResolution) {
-                console.log('[JoinTableDialog] Resolving cards from server...');
-                deck = await cardResolverService.resolveDeck(deck);
-            }
-
             const success = await joinTable(
                 table.tableId,
                 userName,
-                deck,
+                selectedDeck,
                 table.passworded ? password : undefined
             );
 
@@ -102,13 +79,9 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
         }
     };
 
-
-
     if (!table) return null;
 
-    const parsedDeck = DeckSerializer.importDeck(deckText);
-    const maindeckCount = parsedDeck.cards.reduce((sum: number, c: DeckCardInfo) => sum + c.amount, 0);
-    const sideboardCount = parsedDeck.sideboard.reduce((sum: number, c: DeckCardInfo) => sum + c.amount, 0);
+    const mainDeckCount = selectedDeck?.cards.reduce((sum, c) => sum + c.amount, 0) || 0;
 
     return (
         <Modal
@@ -125,7 +98,7 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
                         variant="primary"
                         onClick={handleJoin}
                         isLoading={isLoading}
-                        disabled={maindeckCount < 1}
+                        disabled={!selectedDeck || mainDeckCount < 1}
                     >
                         Join Table
                     </Button>
@@ -166,7 +139,7 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
                 {table.passworded && (
                     <div className="input-group">
                         <label htmlFor="tablePassword" className="input-label">
-                            🔒 Table Password
+                            Table Password
                         </label>
                         <input
                             id="tablePassword"
@@ -179,13 +152,15 @@ export const JoinTableDialog: React.FC<JoinTableDialogProps> = ({
                     </div>
                 )}
 
-                {/* Deck section */}
-                <DeckSelector
-                    deckName={deckName}
-                    onDeckNameChange={setDeckName}
-                    deckText={deckText}
-                    onDeckTextChange={setDeckText}
+                {/* Deck Picker */}
+                <DeckPicker
+                    selectedDeck={selectedDeck}
+                    onDeckChange={setSelectedDeck}
+                    format={table.deckType}
+                    isLoading={isLoading}
+                    error={null}
                     onError={setError}
+                    label="Your Deck"
                 />
             </div>
         </Modal>

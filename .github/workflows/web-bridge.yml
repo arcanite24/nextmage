@@ -1,0 +1,48 @@
+name: Web bridge
+
+# The WebSocket bridge tests (contract, transport, API docs) for every branch and PR that touches
+# the bridge, its shared types or its documentation. The full build in maven.yml runs only on master.
+on:
+  push:
+    paths:
+      - "Mage.Server/src/main/java/mage/server/websocket/**"
+      - "Mage.Server/src/test/**"
+      - "Mage.Server/pom.xml"
+      - "Mage.Common/**"
+      - "docs/WebSocketAPI.md"
+      - ".github/workflows/web-bridge.yml"
+  pull_request:
+    paths:
+      - "Mage.Server/src/main/java/mage/server/websocket/**"
+      - "Mage.Server/src/test/**"
+      - "Mage.Server/pom.xml"
+      - "Mage.Common/**"
+      - "docs/WebSocketAPI.md"
+      - ".github/workflows/web-bridge.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bridge-tests:
+    runs-on: ubuntu-latest
+    # Mage.Server depends on Mage.Sets, so the first (uncached) build compiles every card
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - name: Build Mage.Server and its dependencies
+        run: mvn -B -pl Mage.Server -am install -DskipTests
+      - name: Bridge tests
+        run: >
+          mvn -B -pl Mage.Server test
+          -Dtest='mage/server/websocket/**/*Test'
+          -Dsurefire.failIfNoSpecifiedTests=false
+          -Dxmage.dataCollectors.printGameLogs=false
+          -Dlog4j.configuration=file:${GITHUB_WORKSPACE}/.travis/log4j.properties

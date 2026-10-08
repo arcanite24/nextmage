@@ -1,0 +1,45 @@
+.zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--radius-zone);
+}
+
+/* screen-printed outline: ink pressed into the neoprene */
+.line {
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  padding: var(--space-4);
+}
+
+.filled {
+  background: rgb(7 12 10 / 0.55);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost), inset 0 1px 12px rgb(0 0 0 / 0.35);
+  padding: var(--space-4);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.label {
+  font-family: var(--font-print);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.aside {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+}

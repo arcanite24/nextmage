@@ -1,0 +1,347 @@
+/* overlays sit on the stage: the board dims, a printed zone comes up */
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgb(4 7 6 / 0.72);
+  animation: fade var(--dur-place) var(--ease-place);
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.bigTitle {
+  font-size: 72px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.subtitle {
+  max-width: 900px;
+  font-size: 24px;
+  color: var(--ink-soft);
+}
+
+.handRow {
+  display: flex;
+  gap: 18px;
+  margin: 18px 0;
+}
+
+.handCard {
+  width: 210px;
+  animation: deal var(--dur-print) var(--ease-place) both;
+}
+
+.handCard:nth-child(2) { animation-delay: 40ms; }
+.handCard:nth-child(3) { animation-delay: 80ms; }
+.handCard:nth-child(4) { animation-delay: 120ms; }
+.handCard:nth-child(5) { animation-delay: 160ms; }
+.handCard:nth-child(6) { animation-delay: 200ms; }
+.handCard:nth-child(7) { animation-delay: 240ms; }
+
+.buttons {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 1280px;
+  max-height: 900px;
+  padding: 28px 32px;
+  border-radius: 18px;
+  background-color: var(--mat-700);
+  background-image: var(--mat-grain);
+  box-shadow: inset 0 0 0 2px var(--ink-faint), var(--shadow-held);
+  animation: place var(--dur-place) var(--ease-place);
+}
+
+.panelNarrow {
+  width: 720px;
+}
+
+.panelWide {
+  width: 1400px;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panelTitle {
+  font-size: 40px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.panelText {
+  font-size: 22px;
+  color: var(--ink-soft);
+}
+
+.panelFoot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+  padding: 6px;
+  overflow: auto;
+}
+
+.pick {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
+}
+
+.pickable {
+  cursor: pointer;
+}
+
+.pickable:hover {
+  transform: translateY(-4px);
+}
+
+.unpickable {
+  opacity: 0.45;
+}
+
+.picked::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  box-shadow: 0 0 0 3px var(--decision), 0 0 20px 4px var(--decision-glow);
+}
+
+.peek {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  translate: -50% 0;
+  z-index: 100;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.optionsScroll {
+  max-height: 520px;
+  overflow: auto;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(233 228 214 / 0.05);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  color: var(--ink-strong);
+  font-size: 22px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover,
+.option:focus-visible {
+  background: rgb(233 228 214 / 0.1);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.optionKey {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  font-family: var(--font-print);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-dim);
+}
+
+.search {
+  height: 52px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(7 12 10 / 0.7);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink-strong);
+  font-size: 22px;
+  caret-color: var(--ink-strong);
+}
+
+.piles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.pileChoice {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 0;
+  border-radius: 14px;
+  background: rgb(233 228 214 / 0.04);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.pileChoice:hover {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.pileLabel {
+  font-family: var(--font-print);
+  font-size: 24px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pileCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pileCard {
+  width: 110px;
+}
+
+.amount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.amountValue {
+  width: 160px;
+  height: 90px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(7 12 10 / 0.7);
+  box-shadow: inset 0 0 0 2px var(--ink-faint);
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: 60px;
+  font-weight: 700;
+  text-align: center;
+  caret-color: var(--ink-strong);
+}
+
+.slider {
+  width: 100%;
+  accent-color: var(--decision);
+}
+
+.range {
+  margin-right: auto;
+  font-size: 18px;
+  color: var(--ink-dim);
+}
+
+.split {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.splitRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 22px;
+}
+
+.splitValue {
+  width: 100px;
+  height: 52px;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(7 12 10 / 0.7);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: 30px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.endScrim {
+  background: radial-gradient(60% 50% at 50% 45%, rgb(7 12 10 / 0.6), rgb(4 7 6 / 0.9));
+}
+
+/* the result, printed across the table */
+.endTitle {
+  font-size: 200px;
+  line-height: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  animation: stamp 700ms var(--ease-place) both;
+}
+
+.victory {
+  color: var(--ink-strong);
+}
+
+.defeat {
+  color: var(--ink-soft);
+}
+
+.score {
+  font-family: var(--font-print);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+
+@keyframes place {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+}
+
+@keyframes deal {
+  from { opacity: 0; transform: translateY(80px) rotate(-6deg); }
+}
+
+@keyframes stamp {
+  from { opacity: 0; transform: scale(1.25); filter: blur(6px); }
+}

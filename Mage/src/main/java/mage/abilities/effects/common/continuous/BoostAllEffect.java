@@ -41,15 +41,15 @@ public class BoostAllEffect extends ContinuousEffectImpl {
         this(power, toughness, duration, StaticFilters.FILTER_PERMANENT_ALL_CREATURES, excludeSource);
     }
 
-    public BoostAllEffect(int power, int toughness, Duration duration, FilterCreaturePermanent filter, boolean excludeSource) {
+    public BoostAllEffect(int power, int toughness, Duration duration, FilterPermanent filter, boolean excludeSource) {
         this(StaticValue.get(power), StaticValue.get(toughness), duration, filter, excludeSource);
     }
 
-    public BoostAllEffect(DynamicValue power, DynamicValue toughness, Duration duration, FilterCreaturePermanent filter, boolean excludeSource) {
+    public BoostAllEffect(DynamicValue power, DynamicValue toughness, Duration duration, FilterPermanent filter, boolean excludeSource) {
         this(power, toughness, duration, filter, excludeSource, null);
     }
 
-    public BoostAllEffect(DynamicValue power, DynamicValue toughness, Duration duration, FilterCreaturePermanent filter, boolean excludeSource, String rule) {
+    public BoostAllEffect(DynamicValue power, DynamicValue toughness, Duration duration, FilterPermanent filter, boolean excludeSource, String rule) {
         super(duration, Layer.PTChangingEffects_7, SubLayer.ModifyPT_7c, CardUtil.getBoostOutcome(power, toughness));
         this.power = power;
         this.toughness = toughness;
@@ -61,6 +61,18 @@ public class BoostAllEffect extends ContinuousEffectImpl {
         } else {
             this.staticText = rule;
         }
+    }
+
+    public BoostAllEffect(int power, int toughness, Duration duration, FilterCreaturePermanent filter, boolean excludeSource) {
+        this(StaticValue.get(power), StaticValue.get(toughness), duration, filter, excludeSource);
+    }
+
+    public BoostAllEffect(DynamicValue power, DynamicValue toughness, Duration duration, FilterCreaturePermanent filter, boolean excludeSource) {
+        this(power, toughness, duration, filter, excludeSource, null);
+    }
+
+    public BoostAllEffect(DynamicValue power, DynamicValue toughness, Duration duration, FilterCreaturePermanent filter, boolean excludeSource, String rule) {
+        this(power, toughness, duration, (FilterPermanent) filter, excludeSource, rule);
     }
 
     public BoostAllEffect(int power, int toughness, Duration duration, FilterControlledCreaturePermanent filter, boolean excludeSource) {

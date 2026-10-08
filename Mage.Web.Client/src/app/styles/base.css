@@ -1,0 +1,138 @@
+@import '@fontsource/barlow/400.css';
+@import '@fontsource/barlow/500.css';
+@import '@fontsource/barlow/600.css';
+@import '@fontsource/barlow/700.css';
+@import '@fontsource/barlow-condensed/500.css';
+@import '@fontsource/barlow-condensed/600.css';
+@import '@fontsource/barlow-condensed/700.css';
+@import 'mana-font/css/mana.min.css';
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: var(--mat-800);
+  background-image: var(--mat-grain);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-print);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* drop-downs print their own chevron in ivory ink instead of the system's control */
+select:not([multiple]):not([size]) {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e9e4d6' stroke-opacity='0.75' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  cursor: pointer;
+}
+
+select option {
+  background-color: var(--mat-800);
+  color: var(--ink);
+}
+
+a {
+  color: var(--ink-strong);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+::selection {
+  background: var(--mat-400);
+  color: var(--ink-strong);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink-strong);
+  outline-offset: 2px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-dim);
+}
+
+/* scrollbars printed in ink, on the mat */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-faint) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--ink-faint);
+  border: 3px solid transparent;
+  border-radius: 10px;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

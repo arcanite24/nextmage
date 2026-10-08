@@ -1,11 +1,18 @@
 import React, { useMemo } from 'react';
+import { BookOpen, Hand, Skull, Sparkles, Zap } from 'lucide-react';
 import { PlayerView } from '../../types';
+import { useAnimationStore } from '../../stores';
+import { MatchPlayerFlagPill, MatchPlayerHudDetails } from './MatchPlayerHudDetails';
 import './ArenaLayout.css';
+import './AttackAnimation.css';
 
 interface ArenaOpponentHUDProps {
     player: PlayerView;
+    isActivePlayer?: boolean;
     onShowZone?: (zone: 'graveyard' | 'exile' | 'library' | 'sideboard', playerId: string) => void;
     onInteract?: (uuid: string) => void;
+    showPlayerName?: boolean;
+    displayLifeOnAvatar?: boolean;
 }
 
 // Default avatar SVG
@@ -16,35 +23,63 @@ const DefaultAvatarSVG = () => (
     </svg>
 );
 
-export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ player, onShowZone, onInteract }) => {
+export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ player, isActivePlayer, onShowZone, onInteract, showPlayerName = true, displayLifeOnAvatar = true }) => {
+    // Check for deferred life update (visual override)
+    const visualLifeTotals = useAnimationStore(state => state.visualLifeTotals);
+    const displayedLife = visualLifeTotals?.[player.playerId] ?? player.life;
+
     const graveyardCount = useMemo(() => Object.keys(player.graveyard).length, [player.graveyard]);
     const exileCount = useMemo(() => Object.keys(player.exile).length, [player.exile]);
-    const lifeClass = useMemo(() => player.life <= 5 ? 'low' : player.life >= 30 ? 'high' : '', [player.life]);
+    const lifeClass = useMemo(() => displayedLife <= 5 ? 'low' : displayedLife >= 30 ? 'high' : '', [displayedLife]);
+
+    const activeLifeEffect = useAnimationStore((state) => {
+        const effect = state.activeDamageEffects.find((entry) => entry.targetId === player.playerId);
+        return effect?.type ?? 'none';
+    });
+
+    // Build avatar container class names
+    const avatarContainerClasses = useMemo(() => {
+        const classes = ['arena-opponent-avatar-container', 'clickable-stat'];
+        if (isActivePlayer) classes.push('active-player');
+        if (player.hasPriority) classes.push('has-priority');
+        if (displayLifeOnAvatar && activeLifeEffect === 'damage') classes.push('taking-damage');
+        if (displayLifeOnAvatar && activeLifeEffect === 'lifeGain') classes.push('gaining-life');
+        return classes.join(' ');
+    }, [isActivePlayer, player.hasPriority, activeLifeEffect, displayLifeOnAvatar]);
 
     return (
         <>
             {/* Opponent Info (Top Left) */}
-            <div className="arena-opponent-info">
-                <span className="arena-opponent-name">
-                    {player.name}
-                    {player.hasPriority && <span className="priority-indicator-opponent">⚡</span>}
-                </span>
+            <div className="arena-opponent-info" data-testid="opponent-hud">
+                {showPlayerName && (
+                    <span className="arena-opponent-name" data-testid="opponent-name">
+                        <MatchPlayerFlagPill flagName={player.userData?.flagName} />
+                        {player.name}
+                        {player.hasPriority && <Zap className="priority-indicator-opponent" size={13} aria-hidden="true" />}
+                    </span>
+                )}
                 <div className="arena-opponent-stats">
-                    <span
+                    <button
+                        type="button"
                         title="Graveyard"
                         className="clickable-stat"
                         onClick={() => onShowZone?.('graveyard', player.playerId)}
+                        aria-label={`View ${player.name}'s graveyard`}
+                        data-testid="opponent-zone-graveyard"
                     >
-                        💀 {graveyardCount}
-                    </span>
+                        <Skull size={14} aria-hidden="true" /> {graveyardCount}
+                    </button>
                     {exileCount > 0 && (
-                        <span
+                        <button
+                            type="button"
                             title="Exile"
                             className="clickable-stat"
                             onClick={() => onShowZone?.('exile', player.playerId)}
+                            aria-label={`View ${player.name}'s exile`}
+                            data-testid="opponent-zone-exile"
                         >
-                            🌌 {exileCount}
-                        </span>
+                            <Sparkles size={14} aria-hidden="true" /> {exileCount}
+                        </button>
                     )}
                 </div>
             </div>
@@ -52,7 +87,9 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
             {/* Opponent Avatar & Life (Top Center) */}
             <div className="arena-opponent-hud">
                 <div
-                    className="arena-opponent-avatar-container clickable-stat"
+                    id={`player-${player.playerId}`}
+                    className={avatarContainerClasses}
+                    data-life-on-avatar={displayLifeOnAvatar ? 'true' : 'false'}
                     onClick={() => onInteract?.(player.playerId)}
                     title="Click to target player"
                 >
@@ -70,18 +107,27 @@ export const ArenaOpponentHUD: React.FC<ArenaOpponentHUDProps> = React.memo(({ p
                         )}
                     </div>
 
-                    <div className={`arena-opponent-life ${lifeClass}`}>
-                        {player.life}
+                {displayLifeOnAvatar && (
+                    <div className={`arena-opponent-life ${lifeClass}`} data-testid="opponent-avatar-life">
+                        {displayedLife}
                     </div>
-                </div>
+                )}
+
+                <MatchPlayerHudDetails
+                    player={player}
+                    variant="opponent"
+                    displayedLife={displayedLife}
+                    onShowZone={onShowZone}
+                />
+            </div>
 
                 {/* Deck Info next to avatar */}
                 <div className="arena-opponent-deck-info">
                     <div className="arena-opponent-zone-mini" title="Library">
-                        📚 {player.libraryCount}
+                        <BookOpen size={13} aria-hidden="true" /> {player.libraryCount}
                     </div>
                     <div className="arena-opponent-zone-mini" title="Hand">
-                        ✋ {player.handCount}
+                        <Hand size={13} aria-hidden="true" /> {player.handCount}
                     </div>
                 </div>
             </div>

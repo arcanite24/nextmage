@@ -1,0 +1,201 @@
+/* two mats meet at a stitched seam across the middle of the table */
+.mat {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(70% 60% at 50% 78%, rgb(255 255 255 / 0.035), transparent 70%),
+    radial-gradient(70% 60% at 50% 22%, rgb(0 0 0 / 0.18), transparent 70%);
+  pointer-events: none;
+}
+
+.seam {
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  top: 539px;
+  height: 2px;
+  background-image: repeating-linear-gradient(90deg, var(--thread) 0 14px, transparent 14px 24px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.row {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  /* the zone printed in ivory ink on the mat */
+  box-shadow: inset 0 0 0 2px rgb(233 228 214 / 0.09);
+}
+
+.row::before {
+  content: attr(data-label);
+  position: absolute;
+  left: 16px;
+  bottom: 8px;
+  font-family: var(--font-print);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.rowFlip::before {
+  top: 8px;
+  bottom: auto;
+}
+
+.printMine,
+.printTheirs {
+  position: absolute;
+  left: 0;
+  right: 0;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.printTheirs {
+  top: 0;
+  height: 540px;
+  transform: rotate(180deg);
+}
+
+.printMine {
+  top: 540px;
+  bottom: 0;
+}
+
+/* the decision, printed across the middle of the table */
+.myPlate {
+  position: absolute;
+  left: 24px;
+  top: 936px;
+  z-index: 20;
+}
+
+.theirPlate {
+  position: absolute;
+  left: 24px;
+  z-index: 20;
+}
+
+.myPiles,
+.theirPiles {
+  position: absolute;
+  left: 24px;
+}
+
+.myPiles {
+  top: 600px;
+}
+
+.theirPiles {
+  top: 140px;
+}
+
+/* the piles stand two by two in the seat column */
+.myPiles > *,
+.theirPiles > * {
+  flex-wrap: wrap;
+  width: 240px;
+  row-gap: 10px;
+}
+
+.hiddenHand {
+  position: absolute;
+  top: -78px;
+  z-index: 4;
+  width: 0;
+  height: 120px;
+}
+
+.hiddenCard {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 84px;
+  transform: translateX(calc(-50% + var(--i) * 36px)) rotate(calc(var(--i) * -3deg));
+  transform-origin: 50% 0;
+}
+
+.handCount {
+  position: absolute;
+  left: 0;
+  top: 96px;
+  translate: -50% 0;
+  min-width: 32px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(7 12 10 / 0.85);
+  box-shadow: inset 0 0 0 1px var(--ink-faint);
+  font-family: var(--font-print);
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.watching {
+  position: absolute;
+  right: 40px;
+  bottom: 40px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-print);
+  font-size: 28px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-print);
+}
+
+.menu {
+  position: absolute;
+  right: 24px;
+  top: 20px;
+  z-index: 60;
+}
+
+.menuButton {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(7 12 10 / 0.6);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.menuButton:hover,
+.menuButton[data-state='open'] {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.menuContent {
+  z-index: var(--z-dialog);
+  min-width: 220px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--mat-800);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint), var(--shadow-held);
+}
+
+.menuItem {
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: var(--ink-strong);
+  font-size: var(--text-md);
+  cursor: pointer;
+  outline: none;
+}
+
+.menuItem[data-highlighted] {
+  background: rgb(233 228 214 / 0.1);
+}

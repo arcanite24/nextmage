@@ -68,6 +68,8 @@ public interface TableManager {
 
     void endGame(UUID tableId);
 
+    void endGameOnGameThread(UUID tableId);
+
     void endDraft(UUID tableId, Draft draft);
 
     void endTournament(UUID tableId, Tournament tournament);

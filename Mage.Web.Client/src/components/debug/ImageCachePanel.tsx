@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useGameStore } from '../../stores/gameStore';
+import { Image } from 'lucide-react';
+import { useSessionStore } from '../../stores';
 import { cardImageService } from '../../services/CardImageService';
 import { CacheStats } from '../../services/ImageCacheManager';
 import { Modal } from '../common/Modal';
@@ -10,6 +11,8 @@ export const ImageCachePanel: React.FC = () => {
   const [stats, setStats] = useState<CacheStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const showAlert = useSessionStore(state => state.showAlert);
+  const showLocalUserRequest = useSessionStore(state => state.showLocalUserRequest);
 
   const loadStats = async () => {
     setLoading(true);
@@ -24,7 +27,16 @@ export const ImageCachePanel: React.FC = () => {
   };
 
   const handleClearCache = async () => {
-    if (!confirm('Are you sure you want to clear the entire image cache? This will force all images to be re-downloaded.')) {
+    const confirmed = await showLocalUserRequest({
+      title: 'Clear image cache?',
+      message: 'This removes every cached card image and symbol. Images will be downloaded again as they are needed.',
+      button2Text: 'Cancel',
+      button2Action: null,
+      button1Text: 'Clear cache',
+      button1Action: null,
+    });
+
+    if (confirmed !== 1) {
       return;
     }
 
@@ -34,7 +46,7 @@ export const ImageCachePanel: React.FC = () => {
       await loadStats();
     } catch (error) {
       console.error('Failed to clear cache:', error);
-      alert('Failed to clear cache. See console for details.');
+      showAlert('Image cache', 'Failed to clear cache. See console for details.');
     } finally {
       setLoading(false);
     }
@@ -46,18 +58,18 @@ export const ImageCachePanel: React.FC = () => {
 
     const daysNum = parseInt(days, 10);
     if (isNaN(daysNum) || daysNum < 1) {
-      alert('Please enter a valid number of days.');
+      showAlert('Image cache', 'Please enter a valid number of days.');
       return;
     }
 
     setLoading(true);
     try {
       const deletedCount = await cardImageService.clearOldCache(daysNum);
-      alert(`Deleted ${deletedCount} cache entries older than ${daysNum} days.`);
+      showAlert('Image cache', `Deleted ${deletedCount} cache entries older than ${daysNum} days.`);
       await loadStats();
     } catch (error) {
       console.error('Failed to clear old cache:', error);
-      alert('Failed to clear old cache. See console for details.');
+      showAlert('Image cache', 'Failed to clear old cache. See console for details.');
     } finally {
       setLoading(false);
     }
@@ -87,7 +99,8 @@ export const ImageCachePanel: React.FC = () => {
         onClick={() => setOpen(true)}
         title="Manage image cache"
       >
-        🖼️ Cache ({stats ? formatBytes(stats.totalSize) : 'Loading...'})
+        <Image size={16} aria-hidden="true" />
+        Cache ({stats ? formatBytes(stats.totalSize) : 'Loading...'})
       </button>
 
       {open && (
@@ -132,11 +145,7 @@ export const ImageCachePanel: React.FC = () => {
                   <h3 className="image-cache-actions-title">Cache Actions</h3>
 
                   <Button
-                    onClick={() => {
-                      if (confirm('Refresh cache statistics?')) {
-                        loadStats();
-                      }
-                    }}
+                    onClick={() => void loadStats()}
                     variant="secondary"
                     disabled={loading}
                   >
