@@ -91,6 +91,11 @@ for part in mv.db trace.db; do
   ln -sfn "$CARDS_DIR/cards.h2.$part" "$link"
 done
 rm -f "$DB_DIR/cards.h2.lock.db" "$DB_DIR/cards.h2.mv.db.tempFile"
+# H2 resolves a symlink to an existing file to its real path, but keeps the link path for a missing
+# one. Right after a wipe, the server's two openings of the card DB then look like two databases on
+# one file and the second fails ("file is locked", OverlappingFileLockException). An empty file is
+# a valid new store and makes every opening resolve to the same path.
+[ -e "$CARDS_DIR/cards.h2.mv.db" ] || : > "$CARDS_DIR/cards.h2.mv.db"
 
 # --- JVM ----------------------------------------------------------------------------------------
 # Arguments go through a private @argfile so the admin password does not show up in `ps`.
