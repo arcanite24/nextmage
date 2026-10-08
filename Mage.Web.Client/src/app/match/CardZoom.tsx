@@ -29,8 +29,9 @@ export function CardZoom() {
   const shown = zoom && !dragging && settled === zoom ? zoom : null;
   // a card that left its place while hovered (cast from hand, died) never reports the pointer leaving it
   // ...or that changed zone under the same id (a spell becoming a permanent): only the hovered element counts
-  const element = shown?.card.id ? stage.element?.querySelector(`[data-object-id="${CSS.escape(shown.card.id)}"]`) : null;
-  if (!shown || detailOpen || !element || !element.matches(':hover')) return null;
+  const element = shown?.anchor
+    ?? (shown?.card.id ? stage.element?.querySelector(`[data-object-id="${CSS.escape(shown.card.id)}"]`) : null);
+  if (!shown || detailOpen || !element || !element.isConnected || !element.matches(':hover')) return null;
   const point = toStagePoint(stage, shown.x, shown.y);
   const left = point.x > stage.width / 2 ? point.x - ZOOM_WIDTH - 60 : point.x + 60;
   const top = Math.max(24, Math.min(STAGE_HEIGHT - ZOOM_HEIGHT - 24, point.y - ZOOM_HEIGHT / 2));

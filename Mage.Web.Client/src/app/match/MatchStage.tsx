@@ -281,7 +281,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
 
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
-            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} />
+            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} />
             <GameMenu canConcede={canAct} onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })} onLeave={leave} />
 
             {interaction.mode === 'mulligan' && !awaitingServer && (
