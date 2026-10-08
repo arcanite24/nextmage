@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { POOL_MANA, poolId } from '../../core/game/payment';
+import { ROPE_SECONDS, ropeSecondsLeft, ropeVisible } from '../../core/game/rope';
 import type { PlayerView } from '../../protocol/generated/views';
 import { ManaCost } from '../ui/ManaCost';
 import styles from './PlayerPlate.module.css';
@@ -23,6 +24,25 @@ export interface PlayerPlateProps {
   onPay?(id: string): void;
 }
 
+const ROPE_TICK_MS = 250;
+
+/** The player's priority time left, counted down locally between the server's reports. */
+function useRopeSeconds(player: PlayerView): number {
+  const reported = player.priorityTimeLeftSecs ?? 0;
+  const running = !!player.timerActive && !!player.hasPriority && reported > 0;
+  // a new report (a new value, or the same value saved again) restarts the local count from it
+  const report = `${reported}|${player.priorityTimeSavedTimeMs ?? ''}`;
+  const [clock, setClock] = useState<{ report: string; at: number; now: number } | null>(null);
+  useEffect(() => {
+    if (!running) return;
+    const at = Date.now();
+    const timer = setInterval(() => setClock({ report, at, now: Date.now() }), ROPE_TICK_MS);
+    return () => clearInterval(timer);
+  }, [report, running]);
+  if (!running || !clock || clock.report !== report) return reported;
+  return ropeSecondsLeft(reported, clock.at, clock.now);
+}
+
 /** A player's seat: who they are, their life, counters, floating mana and clock. */
 export function PlayerPlate({ player, isMe, targetable, selected, deciding, sleeve, onClick, toPay, payable, onPay }: PlayerPlateProps) {
   const life = player.life ?? 0;
@@ -37,8 +57,8 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
 
   const counters = (player.counters ?? []).filter((counter) => (counter.count ?? 0) > 0);
   const pool = POOL_MANA.filter(({ key }) => (player.manaPool?.[key] ?? 0) > 0);
-  const timeLeft = player.priorityTimeLeftSecs ?? 0;
-  const ticking = player.timerActive && player.hasPriority && timeLeft > 0 && timeLeft < 30;
+  const timeLeft = useRopeSeconds(player);
+  const ticking = ropeVisible(player.timerActive, player.hasPriority, timeLeft);
   const initial = (player.name ?? '?').slice(0, 1).toUpperCase();
 
   return (
@@ -68,8 +88,8 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
       <div className={styles.avatar}>
         <span aria-hidden="true">{initial}</span>
         {ticking && (
-          <svg className={styles.rope} viewBox="0 0 100 100" aria-label={`${timeLeft} seconds left`}>
-            <circle cx="50" cy="50" r="47" pathLength={30} strokeDasharray={`${timeLeft} 30`} />
+          <svg className={styles.rope} viewBox="0 0 100 100" role="img" aria-label={`${Math.ceil(timeLeft)} seconds left`}>
+            <circle cx="50" cy="50" r="47" pathLength={ROPE_SECONDS} strokeDasharray={`${timeLeft} ${ROPE_SECONDS}`} />
           </svg>
         )}
       </div>

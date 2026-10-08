@@ -74,7 +74,8 @@
   stroke: var(--danger-text);
   stroke-width: 4;
   stroke-linecap: round;
-  transition: stroke-dasharray 1s linear;
+  /* counted down locally in quarter seconds: the stroke glides between ticks */
+  transition: stroke-dasharray 250ms linear;
 }
 
 .info {
