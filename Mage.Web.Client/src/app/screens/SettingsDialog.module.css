@@ -275,3 +275,21 @@
   color: var(--ink-strong);
   font-weight: 600;
 }
+
+.volume {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.volume input {
+  width: 160px;
+  accent-color: var(--decision);
+}
+
+.volume span {
+  min-width: 3.5ch;
+  text-align: right;
+}
