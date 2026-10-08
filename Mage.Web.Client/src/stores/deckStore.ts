@@ -32,7 +32,7 @@ import {
     setDeckCardAmount as setDeckCardCopies,
 } from '../services/DeckCardListService';
 import { appendDeckCardLists } from '../services/DeckImportWorkflowService';
-import { deckStorage, DeckSummary } from '../services/DeckStorageService';
+import { deckStorage, DeckSummary } from '../core/decks/DeckStorageService';
 import { wsService } from '../services/WebSocketService';
 
 export interface DeckColors {

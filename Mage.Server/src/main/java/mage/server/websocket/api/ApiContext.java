@@ -18,10 +18,20 @@ public final class ApiContext {
     final CardSearchService cardSearch = new CardSearchService();
     final DeckValidationService deckValidation = new DeckValidationService();
     final DeckImportService deckImport = new DeckImportService();
+    final LoginThrottle adminLoginThrottle = new LoginThrottle();
+    /**
+     * Server admin password; admin login over the bridge is disabled when it is empty.
+     */
+    final String adminPassword;
 
     public ApiContext(MageServer server, ManagerFactory managers, RpcSessions sessions) {
+        this(server, managers, sessions, "");
+    }
+
+    public ApiContext(MageServer server, ManagerFactory managers, RpcSessions sessions, String adminPassword) {
         this.server = server;
         this.managers = managers;
         this.sessions = sessions;
+        this.adminPassword = adminPassword == null ? "" : adminPassword;
     }
 }

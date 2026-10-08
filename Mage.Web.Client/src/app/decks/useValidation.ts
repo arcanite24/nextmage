@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import type { DeckCardLists } from '../../types/models';
+import type { DeckCardLists } from '../../core/decks/types';
 import { api } from '../connection';
 import { toWire } from './deckModel';
 

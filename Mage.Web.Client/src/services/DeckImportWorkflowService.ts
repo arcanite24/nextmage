@@ -1,6 +1,6 @@
-import { DeckSerializer } from './DeckSerializer.js';
+import { DeckSerializer } from '../core/decks/DeckSerializer.js';
 import { cardResolverService, type CardUnresolvedReportItem, type DeckResolutionResult, type ResolvedCard } from './CardResolverService.js';
-import type { DeckCardInfo, DeckCardLists } from '../types/index.js';
+import type { DeckCardInfo } from '../types/index.js';
 
 export interface DeckImportReplacement {
   item: CardUnresolvedReportItem;
@@ -101,42 +101,5 @@ export async function resolveImportedDeckText(content: string, deckName: string)
   return cardResolverService.resolveDeckWithReport(deck);
 }
 
-export function appendDeckCardLists(baseDeck: DeckCardLists, deckToAppend: DeckCardLists): DeckCardLists {
-  return {
-    ...baseDeck,
-    cards: mergeCardLists(baseDeck.cards, deckToAppend.cards),
-    sideboard: mergeCardLists(baseDeck.sideboard, deckToAppend.sideboard),
-    updatedAt: Date.now(),
-  };
-}
-
-function mergeCardLists(baseCards: DeckCardInfo[], cardsToAppend: DeckCardInfo[]): DeckCardInfo[] {
-  const merged = baseCards.map(card => ({ ...card }));
-  const indexByIdentity = new Map(merged.map((card, index) => [cardIdentity(card), index]));
-
-  for (const card of cardsToAppend) {
-    const identity = cardIdentity(card);
-    const existingIndex = indexByIdentity.get(identity);
-
-    if (existingIndex === undefined) {
-      indexByIdentity.set(identity, merged.length);
-      merged.push({ ...card });
-      continue;
-    }
-
-    merged[existingIndex] = {
-      ...merged[existingIndex],
-      amount: merged[existingIndex].amount + card.amount,
-    };
-  }
-
-  return merged;
-}
-
-function cardIdentity(card: DeckCardInfo): string {
-  return [
-    card.setCode?.trim().toUpperCase() ?? '',
-    card.cardNumber?.trim().toLowerCase() ?? '',
-    card.cardName.trim().toLowerCase(),
-  ].join('|');
-}
+// moved to core/decks so the new app does not depend on this legacy service
+export { appendDeckCardLists } from '../core/decks/merge.js';

@@ -1,5 +1,6 @@
 # XMage server with the web bridge (WebSocket JSON-RPC on 17172).
 # Build context: the repository root.  docker build -f ops/web/Dockerfile.server .
+# The same image runs the nightly backup service (entrypoint xmage-backup).
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /src
 COPY . .
@@ -7,15 +8,30 @@ COPY . .
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -q install -DskipTests \
  && cd Mage.Server && mvn -B -q package assembly:single -DskipTests \
- && mkdir -p /opt/xmage && cd /opt/xmage && jar xf /src/Mage.Server/target/mage-server.zip
+ && mkdir -p /opt/xmage && cd /opt/xmage && jar xf /src/Mage.Server/target/mage-server.zip \
+ && date -u +%Y%m%dT%H%M%S%N > /opt/xmage/.build-id
 
 FROM eclipse-temurin:17-jre
+# xmlstarlet renders config.xml at start; sqlite3 takes consistent backups of the stats databases
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends xmlstarlet sqlite3 \
+ && rm -rf /var/lib/apt/lists/*
 WORKDIR /opt/xmage
 COPY --from=build /opt/xmage /opt/xmage
 COPY ops/web/server-entrypoint.sh /usr/local/bin/xmage-server
-RUN chmod +x /usr/local/bin/xmage-server && useradd --system --home /opt/xmage xmage && chown -R xmage /opt/xmage
+COPY ops/web/backup.sh /usr/local/bin/xmage-backup
+COPY ops/web/log4j-docker.properties /opt/xmage/config/log4j-docker.properties
+# config.template.xml is the shipped config; the entrypoint renders config.xml from it and the environment.
+# .build-id (written by the build stage) changes with every server build; the entrypoint then rebuilds the card database.
+RUN sed -i "s/\r$//" /usr/local/bin/xmage-server /usr/local/bin/xmage-backup \
+ && chmod +x /usr/local/bin/xmage-server /usr/local/bin/xmage-backup \
+ && cp config/config.xml config/config.template.xml \
+ && useradd --system --home /opt/xmage xmage \
+ && mkdir -p db cards-db logs saved /backups \
+ && chown -R xmage /opt/xmage /backups
 USER xmage
 # 17172: web clients (behind the proxy). 17171 is the desktop client's port; publish it only if you want desktop players.
 EXPOSE 17172
-VOLUME ["/opt/xmage/db", "/opt/xmage/saved"]
+# db: user data. cards-db: card database cache. logs: mageserver.log. saved: saved games.
+VOLUME ["/opt/xmage/db", "/opt/xmage/cards-db", "/opt/xmage/logs", "/opt/xmage/saved"]
 ENTRYPOINT ["xmage-server"]

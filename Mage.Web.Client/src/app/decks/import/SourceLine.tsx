@@ -1,5 +1,5 @@
 import { siteById } from '../../../core/deckImport/sites';
-import type { DeckImportSource } from '../../../types/models';
+import type { DeckImportSource } from '../../../core/decks/types';
 import { SiteMark } from './SiteMark';
 import { timeAgo } from './text';
 import styles from './SourceLine.module.css';

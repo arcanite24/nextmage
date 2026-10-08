@@ -3,8 +3,14 @@ package mage.server.websocket.api;
 import mage.players.net.UserData;
 import mage.server.DisconnectReason;
 import mage.server.Main;
+import mage.server.websocket.rpc.RpcCall;
+import mage.server.websocket.rpc.RpcException;
 import mage.server.websocket.rpc.RpcMethod;
 import mage.utils.MageVersion;
+import org.apache.log4j.Logger;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +25,8 @@ import static mage.server.websocket.rpc.RpcParam.optional;
  * Web client bridge: login, registration, user settings and connection keep-alive.
  */
 final class SessionApi {
+
+    private static final Logger logger = Logger.getLogger(SessionApi.class);
 
     private SessionApi() {
     }
@@ -58,8 +66,19 @@ final class SessionApi {
                 RpcMethod.named("connectAdmin")
                         .establishes(1)
                         .params(of("password", STRING), of("sessionId", STRING))
-                        .doc("Log in as server admin.")
-                        .handler(call -> ctx.server.connectAdmin(call.string(0), call.string(1), serverVersion)),
+                        .doc("Log in as server admin. Disabled unless the server was started with a non-empty admin password "
+                                + "(-adminPassword=... or -Dxmage.adminPassword=...). After a wrong password the caller's IP is "
+                                + "locked out for 1, 2, 4... seconds (at most 5 minutes).")
+                        .handler(call -> connectAdmin(ctx, call, serverVersion)),
+
+                RpcMethod.named("sessionGetRestoreToken")
+                        .session(0)
+                        .params(of("sessionId", STRING))
+                        .returns("string")
+                        .doc("Token that reattaches this user (and its tables) from a later connection: pass it as "
+                                + "connectUser's restoreSessionId. It changes on every login, so fetch it again after each one.")
+                        .handler(call -> ctx.sessions.restoreToken(call.sessionId())
+                                .orElseThrow(() -> RpcException.notAuthorized("Log in before asking for a restore token"))),
 
                 RpcMethod.named("authRegister")
                         .establishes(0)
@@ -102,5 +121,31 @@ final class SessionApi {
                             return true;
                         })
         );
+    }
+
+    private static boolean connectAdmin(ApiContext ctx, RpcCall call, MageVersion serverVersion) throws Exception {
+        String ip = call.getConnection().getRemoteHost();
+        String password = call.string(0);
+        RpcException rejection = null;
+        long lockMillis = ctx.adminPassword.isEmpty() ? 0 : ctx.adminLoginThrottle.tryBegin(ip);
+        if (ctx.adminPassword.isEmpty()) {
+            rejection = RpcException.notAuthorized("Admin login is disabled on this server");
+        } else if (lockMillis > 0) {
+            rejection = new RpcException(RpcException.RATE_LIMITED,
+                    "Too many failed admin logins, try again in " + ((lockMillis + 999) / 1000) + " s");
+        } else if (!MessageDigest.isEqual(password.getBytes(StandardCharsets.UTF_8),
+                ctx.adminPassword.getBytes(StandardCharsets.UTF_8))) {
+            ctx.adminLoginThrottle.recordFailure(ip);
+            logger.warn("Failed admin login over WebSocket from " + ip);
+            rejection = RpcException.notAuthorized("Wrong admin password");
+        }
+        if (rejection != null) {
+            // the dispatcher already opened a session for this login: do not leave it behind
+            ctx.sessions.disconnect(call.sessionId(), DisconnectReason.LostConnection);
+            call.getConnection().bindSession(null);
+            throw rejection;
+        }
+        ctx.adminLoginThrottle.recordSuccess(ip);
+        return ctx.server.connectAdmin(password, call.sessionId(), serverVersion);
     }
 }

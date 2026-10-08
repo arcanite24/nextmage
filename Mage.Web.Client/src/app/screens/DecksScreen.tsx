@@ -7,7 +7,7 @@ import { UpdateDialog } from '../decks/import/UpdateDialog';
 import { useImportDrop, useImportPaste } from '../decks/import/useImportShortcuts';
 import { useDegradedSites } from '../decks/import/useImportFlow';
 import { PASTE_KEYS } from '../decks/import/text';
-import { deckStorage } from '../../services/DeckStorageService';
+import { deckStorage } from '../../core/decks/DeckStorageService';
 import { applyUpdate } from '../../core/deckImport/diff';
 import { SLEEVE_COLORS, rosterOf, sleeveFor, useDecks, type RosterDeck } from '../stores/decks';
 import { openImport, useImportSheet } from '../stores/importSheet';

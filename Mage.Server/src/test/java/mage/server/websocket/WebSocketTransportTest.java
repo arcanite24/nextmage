@@ -16,7 +16,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.util.ArrayList;
@@ -54,6 +58,15 @@ public class WebSocketTransportTest {
     }
 
     private void start(String allowedOrigins) throws Exception {
+        start(allowedOrigins, WebSocketLimits.fromSystemProperties());
+    }
+
+    private void restart(WebSocketLimits limits) throws Exception {
+        server.shutdown();
+        start("https://play.example.com", limits);
+    }
+
+    private void start(String allowedOrigins, WebSocketLimits limits) throws Exception {
         try (ServerSocket socket = new ServerSocket(0)) {
             port = socket.getLocalPort();
         }
@@ -65,7 +78,7 @@ public class WebSocketTransportTest {
                     }
                     return null;
                 });
-        server = new WebSocketServerImpl(new InetSocketAddress("127.0.0.1", port), mageServer, null, allowedOrigins);
+        server = new WebSocketServerImpl(new InetSocketAddress("127.0.0.1", port), mageServer, null, allowedOrigins, "", limits);
         server.start();
         server.awaitStartup(10, TimeUnit.SECONDS);
     }
@@ -157,12 +170,94 @@ public class WebSocketTransportTest {
         }
     }
 
+    @Test
+    void connectionsPerClientAddressAreLimited() throws Exception {
+        restart(new WebSocketLimits(new ClientAddressResolver(""), 2, true, WebSocketLimits.DEFAULT_MAX_OUTGOING_BYTES));
+        TestClient first = TestClient.connect(port, null);
+        TestClient second = TestClient.connect(port, null);
+        TestClient third = TestClient.connect(port, null);
+        try {
+            assertThat(first.awaitClose(300)).isFalse();
+            assertThat(second.awaitClose(300)).isFalse();
+            assertThat(third.awaitClose(5000)).as("third connection from the same address is closed").isTrue();
+            assertThat(third.closeCode).isEqualTo(1008);
+        } finally {
+            first.closeBlocking();
+            second.closeBlocking();
+            third.closeBlocking();
+        }
+        // closed connections free their slot
+        waitUntil(() -> server.openConnectionsFrom("127.0.0.1") == 0);
+        TestClient again = TestClient.connect(port, null);
+        try {
+            assertThat(again.awaitClose(300)).isFalse();
+        } finally {
+            again.closeBlocking();
+        }
+    }
+
+    @Test
+    void forwardedAddressIsUsedOnlyFromATrustedProxy() throws Exception {
+        restart(new WebSocketLimits(new ClientAddressResolver("127.0.0.1"), 16, true, WebSocketLimits.DEFAULT_MAX_OUTGOING_BYTES));
+        Map<String, String> headers = new HashMap<>();
+        headers.put("X-Forwarded-For", "6.6.6.6, 203.0.113.5");
+        TestClient client = TestClient.connectWithHeaders(port, headers);
+        try {
+            waitUntil(() -> server.openConnectionsFrom("203.0.113.5") == 1);
+            assertThat(server.openConnectionsFrom("127.0.0.1")).isZero();
+            assertThat(server.openConnectionsFrom("6.6.6.6")).isZero();
+        } finally {
+            client.closeBlocking();
+        }
+    }
+
+    @Test
+    void clientThatStopsReadingIsDropped() throws Exception {
+        long limit = 256 * 1024;
+        restart(new WebSocketLimits(new ClientAddressResolver(""), 16, false, limit));
+        try (Socket socket = new Socket("127.0.0.1", port)) {
+            socket.setReceiveBufferSize(16 * 1024);
+            OutputStream out = socket.getOutputStream();
+            out.write(("GET / HTTP/1.1\r\nHost: 127.0.0.1:" + port + "\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                    + "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
+                    .getBytes(StandardCharsets.US_ASCII));
+            out.flush();
+            InputStream in = socket.getInputStream();
+            StringBuilder response = new StringBuilder();
+            while (!response.toString().endsWith("\r\n\r\n")) {
+                int b = in.read();
+                assertThat(b).as("handshake response").isNotEqualTo(-1);
+                response.append((char) b);
+            }
+            assertThat(response.toString()).startsWith("HTTP/1.1 101");
+
+            waitUntil(() -> !server.getConnections().isEmpty());
+            WebSocket conn = server.getConnections().iterator().next();
+            String chunk = String.join("", Collections.nCopies(64 * 1024, "x"));
+            // the socket never reads: kernel buffers fill up, then the server's queue
+            for (int i = 0; i < 2000 && conn.isOpen(); i++) {
+                WebSocketServerImpl.sendText(conn, chunk);
+            }
+            assertThat(conn.isOpen()).as("connection dropped once more than " + limit + " bytes were queued").isFalse();
+        }
+    }
+
+    private static void waitUntil(java.util.function.BooleanSupplier condition) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5000;
+        while (!condition.getAsBoolean()) {
+            assertThat(System.currentTimeMillis()).as("condition within 5 s").isLessThan(deadline);
+            Thread.sleep(20);
+        }
+    }
+
     private static int errorCode(JsonObject response) {
         return response.get("error").getAsJsonObject().get("code").getAsInt();
     }
 
     private static final class TestClient extends WebSocketClient {
         private final BlockingQueue<String> messages = new LinkedBlockingQueue<>();
+        private final java.util.concurrent.CountDownLatch closed = new java.util.concurrent.CountDownLatch(1);
+        volatile int closeCode;
 
         private TestClient(URI uri, Draft draft, Map<String, String> headers) {
             super(uri, draft, headers);
@@ -170,6 +265,16 @@ public class WebSocketTransportTest {
 
         static TestClient connect(int port, String origin) throws InterruptedException {
             return connect(port, origin, false);
+        }
+
+        static TestClient connectWithHeaders(int port, Map<String, String> headers) throws InterruptedException {
+            TestClient client = new TestClient(URI.create("ws://127.0.0.1:" + port), new Draft_6455(), headers);
+            client.connectBlocking(5, TimeUnit.SECONDS);
+            return client;
+        }
+
+        boolean awaitClose(long millis) throws InterruptedException {
+            return closed.await(millis, TimeUnit.MILLISECONDS);
         }
 
         static TestClient connect(int port, String origin, boolean compressed) throws InterruptedException {
@@ -207,6 +312,8 @@ public class WebSocketTransportTest {
 
         @Override
         public void onClose(int code, String reason, boolean remote) {
+            closeCode = code;
+            closed.countDown();
         }
 
         @Override
