@@ -1,0 +1,134 @@
+/* combat damage split on the creatures themselves: placed over the board, under the arrows and the decision corner */
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 58;
+  pointer-events: none;
+}
+
+.chip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--ink-faint);
+  border-radius: var(--radius-chip);
+  background: rgb(7 12 10 / 0.88);
+  box-shadow: var(--shadow-lifted);
+  color: var(--ink);
+  pointer-events: auto;
+  transition: border-color var(--dur-quick) ease;
+}
+
+.lethal {
+  border-color: var(--oxblood-lit);
+}
+
+.order {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 26px;
+  padding: 0 6px;
+  border-radius: var(--radius-chip);
+  background: var(--mat-600);
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 24px;
+  text-align: center;
+}
+
+.step {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(233 228 214 / 0.08);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.step:hover:not(:disabled) {
+  background: rgb(233 228 214 / 0.18);
+}
+
+.step:focus-visible {
+  outline: 2px solid var(--ink-strong);
+  outline-offset: 2px;
+}
+
+.step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.amount {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+  line-height: 1;
+}
+
+.amount b {
+  font-family: var(--font-print);
+  font-size: 34px;
+  color: var(--ink-strong);
+}
+
+.lethal .amount b {
+  color: var(--danger-text);
+}
+
+.amount small {
+  font-family: var(--font-print);
+  font-size: 21px;
+  color: var(--ink-dim);
+}
+
+.skull {
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  padding: 3px;
+  box-sizing: content-box;
+  border-radius: 50%;
+  background: var(--oxblood);
+  color: var(--oxblood-ink);
+}
+
+.source {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+  padding: 4px 4px 4px 14px;
+  border-radius: var(--radius-chip);
+  background: rgb(7 12 10 / 0.85);
+  box-shadow: var(--shadow-placed);
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.total {
+  font-family: var(--font-print);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    transition: none;
+  }
+}
