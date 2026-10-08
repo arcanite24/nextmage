@@ -123,6 +123,7 @@ export class DeckSerializer {
             lowerContent.includes('sb:');
 
         let currentZone: 'main' | 'side' = 'main';
+        let deckName: string | null = null;
 
         for (let line of lines) {
             line = line.trim();
@@ -152,6 +153,13 @@ export class DeckSerializer {
 
             // Ignore non-card headers (e.g. "Creatures", "Lands", CSV headers)
             if (this.isLikelyHeader(line)) {
+                continue;
+            }
+
+            // XMage .dck files name the deck on a NAME: line
+            const named = /^NAME:\s*(.+)$/.exec(line);
+            if (named) {
+                deckName = named[1].trim();
                 continue;
             }
 
@@ -249,7 +257,7 @@ export class DeckSerializer {
         }
 
         return {
-            name: 'Imported Deck',
+            name: deckName || 'Imported Deck',
             cards: mainDeck,
             sideboard: sideboard
         };

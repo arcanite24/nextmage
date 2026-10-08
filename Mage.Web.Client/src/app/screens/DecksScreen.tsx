@@ -1,7 +1,8 @@
-import { ClipboardPaste, Download, PencilRuler, RefreshCw, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { ClipboardPaste, Copy, Download, PencilLine, PencilRuler, RefreshCw, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { siteById } from '../../core/deckImport/sites';
+import { ExportMenu } from '../decks/ExportMenu';
 import { SourceLine } from '../decks/import/SourceLine';
 import { UpdateDialog } from '../decks/import/UpdateDialog';
 import { useImportDrop, useImportPaste } from '../decks/import/useImportShortcuts';
@@ -14,6 +15,8 @@ import { openImport, useImportSheet } from '../stores/importSheet';
 import { Button } from '../ui/Button';
 import { DeckBox } from '../ui/DeckBox';
 import { Dialog } from '../ui/Dialog';
+import { Field } from '../ui/Field';
+import { notify } from '../stores/toasts';
 import { Zone } from '../ui/Zone';
 import styles from './DecksScreen.module.css';
 
@@ -23,6 +26,7 @@ export function DecksScreen() {
   const roster = useMemo(() => rosterOf(decks), [decks]);
   const [removing, setRemoving] = useState<RosterDeck | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<RosterDeck | null>(null);
   const selected = roster.find((deck) => deck.id === decks.selectedId) ?? null;
   const arrivedId = useImportSheet((state) => state.arrivedId);
   const navigate = useNavigate();
@@ -37,6 +41,14 @@ export function DecksScreen() {
   const source = selected?.source;
   const sourceSite = siteById(source?.site);
   const updatable = !!sourceSite && sourceSite.tier === 'direct' && !degraded.has(sourceSite.id);
+
+  async function duplicate(deck: RosterDeck) {
+    try {
+      await useDecks.getState().duplicate(deck.id);
+    } catch (error) {
+      notify("Couldn't duplicate the deck", error instanceof Error ? error.message : String(error), 'error');
+    }
+  }
 
   /** A site that blocks us: paste a fresh copy of the list, which replaces this deck's cards. */
   function pasteNewList(deck: RosterDeck) {
@@ -125,6 +137,13 @@ export function DecksScreen() {
             <Button variant="print" icon={<PencilRuler size={16} />} onClick={() => navigate(`/decks/${encodeURIComponent(selected.id)}`)}>
               {selected.starter ? 'Copy and edit' : 'Edit deck'}
             </Button>
+            <div className={styles.actions}>
+              <ExportMenu getDeck={() => useDecks.getState().loadList(selected.id)} />
+              <Button variant="print" size="sm" icon={<Copy size={16} />} onClick={() => void duplicate(selected)}>Duplicate</Button>
+              {!selected.starter && (
+                <Button variant="print" size="sm" icon={<PencilLine size={16} />} onClick={() => setRenaming(selected)}>Rename</Button>
+              )}
+            </div>
             {!selected.starter && (
               <Button variant="danger" size="sm" className={styles.remove} icon={<Trash2 size={16} />} onClick={() => setRemoving(selected)}>Remove deck</Button>
             )}
@@ -135,6 +154,8 @@ export function DecksScreen() {
       </Zone>
 
       <UpdateDialog deckId={updating} onClose={() => setUpdating(null)} />
+
+      <RenameDialog deck={renaming} onClose={() => setRenaming(null)} />
 
       <Dialog
         open={!!removing}
@@ -160,5 +181,57 @@ export function DecksScreen() {
         <span />
       </Dialog>
     </div>
+  );
+}
+
+/** Rename a saved deck in place (same id, sleeve and history). */
+function RenameDialog({ deck, onClose }: { deck: RosterDeck | null; onClose(): void }) {
+  return (
+    <Dialog open={!!deck} onOpenChange={(open) => !open && onClose()} title="Rename deck" width="sm">
+      {deck && <RenameForm key={deck.id} deck={deck} onClose={onClose} />}
+    </Dialog>
+  );
+}
+
+function RenameForm({ deck, onClose }: { deck: RosterDeck; onClose(): void }) {
+  const [name, setName] = useState(deck.name);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!name.trim()) {
+      setError('A deck needs a name.');
+      return;
+    }
+    setBusy(true);
+    try {
+      await useDecks.getState().rename(deck.id, name);
+      onClose();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className={styles.renameForm} onSubmit={(event) => void submit(event)}>
+      <Field
+        label="Deck name"
+        value={name}
+        maxLength={60}
+        autoFocus
+        onFocus={(event) => event.currentTarget.select()}
+        onChange={(event) => {
+          setName(event.target.value);
+          setError(null);
+        }}
+        error={error}
+      />
+      <div className={styles.renameButtons}>
+        <Button variant="quiet" onClick={onClose}>Cancel</Button>
+        <Button variant="decision" type="submit" busy={busy}>Rename</Button>
+      </div>
+    </form>
   );
 }
