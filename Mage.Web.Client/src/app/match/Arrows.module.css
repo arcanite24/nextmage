@@ -6,23 +6,30 @@
   overflow: visible;
 }
 
+/* the layers below are groups: the filter sits on the group, the strokes are inherited by its paths */
 .ink {
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 3px rgb(var(--shade-rgb) / 0.6));
+}
+
+.ink path {
   fill: none;
   stroke: var(--ink);
   stroke-width: 5;
   stroke-linecap: round;
   stroke-dasharray: 2 12;
-  opacity: 0.85;
-  filter: drop-shadow(0 2px 3px rgb(var(--shade-rgb) / 0.6));
   animation: march 900ms linear infinite;
 }
 
 .block {
+  filter: drop-shadow(0 2px 3px rgb(var(--shade-rgb) / 0.6));
+}
+
+.block line {
   stroke: var(--ink-strong);
   stroke-width: 6;
   stroke-linecap: round;
   stroke-dasharray: 12 10;
-  filter: drop-shadow(0 2px 3px rgb(var(--shade-rgb) / 0.6));
 }
 
 /* a block being dragged, over an attacker it can be dropped on: the block line, lit as the decision */
@@ -48,16 +55,14 @@
   }
 }
 
-/* an attack: a heavy oxblood stroke with an ember glow, and a bright pulse running toward the target */
+/*
+ * an attack: a heavy oxblood stroke with an ember glow, and a bright pulse running toward the target. Glow, body and
+ * pulse are three layers; the pulse layer has no filter, so its marching repaints nothing heavy.
+ */
 .attack {
-  animation: attack-in 260ms var(--ease-out, ease-out) both;
-}
-
-.attackGlow,
-.attackBody,
-.attackFlow {
   fill: none;
   stroke-linecap: round;
+  animation: attack-in 260ms var(--ease-out, ease-out) both;
 }
 
 .attackGlow {
@@ -77,7 +82,10 @@
   stroke-width: 3;
   stroke-dasharray: 18 70;
   opacity: 0.85;
-  animation: march-attack 700ms linear infinite;
+}
+
+.attackFlow .attack {
+  animation: attack-in 260ms var(--ease-out, ease-out) both, march-attack 700ms linear infinite;
 }
 
 @keyframes march-attack {
@@ -94,7 +102,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .attack,
-  .attackFlow {
+  .attackFlow .attack,
+  .ink path {
     animation: none;
   }
 }
