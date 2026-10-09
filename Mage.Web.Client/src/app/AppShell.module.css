@@ -18,6 +18,14 @@
   z-index: 1;
 }
 
+.immersive {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.immersive .main {
+  padding: 0;
+}
+
 .rail {
   position: relative;
   z-index: var(--z-rail);

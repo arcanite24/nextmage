@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Library, Search } from 'lucide-react';
 import { memo, useEffect, useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import type { CareerProfile } from '../../protocol/generated/views';
 import { api } from '../connection';
 import { registerMessages, useT, type MessageKey } from '../i18n';
@@ -10,7 +10,8 @@ import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
-import { CareerBar } from './CareerBar';
+import { CareerBinder } from './CareerBinder';
+import type { BinderCard } from './binderModel';
 import { craftCard, useCareerCollection, useCareerSetProgress, useCareerState } from './careerData';
 import { ProgressBar } from './CareerScreen';
 import { fraction } from './progressModel';
@@ -19,12 +20,7 @@ import styles from './Career.module.css';
 
 registerMessages(messages);
 
-interface Printing {
-  name: string;
-  setCode: string;
-  cardNumber: string;
-  rarity: CareerRarity;
-}
+type Printing = BinderCard;
 
 const RARITIES: { value: CareerRarity | ''; label: MessageKey }[] = [
   { value: '', label: 'career.rarity.any' },
@@ -54,6 +50,8 @@ export function CareerCollectionScreen() {
   const [everything, setEverything] = useState(false);
   const [crafting, setCrafting] = useState<Printing | null>(null);
   const [showSets, setShowSets] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const view = params.get('view') === 'search' ? 'search' : 'binder';
   const owned = useMemo(() => ownedByName(collection.data ?? []), [collection.data]);
   const needle = text.trim().toLowerCase();
   const query = useDebounced(needle, 250);
@@ -81,39 +79,48 @@ export function CareerCollectionScreen() {
 
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
-      <header className={styles.pageHead}>
-        <p className={styles.lead}>{t('career.collection.count', { count: total })}</p>
-        <div className={styles.filters}>
-          <label className={styles.search}>
-            <Search size={16} aria-hidden="true" />
-            <input value={text} onChange={(event) => setText(event.target.value)} placeholder={t('career.collection.search')} aria-label={t('career.collection.search')} />
-          </label>
-          <select className={styles.select} value={rarity} onChange={(event) => setRarity(event.target.value as CareerRarity | '')} aria-label={t('career.rarity.any')}>
-            {RARITIES.map((item) => <option key={item.value} value={item.value}>{t(item.label)}</option>)}
-          </select>
-          <label className={styles.toggle}>
-            <input type="checkbox" checked={everything} onChange={(event) => setEverything(event.target.checked)} />
-            {t('career.collection.all')}
-          </label>
-          <Button variant="quiet" size="sm" icon={<Library size={16} />} onClick={() => setShowSets(true)}>{t('career.sets')}</Button>
-        </div>
-      </header>
-      <div className={styles.binder}>
-        {everything && query.length < 2 ? (
-          <p className={styles.note}>{t('career.collection.searchHint')}</p>
-        ) : (everything ? search.isPending : collection.isPending) ? (
-          <p className={styles.note}>{t('career.loading')}</p>
-        ) : cards.length === 0 ? (
-          <p className={styles.note}>{t('career.collection.empty')}</p>
-        ) : (
-          <ul className={styles.grid}>
-            {cards.map((card) => (
-              <OwnedCard key={`${card.setCode}:${card.cardNumber}`} card={card} count={owned.get(card.name.toLowerCase()) ?? 0} onPick={setCrafting} />
-            ))}
-          </ul>
-        )}
+      <div className={styles.tabs} role="group" aria-label={t('career.nav.collection')}>
+        <button type="button" className={styles.tab} aria-pressed={view === 'binder'} onClick={() => setParams({}, { replace: true })} data-nav>{t('career.binder')}</button>
+        <button type="button" className={styles.tab} aria-pressed={view === 'search'} onClick={() => setParams({ view: 'search' }, { replace: true })} data-nav>{t('career.binder.search')}</button>
+        <p className={styles.tabsNote}>{t('career.collection.count', { count: total })}</p>
       </div>
+      {view === 'binder' ? (
+        <CareerBinder collection={collection.data ?? []} owned={owned} onPick={setCrafting} />
+      ) : (
+        <>
+          <header className={styles.pageHead}>
+            <div className={styles.filters}>
+              <label className={styles.search}>
+                <Search size={16} aria-hidden="true" />
+                <input value={text} onChange={(event) => setText(event.target.value)} placeholder={t('career.collection.search')} aria-label={t('career.collection.search')} />
+              </label>
+              <select className={styles.select} value={rarity} onChange={(event) => setRarity(event.target.value as CareerRarity | '')} aria-label={t('career.rarity.any')}>
+                {RARITIES.map((item) => <option key={item.value} value={item.value}>{t(item.label)}</option>)}
+              </select>
+              <label className={styles.toggle}>
+                <input type="checkbox" checked={everything} onChange={(event) => setEverything(event.target.checked)} />
+                {t('career.collection.all')}
+              </label>
+              <Button variant="quiet" size="sm" icon={<Library size={16} />} onClick={() => setShowSets(true)}>{t('career.sets')}</Button>
+            </div>
+          </header>
+          <div className={styles.binder}>
+            {everything && query.length < 2 ? (
+              <p className={styles.note}>{t('career.collection.searchHint')}</p>
+            ) : (everything ? search.isPending : collection.isPending) ? (
+              <p className={styles.note}>{t('career.loading')}</p>
+            ) : cards.length === 0 ? (
+              <p className={styles.note}>{t('career.collection.empty')}</p>
+            ) : (
+              <ul className={styles.grid}>
+                {cards.map((card) => (
+                  <OwnedCard key={`${card.setCode}:${card.cardNumber}`} card={card} count={owned.get(card.name.toLowerCase()) ?? 0} onPick={setCrafting} />
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
       <SetProgressDialog open={showSets} onClose={() => setShowSets(false)} />
       <CraftDialog card={crafting} profile={profile} owned={crafting ? owned.get(crafting.name.toLowerCase()) ?? 0 : 0} onClose={() => setCrafting(null)} />
     </div>

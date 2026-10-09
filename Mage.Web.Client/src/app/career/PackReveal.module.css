@@ -1,0 +1,318 @@
+/* Opening a pack, on the whole screen: the sealed wrapper torn in two, the cards fanned face down and turned. Rare
+   and mythic glows use the reward metals (brass, copper); amber stays on the one next step. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  background:
+    radial-gradient(ellipse at 50% 45%, rgb(var(--mat-rgb) / 0.96), rgb(var(--void-rgb) / 0.99) 70%);
+  animation: overlay-in 260ms linear both;
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.title {
+  margin: 0;
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-print);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ---- the sealed pack */
+
+.stage {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--space-4);
+  min-height: 0;
+}
+
+.wrapper {
+  --wrapper: hsl(var(--wrapper-hue, 30) 38% 30%);
+  --wrapper-edge: hsl(var(--wrapper-hue, 30) 42% 46%);
+  position: relative;
+  display: grid;
+  grid-template-rows: 46% 54%;
+  width: min(260px, 60vw);
+  aspect-ratio: 5 / 8;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  filter: drop-shadow(0 18px 30px rgb(0 0 0 / 0.55));
+  transition: transform var(--dur-quick) var(--ease-lift);
+  animation: wrapper-in 520ms var(--ease-place) both;
+}
+
+@keyframes wrapper-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px) rotate(-4deg) scale(0.9);
+  }
+}
+
+.wrapper:hover,
+.wrapper:focus-visible {
+  transform: translateY(-6px) rotate(-1deg);
+}
+
+.wrapper:focus-visible {
+  outline: 2px solid var(--ink-strong);
+  outline-offset: 8px;
+}
+
+.half {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(115deg, rgb(255 255 255 / 0.05) 0 2px, transparent 2px 14px),
+    linear-gradient(160deg, var(--wrapper-edge), var(--wrapper) 55%);
+  color: var(--ink-strong);
+  transition: transform 560ms var(--ease-place), opacity 560ms linear;
+}
+
+.half:first-child {
+  border-radius: 8px 8px 0 0;
+  /* the tear line: a ragged edge where the two halves meet */
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 90% 100%, 78% 93%, 66% 100%, 52% 92%, 40% 100%, 27% 93%, 14% 100%, 0 93%);
+}
+
+.lower {
+  margin-top: -6%;
+  border-radius: 0 0 8px 8px;
+  clip-path: polygon(0 4%, 14% 11%, 27% 4%, 40% 11%, 52% 4%, 66% 11%, 78% 4%, 90% 11%, 100% 4%, 100% 100%, 0 100%);
+}
+
+.crimp {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: repeating-linear-gradient(90deg, rgb(0 0 0 / 0.25) 0 3px, transparent 3px 7px);
+}
+
+.crimpBottom {
+  top: auto;
+  bottom: 0;
+}
+
+.code {
+  font-family: var(--font-print);
+  font-size: 4.5rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.35);
+}
+
+.setName {
+  max-width: 85%;
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.05;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.count {
+  color: rgb(var(--ink-rgb) / 0.75);
+  font-size: var(--text-sm);
+}
+
+/* torn: the top flies up and away, the bottom drops */
+.tearing .half:first-child {
+  transform: translate(10%, -70%) rotate(14deg);
+  opacity: 0;
+}
+
+.tearing .lower {
+  transform: translateY(40%);
+  opacity: 0;
+}
+
+.hint {
+  margin: 0;
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+}
+
+/* ---- the cards, fanned and turned */
+
+.fan {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 22px 14px;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 0 18px;
+  overflow: auto;
+  list-style: none;
+}
+
+.fan > li {
+  width: clamp(120px, 11vw, 168px);
+}
+
+.flip {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--card-radius);
+  background: none;
+  cursor: pointer;
+  perspective: 900px;
+}
+
+.flip:focus-visible {
+  outline: 2px solid var(--ink-strong);
+  outline-offset: 3px;
+}
+
+.flipInner {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 560ms var(--ease-lift);
+}
+
+.flipBack,
+.flipFront {
+  grid-area: 1 / 1;
+  border-radius: var(--card-radius);
+  backface-visibility: hidden;
+}
+
+.flipFront {
+  transform: rotateY(180deg);
+}
+
+.flipUp .flipInner {
+  transform: rotateY(180deg);
+}
+
+.flip:not(.flipUp):hover .flipInner {
+  transform: translateY(-6px);
+}
+
+.rare .flipFront {
+  box-shadow: 0 0 0 2px var(--brass), 0 0 26px rgb(var(--brass-rgb) / 0.5);
+}
+
+.mythic .flipFront {
+  box-shadow: 0 0 0 2px var(--copper), 0 0 34px rgb(var(--copper-rgb) / 0.65);
+  animation: mythic-glow 1.4s ease-in-out 2 600ms;
+}
+
+@keyframes mythic-glow {
+  50% {
+    box-shadow: 0 0 0 3px var(--copper-ink), 0 0 54px rgb(var(--copper-rgb) / 0.85);
+  }
+}
+
+/* the table jolts once when a mythic turns over */
+.jolt {
+  animation: jolt 440ms linear;
+}
+
+@keyframes jolt {
+  20% {
+    transform: translate(-6px, 2px);
+  }
+  40% {
+    transform: translate(5px, -3px);
+  }
+  60% {
+    transform: translate(-3px, 2px);
+  }
+  80% {
+    transform: translate(2px, -1px);
+  }
+}
+
+.badge {
+  position: absolute;
+  left: 50%;
+  bottom: -11px;
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-chip);
+  background: rgb(var(--mat-rgb) / 0.95);
+  box-shadow: inset 0 0 0 1px var(--brass);
+  color: var(--brass-ink);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  width: min(100%, 1100px);
+  margin: 0 auto;
+}
+
+.summary {
+  flex: 1;
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.still .flipInner,
+.still .half,
+.still .wrapper {
+  transition: none;
+  animation: none;
+}
+
+.still .mythic .flipFront {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .wrapper,
+  .mythic .flipFront,
+  .jolt {
+    animation: none;
+  }
+
+  .flipInner,
+  .half {
+    transition: none;
+  }
+}
+
+/* smaller screens step the display type down (sizes stay in rem, so text zoom still scales them) */
+@media (max-width: 900px) {
+  .code {
+    font-size: 3rem;
+  }
+}

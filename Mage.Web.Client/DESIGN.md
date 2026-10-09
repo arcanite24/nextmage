@@ -10,6 +10,10 @@ colors:
   oxblood-ink: "#f0b3a9"
   danger-text: "#e5877c"
   sage: "#8fc19a"
+  brass: "#d6b36a"
+  brass-ink: "#e8cf8f"
+  copper: "#e0743f"
+  copper-ink: "#f1a37a"
   ink: "#e9e4d6"
   ink-strong: "#f6f2e8"
   ink-soft: "rgb(233 228 214 / 0.78)"
@@ -208,6 +212,7 @@ A monochrome green-and-ivory world with a single hot accent and two quiet semant
 ### Secondary
 - **Oxblood** (`oxblood`, `oxblood-ink`, `danger-text`): damage, attack declarations, destructive buttons, field errors, the error toast.
 - **Sage** (`sage`): positive outcomes only (legal deck, victory scores).
+- **Brass and Copper** (`brass`, `brass-ink`, `copper`, `copper-ink`): Career's reward metals, nowhere else. Brass is what you earned (coins, XP, rares, achievements, a won verdict); copper is the rarest (mythics, level rewards). Never on a button, never for focus or selection.
 
 ### Neutral
 - **Neoprene** (`mat-950` to `mat-600`): the ground. `mat-800` is the app body, `mat-700` the dialog stock, `mat-600` toasts and card-back weave, `mat-900`/`mat-950` the match frame vignette and dark wells. `mat-400` is text selection.
@@ -325,6 +330,43 @@ While a deck file, link or list is dragged over a shelf, the zone's printed outl
 ### Mat Print (signature)
 The selected deck's art printed into the mat in three separations (shadow, light, key) under a mat-green dye and a 4px halftone, masked to fade into the plain mat. Selecting a deck re-prints it: separations slide into register over 620ms.
 
+## Career: game mode
+
+Career is the same playmat with the house lights down: a single-player game mode, not a set of web pages. Everything above still holds; this section adds what a game screen needs.
+
+### Shell and HUD
+Every `/career` route renders inside `CareerShell`: full bleed, the app's header gone. The ground is a Mat Print of the card in front of the player (the next opponent, the chapter's boss, the result's opponent), vignetted toward `void` at the top and bottom. A HUD strip runs across the top: back (Escape does the same), "Career" and the screen's name in Plate caps, the wallet (coins counting up when they change, rare and mythic wildcards, packs to open), the music toggle, settings, and the Level Medallion: the avatar in a brass XP ring with the level on a badge. The hub's backdrop turns through the next duel and the modes' art every nine seconds; still, it stays on the first.
+
+### Portrait Card
+An opponent is their signature card: the art crop in a frame (cover from Career content, or the highest-rarity, highest-cost card of their deck), a name plate in Plate caps with colour pips, and a foot for wins and pay. Sizes sm / md / lg through `--portrait-w`. Locked frames are sealed (dimmed, lock seal); a boss gets a crown; the next one is selected in ink. Until the art loads, the drawn portrait stands in.
+
+### Scenes
+- **Hub**: the next duel as a large portrait with one amber Play, nine mode tiles of placed art (state on each: next node, run record, packs waiting), quests and the weekly goal at the side.
+- **Ladder**: tiers stacked from the champions down, each a numbered rung and a row of portraits; a sealed tier shows the wins still needed as pips.
+- **Versus**: you left, the opponent right, sliding in; VS stamps between them; stakes as brass chips; their opening line; one amber Fight that stays busy while the table is set.
+- **Results**: the verdict stamped over the opponent's frame (brass for victory, ink for defeat) and their last word, then coins count up, the XP bar sweeps level by level, quests tick in, prizes deal in as brass-edged cards. Every beat skips on Skip, Space or Enter.
+- **Pack**: full screen. The sealed wrapper (its hue from the set code, never the card art) tears in two, the cards deal in face down and turn one by one; rares glow brass, mythics copper with a jolt of the table. Reveal all and the summary close it.
+- **Binder**: a shelf of set spines with completion, and the open set two pages at a time, nine pockets each. Owned cards sit in pockets with playset pips; the rest are dashed outlines with number and name. Cards new since the last look catch a brass shine once and keep a NEW tag for the visit.
+- **Campaign**: the chapter's path with the boss at its end, the boss's art behind it; each duel's opponent speaks in a speech card (before the duel, then the parting word once it's won).
+- **Ceremonies**: a new tier, chapter, shop set or achievement gets one full-screen moment the first time (art or crest, kicker, title, one line, Continue). They queue and never repeat.
+
+### Motion
+One kit (`career/motion.ts`, `motion.module.css`): deal (staggered rise, capped at ten steps), scene (a screen rises 12px and settles), stamp (lands large and settles), pulse (an ivory breath, three times), count-up, and sequences of beats. No move blocks input for more than 1.2s, everything long can be skipped, and reduced motion or the animations setting turns every move into a plain appearance.
+
+### Sound and music
+Career cues are synthesized like the match's: tap, whoosh, coin and coins, XP, level-up, unlock, tear, flip, rare, mythic, versus, win, loss. A generative pad (Am, F, C, G with pentatonic bells) plays while Career is open and no game is, under its own toggle and volume in Settings, never louder than the effects.
+
+### Voices
+Each Career opponent has five lines in Career content (intro, big play, low life, win, lose). In a Career game they appear as the opponent's speech bubble, each at most once; muting the opponent hides them; free play never has them.
+
+### Navigation
+Arrow keys move a visible ink focus between anything marked `data-nav`, Enter takes it, Escape goes back. A gamepad does the same: d-pad or stick to move, A to take, B to go back.
+
+### Named Rules
+**The Reward Metal Rule.** Brass and copper are for what the player got, never for what they must decide. The decision on a Career screen is still the one amber button.
+
+**The Skippable Rule.** Every Career animation can be skipped or is shorter than a beat; nothing makes the player wait to play.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -334,6 +376,7 @@ The selected deck's art printed into the mat in three separations (shadow, light
 - **Do** keep the stitched edge and mat grain on every top-level screen.
 - **Do** set match HUD type in stage pixels at 21px or larger.
 - **Do** use placed / lifted / held shadows only for objects on the mat, and keep printed ink flat.
+- **Do** show Career opponents by their card's art in a Portrait Card, and let every Career sequence be skipped.
 
 ### Don't:
 - **Don't** use amber for focus, hover, tabs, filters, the active nav item, decoration or celebration.
@@ -341,3 +384,4 @@ The selected deck's art printed into the mat in three separations (shadow, light
 - **Don't** make glass panels, backdrop blur, or navy-and-gold fantasy chrome.
 - **Don't** outline zones, buttons or selected items with layout-shifting borders; use the inset outline weights above.
 - **Don't** use mana colors for UI state.
+- **Don't** use brass or copper outside Career's rewards, or put either on a button.

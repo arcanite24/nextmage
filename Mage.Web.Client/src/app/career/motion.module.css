@@ -1,0 +1,74 @@
+/* Career's motion kit (see motion.ts): staggered deals, scene entrances, a pulse for what's new. Reduced motion and
+   the animations setting both turn every move here into a plain appearance. */
+
+/* dealt in like cards onto the mat, one after another (--deal is the item's place, capped in motion.ts) */
+.deal {
+  animation: deal-in 420ms var(--ease-place) both;
+  animation-delay: calc(var(--deal, 0) * 55ms + 60ms);
+}
+
+@keyframes deal-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+}
+
+/* a screen of Career arrives: rises a little and settles */
+.scene {
+  animation: scene-in 360ms var(--ease-place) both;
+}
+
+@keyframes scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* something new: a slow ivory breath around it, three times, then it rests */
+.pulse {
+  animation: pulse 1.6s ease-in-out 3;
+}
+
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 0 3px rgb(var(--ink-strong-rgb) / 0.55), 0 0 28px rgb(var(--ink-strong-rgb) / 0.25);
+  }
+}
+
+/* a stamp: lands big and settles, for banners and medals */
+.stamp {
+  animation: stamp 520ms var(--ease-place) both;
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.35);
+    filter: blur(2px);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+.still .deal,
+.still .scene,
+.still .pulse,
+.still .stamp,
+.still.deal,
+.still.scene,
+.still.pulse,
+.still.stamp {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deal,
+  .scene,
+  .pulse,
+  .stamp {
+    animation: none;
+  }
+}

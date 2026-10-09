@@ -1,8 +1,7 @@
-import { Check, Download, Gift, ListOrdered, Lock, RefreshCw, Swords, Trophy, Upload } from 'lucide-react';
+import { Check, Coins, Gift, RefreshCw, Swords, Trophy, Upload } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { DeckCardLists } from '../../core/decks/types';
-import type { CareerOpponent, CareerPayout, CareerProfile, CareerQuest, CareerQuests, CareerStarter, CareerWeekly } from '../../protocol/generated/views';
+import { Link, useNavigate } from 'react-router-dom';
+import type { CareerAchievement, CareerCampaign, CareerOpponent, CareerProfile, CareerShopSet, CareerQuest, CareerQuests, CareerStarter, CareerWeekly } from '../../protocol/generated/views';
 import { registerMessages, useT, type MessageKey } from '../i18n';
 import messages from '../i18n/en/career';
 import { usePlay } from '../stores/play';
@@ -12,16 +11,23 @@ import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
-import { downloadText } from '../ui/download';
-import { CareerBar } from './CareerBar';
-import { CareerModesCard } from './CareerModesCard';
-import { ensureCareerDeck } from './careerDeck';
+import { achievementMoment, useCeremonies, type CeremonyMoment } from './ceremonies';
 import {
-  exportCareer, importCareer, playCareer, startCareer, useCareerCollection, useCareerOpponents, useCareerQuests, useCareerStarters, useCareerState,
-  rerollQuest, setCountAiGames, useCareerAchievements, useCareerLevels, useCareerLook, useCareerUnlocks, useCareerWeekly,
+  importCareer, rerollQuest, setCountAiGames, startCareer, useCareerAchievements, useCareerLevels, useCareerLook, useCareerOpponents,
+  useCareerQuests, useCareerShop, useCareerStarters, useCareerState, useCareerUnlocks, useCareerWeekly,
 } from './careerData';
+import { useCampaigns, useChallenge, useGauntlet, useLimited, usePuzzles } from './careerModesData';
+import { focusNode } from './careerModesModel';
+import { useRotatingSceneArt } from './careerScene';
+import { playCareerCue } from './careerSound';
+import { beatenCount, freshUnlocks, nextOpponent, readSeen, unlockFacts, writeSeen } from './hubModel';
+import { dealStyle, useStill } from './motion';
+import { CardArt, PortraitCard, type ArtCard } from './Portraits';
 import { CAREER_AVATARS, CAREER_SLEEVES, cosmeticName, describePay, fraction, titleLabel, unlockedIds, weeklyMarks } from './progressModel';
-import { DECK_MIN, WINS_TO_UNLOCK, exportFileName, levelProgress, mainDeckSize, ownedByName, shortfalls, tiersOf } from './careerModel';
+import { RosterVersus } from './rosterPlay';
+import { useCareerDeck } from './useCareerDeck';
+import hub from './CareerHub.module.css';
+import motion from './motion.module.css';
 import styles from './Career.module.css';
 
 registerMessages(messages);
@@ -56,7 +62,7 @@ export function CareerScreen() {
     );
   }
   const profile = state.data.profile;
-  if (profile) return <CareerHome profile={profile} recent={state.data.recent ?? []} />;
+  if (profile) return <CareerHub profile={profile} />;
   if (!optedIn) return <Intro />;
   return <StarterPicker />;
 }
@@ -183,174 +189,229 @@ function ImportButton() {
   );
 }
 
-function CareerHome({ profile, recent }: { profile: CareerProfile; recent: CareerPayout[] }) {
+/** The Career's hub: the next duel up front, every mode as a tile, the day's quests at the side. */
+function CareerHub({ profile }: { profile: CareerProfile }) {
   const t = useT();
   const navigate = useNavigate();
-  const user = useSession((state) => state.userName);
   const opponents = useCareerOpponents(true);
-  const collection = useCareerCollection(true);
-  const tiers = useMemo(() => tiersOf(opponents.data ?? []), [opponents.data]);
-  const owned = useMemo(() => ownedByName(collection.data ?? []), [collection.data]);
-  const [deck, setDeck] = useState<DeckCardLists | null>(null);
-  const starter = profile.starter;
-  useEffect(() => {
-    let cancelled = false;
-    void ensureCareerDeck(user, starter).then((loaded) => !cancelled && setDeck(loaded));
-    return () => {
-      cancelled = true;
-    };
-  }, [user, starter]);
-  const size = deck ? mainDeckSize(deck) : 0;
-  const missing = useMemo(() => (deck && collection.data ? shortfalls(deck, owned) : []), [deck, owned, collection.data]);
-  const deckProblem = size < DECK_MIN ? t('career.deck.notReady', { min: DECK_MIN, count: size }) : missing.length > 0 ? t('career.deck.missing', { count: missing.length }) : null;
-  const level = levelProgress(profile.xp ?? 0, profile.level ?? 1);
-  const playing = usePlay((play) => play.phase !== 'idle');
-  const [starting, setStarting] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const names = useMemo(() => new Map((opponents.data ?? []).map((opponent) => [opponent.id, opponent.name])), [opponents.data]);
+  const campaigns = useCampaigns(true);
+  const gauntlet = useGauntlet(true);
+  const puzzles = usePuzzles(true);
+  const limited = useLimited(true);
+  const challenge = useChallenge(true);
+  const shop = useCareerShop(true);
+  const achievements = useCareerAchievements(true);
   const quests = useCareerQuests(true);
   const weekly = useCareerWeekly(true);
-  const avatar = useCareerLook((look) => look.looks[user.toLowerCase()]?.avatar ?? null);
-  const title = useCareerLook((look) => look.looks[user.toLowerCase()]?.title ?? null);
+  const deck = useCareerDeck(profile);
+  const playing = usePlay((play) => play.phase !== 'idle');
+  const [versus, setVersus] = useState<CareerOpponent | null>(null);
+  const roster = useMemo(() => opponents.data ?? [], [opponents.data]);
+  const next = useMemo(() => nextOpponent(roster), [roster]);
+  const still = useStill();
+  useUnlockMoments(roster, campaigns.data, achievements.data, shop.data, opponents.isSuccess && campaigns.isSuccess && achievements.isSuccess && shop.isSuccess);
 
-  async function play(opponent: CareerOpponent) {
-    if (!deck || deckProblem) return;
-    setStarting(opponent.id ?? null);
-    setError(null);
-    try {
-      await playCareer(opponent.id!, deck);
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
-      setStarting(null);
-    }
-  }
+  const chapter = useMemo(() => {
+    const campaign = campaigns.data?.[0];
+    const chapters = campaign?.chapters ?? [];
+    const current = chapters.find((item) => !item.done && (item.nodes ?? []).some((node) => node.state === 'open')) ?? chapters.find((item) => !item.done);
+    return { campaign, current, node: current ? focusNode(current) : undefined };
+  }, [campaigns.data]);
+  const solved = (puzzles.data ?? []).filter((puzzle) => puzzle.solved).length;
+  const run = gauntlet.data?.run;
+  const runOn = run && run.state === 'active';
+  const limitedRun = limited.data?.run;
+  const earned = (achievements.data ?? []).filter((achievement) => achievement.achieved).length;
+  const packs = profile.packTokens ?? 0;
+  const price = shop.data?.[0]?.price ?? 100;
 
-  async function exportNow() {
-    try {
-      downloadText(exportFileName(user, new Date()), await exportCareer());
-      notify(t('career.export.done'), '');
-    } catch (reason) {
-      notify(t('career.export.failed'), reason instanceof Error ? reason.message : String(reason), 'error');
-    }
-  }
+  const tiles: Tile[] = [
+    {
+      to: '/career/opponents', title: t('career.nav.home'), art: next?.cover ?? null, artName: next?.name ?? '',
+      status: t('career.hub.opponents', { beaten: beatenCount(roster), total: roster.length }),
+    },
+    {
+      to: '/career/campaign', title: t('career.modes.campaign'), art: chapter.node?.cover ?? null, artName: chapter.node?.name ?? '',
+      status: chapter.current ? t('career.hub.campaign', { chapter: chapter.current.name ?? '', done: chapter.campaign?.done ?? 0, total: chapter.campaign?.total ?? 0 }) : t('career.hub.campaignDone'),
+    },
+    {
+      to: '/career/gauntlet', title: t('career.modes.gauntlet'), art: run?.next?.cover ?? HUB_ART.gauntlet, artName: run?.next?.name ?? '',
+      status: runOn ? t('career.hub.gauntletRun', { wins: run?.wins ?? 0 }) : t('career.hub.gauntletEntry', { coins: gauntlet.data?.entryCoins ?? 0 }),
+      badge: runOn ? t('career.hub.inProgress') : undefined,
+    },
+    {
+      to: '/career/puzzles', title: t('career.modes.puzzles'), art: HUB_ART.puzzles, artName: '',
+      status: t('career.hub.puzzles', { solved, total: puzzles.data?.length ?? 0 }),
+    },
+    {
+      to: '/career/limited', title: t('career.modes.limited'), art: HUB_ART.limited, artName: '',
+      status: limitedRun && limitedRun.state === 'active'
+        ? t('career.hub.limitedRun', { wins: limitedRun.wins ?? 0, losses: limitedRun.losses ?? 0 })
+        : t('career.hub.limitedEntry', { sealed: limited.data?.sealedEntry ?? 0, draft: limited.data?.draftEntry ?? 0 }),
+      badge: limitedRun && limitedRun.state === 'active' ? t('career.hub.inProgress') : undefined,
+    },
+    {
+      to: '/career/challenge', title: t('career.modes.challenge'), art: challenge.data?.cover ?? null, artName: challenge.data?.opponentName ?? '',
+      status: challenge.data?.won ? t('career.hub.challengeWon') : challenge.data?.name ?? '',
+    },
+    {
+      to: '/career/shop', title: t('career.nav.shop'), art: HUB_ART.shop, artName: '',
+      status: packs > 0 ? t('career.hub.shopFree', { count: packs }) : t('career.hub.shop', { price }),
+      badge: packs > 0 ? t('career.hub.packs', { count: packs }) : undefined,
+    },
+    {
+      to: '/career/collection', title: t('career.nav.collection'), art: HUB_ART.collection, artName: '',
+      status: t('career.hub.collection', { count: deck.cardCount }),
+    },
+    {
+      to: '/career/progress', title: t('career.nav.progress'), art: HUB_ART.progress, artName: '',
+      status: t('career.hub.progress', { level: profile.level ?? 1, earned }),
+    },
+  ];
+  // the mat behind the hub turns through the next duel and the modes' art
+  useRotatingSceneArt([next?.cover ?? deck.cover, ...tiles.map((tile) => tile.art)], still);
 
   return (
-    <div className={styles.page}>
-      <CareerBar profile={profile} />
-      <div className={styles.homeGrid}>
-        <section className={styles.tiers} aria-label={t('career.nav.home')}>
-          {error && <p className={styles.error} role="alert">{t('career.playFailed')}: {error}</p>}
-          {opponents.isPending && <p className={styles.note}>{t('career.loading')}</p>}
-          {tiers.map((tier, index) => (
-            <section key={tier.tier} className={[styles.tier, tier.unlocked ? '' : styles.tierLocked].join(' ')}>
-              <header className={styles.tierHead}>
-                <h2>{t('career.tier', { tier: tier.tier, name: tier.name })}</h2>
-                <small>
-                  {!tier.unlocked
-                    ? t('career.tier.locked', { needed: WINS_TO_UNLOCK })
-                    : index < tiers.length - 1
-                      ? (tier.wins >= WINS_TO_UNLOCK ? t('career.tier.done') : t('career.tier.progress', { wins: tier.wins, needed: WINS_TO_UNLOCK }))
-                      : null}
-                </small>
-              </header>
-              <ul className={styles.opponents}>
-                {tier.opponents.map((opponent) => (
-                  <li key={opponent.id} className={styles.opponent}>
-                    <span className={styles.colors} aria-hidden="true">
-                      {(opponent.colors ?? '').split('').map((letter, i) => <i key={i} className={`ms ms-cost ms-${letter.toLowerCase()}`} />)}
-                    </span>
-                    <span className={styles.opponentText}>
-                      <b>{opponent.name}</b>
-                      <small>{opponent.tagline}</small>
-                    </span>
-                    <span className={styles.opponentMeta}>
-                      <span>{t('career.opponent.wins', { count: opponent.wins ?? 0 })}</span>
-                      <small>{t('career.opponent.pays', { coins: opponent.winCoins ?? 0 })}</small>
-                    </span>
-                    {opponent.unlocked ? (
-                      <Button
-                        variant="print"
-                        icon={<Swords size={16} />}
-                        busy={starting === opponent.id}
-                        disabled={playing || !!deckProblem || !deck}
-                        onClick={() => void play(opponent)}
-                      >
-                        {starting === opponent.id ? t('career.playing') : t('career.opponent.play')}
-                      </Button>
-                    ) : (
-                      <span className={styles.locked}><Lock size={16} aria-hidden="true" /> {t('career.opponent.locked')}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+    <div className={hub.hub}>
+      <section className={hub.hero} aria-labelledby="hub-next">
+        {next ? (
+          <>
+            <PortraitCard
+              name={next.name ?? ''}
+              colors={next.colors}
+              cover={next.cover}
+              size="lg"
+              className={[hub.heroCard, motion.deal].join(' ')}
+              onPick={() => setVersus(next)}
+              label={t('career.hub.face', { opponent: next.name ?? '' })}
+            />
+            <div className={hub.heroText}>
+              <p className={hub.kicker}>{t('career.hub.next')} · {t('career.tier', { tier: next.tier ?? 1, name: next.tierName ?? '' })}</p>
+              <h2 id="hub-next" className={hub.heroName}>{next.name}</h2>
+              <p className={hub.heroLine}>{next.tagline}</p>
+              <p className={hub.heroPays}><Coins size={18} aria-hidden="true" /> {t('career.opponent.pays', { coins: next.winCoins ?? 0 })}</p>
+              <div className={hub.heroActions}>
+                {deck.problem ? (
+                  <Button variant="decision" size="xl" onClick={() => navigate('/career/deck')} data-nav>{t('career.deck.fix')}</Button>
+                ) : (
+                  <Button variant="decision" size="xl" icon={<Swords size={24} />} disabled={playing || !deck.deck} onClick={() => setVersus(next)} data-nav>
+                    {t('career.opponent.play')}
+                  </Button>
+                )}
+                <Button variant="print" size="lg" onClick={() => navigate('/career/opponents')} data-nav>{t('career.hub.allOpponents')}</Button>
+              </div>
+              <div className={hub.deckPlate}>
+                <span>
+                  <b>{deck.deck?.name ?? t('career.nav.deck')}</b>
+                  <small>{deck.problem ?? t('career.deck.summary', { count: deck.size })}</small>
+                </span>
+                <Button variant="quiet" size="sm" onClick={() => navigate('/career/deck')} data-nav>{t('career.deck.edit')}</Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className={styles.note}>{opponents.isError ? t('career.failed') : t('career.loading')}</p>
+        )}
+      </section>
+
+      <nav className={hub.tiles} aria-label={t('career.hub.modes')}>
+        {tiles.map((tile, index) => <ModeTile key={tile.to} tile={tile} index={index} />)}
+      </nav>
+
+      <aside className={hub.side}>
+        <section className={[hub.panel, motion.deal].join(' ')} style={dealStyle(3)}>
+          <h2 className={styles.cardLabel}>{t('career.quests')}</h2>
+          {quests.isPending ? <p className={styles.small}>{t('career.loading')}</p> : <QuestList quests={quests.data ?? undefined} />}
         </section>
+        <section className={[hub.panel, motion.deal].join(' ')} style={dealStyle(4)}>
+          <h2 className={styles.cardLabel}>{t('career.weekly')}</h2>
+          <WeeklyGoal weekly={weekly.data} />
+        </section>
+      </aside>
 
-        <aside className={styles.side}>
-          <CareerModesCard />
-
-          <section className={styles.card}>
-            <div className={styles.identity}>
-              <CareerAvatar id={avatar} name={user} />
-              <span className={styles.identityText}>
-                <b>{user}</b>
-                {title && <small>{titleLabel(title)}</small>}
-              </span>
-            </div>
-            <h2 className={styles.cardLabel}>{t('career.level', { level: profile.level ?? 1 })}</h2>
-            <div className={styles.xpBar} role="progressbar" aria-valuemin={0} aria-valuemax={level.needed || 1} aria-valuenow={level.into} aria-label={t('career.level', { level: profile.level ?? 1 })}>
-              <span style={{ width: `${Math.round(level.fraction * 100)}%` }} />
-            </div>
-            <p className={styles.small}>{level.max ? t('career.xpMax') : t('career.xp', { into: level.into, needed: level.needed })} · {t('career.record', { wins: profile.wins ?? 0, losses: profile.losses ?? 0 })}</p>
-            <Button variant="quiet" size="sm" icon={<ListOrdered size={16} />} onClick={() => navigate('/career/progress')}>{t('career.progress.levels')}</Button>
-          </section>
-
-          <section className={styles.card}>
-            <h2 className={styles.cardLabel}>{t('career.weekly')}</h2>
-            <WeeklyGoal weekly={weekly.data} />
-          </section>
-
-          <section className={styles.card}>
-            <h2 className={styles.cardLabel}>{t('career.quests')}</h2>
-            {quests.isPending ? <p className={styles.small}>{t('career.loading')}</p> : <QuestList quests={quests.data ?? undefined} />}
-          </section>
-
-          <section className={styles.card}>
-            <h2 className={styles.cardLabel}>{deck?.name ?? t('career.nav.deck')}</h2>
-            <p className={styles.small}>{t('career.deck.summary', { count: size })}</p>
-            {deckProblem && <p className={styles.warn}>{deckProblem}</p>}
-            <Button variant={deckProblem ? 'decision' : 'print'} size="sm" onClick={() => navigate('/career/deck')}>{deckProblem ? t('career.deck.fix') : t('career.deck.edit')}</Button>
-            <p className={styles.small}>{t('career.lossNote')}</p>
-          </section>
-
-          {recent.length > 0 && (
-            <section className={styles.card}>
-              <h2 className={styles.cardLabel}>{t('career.recent')}</h2>
-              <ul className={styles.recent}>
-                {recent.slice(0, 5).map((payout) => {
-                  const opponent = names.get(payout.opponent) ?? payout.opponent ?? '';
-                  return (
-                    <li key={payout.matchKey}>
-                      <span className={payout.won ? styles.won : styles.lost}>{t(payout.won ? 'career.recent.won' : 'career.recent.lost', { opponent })}</span>
-                      <small>{payout.note || t('career.recent.paid', { coins: payout.coins ?? 0, xp: payout.xp ?? 0 })}</small>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          )}
-
-          <section className={styles.card}>
-            <h2 className={styles.cardLabel}>{t('career.settings')}</h2>
-            <CountAiGames profile={profile} />
-          </section>
-
-          <Button variant="quiet" size="sm" icon={<Download size={16} />} onClick={() => void exportNow()}>{t('career.export')}</Button>
-        </aside>
-      </div>
+      {versus && <RosterVersus opponent={versus} deck={deck} onClose={() => setVersus(null)} />}
     </div>
   );
+}
+
+/** Cards whose art stands for a mode that has no opponent of its own to show. */
+const HUB_ART = {
+  gauntlet: { name: 'Stoneshock Giant', setCode: 'THS', cardNumber: '142' },
+  puzzles: { name: 'Omenspeaker', setCode: 'THS', cardNumber: '57' },
+  limited: { name: 'Chronicler of Heroes', setCode: 'THS', cardNumber: '190' },
+  shop: { name: 'Sylvan Caryatid', setCode: 'THS', cardNumber: '180' },
+  collection: { name: 'Horizon Scholar', setCode: 'THS', cardNumber: '51' },
+  progress: { name: "Elspeth, Sun's Champion", setCode: 'THS', cardNumber: '9' },
+} as const;
+
+interface Tile {
+  to: string;
+  title: string;
+  status: string;
+  art: ArtCard | null;
+  artName: string;
+  badge?: string;
+}
+
+function ModeTile({ tile, index }: { tile: Tile; index: number }) {
+  return (
+    <Link to={tile.to} className={[hub.tile, motion.deal].join(' ')} style={dealStyle(index)} onClick={() => playCareerCue('whoosh')} data-nav>
+      <CardArt card={tile.art} name={tile.artName || tile.title} className={hub.tileArt} />
+      <span className={hub.tileText}>
+        <b>{tile.title}</b>
+        <small>{tile.status}</small>
+      </span>
+      {tile.badge && <span className={hub.badge}>{tile.badge}</span>}
+    </Link>
+  );
+}
+
+/** New tiers, chapters, shop sets and achievements get their moment the first time the hub sees them. */
+function useUnlockMoments(
+  roster: readonly CareerOpponent[],
+  campaigns: readonly CareerCampaign[] | undefined,
+  achievements: readonly CareerAchievement[] | undefined,
+  shop: readonly CareerShopSet[] | undefined,
+  ready: boolean,
+) {
+  const t = useT();
+  const user = useSession((state) => state.userName);
+  useEffect(() => {
+    if (!ready) return;
+    const { fresh, seen } = freshUnlocks(readSeen(user), unlockFacts(roster, campaigns ?? [], achievements ?? [], shop ?? []));
+    writeSeen(user, seen);
+    const moments: CeremonyMoment[] = fresh.flatMap((fact): CeremonyMoment[] => {
+      const [kind, ...rest] = fact.split(':');
+      if (kind === 'tier') {
+        const tier = Number(rest[0]);
+        const members = roster.filter((opponent) => opponent.tier === tier);
+        const first = members[0];
+        if (!first) return [];
+        return [{
+          id: fact,
+          kicker: t('career.ceremony.tier'),
+          title: t('career.tier', { tier, name: first.tierName ?? '' }),
+          text: t('career.ceremony.tierText', { names: members.map((opponent) => opponent.name).join(', ') }),
+          card: first.cover ?? undefined,
+        }];
+      }
+      if (kind === 'chapter') {
+        const [campaignId, chapterId] = rest;
+        const chapter = campaigns?.find((campaign) => campaign.id === campaignId)?.chapters?.find((item) => item.id === chapterId);
+        if (!chapter) return [];
+        return [{ id: fact, kicker: t('career.ceremony.chapter'), title: chapter.name ?? '', text: chapter.text, crest: { name: chapter.name ?? '', colors: chapter.color } }];
+      }
+      if (kind === 'set') {
+        const set = shop?.find((item) => item.setCode === rest[0]);
+        if (!set) return [];
+        return [{ id: fact, kicker: t('career.ceremony.set'), title: set.name ?? set.setCode ?? '', text: t('career.ceremony.setText', { chapter: set.unlockedBy ?? '' }), crest: { name: set.setCode ?? '' }, cue: 'coins' }];
+      }
+      const achievement = achievements?.find((item) => item.id === rest.join(':'));
+      if (!achievement) return [];
+      return [achievementMoment(t, achievement)];
+    });
+    if (moments.length > 0) useCeremonies.getState().show(moments);
+  }, [ready, roster, campaigns, achievements, shop, user, t]);
 }
 
 // ---- Career outside its screens (loaded with this one): your profile's Career line, and unlocked sleeves in Decks

@@ -9,12 +9,11 @@ import { usePlay } from '../stores/play';
 import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
-import { CareerBar } from './CareerBar';
 import { useCareerShop, useCareerState } from './careerData';
 import { abandonLimited, pickLimited, playMode, startLimited, useLimited } from './careerModesData';
 import { LIMITED_LOSSES, LIMITED_WINS } from './careerModesModel';
 import { LimitedBuilder } from './CareerLimitedBuild';
-import { ModeResult, ModesNav } from './ModeParts';
+import { ModeResult } from './ModeParts';
 import styles from './CareerModes.module.css';
 
 registerMessages(messages);
@@ -39,8 +38,6 @@ export function CareerLimitedScreen() {
 
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
-      <ModesNav />
       <div className={styles.scroll}>
         <ModeResult kind="limited" />
         <header className={styles.modeHead}>

@@ -9,7 +9,7 @@ export type { Cue } from './cueRules';
  * through one bus (a gentle compressor and a short room) so they sound like one set.
  */
 
-interface Bus {
+export interface Bus {
   ctx: AudioContext;
   input: GainNode;
   noise: AudioBuffer;
@@ -17,7 +17,8 @@ interface Bus {
 
 let bus: Bus | null = null;
 
-function audio(): Bus | null {
+/** The one audio bus every synthesized sound goes through (game cues, Career's sounds and music). */
+export function audio(): Bus | null {
   if (typeof window === 'undefined' || !('AudioContext' in window)) return null;
   if (!bus) {
     const ctx = new AudioContext();
@@ -66,7 +67,7 @@ interface ToneOptions {
   detune?: number;
 }
 
-function tone({ ctx }: Bus, out: AudioNode, { freq, start, length, type = 'sine', gain = 0.3, slide, attack = 0.008, detune = 0 }: ToneOptions) {
+export function tone({ ctx }: Bus, out: AudioNode, { freq, start, length, type = 'sine', gain = 0.3, slide, attack = 0.008, detune = 0 }: ToneOptions) {
   const osc = ctx.createOscillator();
   const env = ctx.createGain();
   osc.type = type;
@@ -82,7 +83,7 @@ function tone({ ctx }: Bus, out: AudioNode, { freq, start, length, type = 'sine'
 }
 
 /** A small bell: a few inharmonic partials that die away at different speeds. */
-function bell(b: Bus, out: AudioNode, freq: number, start: number, length: number, gain: number) {
+export function bell(b: Bus, out: AudioNode, freq: number, start: number, length: number, gain: number) {
   const partials: [number, number, number][] = [[1, 1, 1], [2.01, 0.42, 0.6], [3.02, 0.2, 0.4], [4.17, 0.1, 0.28]];
   for (const [ratio, level, decay] of partials) {
     tone(b, out, { freq: freq * ratio, start, length: length * decay, gain: gain * level, attack: 0.004 });
@@ -90,7 +91,7 @@ function bell(b: Bus, out: AudioNode, freq: number, start: number, length: numbe
 }
 
 /** Filtered noise: felt, paper, breath. */
-function noise(b: Bus, out: AudioNode, { start, length, from, to, gain = 0.25, type = 'bandpass', q = 1.2 }: {
+export function noise(b: Bus, out: AudioNode, { start, length, from, to, gain = 0.25, type = 'bandpass', q = 1.2 }: {
   start: number;
   length: number;
   from: number;
@@ -116,18 +117,18 @@ function noise(b: Bus, out: AudioNode, { start, length, from, to, gain = 0.25, t
 }
 
 /** A knock on wood: a quick pitched click with a little body. */
-function knock(b: Bus, out: AudioNode, freq: number, start: number, gain: number) {
+export function knock(b: Bus, out: AudioNode, freq: number, start: number, gain: number) {
   tone(b, out, { freq, start, length: 0.07, type: 'triangle', gain, attack: 0.002, slide: freq * 0.82 });
   noise(b, out, { start, length: 0.03, from: freq * 3, to: freq * 2, gain: gain * 0.5, q: 3 });
 }
 
 /** A thud on felt: low and soft, more pressure than pitch. */
-function thud(b: Bus, out: AudioNode, start: number, gain: number, freq = 95) {
+export function thud(b: Bus, out: AudioNode, start: number, gain: number, freq = 95) {
   tone(b, out, { freq, start, length: 0.22, gain, attack: 0.003, slide: freq * 0.5 });
   noise(b, out, { start, length: 0.08, from: 700, to: 180, gain: gain * 0.45, type: 'lowpass', q: 0.7 });
 }
 
-const NOTE = { C4: 261.63, D4: 293.66, E4: 329.63, G4: 392, A4: 440, Bb4: 466.16, C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, C6: 1046.5 };
+export const NOTE = { C4: 261.63, D4: 293.66, E4: 329.63, G4: 392, A4: 440, Bb4: 466.16, C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, C6: 1046.5 };
 
 function render(b: Bus, out: AudioNode, cue: Cue, t: number) {
   switch (cue) {

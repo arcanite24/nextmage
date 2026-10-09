@@ -48,6 +48,21 @@ public final class CareerContent {
         public String aiType;
         /** overrides the tier's skill */
         public Integer skill;
+        /** the card whose art is the opponent's portrait; picked from the deck when absent */
+        public CareerCover cover;
+        /** what the opponent says during a game */
+        public CareerLines lines;
+    }
+
+    /** An AI opponent's few lines: as the game starts, after a big play, at low life, and as it ends either way. */
+    public static class CareerLines {
+        public String intro;
+        public String bigPlay;
+        public String lowLife;
+        /** the opponent won */
+        public String win;
+        /** the opponent lost */
+        public String lose;
     }
 
     public static class CareerStarter {
@@ -176,6 +191,66 @@ public final class CareerContent {
 
     public DeckCardLists opponentDeck(Opponent opponent) throws IOException {
         return deck("opponents/" + opponent.deck);
+    }
+
+    private static final Map<String, java.util.Optional<CareerCover>> covers = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * The card a deck shows as its face: of the cards that aren't lands, the rarest, then the most expensive, then the
+     * one with the most copies. Null without a card database (the bridge's own tests) or for a deck that can't be read.
+     */
+    public static CareerCover coverOf(String path) {
+        return covers.computeIfAbsent(path, key -> {
+            try {
+                return java.util.Optional.ofNullable(pickCover(deck(key)));
+            } catch (IOException | RuntimeException e) {
+                return java.util.Optional.empty();
+            }
+        }).orElse(null);
+    }
+
+    static CareerCover pickCover(DeckCardLists deck) {
+        DeckCardInfo best = null;
+        int[] bestScore = null;
+        for (DeckCardInfo card : deck.getCards()) {
+            List<mage.cards.repository.CardInfo> found = mage.cards.repository.CardRepository.instance.findCards(card.getCardName());
+            if (found.isEmpty()) {
+                continue;
+            }
+            mage.cards.repository.CardInfo info = found.get(0);
+            if (info.getTypes().contains(mage.constants.CardType.LAND)) {
+                continue;
+            }
+            int rarity = info.getRarity() == null ? 0 : Math.min(info.getRarity().ordinal(), mage.constants.Rarity.MYTHIC.ordinal());
+            int[] score = {rarity, info.getManaValue(), card.getAmount()};
+            if (bestScore == null || ahead(score, bestScore)) {
+                best = card;
+                bestScore = score;
+            }
+        }
+        if (best == null) {
+            return null;
+        }
+        CareerCover cover = new CareerCover();
+        cover.name = best.getCardName();
+        cover.setCode = best.getSetCode();
+        cover.cardNumber = best.getCardNumber();
+        return cover;
+    }
+
+    /** whether a score beats another, field by field */
+    private static boolean ahead(int[] score, int[] other) {
+        for (int i = 0; i < score.length; i++) {
+            if (score[i] != other[i]) {
+                return score[i] > other[i];
+            }
+        }
+        return false;
+    }
+
+    /** an opponent's portrait card: the one its entry names, or one picked from its deck */
+    public CareerCover cover(Opponent opponent) {
+        return opponent.cover != null ? opponent.cover : coverOf("opponents/" + opponent.deck);
     }
 
     /** reads a .dck file shipped in resources (the importer reads files, so it goes through a temporary copy) */

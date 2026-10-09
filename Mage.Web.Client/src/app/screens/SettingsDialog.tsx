@@ -170,6 +170,27 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             </div>
           </Row>
           <Row label={t('settings.importantCues')} detail={t('settings.importantCues.detail')}>{toggle('importantCuesOnly')}</Row>
+          {settings.careerOptIn && (
+            <>
+              <Row label={t('settings.careerMusic')} detail={t('settings.careerMusic.detail')}>{toggle('careerMusic')}</Row>
+              <Row label={t('settings.musicVolume')}>
+                <div className={styles.volume}>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={settings.musicVolume}
+                    disabled={!settings.sound || !settings.careerMusic}
+                    onChange={(event) => update({ musicVolume: Number(event.target.value) })}
+                    aria-label={t('settings.musicVolume.label')}
+                    aria-valuetext={formatNumber(settings.musicVolume, { style: 'percent' })}
+                  />
+                  <span aria-hidden="true">{formatNumber(settings.musicVolume, { style: 'percent' })}</span>
+                </div>
+              </Row>
+            </>
+          )}
         </Tabs.Content>
 
         <Tabs.Content value="import" className={styles.panel}>

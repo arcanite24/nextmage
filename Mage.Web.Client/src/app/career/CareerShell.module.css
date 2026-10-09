@@ -1,0 +1,312 @@
+/* Career's shell: the whole mat for the game mode, a header of placed tokens (back, level, wallet), the current
+   screen's art printed full-bleed behind everything. */
+
+.shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  overflow: hidden;
+}
+
+/* the art of whatever is in front of you, printed big and fading into the mat at the edges */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.55;
+  mask-image: radial-gradient(120% 95% at 62% 38%, #000 30%, transparent 85%);
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgb(var(--void-rgb) / 0.55), transparent 22%, transparent 70%, rgb(var(--void-rgb) / 0.75)),
+    radial-gradient(140% 120% at 50% 40%, transparent 50%, rgb(var(--void-rgb) / 0.6));
+  pointer-events: none;
+}
+
+/* ---- the header: placed tokens on the mat's top edge */
+
+.hud {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+  padding: calc(var(--stitch-inset) + var(--space-3)) calc(var(--stitch-inset) + var(--space-5)) var(--space-3);
+}
+
+.hudLeft,
+.hudRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px 0 12px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: rgb(var(--mat-rgb) / 0.7);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint), var(--shadow-placed);
+  color: var(--ink);
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform var(--dur-quick) var(--ease-lift), box-shadow var(--dur-quick) linear;
+}
+
+.back:hover {
+  transform: translateX(-2px);
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft), var(--shadow-lifted);
+}
+
+.back:focus-visible,
+.icon:focus-visible {
+  outline: 2px solid var(--ink-strong);
+  outline-offset: 3px;
+}
+
+.titles {
+  display: grid;
+  line-height: 1;
+}
+
+.mode {
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+}
+
+.screenTitle {
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+.wallet {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: var(--radius-chip);
+  background: rgb(var(--mat-rgb) / 0.7);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost), var(--shadow-placed);
+}
+
+.coin,
+.wild,
+.packs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-chip);
+  font-family: var(--font-print);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.coin {
+  min-width: 96px;
+  background: rgb(var(--brass-rgb) / 0.12);
+  color: var(--brass-ink);
+}
+
+.wild {
+  color: var(--ink-soft);
+  font-size: var(--text-lg);
+}
+
+.wildRare,
+.wildMythic {
+  min-width: 26px;
+  padding: 0 7px;
+  border-radius: var(--radius-chip);
+  text-align: center;
+}
+
+.wildRare {
+  box-shadow: inset 0 0 0 1.5px var(--brass);
+  color: var(--brass-ink);
+}
+
+.wildMythic {
+  box-shadow: inset 0 0 0 1.5px var(--copper);
+  color: var(--copper-ink);
+}
+
+.packs {
+  color: var(--ink-strong);
+  font-size: var(--text-lg);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.name {
+  display: grid;
+  line-height: 1.1;
+}
+
+.name b {
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  letter-spacing: var(--tracking-print);
+}
+
+.name small {
+  color: var(--brass-ink);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-print);
+}
+
+.icon {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(var(--mat-rgb) / 0.7);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+
+.icon:hover {
+  color: var(--ink-strong);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+
+/* ---- the level medallion: the crest inside a ring of XP, the level stamped at its foot */
+
+.medallion {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--medal, 56px);
+  height: var(--medal, 56px);
+}
+
+.medallion svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ringTrack {
+  fill: rgb(var(--mat-rgb) / 0.8);
+  stroke: var(--ink-ghost);
+  stroke-width: 4;
+}
+
+.ringFill {
+  fill: none;
+  stroke: var(--brass);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 900ms var(--ease-place);
+}
+
+.medalFace {
+  display: grid;
+  place-items: center;
+  transform: scale(0.82);
+}
+
+.medalLevel {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  translate: -50% 0;
+  min-width: 24px;
+  padding: 1px 6px;
+  border-radius: var(--radius-chip);
+  background: var(--mat-900);
+  box-shadow: inset 0 0 0 1.5px var(--brass);
+  color: var(--brass-ink);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* ---- the screen itself */
+
+.main {
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+  padding: var(--space-2) calc(var(--stitch-inset) + var(--space-5)) calc(var(--stitch-inset) + var(--space-4));
+  overflow: hidden;
+}
+
+.scene {
+  height: 100%;
+  min-height: 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .hud {
+    padding-inline: calc(var(--stitch-inset) + var(--space-3));
+  }
+
+  .main {
+    padding-inline: calc(var(--stitch-inset) + var(--space-3));
+    overflow: auto;
+  }
+
+  .name,
+  .titles .mode {
+    display: none;
+  }
+
+  .coin {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back,
+  .ringFill {
+    transition: none;
+  }
+}

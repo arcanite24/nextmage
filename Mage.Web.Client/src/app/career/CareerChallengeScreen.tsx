@@ -7,12 +7,13 @@ import { registerMessages, useT } from '../i18n';
 import messages from '../i18n/en/career';
 import { usePlay } from '../stores/play';
 import { Button } from '../ui/Button';
-import { CareerBar } from './CareerBar';
 import { useCareerState } from './careerData';
 import { playMode, useChallenge } from './careerModesData';
 import { twistLines } from './careerModesModel';
-import { Portrait } from './ModeArt';
-import { LineList, ModeResult, ModesNav } from './ModeParts';
+import { useSceneArt } from './careerScene';
+import { PortraitCard } from './Portraits';
+import { Versus } from './Versus';
+import { LineList, ModeResult } from './ModeParts';
 import styles from './CareerModes.module.css';
 
 registerMessages(messages);
@@ -28,8 +29,6 @@ export function CareerChallengeScreen() {
   if (!profile) return <Navigate to="/career" replace />;
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
-      <ModesNav />
       <div className={styles.scroll}>
         <ModeResult kind="challenge" />
         {challenge.isPending && <p className={styles.note}>{t('career.loading')}</p>}
@@ -43,21 +42,10 @@ export function CareerChallengeScreen() {
 function Challenge({ challenge }: { challenge: CareerChallenge }) {
   const t = useT();
   const playing = usePlay((play) => play.phase !== 'idle');
-  const [starting, setStarting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [versus, setVersus] = useState(false);
   const twists = twistLines(challenge.twists);
   const board = challenge.board ?? [];
-
-  async function play() {
-    setStarting(true);
-    setError(null);
-    try {
-      await playMode('challenge', () => api.careerChallengePlay());
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
-      setStarting(false);
-    }
-  }
+  useSceneArt(challenge.cover);
 
   return (
     <>
@@ -71,7 +59,7 @@ function Challenge({ challenge }: { challenge: CareerChallenge }) {
       <div className={styles.split}>
         <article className={styles.detail} aria-labelledby="challenge-opponent">
           <div className={styles.detailArt}>
-            <Portrait name={challenge.opponentName ?? ''} boss size={96} />
+            <PortraitCard name={challenge.opponentName ?? ''} cover={challenge.cover} boss size="sm" />
           </div>
           <div className={styles.detailBody}>
             <header className={styles.detailHead}>
@@ -93,16 +81,25 @@ function Challenge({ challenge }: { challenge: CareerChallenge }) {
                   : t('career.challenge.noWin', { count: challenge.attempts ?? 0 })}
             </p>
             <p className={styles.small}>{t('career.challenge.rule')}</p>
-            {error && <p className={styles.error} role="alert">{t('career.playFailed')}: {error}</p>}
             <div className={styles.actions}>
-              <Button variant="decision" size="lg" icon={<Swords size={18} />} busy={starting} disabled={playing} onClick={() => void play()}>
-                {starting ? t('career.playing') : t((challenge.attempts ?? 0) > 0 ? 'career.challenge.again' : 'career.challenge.play')}
+              <Button variant="decision" size="lg" icon={<Swords size={18} />} disabled={playing} onClick={() => setVersus(true)} data-nav>
+                {t((challenge.attempts ?? 0) > 0 ? 'career.challenge.again' : 'career.challenge.play')}
               </Button>
             </div>
           </div>
         </article>
         <Board board={board} />
       </div>
+      {versus && (
+        <Versus
+          kicker={t('career.challenge.week', { week: challenge.week ?? '' })}
+          opponent={{ name: challenge.opponentName ?? '', cover: challenge.cover, boss: true }}
+          deck={{ name: challenge.name ?? '' }}
+          stakes={[t('career.challenge.fixed'), ...twists.map((line) => t(line.key, line.vars)), t('career.challenge.rule')]}
+          onFight={() => playMode('challenge', () => api.careerChallengePlay())}
+          onClose={() => setVersus(false)}
+        />
+      )}
     </>
   );
 }

@@ -68,6 +68,10 @@ export default {
   'settings.volume.label': 'Sound volume',
   'settings.importantCues': 'Only important cues',
   'settings.importantCues.detail': 'Just your turn, decisions, your clock running low and the result.',
+  'settings.careerMusic': 'Career music',
+  'settings.careerMusic.detail': "Quiet music on Career's screens. It stops for games.",
+  'settings.musicVolume': 'Music volume',
+  'settings.musicVolume.label': 'Career music volume',
 
   'settings.answers.intro': 'When the game asks a yes/no question, or the order of your triggers, “Always…” answers it the same way for the rest of that game.',
   'settings.answers.none': 'You’re not in a game. Answers you set during a game show here.',
