@@ -49,6 +49,14 @@ final class GameApi {
                                 + "Returns false when nothing is waiting for the player's answer.")
                         .handler(call -> call.getConnection().resendPrompt(call.uuid(0))),
 
+                RpcMethod.named("gameStateResync")
+                        .session(1)
+                        .params(gameId(), of("sessionId", STRING))
+                        .doc("With state patches on (setCapabilities): the client could not apply a patch, so the server sends "
+                                + "the game's last state complete (as GAME_UPDATE or REPLAY_UPDATE), then its open question. "
+                                + "Returns false when it has none; the next state is sent complete anyway.")
+                        .handler(call -> call.getConnection().resendGameState(call.uuid(0))),
+
                 RpcMethod.named("matchQuit")
                         .session(1)
                         .params(gameId(), of("sessionId", STRING))
@@ -104,6 +112,7 @@ final class GameApi {
                         .params(gameId(), of("sessionId", STRING))
                         .doc("Stop spectating a game.")
                         .handler(call -> {
+                            call.getConnection().forgetGameState(call.uuid(0));
                             ctx.server.gameWatchStop(call.uuid(0), call.string(1));
                             return true;
                         }),
@@ -250,6 +259,7 @@ final class GameApi {
                             ctx.server.replayStart(gameId, sessionId);
                             break;
                         case "replayStop":
+                            call.getConnection().forgetGameState(gameId);
                             ctx.server.replayStop(gameId, sessionId);
                             break;
                         case "replayNext":
