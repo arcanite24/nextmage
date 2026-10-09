@@ -19,13 +19,17 @@ export interface HandProps {
   playLine: number;
   /** fly drawn cards from here */
   libraryOrigin: string;
+  /** watching: the cards show their backs (an unknown hand, or one hidden for the broadcast) */
+  faceDown?: boolean;
+  /** the hand's accessible name (default: "Your hand") */
+  label?: string;
 }
 
 const CARD_WIDTH = 168;
 const DRAG_THRESHOLD = 12;
 
 /** The player's hand, fanned along the bottom edge. Hover lifts a card; drag it up (or click it) to play it. */
-export function Hand({ cards, choosing = false, clickable, selected, sleeve, onPlay, playLine, libraryOrigin }: HandProps) {
+export function Hand({ cards, choosing = false, clickable, selected, sleeve, onPlay, playLine, libraryOrigin, faceDown = false, label = 'Your hand' }: HandProps) {
   const count = cards.length;
   const spread = Math.min(CARD_WIDTH * 0.78, 1000 / Math.max(1, count));
   const arc = Math.min(4, 26 / Math.max(1, count));
@@ -33,7 +37,7 @@ export function Hand({ cards, choosing = false, clickable, selected, sleeve, onP
   const keys = useMemo(() => zoneKeys(cards), [cards]);
 
   return (
-    <div className={styles.hand} style={{ width }} role="list" aria-label={`Your hand, ${count} cards`}>
+    <div className={styles.hand} style={{ width }} role="list" aria-label={`${label}, ${count} cards`}>
       {cards.map((card, index) => {
         const offset = index - (count - 1) / 2;
         return (
@@ -51,6 +55,7 @@ export function Hand({ cards, choosing = false, clickable, selected, sleeve, onP
             onPlay={onPlay}
             playLine={playLine}
             libraryOrigin={libraryOrigin}
+            faceDown={faceDown}
           />
         );
       })}
@@ -71,9 +76,10 @@ interface HandCardProps {
   onPlay(id: string): void;
   playLine: number;
   libraryOrigin: string;
+  faceDown: boolean;
 }
 
-function HandCard({ card, choosing, index, left, rotate, drop, clickable, selected, sleeve, onPlay, playLine, libraryOrigin }: HandCardProps) {
+function HandCard({ card, choosing, index, left, rotate, drop, clickable, selected, sleeve, onPlay, playLine, libraryOrigin, faceDown }: HandCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const stage = useStage();
   const setZoom = useMatchUi((state) => state.setZoom);
@@ -123,10 +129,10 @@ function HandCard({ card, choosing, index, left, rotate, drop, clickable, select
     <div
       ref={ref}
       role="listitem"
-      className={[styles.card, clickable ? (choosing ? styles.choosable : styles.playable) : choosing ? styles.unchoosable : '', selected ? styles.selected : '', drag?.moved ? styles.dragging : ''].join(' ')}
+      className={[styles.card, faceDown ? styles.faceDown : '', clickable ? (choosing ? styles.choosable : styles.playable) : choosing ? styles.unchoosable : '', selected ? styles.selected : '', drag?.moved ? styles.dragging : ''].join(' ')}
       style={style}
       tabIndex={clickable ? 0 : -1}
-      aria-label={`${card.name}${clickable ? ', playable' : ''}${selected ? ', chosen' : ''}`}
+      aria-label={`${faceDown ? 'Hidden card' : card.name ?? 'Card'}${clickable ? ', playable' : ''}${selected ? ', chosen' : ''}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -141,11 +147,11 @@ function HandCard({ card, choosing, index, left, rotate, drop, clickable, select
           onPlay(card.id!);
         }
       }}
-      onPointerEnter={(event) => !drag && setZoom({ card, x: event.clientX, y: event.clientY, sleeve })}
+      onPointerEnter={(event) => !drag && !faceDown && setZoom({ card, x: event.clientX, y: event.clientY, sleeve })}
       onPointerLeave={() => setZoom(null)}
       data-object-id={card.id}
     >
-      <CardFace card={card} sleeve={sleeve} />
+      <CardFace card={card} sleeve={sleeve} hidden={faceDown} />
     </div>
   );
 }

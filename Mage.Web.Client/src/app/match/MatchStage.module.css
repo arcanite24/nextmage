@@ -225,3 +225,16 @@
   color: var(--ink-faint);
   pointer-events: none;
 }
+
+/* watching with a broadcast delay: the board stays empty until the first delayed view */
+.delayNote {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: var(--z-rail);
+  max-width: 720px;
+  transform: translate(-50%, -50%);
+  color: var(--ink-dim);
+  font-size: 26px;
+  text-align: center;
+}
