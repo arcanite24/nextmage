@@ -45,6 +45,7 @@ import { useAutoOrder } from './useAutoOrder';
 import { Vfx } from './Vfx';
 import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
+import { clothOf, clothStyle } from './playmats';
 import { PracticeTools } from './PracticeTools';
 import { PhaseLadder } from './PhaseLadder';
 import { DefenderPicker } from './DefenderPicker';
@@ -278,6 +279,11 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   // a choice among cards in hand (discard, reveal...): eligible cards take the decision edge
   const choosingInHand = interaction.mode === 'target' && !pickerCards && [...clickable].some((id) => handIds.has(id));
   const opponentIds = useMemo(() => board.opponents.map((opponent) => opponent.player.playerId!), [board.opponents]);
+  const matCloth = useSettings((state) => state.settings.matCloth);
+  const matArt = useSettings((state) => state.settings.matArt);
+  const matCard = useSettings((state) => state.settings.matCard);
+  const matStyle = useMemo(() => clothStyle(clothOf(matCloth)), [matCloth]);
+  const myArt = matArt === 'none' ? null : matArt === 'card' ? matCard : sleeves.cover;
   const opponentArt = useMemo(() => {
     const permanent = board.opponents[0]?.front[0]?.lead ?? board.opponents[0]?.back.find((group) => !(group.lead.cardTypes ?? []).includes('LAND'))?.lead;
     return permanent?.expansionSetCode && permanent.cardNumber
@@ -286,7 +292,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   }, [board.opponents]);
 
   return (
-    <Stage>
+    <Stage style={matStyle}>
       {(stageWidth) => {
         const fieldWidth = stageWidth - FIELD_LEFT - FIELD_RIGHT_MARGIN;
         return (
@@ -294,7 +300,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             <div className={styles.mat} aria-hidden="true" />
             {/* each half carries its player's deck art, printed faintly into the mat */}
             <div className={styles.printTheirs}><MatPrint card={opponentArt} /></div>
-            <div className={styles.printMine}><MatPrint card={sleeves.cover} /></div>
+            <div className={styles.printMine}><MatPrint card={myArt} /></div>
             <div className={styles.seam} aria-hidden="true" />
             {/* under the hand and the controls, over the mat */}
             <Stitch inset={10} radius={22} zIndex={2} />

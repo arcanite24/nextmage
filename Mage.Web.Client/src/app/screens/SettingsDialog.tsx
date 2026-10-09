@@ -1,6 +1,9 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { BookmarkPlus } from 'lucide-react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { api } from '../connection';
+import { MAT_CLOTHS } from '../match/playmats';
 import bookmarkletSource from '../decks/import/bookmarklet.source.js?raw';
 import type { SkipPrioritySteps } from '../../protocol/generated/views';
 import { resetCommand, type AutoRule, type AutoRuleKind } from '../../core/game/autoAnswer';
@@ -42,7 +45,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title={t('settings.title')} width="lg"
       footer={(
-        <Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag, locale: settings.locale })}>
+        <Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag, locale: settings.locale, matCloth: settings.matCloth, matArt: settings.matArt, matCard: settings.matCard })}>
           {t('settings.restore')}
         </Button>
       )}>
@@ -52,6 +55,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <Tabs.Trigger value="stops" className={styles.trigger}>{t('settings.tab.stops')}</Tabs.Trigger>
           <Tabs.Trigger value="answers" className={styles.trigger}>{t('settings.tab.answers')}</Tabs.Trigger>
           <Tabs.Trigger value="display" className={styles.trigger}>{t('settings.tab.display')}</Tabs.Trigger>
+          <Tabs.Trigger value="playmat" className={styles.trigger}>{t('settings.tab.playmat')}</Tabs.Trigger>
           <Tabs.Trigger value="sound" className={styles.trigger}>{t('settings.tab.sound')}</Tabs.Trigger>
           <Tabs.Trigger value="alerts" className={styles.trigger}>{t('settings.tab.alerts')}</Tabs.Trigger>
           <Tabs.Trigger value="import" className={styles.trigger}>{t('settings.tab.import')}</Tabs.Trigger>
@@ -120,6 +124,10 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
 
         <Tabs.Content value="display" className={styles.panel}>
           <Row label={t('settings.motion')} detail={t('settings.motion.detail')}>{toggle('animations')}</Row>
+        </Tabs.Content>
+
+        <Tabs.Content value="playmat" className={styles.panel}>
+          <PlaymatSettings />
         </Tabs.Content>
 
         <Tabs.Content value="alerts" className={styles.panel}>
@@ -284,6 +292,101 @@ function Bookmarklet() {
       </ol>
       <p className={styles.rowDetail}>{t('settings.bookmarklet.privacy')}</p>
     </div>
+  );
+}
+
+const MAT_ARTS = [
+  ['deck', 'settings.playmat.art.deck'],
+  ['card', 'settings.playmat.art.card'],
+  ['none', 'settings.playmat.art.none'],
+] as const;
+
+/** Your playmat: the cloth the match is dyed in and the art printed into your half. */
+function PlaymatSettings() {
+  const t = useT();
+  const settings = useSettings((state) => state.settings);
+  const update = useSettings((state) => state.update);
+  const [name, setName] = useState(settings.matCard?.name ?? '');
+  const [problem, setProblem] = useState<string | null>(null);
+  const listId = useId();
+  const typed = name.trim();
+  const suggestions = useQuery({
+    queryKey: ['playmat-names', typed.toLowerCase()],
+    queryFn: () => api.searchCards({ nameContains: typed, uniqueNames: true, count: 12, start: 0 }),
+    enabled: typed.length >= 3,
+    staleTime: 60_000,
+  });
+
+  async function chooseCard() {
+    setProblem(null);
+    const found = await api.searchCards({ name: typed, uniqueNames: true, count: 1, start: 0 }).catch(() => []);
+    const card = found[0];
+    if (!card?.expansionSetCode || !card.cardNumber) {
+      setProblem(t('settings.playmat.card.missing', { name: typed }));
+      return;
+    }
+    update({ matArt: 'card', matCard: { name: card.name, setCode: card.expansionSetCode, cardNumber: card.cardNumber } });
+  }
+
+  return (
+    <>
+      <Row label={t('settings.playmat.cloth')} detail={t('settings.playmat.cloth.detail')}>
+        <div className={styles.cloths} role="radiogroup" aria-label={t('settings.playmat.cloth')}>
+          {MAT_CLOTHS.map((cloth) => (
+            <button
+              key={cloth.id}
+              type="button"
+              role="radio"
+              aria-checked={settings.matCloth === cloth.id}
+              aria-label={t(`settings.playmat.cloth.${cloth.id}` as MessageKey)}
+              title={t(`settings.playmat.cloth.${cloth.id}` as MessageKey)}
+              className={styles.cloth}
+              style={{ background: `radial-gradient(circle at 50% 40%, ${cloth.shades[4]}, ${cloth.shades[1]})`, borderColor: cloth.dye }}
+              onClick={() => update({ matCloth: cloth.id })}
+            />
+          ))}
+        </div>
+      </Row>
+      <Row label={t('settings.playmat.art')} detail={t('settings.playmat.art.detail')}>
+        <select
+          className={styles.select}
+          value={settings.matArt === 'card' && !settings.matCard ? 'deck' : settings.matArt}
+          aria-label={t('settings.playmat.art')}
+          onChange={(event) => update({ matArt: event.target.value as PlaySettings['matArt'] })}
+        >
+          {MAT_ARTS.map(([value, key]) => (
+            <option key={value} value={value} disabled={value === 'card' && !settings.matCard}>
+              {value === 'card' && settings.matCard?.name ? `${t(key)}: ${settings.matCard.name}` : t(key)}
+            </option>
+          ))}
+        </select>
+      </Row>
+      <form
+        className={styles.matCard}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (typed) void chooseCard();
+        }}
+      >
+        <label className={styles.rowLabel} htmlFor={`${listId}-input`}>{t('settings.playmat.card')}</label>
+        <div className={styles.matCardRow}>
+          <input
+            id={`${listId}-input`}
+            className={styles.select}
+            value={name}
+            list={listId}
+            autoComplete="off"
+            placeholder={t('settings.playmat.card.placeholder')}
+            onChange={(event) => setName(event.target.value)}
+          />
+          <datalist id={listId}>
+            {(suggestions.data ?? []).map((card) => <option key={card.name} value={card.name} />)}
+          </datalist>
+          <Button type="submit" variant="print" disabled={!typed}>{t('settings.playmat.card.use')}</Button>
+        </div>
+        {problem && <p className={styles.rowDetail} role="alert">{problem}</p>}
+      </form>
+    </>
   );
 }
 
