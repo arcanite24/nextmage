@@ -212,6 +212,14 @@
   font-size: var(--text-md);
 }
 
+.control output {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font-size: var(--text-md);
+}
+
 .check {
   display: flex;
   align-items: center;

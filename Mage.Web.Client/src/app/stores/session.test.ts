@@ -72,7 +72,6 @@ describe('session store', () => {
     const { useSession, fake } = await load();
     await useSession.getState().signIn(SERVER, 'alice', 'secret');
     fake.api.sessionGetRestoreToken.mockResolvedValueOnce('token-2');
-    fake.api.serverGetMainRoomId.mockResolvedValueOnce('room-2');
 
     fake.rpc.setStatus('reconnecting');
     expect(useSession.getState()).toMatchObject({ phase: 'signedIn', connection: 'reconnecting' });
@@ -80,8 +79,52 @@ describe('session store', () => {
     await flush();
 
     expect(fake.api.connectUser).toHaveBeenLastCalledWith('alice', 'secret', 'token-1');
-    await vi.waitFor(() => expect(useSession.getState().roomId).toBe('room-2'));
+    await vi.waitFor(() => expect(useSession.getState().loginCount).toBe(2));
+    expect(useSession.getState()).toMatchObject({ phase: 'signedIn', roomId: 'room-1', expired: false });
     expect(restoreSaved()).toMatchObject({ token: 'token-2' });
+  });
+
+  test('a reconnect to a restarted server sends the player to sign in again', async () => {
+    const { useSession, fake } = await load();
+    await useSession.getState().signIn(SERVER, 'alice', '');
+    // a new server: a new main room
+    fake.api.serverGetMainRoomId.mockResolvedValueOnce('room-2');
+    fake.rpc.setStatus('reconnecting');
+    fake.rpc.setStatus('open');
+    await vi.waitFor(() => expect(useSession.getState().phase).toBe('signedOut'));
+    expect(useSession.getState()).toMatchObject({ roomId: null, error: null, expired: true });
+    expect(restoreSaved()).toBeNull();
+    // the sign-in screen stays put instead of signing back in silently
+    expect(JSON.parse(localStorage.getItem('playmat.login')!)).toMatchObject({ userName: 'alice', passwordless: false });
+  });
+
+  test('a reconnect the restarted server refuses (an account without its password) signs out the same way', async () => {
+    const { useSession, fake } = await load();
+    await useSession.getState().signIn(SERVER, 'alice', '');
+    fake.api.connectUser.mockResolvedValueOnce(false);
+    fake.rpc.setStatus('reconnecting');
+    fake.rpc.setStatus('open');
+    await vi.waitFor(() => expect(useSession.getState().expired).toBe(true));
+    expect(useSession.getState().phase).toBe('signedOut');
+    expect(fake.api.serverGetMainRoomId).toHaveBeenCalledTimes(1);
+  });
+
+  test('a call the server turns away for want of a session signs out', async () => {
+    const { useSession, fake } = await load();
+    await useSession.getState().signIn(SERVER, 'alice', '');
+    fake.rpc.loseSession('roomCreateTable');
+    expect(useSession.getState()).toMatchObject({ phase: 'signedOut', expired: true });
+  });
+
+  test('signing in again clears the restart notice', async () => {
+    const { useSession, fake } = await load();
+    await useSession.getState().signIn(SERVER, 'alice', '');
+    fake.api.serverGetMainRoomId.mockResolvedValueOnce('room-2');
+    fake.rpc.setStatus('reconnecting');
+    fake.rpc.setStatus('open');
+    await vi.waitFor(() => expect(useSession.getState().expired).toBe(true));
+    await useSession.getState().signIn(SERVER, 'alice', '');
+    expect(useSession.getState()).toMatchObject({ phase: 'signedIn', expired: false });
   });
 
   test('a failed reconnect login signs the player out', async () => {

@@ -202,7 +202,8 @@ export const usePlay = create<PlayState>((set, get) => ({
         playerTypes: ['HUMAN', ...rivals.map(() => options.aiType)],
         advanced: { startingLife: options.startingLife },
       }));
-      const tableId = table.tableId;
+      // no table: the server doesn't know us any more (the session store sends us to sign in)
+      const tableId = table?.tableId;
       if (!tableId) throw new Error('The server did not create the table.');
       set({ tableId });
       if (!await api.roomJoinTable(roomId, tableId, userName, 'HUMAN', 1, playerDeck)) {

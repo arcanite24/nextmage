@@ -87,6 +87,7 @@ export default {
   'events.swiss': 'Swiss',
   'events.elimination': 'Single elimination',
   'events.rounds': 'Rounds',
+  'events.rounds.elimination': { one: '{count} round, until one player is left', other: '{count} rounds, until one player is left' },
   'events.matches': 'Matches',
   'events.bestOf1': 'Best of one',
   'events.bestOf3': 'Best of three',

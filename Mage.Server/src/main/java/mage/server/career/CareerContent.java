@@ -55,6 +55,8 @@ public final class CareerContent {
         public String name;
         public int cards;
         public CareerCover cover;
+        /** WUBRG letters, most basic lands first: the colors the deck plays */
+        public String colors;
     }
 
     public static class CareerCover {
@@ -105,6 +107,7 @@ public final class CareerContent {
             starter.name = entry.name;
             starter.cards = entry.cards;
             starter.cover = entry.cover;
+            starter.colors = basicLandColors("starters/" + entry.file);
             starters.put(starter.id, starter);
         }
     }
@@ -134,6 +137,13 @@ public final class CareerContent {
             throw new IOException("Missing career resource " + path);
         }
         return new InputStreamReader(stream, StandardCharsets.UTF_8);
+    }
+
+    /** AI seats take the opponent's whole name ("Wren of the Hedgerow"): the server's name length limit is for people */
+    public static final int MAX_AI_NAME_LENGTH = 40;
+
+    public static String aiSeatName(String opponentName) {
+        return opponentName.length() > MAX_AI_NAME_LENGTH ? opponentName.substring(0, MAX_AI_NAME_LENGTH).trim() : opponentName;
     }
 
     public List<Tier> tiers() {
@@ -195,6 +205,32 @@ public final class CareerContent {
         } finally {
             Files.deleteIfExists(file);
         }
+    }
+
+    private static final String[][] BASIC_LANDS = {{"Plains", "W"}, {"Island", "U"}, {"Swamp", "B"}, {"Mountain", "R"}, {"Forest", "G"}};
+
+    /** a deck's colors read from its basic lands (no card database needed): WUBRG letters, the most lands first */
+    static String basicLandColors(String path) throws IOException {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(resource(path))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                java.util.regex.Matcher matcher = DCK_LINE.matcher(line.trim());
+                if (!matcher.matches() || matcher.group(1) != null) {
+                    continue;
+                }
+                for (String[] basic : BASIC_LANDS) {
+                    if (basic[0].equals(matcher.group(5).trim())) {
+                        counts.merge(basic[1], Integer.parseInt(matcher.group(2)), Integer::sum);
+                    }
+                }
+            }
+        }
+        StringBuilder colors = new StringBuilder();
+        counts.entrySet().stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .forEach(entry -> colors.append(entry.getKey()));
+        return colors.toString();
     }
 
     private static final java.util.regex.Pattern DCK_LINE = java.util.regex.Pattern.compile("^(SB:\\s*)?(\\d+)\\s+\\[([^:\\]]+):([^\\]]+)]\\s+(.+)$");
