@@ -11,7 +11,10 @@ import { Button } from '../ui/Button';
 import { useCareerState } from './careerData';
 import { abandonGauntlet, pickGauntlet, playMode, startGauntlet, useGauntlet } from './careerModesData';
 import { mergeByName, rewardLines, runReward, toggleChoice, twistLines } from './careerModesModel';
-import { Crest, Portrait } from './ModeArt';
+import { useSceneArt } from './careerScene';
+import { Crest } from './ModeArt';
+import { CardArt } from './Portraits';
+import { Versus } from './Versus';
 import { ModeResult } from './ModeParts';
 import styles from './CareerModes.module.css';
 
@@ -166,23 +169,13 @@ function OfferOption({ option, chosen, onToggle }: { option: CareerOfferOption; 
 function Ladder({ run, rewards }: { run: CareerRun; rewards: CareerRunReward[] }) {
   const t = useT();
   const playing = usePlay((play) => play.phase !== 'idle');
-  const [starting, setStarting] = useState(false);
+  const [versus, setVersus] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const wins = run.wins ?? 0;
   const now = rewardLines(runReward(rewards, wins));
   const next = run.next;
-
-  async function play() {
-    setStarting(true);
-    setError(null);
-    try {
-      await playMode('gauntlet', () => api.careerGauntletPlay());
-    } catch (reason) {
-      setError(message(reason));
-      setStarting(false);
-    }
-  }
+  const last = run.bosses?.length ?? 8;
+  useSceneArt(next?.cover);
 
   async function abandon() {
     try {
@@ -201,7 +194,6 @@ function Ladder({ run, rewards }: { run: CareerRun; rewards: CareerRunReward[] }
         <h2 id="gauntlet-run" className={styles.panelTitle}>{t('career.gauntlet.run', { wins, max: run.maxWins ?? 8 })}</h2>
         {now.length > 0 && <p className={styles.small}>{t('career.gauntlet.paysNow', { reward: now.map((line) => t(line.key, line.vars)).join(', ') })}</p>}
       </header>
-      {error && <p className={styles.error} role="alert">{t('career.playFailed')}: {error}</p>}
       <ol className={styles.ladder} aria-label={t('career.gauntlet.ladder')}>
         {(run.bosses ?? []).map((boss) => {
           const isNext = next?.number === boss.number;
@@ -209,7 +201,7 @@ function Ladder({ run, rewards }: { run: CareerRun; rewards: CareerRunReward[] }
           return (
             <li key={boss.number} className={[styles.rung, boss.beaten ? styles.rungBeaten : '', isNext ? styles.rungNext : ''].join(' ')} aria-current={isNext ? 'step' : undefined}>
               <span className={styles.rungNumber} aria-hidden="true">{boss.number}</span>
-              <Portrait name={boss.name ?? ''} boss={(boss.number ?? 0) >= (run.bosses?.length ?? 8)} size={44} />
+              <CardArt card={boss.cover} name={boss.name ?? ''} boss={(boss.number ?? 0) >= last} className={styles.rungArt} />
               <span className={styles.rungText}>
                 <b>{boss.name}</b>
                 <small>
@@ -226,8 +218,8 @@ function Ladder({ run, rewards }: { run: CareerRun; rewards: CareerRunReward[] }
       </ol>
       <div className={styles.actions}>
         {next && (
-          <Button variant="decision" size="lg" icon={next.number === run.bosses?.length ? <Crown size={18} /> : <Swords size={18} />} busy={starting} disabled={playing} onClick={() => void play()}>
-            {starting ? t('career.playing') : t('career.gauntlet.play', { name: next.name ?? '' })}
+          <Button variant="decision" size="lg" icon={next.number === last ? <Crown size={18} /> : <Swords size={18} />} disabled={playing} onClick={() => setVersus(true)} data-nav>
+            {t('career.gauntlet.play', { name: next.name ?? '' })}
           </Button>
         )}
         {confirming ? (
@@ -240,6 +232,20 @@ function Ladder({ run, rewards }: { run: CareerRun; rewards: CareerRunReward[] }
           <Button variant="quiet" size="sm" icon={<Flag size={16} />} onClick={() => setConfirming(true)}>{t('career.gauntlet.abandon')}</Button>
         )}
       </div>
+      {versus && next && (
+        <Versus
+          kicker={t('career.gauntlet.run', { wins, max: run.maxWins ?? 8 })}
+          opponent={{ name: next.name ?? '', cover: next.cover, boss: next.number === last }}
+          deck={{ name: t('career.gauntlet.title') }}
+          stakes={[
+            t('career.node.skill', { skill: next.skill ?? 1 }),
+            ...twistLines(next.twists).map((line) => t(line.key, line.vars)),
+            t('career.versus.oneLoss'),
+          ]}
+          onFight={() => playMode('gauntlet', () => api.careerGauntletPlay())}
+          onClose={() => setVersus(false)}
+        />
+      )}
     </section>
   );
 }

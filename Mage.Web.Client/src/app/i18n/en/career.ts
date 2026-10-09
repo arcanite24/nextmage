@@ -72,6 +72,7 @@ export default {
   'career.recent.won': 'Won against {opponent}',
   'career.recent.lost': 'Lost to {opponent}',
   'career.recent.paid': '+{coins} coins · +{xp} XP',
+  'career.recent.none': 'No Career games yet.',
 
   'career.collection.title': 'Collection',
   'career.collection.count': { one: '{count} card', other: '{count} cards' },
@@ -114,6 +115,10 @@ export default {
   'career.pack.basics': { one: '{count} basic land (free anyway)', other: '{count} basic lands (free anyway)' },
   'career.pack.toCoins': '+{coins} coins',
   'career.pack.toWildcard': 'Wildcard',
+  'career.pack.tear': 'Tear the pack open',
+  'career.pack.tearHint': 'Click the pack, or press Enter, to tear it open.',
+  'career.pack.cards': { one: '{count} card', other: '{count} cards' },
+  'career.pack.later': 'Close',
 
   'career.nav.progress': 'Progress',
   'career.shop.free': 'Open a free pack ({count} left)',
@@ -157,6 +162,7 @@ export default {
   'career.progress.levels': 'Level track',
   'career.progress.achievements': 'Achievements',
   'career.progress.look': 'Cosmetics',
+  'career.progress.options': 'Record & options',
   'career.levels.current': 'You are here',
   'career.levels.reached': 'Reached',
 
@@ -449,4 +455,11 @@ export default {
   'career.versus.setting': 'Shuffling up…',
   'career.versus.pays': 'Win: +{coins} coins',
   'career.versus.record': { one: 'Beaten {count} time', other: 'Beaten {count} times' },
+  'career.versus.oneLoss': 'One loss ends the run',
+
+  'career.results.victory': 'Victory',
+  'career.results.defeat': 'Defeat',
+  'career.results.earned': 'Earned',
+  'career.results.skip': 'Skip',
+  'career.results.openPacks': { one: 'Open your pack', other: 'Open {count} packs' },
 } as const;

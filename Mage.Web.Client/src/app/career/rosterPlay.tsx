@@ -20,7 +20,7 @@ export function RosterVersus({ opponent, deck, onClose }: {
       stakes={[t('career.versus.pays', { coins: opponent.winCoins ?? 0 }), t('career.versus.record', { count: opponent.wins ?? 0 })]}
       onFight={async () => {
         if (!deck.deck) throw new Error(t('career.deck.notReady', { min: DECK_MIN, count: 0 }));
-        await playCareer(opponent.id!, deck.deck);
+        await playCareer(opponent.id!, deck.deck, opponent.lines ?? null);
       }}
       onClose={onClose}
     />

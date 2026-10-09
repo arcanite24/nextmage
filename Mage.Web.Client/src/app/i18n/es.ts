@@ -506,6 +506,7 @@ const es: Catalog = {
   'career.recent.won': 'Ganaste a {opponent}',
   'career.recent.lost': 'Perdiste contra {opponent}',
   'career.recent.paid': '+{coins} monedas · +{xp} XP',
+  'career.recent.none': 'Aún no hay partidas de Career.',
 
   'career.collection.title': 'Colección',
   'career.collection.count': { one: '{count} carta', other: '{count} cartas' },
@@ -548,6 +549,10 @@ const es: Catalog = {
   'career.pack.basics': { one: '{count} tierra básica (gratis de todos modos)', other: '{count} tierras básicas (gratis de todos modos)' },
   'career.pack.toCoins': '+{coins} monedas',
   'career.pack.toWildcard': 'Comodín',
+  'career.pack.tear': 'Abrir el sobre',
+  'career.pack.tearHint': 'Haz clic en el sobre, o pulsa Enter, para abrirlo.',
+  'career.pack.cards': { one: '{count} carta', other: '{count} cartas' },
+  'career.pack.later': 'Cerrar',
 
   'career.nav.progress': 'Progreso',
   'career.shop.free': 'Abrir un sobre gratis (quedan {count})',
@@ -591,6 +596,7 @@ const es: Catalog = {
   'career.progress.levels': 'Niveles',
   'career.progress.achievements': 'Logros',
   'career.progress.look': 'Cosméticos',
+  'career.progress.options': 'Historial y opciones',
   'career.levels.current': 'Estás aquí',
   'career.levels.reached': 'Alcanzado',
 
@@ -883,6 +889,13 @@ const es: Catalog = {
   'career.versus.setting': 'Barajando…',
   'career.versus.pays': 'Victoria: +{coins} monedas',
   'career.versus.record': { one: 'Vencido {count} vez', other: 'Vencido {count} veces' },
+  'career.versus.oneLoss': 'Una derrota termina la carrera',
+
+  'career.results.victory': 'Victoria',
+  'career.results.defeat': 'Derrota',
+  'career.results.earned': 'Conseguido',
+  'career.results.skip': 'Saltar',
+  'career.results.openPacks': { one: 'Abrir tu sobre', other: 'Abrir {count} sobres' },
 
   // the match stage
   'match.cards': { one: '{label}, {count} carta', other: '{label}, {count} cartas' },

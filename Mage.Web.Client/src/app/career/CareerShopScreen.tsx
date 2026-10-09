@@ -97,6 +97,7 @@ export function CareerShopScreen() {
         <PackReveal
           key={opened.serial}
           setName={opened.set.name ?? opened.result.setCode ?? ''}
+          setCode={opened.result.setCode ?? opened.set.setCode ?? ''}
           cards={opened.result.cards ?? []}
           canBuyAnother={((opened.result.profile?.packTokens ?? 0) > 0 || (opened.result.profile?.coins ?? 0) >= (opened.set.price ?? price)) && buying === null}
           onAnother={() => void buy(opened.set)}
