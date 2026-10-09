@@ -143,7 +143,7 @@ export async function playCareer(opponentId: string, deck: DeckCardLists): Promi
   try {
     const match = await api.careerPlay(opponentId, toWire(deck));
     // leaving the match shows what it paid, then comes back to Career
-    usePlay.setState({ tableId: match.tableId ?? null, returnPath: rewardsPath(match.tableId ?? null, true, '/career') });
+    usePlay.setState({ tableId: match?.tableId ?? null, returnPath: rewardsPath(match?.tableId ?? null, true, '/career') });
   } catch (error) {
     usePlay.setState({ phase: 'idle', tableId: null });
     throw error;

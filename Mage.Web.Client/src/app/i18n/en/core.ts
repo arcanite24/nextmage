@@ -37,6 +37,7 @@ export default {
   'login.submit.sit': 'Sit down',
   'login.codeSent': 'If {email} belongs to an account, a code is on its way. Check your spam folder too.',
   'login.passwordChanged': 'Your password is changed. Sign in with it.',
+  'login.serverRestarted': 'The server restarted. Sign in again.',
   'login.accountName': 'Account name',
   'login.playerName': 'Player name',
   'login.email': 'Email',
@@ -134,6 +135,7 @@ export default {
 
   // the deck shelf
   'decks.yourDecks': 'Your decks',
+  'decks.fromStarter': { one: 'Copied from starter · {count} card', other: 'Copied from starter · {count} cards' },
   'decks.import': 'Import',
   'decks.build': 'Build a deck',
   'decks.dropHint': 'Drop a deck file, link or list',

@@ -9,18 +9,9 @@ import { MatchScore } from '../match/MatchScore';
 import { useEvents, type ConstructState } from '../stores/events';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
+import { BASICS, countBasics, initialMain, isBasic, toDeckLists, type BasicName } from './buildDeck';
 import { curveColumns, faceOf, poolEntry, poolKey, type PoolCard } from './pool';
 import styles from './Build.module.css';
-
-const BASICS = [
-  { name: 'Plains', symbol: 'w', color: 'white' },
-  { name: 'Island', symbol: 'u', color: 'blue' },
-  { name: 'Swamp', symbol: 'b', color: 'black' },
-  { name: 'Mountain', symbol: 'r', color: 'red' },
-  { name: 'Forest', symbol: 'g', color: 'green' },
-] as const;
-
-type BasicName = (typeof BASICS)[number]['name'];
 
 /** Deck building for an event: after a draft or with a sealed pool, and sideboarding between games. */
 export function BuildScreen() {
@@ -47,8 +38,14 @@ function Builder({ construct }: { construct: ConstructState }) {
     () => [...Object.values(construct.deck.cards ?? {}), ...Object.values(construct.deck.sideboard ?? {})] as PoolCard[],
     [construct.deck],
   );
-  const [main, setMain] = useState<ReadonlySet<string>>(() => new Set(Object.keys(construct.deck.cards ?? {}).filter((id) => !isBasic(construct.deck.cards?.[id] as PoolCard))));
-  const [basics, setBasics] = useState<Record<BasicName, number>>(() => countBasics(Object.values(construct.deck.cards ?? {}) as PoolCard[]));
+  const [main, setMain] = useState<ReadonlySet<string>>(() => initialMain(construct.deck, construct.limited));
+  const [basics, setBasicCounts] = useState<Record<BasicName, number>>(() => countBasics(Object.values(construct.deck.cards ?? {}) as PoolCard[]));
+  // nothing is saved until the player changes something: the server already holds the deck as it came
+  const [touched, setTouched] = useState(false);
+  const setBasics = (next: (current: Record<BasicName, number>) => Record<BasicName, number>) => {
+    setTouched(true);
+    setBasicCounts(next);
+  };
   const [colors, setColors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const entries = useMemo(() => pool.map(poolEntry), [pool]);
@@ -66,13 +63,14 @@ function Builder({ construct }: { construct: ConstructState }) {
 
   // keep the server's copy current, so a timeout submits what's on screen
   useEffect(() => {
-    if (construct.submitted) return;
+    if (construct.submitted || !touched) return;
     const timer = setTimeout(() => api.deckSave(construct.tableId, wire).catch(() => undefined), 1200);
     return () => clearTimeout(timer);
-  }, [wire, construct.tableId, construct.submitted]);
+  }, [wire, touched, construct.tableId, construct.submitted]);
 
   const toggle = (card: PoolCard) => {
     if (construct.submitted) return;
+    setTouched(true);
     setMain((current) => {
       const next = new Set(current);
       if (next.has(card.id!)) next.delete(card.id!);
@@ -152,7 +150,7 @@ function Builder({ construct }: { construct: ConstructState }) {
                   <button type="button" aria-label={`One more ${basic.name}`} disabled={construct.submitted} onClick={() => setBasics((current) => ({ ...current, [basic.name]: current[basic.name] + 1 }))}><Plus size={13} /></button>
                 </div>
               ))}
-              <Button variant="quiet" size="sm" icon={<Sparkles size={15} />} disabled={construct.submitted || inDeck.length === 0} onClick={() => setBasics(suggestLands(inDeck, info, minimum - inDeck.length))}>
+              <Button variant="quiet" size="sm" icon={<Sparkles size={15} />} disabled={construct.submitted || inDeck.length === 0} onClick={() => setBasics(() => suggestLands(inDeck, info, minimum - inDeck.length))}>
                 Suggest lands
               </Button>
             </div>
@@ -208,16 +206,6 @@ function Countdown({ deadline }: { deadline: number }) {
   return <span className={[styles.countdown, left < 60 ? styles.countdownLow : ''].join(' ')} role="timer">{minutes}:{seconds}</span>;
 }
 
-function isBasic(card: PoolCard | undefined): boolean {
-  return !!card?.name && BASICS.some((basic) => basic.name === card.name);
-}
-
-function countBasics(cards: PoolCard[]): Record<BasicName, number> {
-  const counts = { Plains: 0, Island: 0, Swamp: 0, Mountain: 0, Forest: 0 } as Record<BasicName, number>;
-  for (const card of cards) if (isBasic(card)) counts[card.name as BasicName]++;
-  return counts;
-}
-
 function matchesColors(card: PoolCard, info: ReadonlyMap<string, CardView>, colors: string[]): boolean {
   if (colors.length === 0) return true;
   const color = info.get(poolKey(card))?.color;
@@ -252,27 +240,4 @@ function suggestLands(deck: PoolCard[], info: ReadonlyMap<string, CardView>, wan
   const order = [...BASICS].sort((a, b) => symbols[b.name] - symbols[a.name]);
   for (let i = 0; given < lands; i++, given++) result[order[i % order.length].name]++;
   return result;
-}
-
-/** The deck as the server expects it: chosen cards in the main deck, the rest of the pool in the sideboard. */
-function toDeckLists(pool: PoolCard[], main: ReadonlySet<string>, basics: Record<BasicName, number> | null) {
-  const count = (cards: PoolCard[]) => {
-    const map = new Map<string, { cardName: string; setCode: string; cardNumber: string; amount: number }>();
-    for (const card of cards) {
-      const entry = poolEntry(card);
-      const key = poolKey(card);
-      const existing = map.get(key);
-      if (existing) existing.amount++;
-      else map.set(key, { cardName: entry.cardName, setCode: entry.setCode ?? '', cardNumber: entry.cardNumber ?? '', amount: 1 });
-    }
-    return [...map.values()];
-  };
-  const cards = count(pool.filter((card) => main.has(card.id!)));
-  const sideboard = count(pool.filter((card) => !main.has(card.id!) && !(basics && isBasic(card))));
-  if (basics) {
-    for (const basic of BASICS) {
-      if (basics[basic.name] > 0) cards.push({ cardName: basic.name, setCode: '', cardNumber: '', amount: basics[basic.name] });
-    }
-  }
-  return { name: 'Event deck', cards, sideboard };
 }

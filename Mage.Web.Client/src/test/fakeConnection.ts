@@ -16,6 +16,7 @@ export function createFakeConnection() {
   const statusListeners = new Set<(status: ConnectionStatus) => void>();
   const eventListeners = new Set<(event: ServerEvent) => void>();
   const sessionListeners = new Set<() => void>();
+  const lostListeners = new Set<(method: string) => void>();
 
   const setStatus = (next: ConnectionStatus) => {
     status = next;
@@ -42,8 +43,13 @@ export function createFakeConnection() {
       sessionListeners.add(listener);
       return () => sessionListeners.delete(listener);
     },
+    onSessionLost: (listener: (method: string) => void) => {
+      lostListeners.add(listener);
+      return () => lostListeners.delete(listener);
+    },
     /** test helpers */
     setStatus,
+    loseSession: (method: string) => lostListeners.forEach((listener) => listener(method)),
     emit: (event: ServerEvent) => eventListeners.forEach((listener) => listener(event)),
   };
 

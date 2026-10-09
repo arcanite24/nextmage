@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { api } from '../connection';
 import { toWire } from '../decks/deckModel';
-import { useServerState, useTables, queryClient } from '../queries';
+import { refreshTables, useServerState, useTables } from '../queries';
 import { rosterOf, useDecks } from '../stores/decks';
 import { useSession } from '../stores/session';
 import { notify } from '../stores/toasts';
@@ -216,14 +216,14 @@ function MyTable({ table }: { table: TableView }) {
         <IconButton label={chatOpen ? 'Hide table chat' : 'Table chat'} icon={<MessageSquare size={16} />} pressed={chatOpen} onClick={() => setChatOpen(!chatOpen)} />
         {isOwner && table.tableState !== 'DUELING' && (
           <>
-            <Button size="sm" variant="quiet" onClick={() => roomId && table.tableId && void api.tableRemove(roomId, table.tableId)}>Close</Button>
+            <Button size="sm" variant="quiet" onClick={() => roomId && table.tableId && void api.tableRemove(roomId, table.tableId).finally(refreshTables)}>Close</Button>
             <Button size="sm" variant={ready ? 'decision' : 'print'} disabled={!ready} onClick={() => roomId && table.tableId && void api.matchStart(roomId, table.tableId)}>
               Start
             </Button>
           </>
         )}
         {!isOwner && table.tableState === 'WAITING' && (
-          <Button size="sm" variant="quiet" onClick={() => roomId && table.tableId && void api.roomLeaveTableOrTournament(roomId, table.tableId)}>Leave</Button>
+          <Button size="sm" variant="quiet" onClick={() => roomId && table.tableId && void api.roomLeaveTableOrTournament(roomId, table.tableId).finally(refreshTables)}>Leave</Button>
         )}
       </TableRow>
       {chatOpen && table.tableId && <TableChat tableId={table.tableId} />}
@@ -300,7 +300,7 @@ function HostDialog({ open, onOpenChange, deckId }: { open: boolean; onOpenChang
         // players you ignore can't sit at your table or watch it
         bannedUsers: useSocial.getState().ignored,
       }));
-      if (!table.tableId) throw new Error('The server did not create the table.');
+      if (!table?.tableId) throw new Error('The server did not create the table.');
       const wire = toWire(deck);
       if (!await api.roomJoinTable(roomId, table.tableId, userName, 'HUMAN', 1, wire, password)) {
         throw new Error(`Your deck is not legal in ${formatRules(deckType).label}.`);
@@ -314,7 +314,7 @@ function HostDialog({ open, onOpenChange, deckId }: { open: boolean; onOpenChang
           if (!joined && rival !== wire) await api.roomJoinTable(roomId, table.tableId, `AI ${seat}`, 'COMPUTER_MAD', 4, wire, password);
         }
       }
-      await queryClient.invalidateQueries({ queryKey: ['tables'] });
+      refreshTables();
       onOpenChange(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));

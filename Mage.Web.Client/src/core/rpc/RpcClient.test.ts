@@ -88,6 +88,25 @@ describe('RpcClient', () => {
     await expect(denied).rejects.toBeInstanceOf(RpcError);
   });
 
+  test('tells listeners when the server no longer knows the session, and only then', async () => {
+    const client = createClient();
+    const lost: string[] = [];
+    client.onSessionLost((method) => lost.push(method));
+    const connected = client.connect('ws://test');
+    last().open();
+    await connected;
+
+    const owner = client.call('tableRemove', '', 'room-1', 'table-1');
+    last().fail(last().sent[0].id as number, -32001, 'Only the table owner can do that');
+    await expect(owner).rejects.toBeInstanceOf(RpcError);
+    expect(lost).toEqual([]);
+
+    const create = client.call('roomCreateTable', '', 'room-1', {});
+    last().fail(last().sent[1].id as number, -32001, 'Not connected: log in before calling roomCreateTable');
+    await expect(create).rejects.toBeInstanceOf(RpcError);
+    expect(lost).toEqual(['roomCreateTable']);
+  });
+
   test('a failed first connection is reported, not retried', async () => {
     const client = createClient();
     const connected = client.connect('ws://down');

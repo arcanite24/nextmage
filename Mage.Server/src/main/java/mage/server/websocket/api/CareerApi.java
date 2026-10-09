@@ -259,8 +259,7 @@ final class CareerApi {
             if (!ctx.server.roomJoinTable(sessionId, roomId, tableId, user, PlayerType.HUMAN, 1, deck, "")) {
                 throw RpcException.invalidParams("Your deck wasn't accepted for the table.");
             }
-            String aiName = opponentName.length() > 14 ? opponentName.substring(0, 14).trim() : opponentName;
-            if (!ctx.server.roomJoinTable(sessionId, roomId, tableId, aiName, ai, Math.max(1, skill), opponentDeck, "")) {
+            if (!ctx.server.roomJoinTable(sessionId, roomId, tableId, CareerContent.aiSeatName(opponentName), ai, Math.max(1, skill), opponentDeck, "")) {
                 throw new RpcException(RpcException.SERVER_ERROR, opponentName + " couldn't take a seat.");
             }
             if (!ctx.server.matchStart(sessionId, roomId, tableId)) {
