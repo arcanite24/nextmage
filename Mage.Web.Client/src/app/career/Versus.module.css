@@ -125,7 +125,8 @@
 }
 
 .vs {
-  position: fixed;
+  position: absolute;
+  z-index: 2;
   top: 42%;
   left: 50%;
   translate: -50% -50%;

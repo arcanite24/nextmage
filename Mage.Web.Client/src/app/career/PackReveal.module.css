@@ -10,7 +10,7 @@
   gap: var(--space-4);
   padding: var(--space-5) var(--space-5) var(--space-4);
   background:
-    radial-gradient(ellipse at 50% 45%, rgb(var(--mat-rgb) / 0.82), rgb(var(--void-rgb) / 0.97) 70%);
+    radial-gradient(ellipse at 50% 45%, rgb(var(--mat-rgb) / 0.96), rgb(var(--void-rgb) / 0.99) 70%);
   animation: overlay-in 260ms linear both;
 }
 
