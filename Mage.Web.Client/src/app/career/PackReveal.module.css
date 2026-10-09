@@ -116,7 +116,7 @@
 
 .code {
   font-family: var(--font-print);
-  font-size: clamp(3rem, 9vw, 4.5rem);
+  font-size: 4.5rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-shadow: 0 2px 0 rgb(0 0 0 / 0.35);
@@ -307,5 +307,12 @@
   .flipInner,
   .half {
     transition: none;
+  }
+}
+
+/* smaller screens step the display type down (sizes stay in rem, so text zoom still scales them) */
+@media (max-width: 900px) {
+  .code {
+    font-size: 3rem;
   }
 }
