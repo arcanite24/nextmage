@@ -3,7 +3,7 @@
 
 import type { RpcMethodName, RpcMethods, UUID } from './protocol';
 import type { CardCriteria, DeckCardInfo, DeckCardLists, ManaType, PlayerAction, UserData } from './views';
-import type { WebMatchOptions, WebTournamentOptions } from '../options';
+import type { WebCardFilters, WebMatchOptions, WebTournamentOptions } from '../options';
 
 export interface RpcCaller {
   call<M extends RpcMethodName>(method: M, ...params: RpcMethods[M]['params']): Promise<RpcMethods[M]['result']>;
@@ -59,8 +59,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('getExpansionSets'),
     getBasicLandSets: () =>
       rpc.call('getBasicLandSets'),
-    searchCards: (criteria: CardCriteria) =>
-      rpc.call('searchCards', criteria),
+    searchCards: (criteria: CardCriteria, filters?: WebCardFilters | null) =>
+      rpc.call('searchCards', criteria, filters),
     lookupCards: (cards: DeckCardInfo[]) =>
       rpc.call('lookupCards', cards),
     deckValidate: (deckType: string, deck: DeckCardLists) =>

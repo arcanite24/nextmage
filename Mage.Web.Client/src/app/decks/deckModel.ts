@@ -25,11 +25,15 @@ export function printingOf(card: CardView): PrintingRef {
 const BASIC_NAMES = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes',
   'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest']);
 
-/** How many copies of a card a constructed deck may hold (basic lands and "any number" cards are unlimited). */
-export function copyLimit(card: Pick<CardView, 'name' | 'rules' | 'superTypes'> | undefined, name: string): number {
+/**
+ * How many copies of a card a constructed deck may hold (basic lands and "any number" cards are unlimited);
+ * singleton formats allow one.
+ */
+export function copyLimit(card: Pick<CardView, 'name' | 'rules' | 'superTypes'> | undefined, name: string, singleton = false): number {
   if (BASIC_NAMES.has(name) || (card?.superTypes ?? []).includes('BASIC')) return Infinity;
   const rules = (card?.rules ?? []).join(' ');
   if (/a deck can have any number of cards named/i.test(rules)) return Infinity;
+  if (singleton) return 1;
   const limited = /a deck can have up to (\w+) cards named/i.exec(rules);
   if (limited) {
     const words: Record<string, number> = { seven: 7, nine: 9 };
@@ -73,6 +77,13 @@ export function moveCard(deck: DeckCardLists, from: DeckZone, key: string, amoun
   const moved = Math.min(amount, entry.amount);
   const to: DeckZone = from === 'cards' ? 'sideboard' : 'cards';
   return addCard(removeCard(deck, from, key, moved), to, { cardName: entry.cardName, setCode: entry.setCode ?? '', cardNumber: entry.cardNumber ?? '' }, moved);
+}
+
+/** One entry switched to another printing of the same card; copies already on that printing are merged. */
+export function changePrinting(deck: DeckCardLists, zone: DeckZone, key: string, printing: PrintingRef): DeckCardLists {
+  const entry = deck[zone].find((candidate) => entryKey(candidate) === key);
+  if (!entry || entryKey(printing) === key) return deck;
+  return addCard(removeCard(deck, zone, key, entry.amount), zone, printing, entry.amount);
 }
 
 export type DeckGroupKey = 'creatures' | 'planeswalkers' | 'spells' | 'artifacts' | 'enchantments' | 'lands' | 'unknown';

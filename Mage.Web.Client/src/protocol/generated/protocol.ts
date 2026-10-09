@@ -2,7 +2,7 @@
 // Regenerate: mvn -pl Mage.Server test -Dtest=WebClientApiDocsTest -Dxmage.updateWebApiDocs=true
 
 import type { AbilityPickerView, BasicLandSetInfo, CardCriteria, CardView, ChatMessage, DeckCardInfo, DeckCardLists, DeckSourceStatus, DeckValidationResult, DraftClientMessage, DraftPickView, ExpansionSetInfo, GameClientMessage, GameEndView, GameTypeView, GameView, ImportedDeck, ManaType, MatchView, PlayerAction, RoomUsersView, ServerState, TableClientMessage, TableView, TournamentTypeView, TournamentView, UserData, UserRequestMessage, UserView } from './views';
-import type { WebMatchOptions, WebTournamentOptions } from '../options';
+import type { WebCardFilters, WebMatchOptions, WebTournamentOptions } from '../options';
 
 export type UUID = string;
 
@@ -32,7 +32,7 @@ export interface RpcMethods {
   getDraftCubes: { params: []; result: string[] };
   getExpansionSets: { params: []; result: ExpansionSetInfo[] };
   getBasicLandSets: { params: []; result: BasicLandSetInfo[] };
-  searchCards: { params: [criteria: CardCriteria]; result: CardView[] };
+  searchCards: { params: [criteria: CardCriteria, filters?: WebCardFilters | null]; result: CardView[] };
   lookupCards: { params: [cards: DeckCardInfo[]]; result: CardView[] };
   deckValidate: { params: [deckType: string, deck: DeckCardLists]; result: DeckValidationResult };
   deckImportFromUrl: { params: [url: string]; result: ImportedDeck };

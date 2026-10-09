@@ -1,0 +1,52 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px 12px;
+  max-height: min(64vh, 720px);
+  padding: 4px;
+  overflow-y: auto;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover {
+  background: rgb(233 228 214 / 0.06);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--ink-strong);
+  outline-offset: 2px;
+}
+
+.on {
+  box-shadow: inset 0 0 0 2px var(--sage);
+}
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-sm);
+}
+
+.caption small {
+  overflow: hidden;
+  color: var(--ink-dim);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note {
+  color: var(--ink-dim);
+}

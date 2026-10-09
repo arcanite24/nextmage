@@ -16,9 +16,11 @@ interface CollectionFilters {
   manaValue: number | null;
   type: CardType | '';
   rarity: Rarity | '';
+  /** one set's code, or '' for every set */
+  set: string;
 }
 
-const EMPTY_FILTERS: CollectionFilters = { text: '', anyText: false, colors: [], manaValue: null, type: '', rarity: '' };
+const EMPTY_FILTERS: CollectionFilters = { text: '', anyText: false, colors: [], manaValue: null, type: '', rarity: '', set: '' };
 
 const PAGE = 60;
 
@@ -66,6 +68,7 @@ function toCriteria(filters: CollectionFilters, format: string, start: number, i
     webColors: filters.colors,
     colorMatch: 'any',
     types: filters.type ? [filters.type] : [],
+    setCodes: filters.set ? [filters.set] : undefined,
     rarities: filters.rarity ? [filters.rarity] : [],
     manaValue: filters.manaValue ?? undefined,
     manaValueOperator: filters.manaValue === 7 ? 'gte' : filters.manaValue !== null ? 'eq' : undefined,
@@ -87,8 +90,10 @@ function useDebounced<T>(value: T, ms: number): T {
 }
 
 /** Every card the format allows, filterable; click a card to add it. */
-export function Collection({ format, counts, limitOf, onAdd, onRemove, onPreview }: {
+export function Collection({ format, identity, counts, limitOf, onAdd, onRemove, onPreview }: {
   format: string;
+  /** a commander deck's color identity (WUBRG letters): only cards it allows are shown; null shows every color */
+  identity: string[] | null;
   /** copies already in the deck, by card name */
   counts: ReadonlyMap<string, number>;
   limitOf(card: CardView): number;
@@ -98,6 +103,9 @@ export function Collection({ format, counts, limitOf, onAdd, onRemove, onPreview
 }) {
   const [filters, setFilters] = useState<CollectionFilters>(EMPTY_FILTERS);
   const [allSets, setAllSets] = useState(false);
+  // a commander deck shows what its commander allows, unless the player asks for everything
+  const [anyIdentity, setAnyIdentity] = useState(false);
+  const colorIdentity = identity && !anyIdentity ? identity.join('') : null;
   const query = useDebounced(filters, 250);
   const remember = useCardInfoStore((state) => state.remember);
   const sets = useQuery({ queryKey: ['expansionSets'], queryFn: () => api.getExpansionSets(), staleTime: Infinity });
@@ -106,8 +114,8 @@ export function Collection({ format, counts, limitOf, onAdd, onRemove, onPreview
     [allSets, sets.data],
   );
   const results = useInfiniteQuery({
-    queryKey: ['collection', query, format, ignoreSets],
-    queryFn: ({ pageParam }) => api.searchCards(toCriteria(query, format, pageParam, ignoreSets)),
+    queryKey: ['collection', query, format, ignoreSets, colorIdentity],
+    queryFn: ({ pageParam }) => api.searchCards(toCriteria(query, format, pageParam, ignoreSets), colorIdentity === null ? null : { colorIdentity }),
     // wait for the set list so the first page already leaves the sidelined sets out
     enabled: allSets || !sets.isPending,
     initialPageParam: 0,
@@ -130,7 +138,14 @@ export function Collection({ format, counts, limitOf, onAdd, onRemove, onPreview
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const set = (patch: Partial<CollectionFilters>) => setFilters((current) => ({ ...current, ...patch }));
-  const filtered = filters.colors.length > 0 || filters.manaValue !== null || filters.type || filters.rarity || filters.text;
+  const filtered = filters.colors.length > 0 || filters.manaValue !== null || filters.type || filters.rarity || filters.text || filters.set;
+  // newest sets first; the sidelined kinds only when they are shown
+  const setOptions = useMemo(
+    () => [...(sets.data ?? [])]
+      .filter((item) => item.setCode && (allSets || !SIDELINED_SET_TYPES.has(item.type ?? '')))
+      .sort((a, b) => (b.releaseDate ?? 0) - (a.releaseDate ?? 0)),
+    [sets.data, allSets],
+  );
 
   return (
     <section className={styles.collection} aria-label="Collection">
@@ -151,6 +166,15 @@ export function Collection({ format, counts, limitOf, onAdd, onRemove, onPreview
           <input type="checkbox" checked={filters.anyText} onChange={(event) => set({ anyText: event.target.checked })} />
           Rules text
         </label>
+        {identity && (
+          <label className={styles.toggle} title="Only cards your commander's color identity allows">
+            <input type="checkbox" checked={!anyIdentity} onChange={(event) => setAnyIdentity(!event.target.checked)} />
+            Commander&rsquo;s colors
+            {identity.length === 0
+              ? <i className="ms ms-cost ms-c" aria-label="colorless" />
+              : identity.map((letter) => <i key={letter} className={`ms ms-cost ms-${letter.toLowerCase()}`} aria-hidden="true" />)}
+          </label>
+        )}
         <label className={styles.toggle} title="Joke sets, unofficial sets and Arena-only cards">
           <input type="checkbox" checked={allSets} onChange={(event) => setAllSets(event.target.checked)} />
           Joke &amp; digital sets
@@ -195,6 +219,10 @@ export function Collection({ format, counts, limitOf, onAdd, onRemove, onPreview
         </select>
         <select className={styles.select} value={filters.rarity} onChange={(event) => set({ rarity: event.target.value as Rarity | '' })} aria-label="Rarity">
           {RARITIES.map((rarity) => <option key={rarity.value} value={rarity.value}>{rarity.label}</option>)}
+        </select>
+        <select className={[styles.select, styles.setSelect].join(' ')} value={filters.set} onChange={(event) => set({ set: event.target.value })} aria-label="Set">
+          <option value="">All sets</option>
+          {setOptions.map((item) => <option key={item.setCode} value={item.setCode}>{item.name} ({item.setCode})</option>)}
         </select>
         {filtered && <button type="button" className={styles.reset} onClick={() => setFilters(EMPTY_FILTERS)}>Reset</button>}
       </div>

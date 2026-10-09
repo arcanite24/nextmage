@@ -116,7 +116,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `getDraftCubes` | - | `string[]` | public | Cubes available for cube drafts. |
 | `getExpansionSets` | - | `ExpansionSetInfo[]` | public | All card sets. |
 | `getBasicLandSets` | - | `BasicLandSetInfo[]` | public | Sets with basic lands, newest first. |
-| `searchCards` | `criteria: CardCriteria` | `CardView[]` | session | Search the card database (paged with start/count, at most 1000 per page). |
+| `searchCards` | `criteria: CardCriteria`, `filters?: WebCardFilters` | `CardView[]` | session | Search the card database (paged with start/count, at most 1000 per page). filters.colorIdentity (letters of WUBRG, "" for colorless) keeps cards a commander of those colors allows. |
 | `lookupCards` | `cards: DeckCardInfo[]` | `CardView[]` | public | Card details for deck entries (by set and number, falling back to name), in the same order; null for unknown cards. At most 500 per call. |
 | `deckValidate` | `deckType: string`, `deck: DeckCardLists` | `DeckValidationResult` | session | Check a deck against a format, with EDH power level and Commander brackets. |
 | `deckImportFromUrl` | `url: string` | `ImportedDeck` | session | Read the deck behind a deck website link. Ten imports a minute per session; results are cached for five minutes. Fails with code -32005 and data {reason}: private, not_found, blocked, rate_limited, site_changed, unsupported, too_large, timeout or unavailable. |
