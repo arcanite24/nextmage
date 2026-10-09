@@ -165,6 +165,86 @@ export interface CardView extends SimpleCardView {
     zone?: Zone;
 }
 
+export interface CareerCard {
+    cardNumber?: string;
+    convertedTo?: string;
+    count?: number;
+    name?: string;
+    rarity?: string;
+    setCode?: string;
+}
+
+export interface CareerCover {
+    cardNumber?: string;
+    name?: string;
+    setCode?: string;
+}
+
+export interface CareerMatch {
+    opponentId?: string;
+    tableId?: string;
+}
+
+export interface CareerOpponent {
+    colors?: string;
+    id?: string;
+    name?: string;
+    tagline?: string;
+    tier?: number;
+    tierName?: string;
+    unlocked?: boolean;
+    winCoins?: number;
+    wins?: number;
+}
+
+export interface CareerPackResult {
+    cards?: CareerCard[];
+    profile?: CareerProfile;
+    setCode?: string;
+}
+
+export interface CareerPayout {
+    at?: number;
+    coins?: number;
+    matchKey?: string;
+    note?: string;
+    opponent?: string;
+    won?: boolean;
+    xp?: number;
+}
+
+export interface CareerProfile {
+    cards?: number;
+    coins?: number;
+    created?: number;
+    level?: number;
+    losses?: number;
+    starter?: string;
+    wildcards?: Wildcards;
+    wins?: number;
+    xp?: number;
+}
+
+export interface CareerShopSet {
+    name?: string;
+    price?: number;
+    releaseDate?: string;
+    setCode?: string;
+}
+
+export interface CareerStarter {
+    cards?: number;
+    cover?: CareerCover;
+    id?: string;
+    name?: string;
+}
+
+export interface CareerState {
+    enabled?: boolean;
+    profile?: CareerProfile;
+    recent?: CareerPayout[];
+}
+
 export interface ChatMessage extends Serializable {
     color?: MessageColor;
     message?: string;
@@ -684,6 +764,7 @@ export interface Serializable {
 
 export interface ServerInfo {
     accounts?: boolean;
+    career?: boolean;
     deckSync?: boolean;
     mail?: boolean;
     maxPasswordLength?: number;
@@ -915,6 +996,13 @@ export interface UsersView extends Serializable {
     tourneyHistory?: string;
     tourneyQuitRatio?: number;
     userName?: string;
+}
+
+export interface Wildcards {
+    common?: number;
+    mythic?: number;
+    rare?: number;
+    uncommon?: number;
 }
 
 export type AbilityType = "PLAY_LAND" | "SPELL" | "STATIC" | "EVASION" | "ACTIVATED_NONMANA" | "ACTIVATED_MANA" | "TRIGGERED_NONMANA" | "TRIGGERED_MANA" | "SPECIAL_ACTION" | "SPECIAL_MANA_PAYMENT";

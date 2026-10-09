@@ -231,6 +231,28 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('reportPlayer', userName, reason, details, gameId),
     clientReportError: (report: ClientError) =>
       rpc.call('clientReportError', report),
+    careerState: () =>
+      rpc.call('careerState'),
+    careerStarters: () =>
+      rpc.call('careerStarters'),
+    careerStart: (starterId: string) =>
+      rpc.call('careerStart', starterId),
+    careerCollection: () =>
+      rpc.call('careerCollection'),
+    careerOpponents: () =>
+      rpc.call('careerOpponents'),
+    careerPlay: (opponentId: string, deck: DeckCardLists) =>
+      rpc.call('careerPlay', opponentId, deck),
+    careerShop: () =>
+      rpc.call('careerShop'),
+    careerBuyPack: (setCode: string) =>
+      rpc.call('careerBuyPack', setCode),
+    careerCraft: (setCode: string, cardNumber: string) =>
+      rpc.call('careerCraft', setCode, cardNumber),
+    careerExport: () =>
+      rpc.call('careerExport'),
+    careerImport: (data: string) =>
+      rpc.call('careerImport', data),
   };
 }
 

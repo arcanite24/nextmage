@@ -58,6 +58,8 @@ public class WebClientApiContractTest {
             "reportPlayer", "clientReportError", "adminGetReports", "adminCloseReport", "adminClientErrors", // moderation stores
             "adminServerStats", // bridge metrics
             "gamePractice", // game controller practice tools, with readable errors
+            "careerState", "careerStarters", "careerStart", "careerCollection", "careerOpponents", "careerPlay", "careerShop",
+            "careerBuyPack", "careerCraft", "careerExport", "careerImport", // career store and service (career/CareerServiceTest)
             "authRegister", "authSendTokenToEmail", "authResetPassword" // session and AccountService, with readable errors
     ));
 

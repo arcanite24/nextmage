@@ -236,6 +236,17 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `deckSyncDelete` | `deckId: string`, `deletedAt: number` | `DeckPutResult` | session | Delete a deck of the signed-in account, unless the server has a change newer than the deletion. |
 | `reportPlayer` | `userName: string`, `reason: string`, `details: string`, `gameId?: string` | `number` | session | Report a player to the server's moderators. Reasons: abuse, cheating, spam, stalling, other. A player can have 5 open reports at a time. Returns the report id. |
 | `clientReportError` | `report: ClientError` | `boolean` | public | A crash report from the web client: kept in the server log and the admin console, never sent elsewhere. Limited per connection; extra reports are dropped. |
+| `careerState` | - | `CareerState` | session | Whether this server offers Career, and the signed-in account's Career (profile null before it opens one). |
+| `careerStarters` | - | `CareerStarter[]` | session | The starter decks a Career can open with. |
+| `careerStart` | `starterId: string` | `CareerProfile` | session | Open a Career with a starter deck: its cards become the collection, plus coins for a first pack. |
+| `careerCollection` | - | `CareerCard[]` | session | Every card the account owns in Career, by printing. Basic lands are free and not listed. |
+| `careerOpponents` | - | `CareerOpponent[]` | session | The AI opponents in tiers, with the account's wins against each and which are open. A tier opens after enough wins in the one before. |
+| `careerPlay` | `opponentId: string`, `deck: DeckCardLists` | `CareerMatch` | session | Start a Career match against an open opponent with a deck of owned cards (basic lands are free). The server sets up the table and starts the match; the game arrives like any other. |
+| `careerShop` | - | `CareerShopSet[]` | session | The sets the Career shop sells packs of, newest first, with the price in coins. |
+| `careerBuyPack` | `setCode: string` | `CareerPackResult` | session | Buy and open a pack. Copies past four of a card become coins (commons, uncommons) or a wildcard (rares, mythics); those cards say so in convertedTo. |
+| `careerCraft` | `setCode: string`, `cardNumber: string` | `CareerProfile` | session | Craft one copy of a card: commons and uncommons cost coins, rares and mythics a wildcard of their rarity. |
+| `careerExport` | - | `string` | session | The account's whole Career as a signed text file, to keep a copy. |
+| `careerImport` | `data: string` | `CareerProfile` | session | Bring back an exported Career, for an account that has none. Only files this server made for this account are taken. |
 <!-- END GENERATED: methods -->
 
 ## Server events

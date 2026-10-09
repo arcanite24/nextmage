@@ -46,6 +46,8 @@ final class AccountApi {
         public int maxPasswordLength;
         /** decks are kept on the server for each account */
         public boolean deckSync;
+        /** the optional single-player Career is offered (accounts on, and not switched off) */
+        public boolean career;
     }
 
     static List<RpcMethod> methods(ApiContext ctx) {
@@ -137,6 +139,7 @@ final class AccountApi {
             info.maxPasswordLength = config.getMaxPasswordLength();
         }
         info.deckSync = info.accounts;
+        info.career = mage.server.career.CareerService.enabled(info.accounts);
         return info;
     }
 
