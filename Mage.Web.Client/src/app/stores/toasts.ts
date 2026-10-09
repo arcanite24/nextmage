@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { events } from '../connection';
 import { stripMarkup } from '../../core/game/prompt';
+import { useSession } from './session';
 
 export interface ToastAction {
   label: string;
@@ -41,6 +42,8 @@ export function notify(title: string, message: string, tone: Toast['tone'] = 'in
 }
 
 events.on('SHOW_USERMESSAGE', (data) => {
+  // before sign-in (registering, resetting a password) the sign-in screen shows the reason itself
+  if (useSession.getState().phase !== 'signedIn') return;
   const [title, message] = Array.isArray(data) ? data : ['Server', String(data ?? '')];
   notify(stripMarkup(title) || 'Server', stripMarkup(message));
 });

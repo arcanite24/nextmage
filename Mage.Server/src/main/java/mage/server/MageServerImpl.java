@@ -39,7 +39,6 @@ import org.apache.log4j.Logger;
 import org.unbescape.html.HtmlEscape;
 
 import javax.management.timer.Timer;
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
@@ -50,20 +49,11 @@ public class MageServerImpl implements MageServer {
 
     private static final Logger logger = Logger.getLogger(MageServerImpl.class);
     private final ExecutorService callExecutor;
-    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final ManagerFactory managerFactory;
     private final String adminPassword;
     private final boolean testMode;
     private final boolean detailsMode;
-    private final LinkedHashMap<String, String> activeAuthTokens = new LinkedHashMap<String, String>() {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
-            // Keep the latest 1024 auth tokens in memory.
-            return size() > 1024;
-        }
-    };
-
     public MageServerImpl(ManagerFactory managerFactory, String adminPassword, boolean testMode, boolean detailsMode) {
         this.managerFactory = managerFactory;
         this.adminPassword = adminPassword;
@@ -85,38 +75,11 @@ public class MageServerImpl implements MageServer {
         return managerFactory.sessionManager().registerUser(sessionId, userName, password, email);
     }
 
-    // generateAuthToken returns a uniformly distributed 6-digits string.
-    static private String generateAuthToken() {
-        return String.format("%06d", RANDOM.nextInt(1000000));
-    }
-
     @Override
     public boolean authSendTokenToEmail(String sessionId, String email) throws MageException {
-        if (!managerFactory.configSettings().isAuthenticationActivated()) {
-            sendErrorMessageToClient(sessionId, Session.REGISTRATION_DISABLED_MESSAGE);
-            return false;
-        }
-
-        AuthorizedUser authorizedUser = AuthorizedUserRepository.getInstance().getByEmail(email);
-        if (authorizedUser == null) {
-            sendErrorMessageToClient(sessionId, "No user was found with the email address " + email);
-            logger.info("Auth token is requested for " + email + " but there's no such user in DB");
-            return false;
-        }
-
-        String authToken = generateAuthToken();
-        activeAuthTokens.put(email, authToken);
-        String subject = "XMage Password Reset Auth Token";
-        String text = "Use this auth token to reset " + authorizedUser.name + "'s password: " + authToken + '\n'
-                + "It's valid until the next server restart.";
-        boolean success;
-        if (!managerFactory.configSettings().getMailUser().isEmpty()) {
-            success = managerFactory.mailClient().sendMessage(email, subject, text);
-        } else {
-            success = managerFactory.mailgunClient().sendMessage(email, subject, text);
-        }
-        if (!success) {
-            sendErrorMessageToClient(sessionId, "There was an error inside the server while emailing an auth token");
+        String problem = new AccountService(managerFactory).sendResetCode(email);
+        if (problem != null) {
+            sendErrorMessageToClient(sessionId, problem);
             return false;
         }
         return true;
@@ -124,33 +87,11 @@ public class MageServerImpl implements MageServer {
 
     @Override
     public boolean authResetPassword(String sessionId, String email, String authToken, String password) throws MageException {
-        if (!managerFactory.configSettings().isAuthenticationActivated()) {
-            sendErrorMessageToClient(sessionId, Session.REGISTRATION_DISABLED_MESSAGE);
+        String problem = new AccountService(managerFactory).resetPassword(email, authToken, password);
+        if (problem != null) {
+            sendErrorMessageToClient(sessionId, problem);
             return false;
         }
-
-        // multi-step reset:
-        // - send auth token
-        // - check auth token to confirm reset
-
-        String storedAuthToken = activeAuthTokens.get(email);
-        if (storedAuthToken == null || !storedAuthToken.equals(authToken)) {
-            sendErrorMessageToClient(sessionId, "Invalid auth token");
-            logger.info("Invalid auth token " + authToken + " is sent for " + email);
-            return false;
-        }
-
-        AuthorizedUser authorizedUser = AuthorizedUserRepository.getInstance().getByEmail(email);
-        if (authorizedUser == null) {
-            sendErrorMessageToClient(sessionId, "User with that email doesn't exists");
-            logger.info("Auth token is valid, but the user with email address " + email + " is no longer in the DB");
-            return false;
-        }
-
-        // recreate user with new password
-        AuthorizedUserRepository.getInstance().remove(authorizedUser.getName());
-        AuthorizedUserRepository.getInstance().add(authorizedUser.getName(), password, email);
-        activeAuthTokens.remove(email);
         return true;
     }
 

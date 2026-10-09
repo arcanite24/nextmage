@@ -19,6 +19,7 @@ public final class WebClientApi {
         dispatcher.registerAll(GameApi.methods(ctx));
         dispatcher.registerAll(EventApi.methods(ctx));
         dispatcher.registerAll(AdminApi.methods(ctx));
+        dispatcher.registerAll(AccountApi.methods(ctx));
         return dispatcher;
     }
 }

@@ -52,7 +52,11 @@ public class WebClientApiContractTest {
             "testEndGame", "testConcedeMatch", // test mode helpers on table manager
             "gameResync", // the bridge resends its own copy of the open question
             "chatSetIgnored", "gameWatchers", // user and game managers (social/UserRelations, watcher names)
-            "replayList", "replayPage" // replay store (replay/ReplayStoreTest)
+            "replayList", "replayPage", // replay store (replay/ReplayStoreTest)
+            "serverInfo", "deckSyncList", "deckSyncGet", "deckSyncPut", "deckSyncDelete", // config and deck store (decks/DeckStoreTest)
+            "reportPlayer", "clientReportError", "adminGetReports", "adminCloseReport", "adminClientErrors", // moderation stores
+            "adminServerStats", // bridge metrics
+            "authRegister", "authSendTokenToEmail", "authResetPassword" // session and AccountService, with readable errors
     ));
 
     static {

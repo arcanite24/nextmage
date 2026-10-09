@@ -11,7 +11,7 @@
   var path = location.pathname;
 
   function fail(message) {
-    window.alert('Send to Playmat: ' + message);
+    window.alert('Send to __APP_NAME__: ' + message);
   }
 
   function send(site, text, name) {
@@ -124,5 +124,5 @@
     return;
   }
 
-  fail('this page isn’t a deck on a site Playmat knows.');
+  fail('this page isn’t a deck on a site __APP_NAME__ knows.');
 })();

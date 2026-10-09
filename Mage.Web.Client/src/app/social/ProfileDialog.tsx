@@ -1,4 +1,4 @@
-import { Ban, History, MessageCircle, Star, StarOff } from 'lucide-react';
+import { Ban, Flag as FlagIcon, History, MessageCircle, Star, StarOff } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DEFAULT_AVATAR_ID, flagChoices, SIGILS } from '../../core/social/identity';
@@ -93,6 +93,9 @@ function Profile({ name, onClose }: { name: string; onClose(): void }) {
             onClick={() => (ignoredUser ? useSocial.getState().unignore(name) : useSocial.getState().ignore(name))}
           >
             {ignoredUser ? 'Stop ignoring' : 'Ignore'}
+          </Button>
+          <Button size="sm" variant="quiet" icon={<FlagIcon size={16} />} onClick={() => { onClose(); useLobby.getState().openReport(name); }}>
+            Report
           </Button>
         </div>
       )}

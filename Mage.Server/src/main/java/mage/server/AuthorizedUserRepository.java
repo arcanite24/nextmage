@@ -67,6 +67,20 @@ public class AuthorizedUserRepository {
         }
     }
 
+    /**
+     * Gives an existing user a new password, keeping everything else (email, locks, active flag).
+     */
+    public boolean changePassword(final String userName, final String password) {
+        AuthorizedUser user = getByName(userName);
+        if (user == null) {
+            return false;
+        }
+        Hash hash = new SimpleHash(Sha256Hash.ALGORITHM_NAME, password, rng.nextBytes(), 1024);
+        user.setPasswordHash(hash);
+        update(user);
+        return true;
+    }
+
     public void remove(final String userName) {
         try {
             DeleteBuilder<AuthorizedUser, Object> db = usersDao.deleteBuilder();

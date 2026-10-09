@@ -11,6 +11,9 @@ const VENDOR_CHUNKS: [chunk: string, packages: RegExp][] = [
   ['vendor-zustand', /\/node_modules\/(zustand|use-sync-external-store)\//],
 ]
 
+// the product name is a build setting (src/app/brand.ts); index.html's title reads it too
+process.env.VITE_APP_NAME = process.env.VITE_APP_NAME?.trim() || 'Playmat'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
