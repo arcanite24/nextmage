@@ -230,6 +230,9 @@ final class CareerApi {
         options.setSpectatorsAllowed(true);
         int skill = opponent.skill != null ? opponent.skill : content.tier(opponent.tier).skill;
         PlayerType aiType = opponent.aiType != null ? PlayerType.valueOf(opponent.aiType) : PlayerType.COMPUTER_MAD;
+        // the table's seats: without them nobody can join
+        options.getPlayerTypes().add(PlayerType.HUMAN);
+        options.getPlayerTypes().add(aiType);
         UUID tableId = null;
         try {
             TableView table = ctx.server.roomCreateTable(sessionId, roomId, options);
