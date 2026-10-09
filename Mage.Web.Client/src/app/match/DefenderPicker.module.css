@@ -82,3 +82,9 @@
     transform: translateY(10px);
   }
 }
+
+/* tall: above the decision corner in the band over the hand */
+:global([data-layout='tall']) .picker {
+  right: 24px;
+  bottom: calc(360px + var(--hand-raise, 0px));
+}

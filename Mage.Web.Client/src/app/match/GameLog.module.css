@@ -59,6 +59,9 @@
   list-style: none;
   font-size: 17px;
   line-height: 1.4;
+  /* the table blocks panning; a list that scrolls takes the finger back */
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .lines li + li {
@@ -269,4 +272,38 @@
     opacity: 0;
     transform: translateX(-16px);
   }
+}
+
+/* tall: the log's button sits beside the game menu, and the drawer opens down from there */
+:global([data-layout='tall']) .toggle {
+  left: auto;
+  right: calc(92px + var(--touch-target, 0px) / 2);
+  top: 22px;
+}
+
+:global([data-layout='tall']) .drawer {
+  left: auto;
+  right: 24px;
+  top: 110px;
+  bottom: 330px;
+}
+
+/* touch: a tablet shows the stage small; the log's text and drawer grow with the scale (--touch-target is 44px in stage pixels) */
+:global([data-touch]) .drawer {
+  width: max(440px, calc(var(--touch-target, 0px) * 7.5));
+}
+
+:global([data-touch]) .lines {
+  font-size: max(17px, calc(var(--touch-target, 0px) * 0.3));
+}
+
+/* at least 16 window pixels: iOS zooms the page into a smaller field when it takes focus */
+:global([data-touch]) .input {
+  height: max(44px, var(--touch-target, 0px));
+  font-size: max(17px, calc(var(--touch-target, 0px) * 0.37));
+}
+
+:global([data-touch]) .emote,
+:global([data-touch]) .mute {
+  min-height: var(--touch-target, 0px);
 }
