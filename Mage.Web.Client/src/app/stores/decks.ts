@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { isCommanderFormat } from '../../core/decks/formats';
+import { formatRules, isCommanderFormat } from '../../core/decks/formats';
 import { deckStorage, type DeckSummary } from '../../core/decks/DeckStorageService';
 import { DeckSerializer } from '../../core/decks/DeckSerializer';
 import { copyName } from '../../core/decks/exportFormats';
@@ -44,7 +44,7 @@ function summaryToRoster(deck: DeckSummary): RosterDeck {
   return {
     id: deck.id,
     name: deck.name || 'Untitled deck',
-    note: deck.format ? `${deck.format.replace(/^Constructed - /, '')} · ${size}` : size,
+    note: deck.format ? `${formatRules(deck.format).label} · ${size}` : size,
     cardCount: deck.cardCount ?? 0,
     cover: deck.coverCard ?? null,
     colors,
