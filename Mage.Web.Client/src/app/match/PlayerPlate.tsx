@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Swords } from 'lucide-react';
+import { COMMANDER_DAMAGE_LETHAL } from '../../core/game/commander';
 import { POOL_MANA, poolId } from '../../core/game/payment';
 import { ROPE_SECONDS, ropeSecondsLeft, ropeVisible } from '../../core/game/rope';
 import type { PlayerView } from '../../protocol/generated/views';
@@ -22,6 +24,10 @@ export interface PlayerPlateProps {
   payable?: ReadonlySet<string>;
   /** spend a kind of floating mana (its board id) */
   onPay?(id: string): void;
+  /** combat damage taken from each commander (Commander games) */
+  commanderDamage?: readonly { name: string; amount: number }[];
+  /** outside your range of influence: you can't affect this player, nor they you */
+  outOfRange?: boolean;
 }
 
 const ROPE_TICK_MS = 250;
@@ -44,7 +50,7 @@ function useRopeSeconds(player: PlayerView): number {
 }
 
 /** A player's seat: who they are, their life, counters, floating mana and clock. */
-export function PlayerPlate({ player, isMe, targetable, selected, deciding, sleeve, onClick, toPay, payable, onPay }: PlayerPlateProps) {
+export function PlayerPlate({ player, isMe, targetable, selected, deciding, sleeve, onClick, toPay, payable, onPay, commanderDamage = [], outOfRange = false }: PlayerPlateProps) {
   const life = player.life ?? 0;
   const previous = useRef(life);
   const [delta, setDelta] = useState<{ value: number; key: number } | null>(null);
@@ -69,13 +75,14 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
         targetable ? styles.targetable : '',
         selected ? styles.selected : '',
         player.hasLeft ? styles.left : '',
+        outOfRange ? styles.outOfRange : '',
         player.isActive ? styles.active : '',
         deciding ? styles.deciding : '',
       ].join(' ')}
       style={sleeve ? ({ '--sleeve': sleeve } as CSSProperties) : undefined}
       role={targetable ? 'button' : 'group'}
       tabIndex={targetable ? 0 : undefined}
-      aria-label={`${player.name}, ${life} life${targetable ? ', can be targeted' : ''}`}
+      aria-label={`${player.name}, ${life} life${outOfRange ? ', out of range' : ''}${targetable ? ', can be targeted' : ''}`}
       onClick={() => targetable && onClick()}
       onKeyDown={(event) => {
         if (targetable && event.key === 'Enter') {
@@ -94,7 +101,10 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
         )}
       </div>
       <div className={styles.info}>
-        <div className={styles.name}>{player.name}{player.hasLeft ? ' (left)' : ''}</div>
+        <div className={styles.name}>
+          {player.name}{player.hasLeft ? ' (left)' : ''}
+          {outOfRange && !player.hasLeft && <span className={styles.range} title="Outside your range of influence">Out of range</span>}
+        </div>
         <div className={styles.lifeRow}>
           <span key={delta?.key} className={[styles.life, delta ? (delta.value < 0 ? styles.hurt : styles.healed) : ''].join(' ')}>{life}</span>
           <span className={styles.unit} aria-hidden="true">life</span>
@@ -111,6 +121,19 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
           {player.monarch && <span className={styles.counter}>Monarch</span>}
           {player.initiative && <span className={styles.counter}>Initiative</span>}
         </div>
+        {commanderDamage.length > 0 && (
+          <div className={styles.commanderDamage} aria-label="Commander damage taken">
+            {commanderDamage.map((hit) => (
+              <span
+                key={hit.name}
+                className={[styles.hit, hit.amount >= COMMANDER_DAMAGE_LETHAL - 6 ? styles.hitDanger : ''].join(' ')}
+                title={`${hit.amount} combat damage from ${hit.name}; ${COMMANDER_DAMAGE_LETHAL} loses the game`}
+              >
+                <Swords size={16} aria-hidden="true" /> {hit.name.split(',')[0]} <b>{hit.amount}</b>
+              </span>
+            ))}
+          </div>
+        )}
         {toPay && (
           <div className={styles.toPay}>
             <span className={styles.toPayLabel}>To pay</span>
