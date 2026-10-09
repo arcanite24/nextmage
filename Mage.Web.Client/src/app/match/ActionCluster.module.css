@@ -171,3 +171,28 @@
 .fullControl:hover {
   background: rgb(var(--decision-rgb) / 0.15);
 }
+
+/* touch: the pass-ahead button is as wide as a finger */
+.ahead {
+  min-width: var(--touch-target, 0px);
+}
+
+/* tall: the corner sits in the band above the hand */
+:global([data-layout='tall']) .cluster {
+  right: 24px;
+  bottom: calc(140px + var(--hand-raise, 0px));
+  width: 400px;
+}
+
+:global([data-layout='tall']) .headline {
+  max-width: 400px;
+  font-size: 26px;
+}
+
+/* the menu opens outside the stage, at window size: a finger needs a taller row */
+@media (pointer: coarse) {
+  .menuItem {
+    min-height: 48px;
+    padding-block: 0;
+  }
+}

@@ -4,7 +4,8 @@ import { isStackAbility } from '../../core/game/cards';
 import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { useMatchUi } from './matchUi';
-import { STAGE_HEIGHT, toStagePoint, useStage } from './stageContext';
+import { toStagePoint, useStage } from './stageContext';
+import { lastPointerType } from './useLongPress';
 import styles from './CardZoom.module.css';
 
 const ZOOM_WIDTH = 340;
@@ -31,10 +32,12 @@ export function CardZoom() {
   // ...or that changed zone under the same id (a spell becoming a permanent): only the hovered element counts
   const element = shown?.anchor
     ?? (shown?.card.id ? stage.element?.querySelector(`[data-object-id="${CSS.escape(shown.card.id)}"]`) : null);
-  if (!shown || detailOpen || !element || !element.isConnected || !element.matches(':hover')) return null;
+  // a finger doesn't hover: on touch the card opens with a long press instead (the detail view)
+  const touch = lastPointerType() === 'touch';
+  if (!shown || touch || detailOpen || !element || !element.isConnected || !element.matches(':hover')) return null;
   const point = toStagePoint(stage, shown.x, shown.y);
   const left = point.x > stage.width / 2 ? point.x - ZOOM_WIDTH - 60 : point.x + 60;
-  const top = Math.max(24, Math.min(STAGE_HEIGHT - ZOOM_HEIGHT - 24, point.y - ZOOM_HEIGHT / 2));
+  const top = Math.max(24, Math.min(stage.height - ZOOM_HEIGHT - 24, point.y - ZOOM_HEIGHT / 2));
   const card = shown.card as PermanentView;
   const back = card.secondCardFace;
   const extra = details(card);

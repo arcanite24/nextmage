@@ -116,6 +116,25 @@
   color: var(--ink-strong);
 }
 
+/* touch: tall enough to tap, the opponent's strip moved up to keep clear of yours */
+:global([data-touch]) .strip {
+  height: max(52px, var(--touch-target, 0px));
+}
+
+:global([data-touch]) .theirs {
+  top: calc(532px - max(52px, var(--touch-target, 0px)));
+}
+
+:global([data-touch]) .more,
+:global([data-touch]) .dismiss {
+  min-width: var(--touch-target, 36px);
+  height: var(--touch-target, 36px);
+}
+
+:global([data-layout='tall'][data-touch]) .theirs {
+  top: calc(var(--seam) - 48px - max(52px, var(--touch-target, 0px)));
+}
+
 @keyframes print-in {
   from {
     opacity: 0;
@@ -127,4 +146,18 @@
   .strip {
     animation: none;
   }
+}
+
+/* tall: at the right end of the band between the battlefields (the stack has the left), above and below the turn */
+:global([data-layout='tall']) .strip {
+  left: auto;
+  right: 24px;
+}
+
+:global([data-layout='tall']) .theirs {
+  top: calc(var(--seam) - 100px);
+}
+
+:global([data-layout='tall']) .mine {
+  top: calc(var(--seam) + 48px);
 }
