@@ -9,7 +9,6 @@ import messages from '../i18n/en/career';
 import { useSession } from '../stores/session';
 import { useSettings } from '../stores/settings';
 import { Button } from '../ui/Button';
-import { CareerBar } from './CareerBar';
 import { refreshCareer, useCareerAchievements, useCareerLevels, useCareerLook, useCareerOpponents, useCareerState } from './careerData';
 import { CareerAvatar, DoneMark, ProgressBar, WeeklyGoal } from './CareerScreen';
 import {
@@ -41,7 +40,6 @@ export function CareerProgressScreen() {
 
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
       <div className={styles.tabs} role="group" aria-label={t('career.nav.progress')}>
         {TABS.map((item) => (
           <button

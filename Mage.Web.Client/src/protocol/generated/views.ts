@@ -204,6 +204,7 @@ export interface CareerChallenge {
     bestLife?: number;
     bestTurns?: number;
     board?: CareerChallengeEntry[];
+    cover?: CareerCover;
     id?: string;
     name?: string;
     opponentName?: string;
@@ -319,6 +320,14 @@ export interface CareerLimitedState {
     sealedRewards?: number[];
 }
 
+export interface CareerLines {
+    bigPlay?: string;
+    intro?: string;
+    lose?: string;
+    lowLife?: string;
+    win?: string;
+}
+
 export interface CareerMatch {
     opponentId?: string;
     tableId?: string;
@@ -336,8 +345,11 @@ export interface CareerModeResult {
 }
 
 export interface CareerNode {
+    after?: string;
+    before?: string;
     boss?: boolean;
     choice?: string;
+    cover?: CareerCover;
     id?: string;
     name?: string;
     options?: CareerOption[];
@@ -365,7 +377,9 @@ export interface CareerOfferOption {
 
 export interface CareerOpponent {
     colors?: string;
+    cover?: CareerCover;
     id?: string;
+    lines?: CareerLines;
     name?: string;
     tagline?: string;
     tier?: number;
@@ -498,6 +512,7 @@ export interface CareerRun {
 
 export interface CareerRunBoss {
     beaten?: boolean;
+    cover?: CareerCover;
     name?: string;
     number?: number;
     skill?: number;

@@ -7,11 +7,10 @@ import { registerMessages, useT, type MessageKey } from '../i18n';
 import messages from '../i18n/en/career';
 import { usePlay } from '../stores/play';
 import { Button } from '../ui/Button';
-import { CareerBar } from './CareerBar';
 import { useCareerState } from './careerData';
 import { playMode, usePuzzles } from './careerModesData';
 import { puzzleZones } from './careerModesModel';
-import { ModeResult, ModesNav, Stars } from './ModeParts';
+import { ModeResult, Stars } from './ModeParts';
 import styles from './CareerModes.module.css';
 
 registerMessages(messages);
@@ -33,8 +32,6 @@ export function CareerPuzzlesScreen() {
 
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
-      <ModesNav />
       <div className={styles.scroll}>
         <ModeResult kind="puzzle" />
         <header className={styles.modeHead}>

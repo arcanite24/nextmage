@@ -6,7 +6,6 @@ import { registerMessages, useT } from '../i18n';
 import messages from '../i18n/en/career';
 import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
-import { CareerBar } from './CareerBar';
 import { buyPack, useCareerShop, useCareerState } from './careerData';
 import { PackReveal } from './PackReveal';
 import styles from './Career.module.css';
@@ -48,7 +47,6 @@ export function CareerShopScreen() {
 
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
       <header className={styles.pageHead}>
         <p className={styles.lead}>{t('career.shop.lead', { price })}</p>
         <label className={styles.search}>

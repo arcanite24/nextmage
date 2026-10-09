@@ -10,7 +10,6 @@ import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
-import { CareerBar } from './CareerBar';
 import { craftCard, useCareerCollection, useCareerSetProgress, useCareerState } from './careerData';
 import { ProgressBar } from './CareerScreen';
 import { fraction } from './progressModel';
@@ -81,7 +80,6 @@ export function CareerCollectionScreen() {
 
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
       <header className={styles.pageHead}>
         <p className={styles.lead}>{t('career.collection.count', { count: total })}</p>
         <div className={styles.filters}>
