@@ -73,7 +73,8 @@
 .myPlate {
   position: absolute;
   left: 24px;
-  top: 936px;
+  /* anchored at its foot: extra rows (commander damage, floating mana) grow up into the mat, not off the stage */
+  bottom: 24px;
   z-index: var(--z-seat);
 }
 
@@ -202,10 +203,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.seat > :first-child {
-  position: relative;
 }
 
 .theirMini {

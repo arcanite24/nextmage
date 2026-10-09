@@ -103,10 +103,32 @@ describe('full control and combat stops', () => {
     const own = {
       yourTurn: { upkeep: false, main1: true }, opponentTurn: { endOfTurn: true }, stopOnDeclareAttackers: false, stopOnStackNewObjects: false,
     };
-    expect(serverStops(own, false)).toBe(own);
+    expect(serverStops(own, false)).toEqual({ ...own, yourTurn: { ...own.yourTurn, beforeCombat: true } });
     const full = serverStops(own, true);
     expect(full.yourTurn).toMatchObject({ upkeep: true, draw: true, main1: true, beforeCombat: true, endOfCombat: true, main2: true, endOfTurn: true });
     expect(full.opponentTurn).toEqual(full.yourTurn);
     expect(full).toMatchObject({ stopOnDeclareAttackers: true, stopOnStackNewObjects: true, stopOnDeclareBlockersWithZeroPermanents: true });
+  });
+});
+
+describe('the beginning of your combat', () => {
+  const crew = { vehicle: { other: [{ value: 'Crew 1' }] } } as never;
+  const beginCombat: GameView = { myPlayerId: 'me', activePlayerId: 'me', step: 'BEGIN_COMBAT', turn: 5, canPlayObjects: { objects: crew } };
+  const ownStop = { ...on, beginCombatStop: false };
+
+  it('is passed when the player has no stop there, even with abilities to activate', () => {
+    expect(autoAnswer(beginCombat, priority, ownStop)).toBe('pass');
+    expect(autoAnswer(beginCombat, priority, { ...ownStop, autoPass: false })).toBe('pass');
+    expect(autoAnswer(beginCombat, priority, { ...ownStop, beginCombatStop: true })).toBeNull();
+  });
+  it('stops after a trigger there resolved and left something to do (crew what Greasefang returned)', () => {
+    expect(autoAnswer(beginCombat, priority, { ...ownStop, combatTriggered: true })).toBeNull();
+    expect(autoAnswer({ ...beginCombat, canPlayObjects: { objects: {} } }, priority, { ...ownStop, combatTriggered: true })).toBe('pass');
+  });
+  it("leaves the trigger on the stack, the opponent's turn and full control alone", () => {
+    expect(autoAnswer({ ...beginCombat, stack: { trigger: {} } } as GameView, priority, ownStop)).toBeNull();
+    expect(autoAnswer({ ...beginCombat, activePlayerId: 'them', canPlayObjects: { objects: {} } }, priority, ownStop)).toBe('pass');
+    expect(autoAnswer({ ...beginCombat, activePlayerId: 'them' }, priority, { ...ownStop, abilitiesOnTheirTurn: true })).toBeNull();
+    expect(autoAnswer(beginCombat, priority, { ...ownStop, fullControl: true })).toBeNull();
   });
 });

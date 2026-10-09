@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { autoAnswer, type AutoAnswer } from '../../core/game/autoPass';
 import type { Command } from '../../core/game/interaction';
 import type { GameSession, GameSessionState } from '../../core/game/gameSession';
@@ -25,8 +25,15 @@ export function useAutoPass(session: GameSession, state: GameSessionState, enabl
   const abilitiesOnTheirTurn = useSettings((store) => store.settings.abilitiesOnTheirTurn);
   const combatStops = useSettings((store) => store.settings.combatStops);
   const fullControl = useSettings((store) => store.fullControl);
+  const beginCombatStop = useSettings((store) => store.settings.stops.yourTurn?.beforeCombat);
+  // the last turn whose beginning of combat had something on the stack: once it resolves, the player may need the step
+  const view = state.view;
+  const [triggeredTurn, setTriggeredTurn] = useState<number | null>(null);
+  const stackedTurn = view?.step === 'BEGIN_COMBAT' && Object.keys(view.stack ?? {}).length > 0 ? view.turn ?? null : null;
+  if (stackedTurn !== null && stackedTurn !== triggeredTurn) setTriggeredTurn(stackedTurn);
+  const combatTriggered = view?.turn != null && (stackedTurn ?? triggeredTurn) === view.turn;
   const answer = enabled && state.mode === 'play' && !state.awaitingServer && !state.gameOver
-    ? autoAnswer(state.view, state.prompt, { autoPass, autoSkipCombat, abilitiesOnTheirTurn, fullControl, combatStops })
+    ? autoAnswer(view, state.prompt, { autoPass, autoSkipCombat, abilitiesOnTheirTurn, fullControl, combatStops, beginCombatStop, combatTriggered })
     : null;
 
   useEffect(() => {

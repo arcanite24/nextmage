@@ -4,11 +4,14 @@
  */
 .plate {
   --sleeve: var(--mat-500);
-  position: absolute;
+  /* sits in its seat's anchor, which places it on the stage */
+  position: relative;
   display: flex;
   align-items: center;
   gap: 16px;
   min-width: 248px;
+  /* the seat column is this wide: counters and chips wrap instead of pushing into the field */
+  max-width: 268px;
   padding: 12px 22px 12px 12px;
   border-radius: var(--radius-zone);
   background: rgb(var(--mat-rgb) / 0.62);
@@ -106,8 +109,9 @@
 .lifeRow {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
+  gap: 4px 8px;
 }
 
 /* life: big printed numerals, like a spindown face */
