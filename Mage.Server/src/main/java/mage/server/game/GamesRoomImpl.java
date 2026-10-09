@@ -11,6 +11,7 @@ import mage.players.PlayerType;
 import mage.server.RoomImpl;
 import mage.server.User;
 import mage.server.managers.ManagerFactory;
+import mage.server.notify.DiscordNotifier;
 import mage.util.ThreadUtils;
 import mage.util.XmageThreadFactory;
 import mage.view.MatchView;
@@ -144,6 +145,7 @@ public class GamesRoomImpl extends RoomImpl implements GamesRoom, Serializable {
     public TableView createTable(UUID userId, MatchOptions options) {
         Table table = managerFactory.tableManager().createTable(this.getRoomId(), userId, options);
         tables.put(table.getId(), table);
+        announceTable(table, options.getPassword());
         return new TableView(table);
     }
 
@@ -160,7 +162,15 @@ public class GamesRoomImpl extends RoomImpl implements GamesRoom, Serializable {
     public TableView createTournamentTable(UUID userId, TournamentOptions options) {
         Table table = managerFactory.tableManager().createTournamentTable(this.getRoomId(), userId, options);
         tables.put(table.getId(), table);
+        announceTable(table, options.getPassword());
         return new TableView(table);
+    }
+
+    /** Public tables in the main lobby go to the Discord channel, when one is configured. */
+    private void announceTable(Table table, String password) {
+        if (this.getRoomId().equals(managerFactory.gamesRoomManager().getMainRoomId())) {
+            DiscordNotifier.instance().tableOpened(table, password);
+        }
     }
 
     @Override
