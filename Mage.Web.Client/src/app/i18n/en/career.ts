@@ -457,6 +457,15 @@ export default {
   'career.versus.record': { one: 'Beaten {count} time', other: 'Beaten {count} times' },
   'career.versus.oneLoss': 'One loss ends the run',
 
+  'career.binder': 'Binder',
+  'career.binder.search': 'Search & craft',
+  'career.binder.complete': '{have} of {total}',
+  'career.binder.page': 'Pages {page} of {pages}',
+  'career.binder.previous': 'Previous pages',
+  'career.binder.next': 'Next pages',
+  'career.binder.missing': 'not owned yet',
+  'career.binder.new': 'New',
+
   'career.results.victory': 'Victory',
   'career.results.defeat': 'Defeat',
   'career.results.earned': 'Earned',
