@@ -666,6 +666,45 @@
   flex: none;
 }
 
+/* a story panel: what the duel's opponent says, as a speech card with their name under it */
+.speech {
+  position: relative;
+  margin: var(--space-2) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
+  background: rgb(var(--mat-rgb) / 0.85);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+
+.speech::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: -8px;
+  width: 14px;
+  height: 14px;
+  background: inherit;
+  box-shadow: inset 1.5px -1.5px 0 var(--ink-faint);
+  transform: rotate(45deg);
+}
+
+.speech p {
+  margin: 0;
+  color: var(--ink-strong);
+  font-size: var(--text-lg);
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.speech footer {
+  margin-top: 4px;
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
 .choiceArt {
   display: grid;
   place-items: center;
@@ -1018,6 +1057,20 @@
 
 .rungBeaten {
   background: transparent;
+}
+
+/* a boss's face on its rung: their card's art, cropped round */
+.rungArt {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+
+.rungBeaten .rungArt {
+  filter: grayscale(0.7) brightness(0.7);
 }
 
 .rungBeaten .rungText b {

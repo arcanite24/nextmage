@@ -8,6 +8,8 @@ export interface EmoteBubble {
 }
 
 const BUBBLE_MS = 3200;
+// a longer line stays up long enough to read
+const READ_MS_PER_CHAR = 65;
 
 interface EmotesState {
   bubbles: EmoteBubble[];
@@ -28,7 +30,7 @@ export const useEmotes = create<EmotesState>((set) => ({
     const key = ++nextKey;
     // one bubble per player: a new emote replaces the last
     set((state) => ({ bubbles: [...state.bubbles.filter((bubble) => bubble.from !== from), { key, from, text }] }));
-    setTimeout(() => set((state) => ({ bubbles: state.bubbles.filter((bubble) => bubble.key !== key) })), BUBBLE_MS);
+    setTimeout(() => set((state) => ({ bubbles: state.bubbles.filter((bubble) => bubble.key !== key) })), Math.max(BUBBLE_MS, text.length * READ_MS_PER_CHAR));
   },
   toggleMute(gameId) {
     set((state) => ({

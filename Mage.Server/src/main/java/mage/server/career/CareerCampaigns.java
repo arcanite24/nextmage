@@ -362,6 +362,7 @@ public final class CareerCampaigns {
                 result.gameKey = key(campaignId, node.id);
                 result.career = true;
                 result.mode = new CareerProgress.CareerModeResult("campaign", node.name);
+                result.mode.ref = campaignId + "/" + node.id;
                 pay(store, user, chapter, option.reward, result, now);
                 CareerProgress.get().levelsIn(store, user, profile.xp, result, now);
                 return result;
@@ -387,6 +388,8 @@ public final class CareerCampaigns {
             return;
         }
         result.mode = new CareerProgress.CareerModeResult("campaign", node.name);
+        // the client finds the node's closing line by it
+        result.mode.ref = campaign.id + "/" + node.id;
         if (!won) {
             result.mode.lines.add("Lost to " + node.name + ". The duel stays open; try again any time.");
             return;
