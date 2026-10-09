@@ -128,6 +128,22 @@ describe('ImageResolver', () => {
     expect(collectionCalls).toHaveLength(0);
   });
 
+  test('reads every stored link at start, so a known printing resolves without waiting', async () => {
+    const store = memoryStore({
+      'm10/146': { front: { normal: 'cached-bolt' }, fetchedAt: Date.now() },
+      'm10/1': { front: { normal: 'old' }, fetchedAt: 0 },
+    });
+    const get = vi.spyOn(store, 'get');
+    const withAll = { ...store, get, getAll: async () => [...store.data.entries()] };
+    const fetchImpl = vi.fn(async () => jsonResponse(LINKS)) as unknown as typeof fetch;
+    const resolver = createResolver(fetchImpl, withAll);
+    await vi.waitFor(() => expect(resolver.getVersion()).toBeGreaterThan(0));
+    await vi.waitFor(() => expect(resolver.resolve({ name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' })).toBe('cached-bolt'));
+    expect(get).not.toHaveBeenCalledWith('m10/146');
+    // a stale link is not taken: the card is looked up again
+    expect(resolver.resolve({ name: 'Old Card', expansionSetCode: 'M10', cardNumber: '1' })).toBeNull();
+  });
+
   test('normalizes XMage collector numbers like the desktop client', () => {
     expect(normalizeCollectorNumber('15*')).toBe('15★');
     expect(normalizeCollectorNumber('23+')).toBe('23†');

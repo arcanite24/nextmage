@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { create } from 'zustand';
-import type { CareerCosmetic, CareerPackResult, CareerProfile, CareerQuests, CareerState } from '../../protocol/generated/views';
+import type { CareerCosmetic, CareerMatch, CareerPackResult, CareerProfile, CareerQuests, CareerState } from '../../protocol/generated/views';
 import type { DeckCardLists } from '../../core/decks/types';
 import { api } from '../connection';
 import { toWire } from '../decks/deckModel';
@@ -98,13 +98,30 @@ export async function startCareer(starterId: string, starterName: string): Promi
   void queryClient.invalidateQueries({ queryKey: ['career'] });
 }
 
-export async function buyPack(setCode: string): Promise<CareerPackResult> {
+/** A pack just bought, with the names of the cards the collection didn't have before (they open as new). */
+export interface OpenedPack extends CareerPackResult {
+  fresh: string[];
+}
+
+export async function buyPack(setCode: string): Promise<OpenedPack> {
+  // the collection before the pack, to tell which cards are new to it
+  const before = await queryClient.fetchQuery({ queryKey: KEY.collection, queryFn: () => api.careerCollection(), staleTime: 30_000 }).catch(() => null);
   const result = await api.careerBuyPack(setCode);
   // the pictures start downloading while the pack is still face down
   warmCards((result.cards ?? []).map((card) => ({ name: card.name ?? '', setCode: card.setCode, cardNumber: card.cardNumber })));
   setProfile(result.profile);
   void queryClient.invalidateQueries({ queryKey: KEY.collection });
-  return result;
+  void queryClient.invalidateQueries({ queryKey: KEY.sets });
+  const owned = new Set((before ?? []).map((card) => card.name?.toLowerCase()));
+  const fresh = before
+    ? [...new Set((result.cards ?? []).filter((card) => card.name && card.rarity !== 'land' && !card.convertedTo && !owned.has(card.name.toLowerCase())).map((card) => card.name!))]
+    : [];
+  return { ...result, fresh };
+}
+
+/** The opponent's pictures start downloading while the table is set, so their cards land with their art. */
+export function warmMatch(match: CareerMatch | null | undefined): void {
+  warmCards((match?.warm ?? []).filter((card) => !!card.name).map((card) => ({ name: card.name!, setCode: card.setCode, cardNumber: card.cardNumber })));
 }
 
 export async function craftCard(setCode: string, cardNumber: string): Promise<void> {
@@ -144,6 +161,7 @@ export async function playCareer(opponentId: string, deck: DeckCardLists, voice:
   warmCards([...deck.cards, ...deck.sideboard].map((card) => ({ name: card.cardName, setCode: card.setCode ?? undefined, cardNumber: card.cardNumber ?? undefined })));
   try {
     const match = await api.careerPlay(opponentId, toWire(deck));
+    warmMatch(match);
     // leaving the match shows what it paid, then comes back to Career
     usePlay.setState({ tableId: match?.tableId ?? null, returnPath: rewardsPath(match?.tableId ?? null, true, '/career') });
   } catch (error) {

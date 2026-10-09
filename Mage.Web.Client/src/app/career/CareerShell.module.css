@@ -4,6 +4,7 @@
 .shell {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   height: 100%;
   overflow: hidden;
@@ -301,6 +302,10 @@
 
   .coin {
     min-width: 0;
+  }
+
+  .hudRight {
+    gap: var(--space-2);
   }
 }
 

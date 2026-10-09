@@ -27,6 +27,8 @@ export interface PrintingImages {
 export interface ImageLinkStore {
   get(key: string): Promise<PrintingImages | undefined>;
   setMany(entries: [string, PrintingImages][]): Promise<void>;
+  /** everything stored, read once at start so known printings resolve on their first frame */
+  getAll?(): Promise<[string, PrintingImages][]>;
 }
 
 export interface ImageResolverOptions {
@@ -93,6 +95,25 @@ export class ImageResolver {
       now: options.now ?? (() => Date.now()),
       imageProxy: 'imageProxy' in options ? options.imageProxy : configuredImageProxy(),
     };
+    this.hydrate();
+  }
+
+  /**
+   * Reads every stored link into memory once. Until then each printing is read from the store on its own, which takes
+   * a turn of the event loop: long enough for a card to show its text frame before its picture.
+   */
+  private hydrate(): void {
+    const all = this.options.store?.getAll?.();
+    if (!all) return;
+    all.then((entries) => {
+      const keys: string[] = [];
+      for (const [key, entry] of entries) {
+        if (this.memory.has(key) || this.isStale(entry)) continue;
+        this.memory.set(key, entry);
+        keys.push(key);
+      }
+      if (keys.length > 0) this.notify(keys);
+    }, () => undefined);
   }
 
   /** Changes whenever new links arrive (for useSyncExternalStore). */
