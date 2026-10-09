@@ -15,7 +15,7 @@
     { "id": "grondel", "name": "Grondel Two-Axes", "tier": 2, "colors": "RG", "deck": "voracious-rage.dck", "tagline": "Has never once blocked." },
     { "id": "sera", "name": "Seraphine Ashmark", "tier": 3, "colors": "RW", "deck": "boros-aggro.dck", "tagline": "Wins before the second cup of tea." },
     { "id": "korvath", "name": "Korvath the Patient", "tier": 3, "colors": "WBG", "deck": "abzan-midrange.dck", "tagline": "Answers everything, then waits." },
-    { "id": "mirela", "name": "Mirela Nightcourt", "tier": 3, "colors": "BR", "deck": "br-vampires.dck", "tagline": "The court is always hungry." },
+    { "id": "mirela", "name": "Mirela Nightcourt", "tier": 3, "colors": "BR", "deck": "rakdos-aristocrats.dck", "tagline": "The court is always hungry." },
     { "id": "aldous", "name": "Aldous Brightwing", "tier": 3, "colors": "WU", "deck": "azorius-heroic.dck", "tagline": "One hero, every blessing at once." }
   ]
 }
