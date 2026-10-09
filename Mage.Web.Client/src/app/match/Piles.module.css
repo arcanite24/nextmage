@@ -146,3 +146,9 @@ button.chip:disabled {
 .chipCommander b {
   color: var(--ink-strong);
 }
+
+/* touch: the counters beside a seat open their zones; a finger needs a bigger chip */
+:global([data-touch]) .chip {
+  min-height: var(--touch-target, 0px);
+  min-width: var(--touch-target, 0px);
+}

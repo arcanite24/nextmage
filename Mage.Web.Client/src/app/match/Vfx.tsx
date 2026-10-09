@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { GameView, PermanentView } from '../../protocol/generated/views';
 import { lastPlacement, motionAllowed } from './flip';
 import { eventVisuals } from './vfxEvents';
+import { matchLayout } from './matchLayout';
 import { useObjectCenter, useStage } from './stageContext';
 import styles from './Vfx.module.css';
 
@@ -36,9 +37,6 @@ interface Snapshot {
 }
 
 const LIFETIME: Record<EffectKind, number> = { damage: 1300, heal: 1300, enter: 700, resolve: 800, death: 900, charge: 600, bolt: 480 };
-/** where spells resolve: the top of the stack zone, in stage pixels */
-/** where the stack's top card sits, from the stage's right edge */
-const STACK_POINT = { right: 236 + 105, y: 470 };
 
 function snapshot(view: GameView): Snapshot {
   const permanents = new Map<string, PermanentView>();
@@ -172,7 +170,7 @@ export function Vfx({ view, myPlayerId }: { view: GameView | null; myPlayerId: s
       }
     }
     // spells and abilities resolving
-    if ([...before.stack].some((id) => !now.stack.has(id))) add({ kind: 'resolve', x: stage.width - STACK_POINT.right, y: STACK_POINT.y });
+    if ([...before.stack].some((id) => !now.stack.has(id))) add({ kind: 'resolve', ...matchLayout(stage).stackPoint });
     // new attackers charge
     for (const id of now.attackers) {
       if (before.attackers.has(id)) continue;
