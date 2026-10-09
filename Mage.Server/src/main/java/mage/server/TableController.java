@@ -1,5 +1,7 @@
 package mage.server;
 
+import mage.server.career.CareerPayout;
+import mage.server.career.CareerService;
 import mage.MageException;
 import mage.cards.decks.Deck;
 import mage.cards.decks.DeckCardLists;
@@ -857,6 +859,7 @@ public class TableController {
         }
         managerFactory.gameManager().removeGame(game.getId());
         ServerMessagesUtil.instance.incGamesEnded();
+        payCareer(game);
 
         try {
             if (!match.hasEnded()) {
@@ -875,6 +878,24 @@ public class TableController {
             logger.fatal(null, ex);
         }
         return match.hasEnded();
+    }
+
+    /** a Career match that just ended pays its player, once (the service keys the payout by table) */
+    private void payCareer(Game game) {
+        CareerService career = CareerService.get();
+        if (!career.isCareerTable(table.getId()) || !match.hasEnded()) {
+            return;
+        }
+        for (MatchPlayer matchPlayer : match.getPlayers()) {
+            if (matchPlayer.getPlayer().isHuman()) {
+                CareerPayout payout = career.matchEnded(table.getId(), matchPlayer.isMatchWinner(), game.getTurnNum());
+                if (payout != null) {
+                    logger.info("Career: " + matchPlayer.getName() + (payout.won ? " won" : " lost") + " against " + payout.opponent
+                            + ", paid " + payout.coins + " coins and " + payout.xp + " XP");
+                }
+                return;
+            }
+        }
     }
 
     private void sideboard() {

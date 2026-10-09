@@ -9,7 +9,7 @@
 # Each backup is a directory /backups/<UTC timestamp>/ holding:
 #   authorized_user.h2.sql.gz, feedback.h2.sql.gz   H2 SQL dumps (accounts, feedback)
 #   user_stats.db, table_record.db                  SQLite copies (player stats, finished tables)
-#   web_decks.db, web_reports.db                    SQLite copies (synced decks, player reports)
+#   web_decks.db, web_reports.db, career.db         SQLite copies (synced decks, player reports, Career progress)
 # H2 dumps are taken online: AUTO_SERVER lets this process join the running server's database.
 # SQLite copies use the online backup API. The newest $BACKUP_KEEP (default 14) backups are kept.
 set -euo pipefail
@@ -19,7 +19,7 @@ BACKUP_DIR=${BACKUP_DIR:-/backups}
 BACKUP_AT=${BACKUP_AT:-03:30}
 BACKUP_KEEP=${BACKUP_KEEP:-14}
 H2_DBS=(authorized_user.h2 feedback.h2)
-SQLITE_DBS=(user_stats.db table_record.db web_decks.db web_reports.db)
+SQLITE_DBS=(user_stats.db table_record.db web_decks.db web_reports.db career.db)
 
 h2_jar() {
   local jars=(/opt/xmage/lib/h2-*.jar)

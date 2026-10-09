@@ -419,6 +419,13 @@
                                 <class>mage.server.decks.DeckStore$DeckPutResult</class>
                                 <class>mage.server.moderation.PlayerReport</class>
                                 <class>mage.server.moderation.ClientErrors$ClientError</class>
+                                <class>mage.server.websocket.api.CareerApi$CareerState</class>
+                                <class>mage.server.websocket.api.CareerApi$CareerMatch</class>
+                                <class>mage.server.career.CareerContent$CareerStarter</class>
+                                <class>mage.server.career.CareerService$CareerOpponent</class>
+                                <class>mage.server.career.CareerService$CareerShopSet</class>
+                                <class>mage.server.career.CareerService$CareerPackResult</class>
+                                <class>mage.server.career.CareerCard</class>
                             </classes>
                         </configuration>
                     </plugin>
