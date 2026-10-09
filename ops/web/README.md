@@ -113,6 +113,22 @@ Posting never holds up a game: posts wait in a small queue (20) for one backgrou
 - `docker compose -f ops/web/docker-compose.yml ps` shows both states.
 - If `up` stops with "dependency failed to start: container ... is unhealthy" after a failed earlier start, the server usually becomes healthy a little later: run `up -d` again once `ps` shows `xmage` healthy.
 
+## Capacity
+
+Measured on 2026-10-09 on the LAN server (16 cores, Docker on Windows), using the web client's bot load test (`Mage.Web.Client/src/core/headless/loadTest.live.test.ts`).
+- Each table was a scripted web client playing the server's AI at skill 2. The client answers as soon as it's asked, so games run faster than with people.
+- 14 games running at once used about 11% of the CPU on average, with a peak of 19%.
+- On that hardware, CPU is not the limit for a casual server. Games against the AI cost the most, because the AI thinks on the server's cores, and Hard or Expert AIs think longer.
+
+To repeat the test against your own server:
+
+```
+cd Mage.Web.Client
+MAGE_LOAD_TEST=1 MAGE_SERVER_URL=wss://your.host/ws MAGE_ADMIN_PASSWORD=... MAGE_LOAD_GAMES=14 MAGE_LOAD_WAVES=1 npx vitest run src/core/headless/loadTest --silent=false
+```
+
+Caddy allows one address 30 new `/ws` connections a minute (`WS_RATE_LIMIT`). A load test from a single machine therefore needs waves smaller than that, or a raised limit while it runs. Each scripted game opens one connection.
+
 ## Logs
 
 - `docker compose -f ops/web/docker-compose.yml logs -f xmage` shows the server's console output.
