@@ -2,6 +2,8 @@ package mage.server.websocket.rpc;
 
 import org.jboss.remoting.callback.InvokerCallbackHandler;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -39,5 +41,29 @@ public interface RpcConnection {
      */
     default boolean resendPrompt(UUID gameId) {
         return false;
+    }
+
+    /**
+     * Turns on the optional protocol features the client asked for (and the bridge knows).
+     *
+     * @return the features now on
+     */
+    default List<String> setCapabilities(List<String> requested) {
+        return Collections.emptyList();
+    }
+
+    /**
+     * The client could not apply a game state patch: sends it the game's last state complete.
+     *
+     * @return false when there is none (the next state goes out complete anyway)
+     */
+    default boolean resendGameState(UUID gameId) {
+        return false;
+    }
+
+    /**
+     * The client stopped following a game: its last state is no longer needed for patches.
+     */
+    default void forgetGameState(UUID gameId) {
     }
 }

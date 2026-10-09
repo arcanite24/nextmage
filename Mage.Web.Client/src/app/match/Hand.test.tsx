@@ -7,7 +7,7 @@ import { GameSession } from '../../core/game/gameSession';
 import type { Api } from '../../protocol/generated/api';
 import type { CardView, GameView } from '../../protocol/generated/views';
 import { Hand } from './Hand';
-import { StageContext } from './stageContext';
+import { DEFAULT_STAGE, StageContext } from './stageContext';
 
 const BOLT: CardView = { id: 'bolt', name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' } as CardView;
 const BEAR: CardView = { id: 'bear', name: 'Grizzly Bears', expansionSetCode: 'M10', cardNumber: '168' } as CardView;
@@ -46,7 +46,7 @@ function setup() {
     const state = useSyncExternalStore(session.store.subscribe, session.store.getState);
     const clickable = new Set(state.interaction.clickable.keys());
     return (
-      <StageContext.Provider value={{ scale: 1, element: null, width: 1920 }}>
+      <StageContext.Provider value={DEFAULT_STAGE}>
         <Hand
           cards={[BOLT, BEAR]}
           clickable={clickable}

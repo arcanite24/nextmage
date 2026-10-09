@@ -105,6 +105,9 @@ public class GameController implements GameCallback {
         this.choosingPlayerId = choosingPlayerId;
         this.gameOptions = gameOptions;
         this.useResponseIdleTimeout = game.getPlayers().values().stream().filter(Player::isHuman).count() > 1;
+        // what happens in the game, for web clients to animate (see GameEventRecorder)
+        GameEventFeed.open(game.getId());
+        game.getState().addWatcher(new GameEventRecorder(game.getId()));
         init();
     }
 
@@ -121,6 +124,7 @@ public class GameController implements GameCallback {
         }
 
         managerFactory.chatManager().destroyChatSession(chatId);
+        GameEventFeed.close(game.getId());
     }
 
     private void init() {
@@ -781,6 +785,34 @@ public class GameController implements GameCallback {
         } else {
             user.ccViewLimitedDeck(deckSource.getDeckForViewer(), table.getId(), table.getParentTableId(), requestsOpen, true);
         }
+    }
+
+    /**
+     * Queue a practice tool for the user's player. Only allowed when that user is the game's one human player, so
+     * practice can never change a game against another person.
+     *
+     * @return null when queued, else why not
+     */
+    public String practice(UUID userId, PracticeTools.Tool tool, String cardName, int amount) {
+        UUID playerId = getPlayerId(userId);
+        Player player = playerId == null ? null : game.getPlayer(playerId);
+        if (player == null) {
+            return "You aren't playing in this game.";
+        }
+        long humans = game.getPlayers().values().stream().filter(Player::isHuman).count();
+        if (humans != 1 || !player.isHuman()) {
+            return "Practice tools only work in a game against the computer.";
+        }
+        if (game.hasEnded() || !player.isInGame()) {
+            return "The game is over.";
+        }
+        StringBuilder problem = new StringBuilder();
+        java.util.function.Consumer<Game> action = PracticeTools.action(tool, playerId, cardName, amount, problem);
+        if (action == null) {
+            return problem.toString();
+        }
+        player.queueGameThreadAction(action);
+        return null;
     }
 
     public void cheatShow(UUID playerId) {

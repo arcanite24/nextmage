@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { useT } from '../i18n';
 import { useToasts } from '../stores/toasts';
 import styles from './Toaster.module.css';
 
@@ -6,6 +7,7 @@ import styles from './Toaster.module.css';
 export function Toaster() {
   const toasts = useToasts((state) => state.toasts);
   const dismiss = useToasts((state) => state.dismiss);
+  const t = useT();
   return (
     <ol className={styles.stack} aria-live="polite">
       {toasts.map((toast) => (
@@ -26,7 +28,7 @@ export function Toaster() {
               {toast.action.label}
             </button>
           )}
-          <button type="button" className={styles.close} aria-label="Dismiss" onClick={() => dismiss(toast.id)}>
+          <button type="button" className={styles.close} aria-label={t('ui.dismiss')} onClick={() => dismiss(toast.id)}>
             <X size={16} />
           </button>
         </li>

@@ -4,15 +4,21 @@ import { isStackAbility } from '../../core/game/cards';
 import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { useMatchUi } from './matchUi';
-import { STAGE_HEIGHT, toStagePoint, useStage } from './stageContext';
+import { toStagePoint, useStage } from './stageContext';
+import { lastPointerType } from './useLongPress';
 import styles from './CardZoom.module.css';
 
 const ZOOM_WIDTH = 340;
-const ZOOM_HEIGHT = ZOOM_WIDTH * (88 / 63);
+/** broadcast: big enough to read on a stream, at the edge of the table */
+const LARGE_WIDTH = 520;
 const DELAY_MS = 260;
+const EDGE = 24;
 
-/** The hovered card, large, beside the pointer (after a short delay so sweeping the board stays calm). */
-export function CardZoom() {
+/**
+ * The hovered card, large, beside the pointer (after a short delay so sweeping the board stays calm). `large`
+ * (watching, for a stream): bigger still, at the edge of the table away from the pointer, where it hides less.
+ */
+export function CardZoom({ large = false }: { large?: boolean }) {
   const zoom = useMatchUi((state) => state.zoom);
   const dragging = useMatchUi((state) => state.dragging);
   const detailOpen = useMatchUi((state) => !!state.detail);
@@ -31,22 +37,33 @@ export function CardZoom() {
   // ...or that changed zone under the same id (a spell becoming a permanent): only the hovered element counts
   const element = shown?.anchor
     ?? (shown?.card.id ? stage.element?.querySelector(`[data-object-id="${CSS.escape(shown.card.id)}"]`) : null);
-  if (!shown || detailOpen || !element || !element.isConnected || !element.matches(':hover')) return null;
-  const point = toStagePoint(stage, shown.x, shown.y);
-  const left = point.x > stage.width / 2 ? point.x - ZOOM_WIDTH - 60 : point.x + 60;
-  const top = Math.max(24, Math.min(STAGE_HEIGHT - ZOOM_HEIGHT - 24, point.y - ZOOM_HEIGHT / 2));
+  // a finger doesn't hover: on touch the card opens with a long press instead (the detail view)
+  const touch = lastPointerType() === 'touch';
+  if (!shown || touch || detailOpen || !element || !element.isConnected || !element.matches(':hover')) return null;
   const card = shown.card as PermanentView;
   const back = card.secondCardFace;
   const extra = details(card);
+  const width = large ? LARGE_WIDTH : ZOOM_WIDTH;
+  const height = width * (88 / 63);
+  const point = toStagePoint(stage, shown.x, shown.y);
+  const pointerRight = point.x > stage.width / 2;
+  // the second face sits beside the first: the panel is that much wider
+  const span = back && card.transformable ? width * 1.62 + 12 : width;
+  const left = large
+    ? (pointerRight ? EDGE : stage.width - span - EDGE)
+    : pointerRight ? point.x - ZOOM_WIDTH - 60 : point.x + 60;
+  const top = large
+    ? Math.max(EDGE, (stage.height - height) / 2 - 40)
+    : Math.max(EDGE, Math.min(stage.height - height - EDGE, point.y - height / 2));
 
   return (
-    <div className={styles.zoom} style={{ left, top }} aria-hidden="true">
+    <div className={[styles.zoom, large ? styles.large : ''].join(' ')} style={{ left, top }} aria-hidden="true">
       <div className={styles.faces}>
         {isStackAbility(card)
-          ? <AbilityCard ability={card} sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH }} />
-          : <CardFace card={card} size="large" sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH }} />}
+          ? <AbilityCard ability={card} sleeve={shown.sleeve} style={{ width }} />
+          : <CardFace card={card} size="large" sleeve={shown.sleeve} style={{ width }} />}
         {back && card.transformable && (
-          <CardFace card={back} face="back" size="normal" sleeve={shown.sleeve} style={{ width: ZOOM_WIDTH * 0.62 }} />
+          <CardFace card={back} face="back" size="normal" sleeve={shown.sleeve} style={{ width: width * 0.62 }} />
         )}
       </div>
       {extra.length > 0 && (

@@ -1,3 +1,8 @@
+/* the zones are placed by the layout (matchLayout.ts); this wrapper only carries its seam to the stylesheets */
+.layout {
+  display: contents;
+}
+
 /* two mats meet at a stitched seam across the middle of the table */
 .mat {
   position: absolute;
@@ -12,7 +17,7 @@
   position: absolute;
   left: 60px;
   right: 60px;
-  top: 539px;
+  top: calc(var(--seam, 540px) - 1px);
   height: 2px;
   background-image: repeating-linear-gradient(90deg, var(--thread) 0 14px, transparent 14px 24px);
   opacity: 0.45;
@@ -60,41 +65,25 @@
 
 .printTheirs {
   top: 0;
-  height: 540px;
+  height: var(--seam, 540px);
   transform: rotate(180deg);
 }
 
 .printMine {
-  top: 540px;
+  top: var(--seam, 540px);
   bottom: 0;
 }
 
-/* the decision, printed across the middle of the table */
-.myPlate {
-  position: absolute;
-  left: 24px;
-  top: 936px;
-  z-index: var(--z-seat);
-}
-
+/* seats and piles are placed by the layout */
+.myPlate,
 .theirPlate {
   position: absolute;
-  left: 24px;
   z-index: var(--z-seat);
 }
 
 .myPiles,
 .theirPiles {
   position: absolute;
-  left: 24px;
-}
-
-.myPiles {
-  top: 600px;
-}
-
-.theirPiles {
-  top: 140px;
 }
 
 /* the piles stand two by two in the seat column */
@@ -103,6 +92,13 @@
   flex-wrap: wrap;
   width: 240px;
   row-gap: 10px;
+}
+
+/* tall: they stand in a row in the band beside the seat */
+:global([data-layout='tall']) .myPiles > *,
+:global([data-layout='tall']) .theirPiles > * {
+  flex-wrap: nowrap;
+  width: auto;
 }
 
 .hiddenHand {
@@ -145,6 +141,11 @@
   z-index: var(--z-vfx);
 }
 
+/* tall: the log's button sits beside the menu, so the watchers move over */
+:global([data-layout='tall']) .watchers {
+  right: calc(160px + var(--touch-target, 0px) / 2);
+}
+
 .menu {
   position: absolute;
   right: 24px;
@@ -155,8 +156,8 @@
 .menuButton {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
+  width: max(52px, var(--touch-target, 0px));
+  height: max(52px, var(--touch-target, 0px));
   border: 0;
   border-radius: 12px;
   background: rgb(var(--mat-rgb) / 0.6);
@@ -197,6 +198,15 @@
   cursor: default;
 }
 
+/* the menu opens outside the stage, at window size: a finger needs a taller row */
+@media (pointer: coarse) {
+  .menuItem {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+  }
+}
+
 /* multiplayer: each opponent's seat is a column of plate and counters */
 .seat {
   display: flex;
@@ -224,4 +234,17 @@
   text-transform: uppercase;
   color: var(--ink-faint);
   pointer-events: none;
+}
+
+/* watching with a broadcast delay: the board stays empty until the first delayed view */
+.delayNote {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: var(--z-rail);
+  max-width: 720px;
+  transform: translate(-50%, -50%);
+  color: var(--ink-dim);
+  font-size: 26px;
+  text-align: center;
 }

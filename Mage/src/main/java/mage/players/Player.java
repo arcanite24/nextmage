@@ -592,6 +592,13 @@ public interface Player extends MageItem, Copyable<Player> {
 
     void signalPlayerCheat();
 
+    /**
+     * Run an action on the game thread the next time this player waits for an answer (practice tools). Only human
+     * players wait for answers; for anyone else this does nothing.
+     */
+    default void queueGameThreadAction(java.util.function.Consumer<Game> action) {
+    }
+
     void skip();
 
     // priority, undo, ...

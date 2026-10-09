@@ -2,6 +2,7 @@ import { useState, type CSSProperties } from 'react';
 import { useCardImage } from '../../core/images/useCardImage';
 import { isDecoded, markDecoded } from './imageCache';
 import type { CardFace as Face, CardImageRef, ImageSize } from '../../core/images/imageLinks';
+import { useT } from '../i18n';
 import { ManaCost } from './ManaCost';
 import styles from './CardFace.module.css';
 
@@ -29,6 +30,7 @@ export interface CardFaceProps {
  * with name, cost and type keeps the card readable and the layout stable.
  */
 export function CardFace({ card, face = 'front', size = 'normal', sleeve, hidden, className, style }: CardFaceProps) {
+  const t = useT();
   const src = useCardImage(hidden ? null : card, face, size);
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export function CardFace({ card, face = 'front', size = 'normal', sleeve, hidden
     >
       <div className={styles.card}>
         {hidden ? (
-          <div className={styles.back} aria-label="Hidden card" role="img" />
+          <div className={styles.back} aria-label={t('ui.hiddenCard')} role="img" />
         ) : (
           <>
             {!loaded && (

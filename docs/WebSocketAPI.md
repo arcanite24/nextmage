@@ -79,6 +79,40 @@ The server pushes events as plain objects (no `jsonrpc` field):
 
 `method` is the `ClientCallbackMethod` enum name. `messageId` increases per session; it restarts at 0 after a new login.
 
+### State patches
+
+Game states are the bulk of the traffic: every `GAME_UPDATE`, question and inform message carries the whole game view
+(30 to 100 KB), although little changes between two of them. A client can ask for patches instead:
+
+```json
+{"jsonrpc": "2.0", "method": "setCapabilities", "params": [["stateDiffs"]]}
+```
+
+Send it right after connecting, before logging in (the setting belongs to the connection; a new connection starts
+without it). From then on, every event that holds a game view (`GAME_INIT`, `GAME_UPDATE`, `REPLAY_INIT` and
+`REPLAY_UPDATE`, whose `data` is the view, and the messages with `data.gameView`) gets a `state` field:
+
+- `{"seq": 8}`: the view is complete, as before. The first state of each game is always complete.
+- `{"seq": 9, "base": 8, "patch": ...}`: the view is left out (`data` is missing, or `data.gameView` is) and is
+  `base`'s view with the patch applied. The server only sends a patch when the message gets smaller.
+
+`seq` grows per connection. A patch operation is one of:
+
+| Operation | Meaning |
+|-----------|---------|
+| `[value]` | replace with `value` (`null` included) |
+| `[]` | remove this object key |
+| `{"key": operation, ...}` | change an object key by key; other keys keep their value, new keys go after the existing ones |
+| `[length, {"index": operation, ...}]` | change an array element by element, then cut or grow it to `length` |
+| `["o", {"key": operation or 0, ...}]` | the object gets exactly these keys in this order; `0` keeps the old value |
+
+Applying the patch gives exactly the JSON of the complete view, key order included. When `base` is not the last
+state the client has for the game, or the patch does not apply, the client drops the event and calls
+`gameStateResync`: the server answers with the last state, complete, as a `GAME_UPDATE` (`REPLAY_UPDATE` for replays)
+whose `messageId` is the newest one sent, followed by the open question, if any. `GAME_OVER` and `REPLAY_DONE` are
+sent without a state, and after them both sides forget the game; so do `gameWatchStop`, `replayStop`, a new login and
+a closed connection. The admin console's statistics (`adminServerStats`, `bridge.state*`) show how much it saves.
+
 ### Value conventions
 
 - UUIDs are strings.
@@ -95,6 +129,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | Method | Params | Result | Access | Description |
 |--------|--------|--------|--------|-------------|
 | `ping` | `sessionId?: string`, `pingInfo?: string` | `boolean` | public | Keep-alive. Extends the logged in user's session; always succeeds before login. |
+| `setCapabilities` | `capabilities: string[]` | `string[]` | public | Turn on optional protocol features for this connection; returns the ones now on. "stateDiffs": game states are sent as patches against the previous one (see State patches). Call it right after connecting, before logging in; a new connection starts without them. |
 | `connectUser` | `userName: string`, `password: string`, `sessionId: string`, `restoreSessionId?: string`, `clientVersion?: string`, `userIdStr?: string` | `boolean` | login | Log in. Creates the connection's session; restoreSessionId reattaches a user that lost its connection. |
 | `connectAdmin` | `password: string`, `sessionId: string` | `boolean` | login | Log in as server admin. Disabled unless the server was started with a non-empty admin password (-adminPassword=... or -Dxmage.adminPassword=...). After a wrong password the caller's IP is locked out for 1, 2, 4... seconds (at most 5 minutes). |
 | `sessionGetRestoreToken` | `sessionId: string` | `string` | session | Token that reattaches this user (and its tables) from a later connection: pass it as connectUser's restoreSessionId. It changes on every login, so fetch it again after each one. |
@@ -146,6 +181,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `chatFindByRoom` | `roomId: UUID` | `UUID \| null` | session | Chat of a room. |
 | `gameJoin` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Join a started game as a player (after START_GAME). Also used to resync after a reconnect. |
 | `gameResync` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Send this connection the game's open question again, when a reply or the question seems lost. Returns false when nothing is waiting for the player's answer. |
+| `gameStateResync` | `gameId: UUID`, `sessionId: string` | `boolean` | session | With state patches on (setCapabilities): the client could not apply a patch, so the server sends the game's last state complete (as GAME_UPDATE or REPLAY_UPDATE), then its open question. Returns false when it has none; the next state is sent complete anyway. |
 | `matchQuit` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Concede the whole match. |
 | `gameWatchStart` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Start spectating a game. |
 | `replayList` | - | `ReplayInfo[]` | session | Recorded games available for replay, newest first. Games are recorded as a spectator sees them (xmage.replays, on by default) and kept for xmage.replays.retentionDays (30). |
@@ -159,6 +195,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `sendPlayerManaType` | `gameId: UUID`, `playerId: UUID`, `sessionId: string`, `manaType: ManaType` | `boolean` | session | Pay from the mana pool with one mana type. |
 | `sendPlayerAction` | `action: PlayerAction`, `gameId: UUID`, `sessionId: string`, `data?: unknown` | `boolean` | session | Send a player action: pass modes (F-keys), concede, undo, rollback, auto-answer and trigger-order settings. |
 | `cheatShow` | `gameId: UUID`, `sessionId: string`, `playerId: UUID` | `boolean` | session | Test mode only: reveal a player's library. |
+| `gamePractice` | `gameId: UUID`, `sessionId: string`, `tool: string`, `cardName?: string`, `amount?: number` | `boolean` | session | Practice tools in a game against the AI only: tool HAND or BATTLEFIELD (cardName, amount cards), DRAW (amount), UNTAP_ALL, LIFE (amount). Runs the next time you are asked something; announced in the game log. |
 | `replayInit` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Open a saved game for replay. |
 | `replayStart` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Start the replay. |
 | `replayStop` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Stop the replay. |

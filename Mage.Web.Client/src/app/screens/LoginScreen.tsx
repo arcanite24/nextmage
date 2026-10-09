@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../brand';
 import { api, rpc } from '../connection';
+import { useT, type MessageKey } from '../i18n';
 import type { ServerInfo } from '../../protocol/generated/views';
 import type { StarterDeck } from '../stores/decks';
 import { useSession } from '../stores/session';
@@ -17,12 +18,18 @@ import styles from './LoginScreen.module.css';
 type ServerStatus = 'checking' | 'online' | 'offline';
 type Mode = 'sit' | 'register' | 'forgot' | 'reset';
 
-const MODE_TITLES: Record<Mode | 'signIn', string> = {
-  sit: 'Take a seat',
-  signIn: 'Sign in',
-  register: 'Create an account',
-  forgot: 'Reset your password',
-  reset: 'Reset your password',
+const MODE_TITLES: Record<Mode | 'signIn', MessageKey> = {
+  sit: 'login.title.sit',
+  signIn: 'login.title.signIn',
+  register: 'login.title.register',
+  forgot: 'login.title.reset',
+  reset: 'login.title.reset',
+};
+
+const PASSWORD_PROBLEMS: Record<NonNullable<ReturnType<typeof checkPassword>>, MessageKey> = {
+  short: 'login.password.short',
+  mix: 'login.password.mix',
+  name: 'login.password.name',
 };
 
 const DEAL_MS = 700;
@@ -34,6 +41,7 @@ const ART_EVERY_MS = 9000;
  */
 export function LoginScreen() {
   const session = useSession();
+  const t = useT();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
@@ -64,16 +72,17 @@ export function LoginScreen() {
   const accounts = !!info?.accounts;
   const busy = session.phase === 'signingIn' || dealing;
   const name = userName.trim();
-  const nameError = name && !/^[A-Za-z0-9_]{3,14}$/.test(name) ? '3 to 14 letters, digits or underscores.' : null;
+  const nameError = name && !/^[A-Za-z0-9_]{3,14}$/.test(name) ? t('login.nameRule') : null;
   const minPassword = info?.minPasswordLength || 8;
-  const passwordRule = `At least ${minPassword} characters, with a letter and a digit.`;
-  const passwordError = password && (mode === 'register' || mode === 'reset') ? checkPassword(password, minPassword, name) : null;
+  const passwordRule = t('login.passwordRule', { min: minPassword });
+  const passwordProblem = password && (mode === 'register' || mode === 'reset') ? checkPassword(password, minPassword, name) : null;
+  const passwordError = passwordProblem ? t(PASSWORD_PROBLEMS[passwordProblem], { min: minPassword }) : null;
   const canSubmit = mode === 'sit' ? !!name && !nameError && (!accounts || !!password)
     : mode === 'register' ? !!name && !nameError && !!email.trim() && !!password && !passwordError
       : mode === 'forgot' ? !!email.trim()
         : code.length === 6 && !!password && !passwordError;
-  const submitLabel = mode === 'register' ? 'Create account' : mode === 'forgot' ? 'Email me a code' : mode === 'reset' ? 'Set the password'
-    : busy ? 'Shuffling up' : accounts ? 'Sign in' : 'Sit down';
+  const submitLabel = t(mode === 'register' ? 'login.submit.register' : mode === 'forgot' ? 'login.submit.forgot' : mode === 'reset' ? 'login.submit.reset'
+    : busy ? 'login.submit.busy' : accounts ? 'login.submit.signIn' : 'login.submit.sit');
 
   function switchMode(next: Mode) {
     setMode(next);
@@ -106,11 +115,11 @@ export function LoginScreen() {
         if (await session.requestPasswordReset(url, email.trim())) {
           setMode('reset');
           setCode('');
-          setNotice(`If ${email.trim()} belongs to an account, a code is on its way. Check your spam folder too.`);
+          setNotice(t('login.codeSent', { email: email.trim() }));
         }
       } else if (await session.resetPassword(url, email.trim(), code, password)) {
         switchMode('sit');
-        setNotice('Your password is changed. Sign in with it.');
+        setNotice(t('login.passwordChanged'));
       } else {
         setRefused((count) => count + 1);
       }
@@ -137,13 +146,13 @@ export function LoginScreen() {
       </header>
 
       <form key={refused} className={[styles.seat, refused > 0 ? styles.refused : ''].join(' ')} onSubmit={submit} aria-labelledby="seat-title">
-        <h2 id="seat-title" className={styles.seatLabel}>{MODE_TITLES[mode === 'sit' && accounts ? 'signIn' : mode]}</h2>
+        <h2 id="seat-title" className={styles.seatLabel}>{t(MODE_TITLES[mode === 'sit' && accounts ? 'signIn' : mode])}</h2>
 
         {(mode === 'sit' || mode === 'register') && (
           <>
-            <SeatPlate name={name && !nameError ? name : ''} />
+            <SeatPlate name={name && !nameError ? name : ''} placeholder={t('login.yourName')} />
             <Field
-              label={accounts ? 'Account name' : 'Player name'}
+              label={accounts ? t('login.accountName') : t('login.playerName')}
               value={userName}
               autoComplete="username"
               autoFocus
@@ -157,13 +166,13 @@ export function LoginScreen() {
 
         {(mode === 'register' || mode === 'forgot' || mode === 'reset') && (
           <Field
-            label="Email"
+            label={t('login.email')}
             type="email"
             value={email}
             autoComplete="email"
             autoFocus={mode === 'forgot'}
             onChange={(event) => setEmail(event.target.value)}
-            hint={mode === 'register' ? 'For password resets only.' : undefined}
+            hint={mode === 'register' ? t('login.emailHint') : undefined}
             required
             readOnly={mode === 'reset'}
           />
@@ -171,21 +180,21 @@ export function LoginScreen() {
 
         {mode === 'reset' && (
           <Field
-            label="Code from the email"
+            label={t('login.code')}
             value={code}
             inputMode="numeric"
             autoComplete="one-time-code"
             autoFocus
             maxLength={6}
             onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
-            hint={`Six digits. It works for 30 minutes and five tries.`}
+            hint={t('login.codeHint')}
             required
           />
         )}
 
         {mode === 'sit' && (accounts || needsPassword) && (
           <Field
-            label="Password"
+            label={t('login.password')}
             type="password"
             value={password}
             autoComplete="current-password"
@@ -196,7 +205,7 @@ export function LoginScreen() {
         )}
         {(mode === 'register' || mode === 'reset') && (
           <Field
-            label={mode === 'reset' ? 'New password' : 'Password'}
+            label={mode === 'reset' ? t('login.newPassword') : t('login.password')}
             type="password"
             value={password}
             autoComplete="new-password"
@@ -209,7 +218,7 @@ export function LoginScreen() {
 
         {mode === 'sit' && !accounts && !needsPassword && (
           <button type="button" className={styles.linkButton} onClick={() => setNeedsPassword(true)}>
-            <KeyRound size={15} aria-hidden="true" /> This server needs a password
+            <KeyRound size={15} aria-hidden="true" /> {t('login.needsPassword')}
           </button>
         )}
 
@@ -217,16 +226,16 @@ export function LoginScreen() {
           <div className={styles.server}>
             <button type="button" className={styles.serverChip} aria-expanded={editServer} onClick={() => setEditServer((value) => !value)}>
               <span className={[styles.dot, styles[status]].join(' ')} aria-hidden="true" />
-              <span>{describeServer(serverUrl)}</span>
-              <span className={styles.statusText}>{status === 'online' ? 'Online' : status === 'offline' ? "Can't reach" : 'Checking'}</span>
+              <span>{describeServer(serverUrl) ?? t('login.server.choose')}</span>
+              <span className={styles.statusText}>{t(status === 'online' ? 'login.server.online' : status === 'offline' ? (navigator.onLine ? 'login.server.offline' : 'login.server.noNetwork') : 'login.server.checking')}</span>
               <ChevronDown size={15} aria-hidden="true" className={editServer ? styles.flipped : ''} />
             </button>
             {editServer && (
               <Field
-                label="Server address"
+                label={t('login.server.address')}
                 value={serverUrl}
                 onChange={(event) => setServerUrl(event.target.value)}
-                hint="For example ws://localhost:17172 or wss://play.example.com"
+                hint={t('login.server.hint')}
                 spellCheck={false}
               />
             )}
@@ -242,18 +251,18 @@ export function LoginScreen() {
 
         {mode === 'sit' && accounts && (
           <div className={styles.accountLinks}>
-            <button type="button" className={styles.linkButton} onClick={() => switchMode('register')}>Create an account</button>
+            <button type="button" className={styles.linkButton} onClick={() => switchMode('register')}>{t('login.createAccount')}</button>
             {info?.mail
-              ? <button type="button" className={styles.linkButton} onClick={() => switchMode('forgot')}>Forgot your password?</button>
-              : <span className={styles.quiet}>Forgot your password? Ask the server's admin.</span>}
+              ? <button type="button" className={styles.linkButton} onClick={() => switchMode('forgot')}>{t('login.forgot')}</button>
+              : <span className={styles.quiet}>{t('login.forgotAskAdmin')}</span>}
           </div>
         )}
         {mode !== 'sit' && (
           <button type="button" className={styles.linkButton} onClick={() => switchMode('sit')}>
-            <ArrowLeft size={15} aria-hidden="true" /> Back to sign in
+            <ArrowLeft size={15} aria-hidden="true" /> {t('login.back')}
           </button>
         )}
-        <Link to="/about" className={styles.about}>About and credits</Link>
+        <Link to="/about" className={styles.about}>{t('shell.about')}</Link>
       </form>
 
       <Deck dealing={dealing} />
@@ -262,12 +271,12 @@ export function LoginScreen() {
 }
 
 /** How you'll appear at the table, printed as you type. */
-function SeatPlate({ name }: { name: string }) {
+function SeatPlate({ name, placeholder }: { name: string; placeholder: string }) {
   return (
     <div className={[styles.plate, name ? styles.plateOn : ''].join(' ')} aria-hidden="true">
       <span key={name.slice(0, 1)} className={styles.avatar}>{name ? name.slice(0, 1).toUpperCase() : '?'}</span>
       <span className={styles.plateText}>
-        <span className={styles.plateName}>{name || 'Your name'}</span>
+        <span className={styles.plateName}>{name || placeholder}</span>
         <span className={styles.plateLife}>20</span>
       </span>
     </div>
@@ -306,11 +315,12 @@ function Deck({ dealing }: { dealing: boolean }) {
   );
 }
 
-function describeServer(url: string): string {
+/** The server's host, or null when there is no address yet. */
+function describeServer(url: string): string | null {
   try {
     return new URL(url).host;
   } catch {
-    return url || 'Choose a server';
+    return url || null;
   }
 }
 
@@ -320,6 +330,13 @@ function describeServer(url: string): string {
  */
 function useServerStatus(url: string): { status: ServerStatus; info: ServerInfo | null } {
   const [result, setResult] = useState<{ url: string; status: ServerStatus; info: ServerInfo | null } | null>(null);
+  // the installed app opens offline too (its shell is cached): check again when the network comes back
+  const [backOnline, setBackOnline] = useState(0);
+  useEffect(() => {
+    const recheck = () => setBackOnline((count) => count + 1);
+    window.addEventListener('online', recheck);
+    return () => window.removeEventListener('online', recheck);
+  }, []);
   useEffect(() => {
     let cancelled = false;
     const timer = setTimeout(async () => {
@@ -341,7 +358,7 @@ function useServerStatus(url: string): { status: ServerStatus; info: ServerInfo 
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [url]);
+  }, [url, backOnline]);
   return result?.url === url ? { status: result.status, info: result.info } : { status: 'checking', info: null };
 }
 

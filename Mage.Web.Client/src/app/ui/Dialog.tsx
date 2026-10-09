@@ -1,6 +1,7 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { ArrowLeft, X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useT } from '../i18n';
 import styles from './Dialog.module.css';
 
 export interface DialogProps {
@@ -19,6 +20,7 @@ export interface DialogProps {
 
 /** A printed zone laid over the dimmed mat. Focus is trapped and returned on close. */
 export function Dialog({ open, onOpenChange, title, description, children, footer, width = 'md', dismissible = true, onBack }: DialogProps) {
+  const t = useT();
   return (
     <RadixDialog.Root open={open} onOpenChange={dismissible ? onOpenChange : undefined}>
       <RadixDialog.Portal>
@@ -38,13 +40,13 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
         >
           <header className={styles.head}>
             {onBack && (
-              <button type="button" className={styles.back} onClick={onBack} aria-label="Back">
+              <button type="button" className={styles.back} onClick={onBack} aria-label={t('ui.back')}>
                 <ArrowLeft size={18} />
               </button>
             )}
             <RadixDialog.Title className={styles.title}>{title}</RadixDialog.Title>
             {dismissible && (
-              <RadixDialog.Close className={styles.close} aria-label="Close">
+              <RadixDialog.Close className={styles.close} aria-label={t('ui.close')}>
                 <X size={18} />
               </RadixDialog.Close>
             )}

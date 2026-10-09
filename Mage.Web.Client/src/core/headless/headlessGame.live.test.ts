@@ -16,6 +16,9 @@ describe.skipIf(!live)('headless game against the AI', () => {
     expect(stats.gameOver).toBe(true);
     expect(stats.landsPlayed).toBeGreaterThan(0);
     expect(stats.commands).toBeGreaterThan(10);
+    // the server's game events (B073): lands and spells move between zones, and someone takes damage
+    expect(stats.events.ZONE ?? 0).toBeGreaterThan(0);
+    expect(stats.events.DAMAGE ?? 0).toBeGreaterThan(0);
     console.log('[headless] finished:', JSON.stringify(stats));
   }, TIMEOUT + 60_000);
 });

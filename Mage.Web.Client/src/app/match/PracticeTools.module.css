@@ -1,0 +1,25 @@
+.section {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.number {
+  width: 76px;
+}
+
+.error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: rgb(var(--oxblood-rgb) / 0.3);
+  color: var(--oxblood-ink);
+}

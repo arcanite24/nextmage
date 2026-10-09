@@ -28,7 +28,7 @@ export function MulliganOverlay({ hand, interaction, sleeve, onCommand }: {
         <p className={styles.subtitle}>{prompt.text}</p>
         <div className={styles.handRow}>
           {hand.map((card) => (
-            <div key={card.id} className={styles.handCard}>
+            <div key={card.id} className={styles.handCard} data-card-id={card.id}>
               <CardFace card={card} sleeve={sleeve} size="normal" />
             </div>
           ))}
