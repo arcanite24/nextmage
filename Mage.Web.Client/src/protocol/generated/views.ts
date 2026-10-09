@@ -165,6 +165,21 @@ export interface CardView extends SimpleCardView {
     zone?: Zone;
 }
 
+export interface CareerAchievement {
+    achieved?: boolean;
+    at?: number;
+    coins?: number;
+    cosmetic?: CareerCosmetic;
+    id?: string;
+    name?: string;
+    progress?: number;
+    scope?: string;
+    secret?: boolean;
+    target?: number;
+    text?: string;
+    xp?: number;
+}
+
 export interface CareerCard {
     cardNumber?: string;
     convertedTo?: string;
@@ -174,10 +189,52 @@ export interface CareerCard {
     setCode?: string;
 }
 
+export interface CareerCosmetic {
+    id?: string;
+    kind?: string;
+}
+
 export interface CareerCover {
     cardNumber?: string;
     name?: string;
     setCode?: string;
+}
+
+export interface CareerGameResult {
+    achievements?: CareerAchievement[];
+    career?: boolean;
+    coins?: number;
+    gameKey?: string;
+    levelAfter?: number;
+    levelBefore?: number;
+    levelRewards?: CareerLevelReward[];
+    note?: string;
+    opened?: string[];
+    opponent?: string;
+    packs?: number;
+    quests?: CareerQuestProgress[];
+    weekly?: CareerWeekly;
+    won?: boolean;
+    xp?: number;
+    xpForNext?: number;
+    xpIntoLevel?: number;
+}
+
+export interface CareerLevelReward {
+    coins?: number;
+    cosmetic?: CareerCosmetic;
+    level?: number;
+    packs?: number;
+    wildcard?: string;
+}
+
+export interface CareerLevelTrack {
+    level?: number;
+    rewards?: CareerLevelReward[];
+    unlocks?: CareerCosmetic[];
+    xp?: number;
+    xpForNext?: number;
+    xpIntoLevel?: number;
 }
 
 export interface CareerMatch {
@@ -216,13 +273,49 @@ export interface CareerPayout {
 export interface CareerProfile {
     cards?: number;
     coins?: number;
+    countAiGames?: boolean;
     created?: number;
     level?: number;
     losses?: number;
+    packTokens?: number;
     starter?: string;
     wildcards?: Wildcards;
     wins?: number;
     xp?: number;
+}
+
+export interface CareerQuest {
+    coins?: number;
+    id?: string;
+    progress?: number;
+    slot?: number;
+    target?: number;
+    text?: string;
+    xp?: number;
+}
+
+export interface CareerQuestProgress {
+    after?: number;
+    before?: number;
+    coins?: number;
+    completed?: boolean;
+    id?: string;
+    target?: number;
+    text?: string;
+    xp?: number;
+}
+
+export interface CareerQuests {
+    canReroll?: boolean;
+    quests?: CareerQuest[];
+    today?: string;
+}
+
+export interface CareerSetProgress {
+    name?: string;
+    owned?: number;
+    setCode?: string;
+    total?: number;
 }
 
 export interface CareerShopSet {
@@ -243,6 +336,13 @@ export interface CareerState {
     enabled?: boolean;
     profile?: CareerProfile;
     recent?: CareerPayout[];
+}
+
+export interface CareerWeekly {
+    goals?: number[];
+    nextGoal?: number;
+    week?: string;
+    wins?: number;
 }
 
 export interface ChatMessage extends Serializable {

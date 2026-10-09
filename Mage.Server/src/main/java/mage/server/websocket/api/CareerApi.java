@@ -157,16 +157,16 @@ final class CareerApi {
         );
     }
 
-    private static boolean enabled(ApiContext ctx) {
+    static boolean enabled(ApiContext ctx) {
         return ctx.managers != null && CareerService.enabled(ctx.managers.configSettings().isAuthenticationActivated());
     }
 
-    private static String user(ApiContext ctx, RpcCall call) throws RpcException {
+    static String user(ApiContext ctx, RpcCall call) throws RpcException {
         return ctx.sessions.userName(call.sessionId()).orElseThrow(() -> RpcException.notAuthorized("Sign in first"));
     }
 
     /** the signed-in account, when this server offers Career */
-    private static String career(ApiContext ctx, RpcCall call) throws RpcException {
+    static String career(ApiContext ctx, RpcCall call) throws RpcException {
         String user = user(ctx, call);
         if (!enabled(ctx)) {
             throw RpcException.notAuthorized("This server doesn't offer Career");
@@ -178,7 +178,7 @@ final class CareerApi {
         T run() throws SQLException, CareerService.CareerException;
     }
 
-    private static <T> T store(StoreCall<T> work) throws RpcException {
+    static <T> T store(StoreCall<T> work) throws RpcException {
         try {
             return work.run();
         } catch (CareerService.CareerException e) {

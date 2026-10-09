@@ -1,0 +1,244 @@
+[
+ {
+  "level": 2,
+  "coins": 25
+ },
+ {
+  "level": 3,
+  "coins": 25
+ },
+ {
+  "level": 4,
+  "coins": 25
+ },
+ {
+  "level": 5,
+  "packs": 1
+ },
+ {
+  "level": 6,
+  "wildcard": "uncommon"
+ },
+ {
+  "level": 7,
+  "coins": 25
+ },
+ {
+  "level": 8,
+  "cosmetic": {
+   "kind": "avatar",
+   "id": "owl"
+  }
+ },
+ {
+  "level": 9,
+  "coins": 25
+ },
+ {
+  "level": 10,
+  "cosmetic": {
+   "kind": "sleeve",
+   "id": "copper"
+  }
+ },
+ {
+  "level": 11,
+  "coins": 25
+ },
+ {
+  "level": 12,
+  "coins": 25
+ },
+ {
+  "level": 13,
+  "cosmetic": {
+   "kind": "playmat",
+   "id": "slate"
+  }
+ },
+ {
+  "level": 14,
+  "coins": 25
+ },
+ {
+  "level": 15,
+  "packs": 1,
+  "wildcard": "rare"
+ },
+ {
+  "level": 16,
+  "wildcard": "uncommon"
+ },
+ {
+  "level": 17,
+  "coins": 25
+ },
+ {
+  "level": 18,
+  "cosmetic": {
+   "kind": "avatar",
+   "id": "fox"
+  }
+ },
+ {
+  "level": 19,
+  "coins": 25
+ },
+ {
+  "level": 20,
+  "cosmetic": {
+   "kind": "playmat",
+   "id": "sand"
+  }
+ },
+ {
+  "level": 21,
+  "coins": 25
+ },
+ {
+  "level": 22,
+  "coins": 25
+ },
+ {
+  "level": 23,
+  "cosmetic": {
+   "kind": "sleeve",
+   "id": "obsidian"
+  }
+ },
+ {
+  "level": 24,
+  "coins": 25
+ },
+ {
+  "level": 25,
+  "packs": 1,
+  "wildcard": "mythic"
+ },
+ {
+  "level": 26,
+  "wildcard": "uncommon"
+ },
+ {
+  "level": 27,
+  "coins": 40
+ },
+ {
+  "level": 28,
+  "cosmetic": {
+   "kind": "avatar",
+   "id": "stag"
+  }
+ },
+ {
+  "level": 29,
+  "coins": 40
+ },
+ {
+  "level": 30,
+  "cosmetic": {
+   "kind": "sleeve",
+   "id": "silver"
+  }
+ },
+ {
+  "level": 31,
+  "coins": 40
+ },
+ {
+  "level": 32,
+  "coins": 40
+ },
+ {
+  "level": 33,
+  "cosmetic": {
+   "kind": "playmat",
+   "id": "rose"
+  }
+ },
+ {
+  "level": 34,
+  "coins": 40
+ },
+ {
+  "level": 35,
+  "packs": 1,
+  "wildcard": "rare"
+ },
+ {
+  "level": 36,
+  "wildcard": "uncommon"
+ },
+ {
+  "level": 37,
+  "coins": 40
+ },
+ {
+  "level": 38,
+  "cosmetic": {
+   "kind": "avatar",
+   "id": "drake"
+  }
+ },
+ {
+  "level": 39,
+  "coins": 40
+ },
+ {
+  "level": 40,
+  "cosmetic": {
+   "kind": "playmat",
+   "id": "midnight"
+  }
+ },
+ {
+  "level": 41,
+  "coins": 40
+ },
+ {
+  "level": 42,
+  "coins": 40
+ },
+ {
+  "level": 43,
+  "cosmetic": {
+   "kind": "sleeve",
+   "id": "foil"
+  }
+ },
+ {
+  "level": 44,
+  "coins": 40
+ },
+ {
+  "level": 45,
+  "packs": 1,
+  "wildcard": "mythic"
+ },
+ {
+  "level": 46,
+  "wildcard": "uncommon"
+ },
+ {
+  "level": 47,
+  "coins": 40
+ },
+ {
+  "level": 48,
+  "cosmetic": {
+   "kind": "avatar",
+   "id": "phoenix"
+  }
+ },
+ {
+  "level": 49,
+  "coins": 40
+ },
+ {
+  "level": 50,
+  "cosmetic": {
+   "kind": "sleeve",
+   "id": "gold"
+  }
+ }
+]
