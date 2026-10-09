@@ -7,6 +7,8 @@ import type { Command } from '../../core/game/interaction';
 import { commanderDamageTo, commandersByPlayer, type CommanderStatus } from '../../core/game/commander';
 import { defenderChoice, inRange } from '../../core/game/multiplayer';
 import { parsePayment } from '../../core/game/payment';
+import { delayLabel, isBroadcastDelay } from '../../core/game/broadcastDelay';
+import { spectatorHand } from '../../core/game/spectatorHand';
 import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
 import type { CardView, ChatMessage, GameView, PlayerView } from '../../protocol/generated/views';
@@ -65,6 +67,7 @@ import styles from './MatchStage.module.css';
 const FIELD_LEFT = 300;
 const FIELD_RIGHT_MARGIN = 470;
 const EMPTY: ReadonlySet<string> = new Set();
+const ignore = () => undefined;
 const NO_CARDS: readonly CardView[] = [];
 const NO_COMMANDERS: readonly CommanderStatus[] = [];
 /** multiplayer: each opponent's seat (plate, counters) in the left column, this far apart */
@@ -118,6 +121,15 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   const navigate = useNavigate();
   const animations = useSettings((settings) => settings.settings.animations);
   const autoPay = useSettings((settings) => settings.settings.autoPayMana);
+  // watching and replays: the broadcast options
+  const spectating = mode !== 'play';
+  const broadcastDelay = useSettings((settings) => settings.settings.broadcastDelay);
+  const hideHands = useSettings((settings) => settings.settings.hideHands);
+  const largeZoom = useSettings((settings) => settings.settings.largeZoom);
+  useEffect(() => {
+    // the session only delays a game being watched; turning the delay off catches up at once
+    session.setBroadcastDelay(mode === 'watch' && isBroadcastDelay(broadcastDelay) ? broadcastDelay * 1000 : 0);
+  }, [session, mode, broadcastDelay]);
   const viewer = useMatchUi((ui) => ui.viewer);
   const openViewer = useMatchUi((ui) => ui.openViewer);
   const sleeves = useSleeves();
@@ -152,6 +164,12 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
     return lands;
   }, [interaction.mode, board.me]);
   const hand = useMemo(() => Object.values(view?.myHand ?? {}), [view?.myHand]);
+  // watching: the seat's hand, if its player lets us see it, and only backs while hands are hidden for the broadcast
+  // (a replay of one's own game shows the hand that was held, as before)
+  const seatHand = useMemo(
+    () => (spectating ? spectatorHand(view, board.me?.player, mode === 'watch' && hideHands) : null),
+    [spectating, mode, view, board.me?.player, hideHands],
+  );
   const stack = useMemo(() => Object.values(view?.stack ?? {}), [view?.stack]);
 
   const onCommand = useCallback((command: Command) => {
@@ -357,7 +375,20 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
             <PhaseLadder step={view?.step} myTurn={!!myId && view?.activePlayerId === myId} turn={view?.turn ?? 0} />
 
-            {board.me && !handHidden && (mode === 'play' || (board.me.isMe && hand.length > 0)) && (
+            {board.me && seatHand && (
+              <Hand
+                cards={seatHand.cards}
+                faceDown={seatHand.faceDown}
+                label={`${board.me.player.name ?? 'Player'}'s hand`}
+                clickable={EMPTY}
+                selected={EMPTY}
+                sleeve={sleeves.mine}
+                onPlay={ignore}
+                playLine={0}
+                libraryOrigin={`library:${board.me.player.playerId}`}
+              />
+            )}
+            {board.me && !handHidden && mode === 'play' && (
               <Hand
                 cards={hand}
                 choosing={choosingInHand}
@@ -396,7 +427,12 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
             <EmoteBubbles view={view} />
-            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} replayLog={replayLog} />
+            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} replayLog={replayLog} delayMs={state.broadcastDelayMs} />
+            {mode === 'watch' && !view && state.broadcastDelayMs > 0 && (
+              <p className={styles.delayNote} role="status">
+                The table appears in {delayLabel(Math.round(state.broadcastDelayMs / 1000))}: the broadcast delay holds the game back.
+              </p>
+            )}
             {mode === 'play' && <WatcherCount watchers={watchers} className={styles.watchers} />}
             <GameMenu
               gameId={state.gameId}
@@ -449,7 +485,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 onPlayAgain={mode === 'play' && deckId && !eventId ? playAgain : undefined}
               />
             )}
-            <CardZoom />
+            <CardZoom large={spectating && largeZoom} />
             <CardDetail view={view} extra={pickerCards ?? viewer?.cards ?? NO_CARDS} sleeveOf={sleeveOf} attacking={attacking} blocking={blocking} />
           </>
         );
