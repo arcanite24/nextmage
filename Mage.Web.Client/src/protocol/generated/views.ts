@@ -180,6 +180,16 @@ export interface CareerAchievement {
     xp?: number;
 }
 
+export interface CareerCampaign {
+    chapters?: CareerChapter[];
+    done?: number;
+    id?: string;
+    name?: string;
+    prologue?: string;
+    text?: string;
+    total?: number;
+}
+
 export interface CareerCard {
     cardNumber?: string;
     convertedTo?: string;
@@ -187,6 +197,42 @@ export interface CareerCard {
     name?: string;
     rarity?: string;
     setCode?: string;
+}
+
+export interface CareerChallenge {
+    attempts?: number;
+    bestLife?: number;
+    bestTurns?: number;
+    board?: CareerChallengeEntry[];
+    id?: string;
+    name?: string;
+    opponentName?: string;
+    skill?: number;
+    text?: string;
+    twists?: CareerTwists;
+    week?: string;
+    won?: boolean;
+}
+
+export interface CareerChallengeEntry {
+    attempts?: number;
+    life?: number;
+    rank?: number;
+    turns?: number;
+    user?: string;
+    won?: boolean;
+    you?: boolean;
+}
+
+export interface CareerChapter {
+    color?: string;
+    deckName?: string;
+    done?: boolean;
+    id?: string;
+    name?: string;
+    nodes?: CareerNode[];
+    text?: string;
+    unlockSet?: string;
 }
 
 export interface CareerCosmetic {
@@ -208,6 +254,7 @@ export interface CareerGameResult {
     levelAfter?: number;
     levelBefore?: number;
     levelRewards?: CareerLevelReward[];
+    mode?: CareerModeResult;
     note?: string;
     opened?: string[];
     opponent?: string;
@@ -218,6 +265,15 @@ export interface CareerGameResult {
     xp?: number;
     xpForNext?: number;
     xpIntoLevel?: number;
+}
+
+export interface CareerGauntletState {
+    bestWins?: number;
+    entryCoins?: number;
+    maxWins?: number;
+    recent?: CareerRun[];
+    rewards?: CareerRunReward[];
+    run?: CareerRun;
 }
 
 export interface CareerLevelReward {
@@ -237,9 +293,74 @@ export interface CareerLevelTrack {
     xpIntoLevel?: number;
 }
 
+export interface CareerLimitedRun {
+    deck?: DeckCardInfo[];
+    id?: string;
+    kind?: string;
+    losses?: number;
+    nextReward?: number;
+    pack?: CareerPoolCard[];
+    phase?: string;
+    pick?: number;
+    pool?: CareerPoolCard[];
+    round?: number;
+    setCode?: string;
+    setName?: string;
+    state?: string;
+    wins?: number;
+}
+
+export interface CareerLimitedState {
+    draftEntry?: number;
+    draftRewards?: number[];
+    recent?: CareerLimitedRun[];
+    run?: CareerLimitedRun;
+    sealedEntry?: number;
+    sealedRewards?: number[];
+}
+
 export interface CareerMatch {
     opponentId?: string;
     tableId?: string;
+}
+
+export interface CareerModeResult {
+    coins?: number;
+    kind?: string;
+    lines?: string[];
+    ref?: string;
+    stars?: number;
+    title?: string;
+    unlockedSet?: string;
+    xp?: number;
+}
+
+export interface CareerNode {
+    boss?: boolean;
+    choice?: string;
+    id?: string;
+    name?: string;
+    options?: CareerOption[];
+    requires?: string[];
+    reward?: CareerReward;
+    skill?: number;
+    state?: string;
+    text?: string;
+    twists?: CareerTwists;
+    type?: string;
+}
+
+export interface CareerOffer {
+    kind?: string;
+    options?: CareerOfferOption[];
+    pick?: number;
+}
+
+export interface CareerOfferOption {
+    cards?: CareerRunCard[];
+    color?: string;
+    id?: string;
+    name?: string;
 }
 
 export interface CareerOpponent {
@@ -252,6 +373,12 @@ export interface CareerOpponent {
     unlocked?: boolean;
     winCoins?: number;
     wins?: number;
+}
+
+export interface CareerOption {
+    id?: string;
+    reward?: CareerReward;
+    text?: string;
 }
 
 export interface CareerPackResult {
@@ -270,6 +397,17 @@ export interface CareerPayout {
     xp?: number;
 }
 
+export interface CareerPoolCard {
+    cardNumber?: string;
+    colors?: string;
+    creature?: boolean;
+    land?: boolean;
+    manaValue?: number;
+    name?: string;
+    rarity?: string;
+    setCode?: string;
+}
+
 export interface CareerProfile {
     cards?: number;
     coins?: number;
@@ -282,6 +420,28 @@ export interface CareerProfile {
     wildcards?: Wildcards;
     wins?: number;
     xp?: number;
+}
+
+export interface CareerPuzzle {
+    attempts?: number;
+    hint?: string;
+    id?: string;
+    name?: string;
+    number?: number;
+    open?: boolean;
+    opponent?: CareerPuzzleSide;
+    solved?: boolean;
+    stars?: number;
+    text?: string;
+    you?: CareerPuzzleSide;
+}
+
+export interface CareerPuzzleSide extends Serializable {
+    battlefield?: string[];
+    graveyard?: string[];
+    hand?: string[];
+    library?: string[];
+    life?: number;
 }
 
 export interface CareerQuest {
@@ -311,6 +471,53 @@ export interface CareerQuests {
     today?: string;
 }
 
+export interface CareerReward {
+    coins?: number;
+    deckCards?: boolean;
+    packs?: number;
+    unlockSet?: string;
+    wildcard?: string;
+    xp?: number;
+}
+
+export interface CareerRun {
+    bosses?: CareerRunBoss[];
+    colors?: string;
+    deck?: CareerRunCard[];
+    deckSize?: number;
+    ended?: number;
+    id?: string;
+    losses?: number;
+    maxWins?: number;
+    next?: CareerRunBoss;
+    offer?: CareerOffer;
+    started?: number;
+    state?: string;
+    wins?: number;
+}
+
+export interface CareerRunBoss {
+    beaten?: boolean;
+    name?: string;
+    number?: number;
+    skill?: number;
+    twists?: CareerTwists;
+}
+
+export interface CareerRunCard {
+    amount?: number;
+    cardNumber?: string;
+    name?: string;
+    setCode?: string;
+}
+
+export interface CareerRunReward {
+    coins?: number;
+    packs?: number;
+    wildcard?: string;
+    wins?: number;
+}
+
 export interface CareerSetProgress {
     name?: string;
     owned?: number;
@@ -319,10 +526,12 @@ export interface CareerSetProgress {
 }
 
 export interface CareerShopSet {
+    locked?: boolean;
     name?: string;
     price?: number;
     releaseDate?: string;
     setCode?: string;
+    unlockedBy?: string;
 }
 
 export interface CareerStarter {
@@ -336,6 +545,13 @@ export interface CareerState {
     enabled?: boolean;
     profile?: CareerProfile;
     recent?: CareerPayout[];
+}
+
+export interface CareerTwists extends Serializable {
+    emblem?: string;
+    extraCards?: number;
+    permanents?: string[];
+    startingLife?: number;
 }
 
 export interface CareerWeekly {

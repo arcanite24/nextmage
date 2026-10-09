@@ -108,10 +108,11 @@ final class CareerApi {
 
                 RpcMethod.named("careerShop")
                         .returns("CareerShopSet[]")
-                        .doc("The sets the Career shop sells packs of, newest first, with the price in coins.")
+                        .doc("The sets the Career shop sells packs of, newest first, with the price in coins: the newest sets, and "
+                                + "the ones campaign chapters opened. Sets a chapter still has to open come last, locked, saying which.")
                         .handler(call -> {
-                            career(ctx, call);
-                            return CareerService.get().shop();
+                            String user = career(ctx, call);
+                            return store(() -> CareerService.get().shop(user));
                         }),
 
                 RpcMethod.named("careerBuyPack")
@@ -220,30 +221,47 @@ final class CareerApi {
             throw new RpcException(RpcException.SERVER_ERROR, "The opponent's deck can't be read", e);
         }
 
-        String sessionId = call.sessionId();
-        UUID roomId = ctx.managers.gamesRoomManager().getMainRoomId();
-        MatchOptions options = new MatchOptions(user + " vs " + opponent.name, "Two Player Duel", false);
-        options.setDeckType("Constructed - Freeform");
-        options.setWinsNeeded(1);
-        // a rollback could replay a lost game for its payout
-        options.setRollbackTurnsAllowed(false);
-        options.setSpectatorsAllowed(true);
         int skill = opponent.skill != null ? opponent.skill : content.tier(opponent.tier).skill;
         PlayerType aiType = opponent.aiType != null ? PlayerType.valueOf(opponent.aiType) : PlayerType.COMPUTER_MAD;
+        String tableId = startMatch(ctx, call, user, opponent.name, "Constructed - Freeform", deck, aiType, skill, opponentDeck,
+                id -> CareerService.get().register(id, user, opponent.id, opponent.tier));
+        CareerMatch match = new CareerMatch();
+        match.tableId = tableId;
+        match.opponentId = opponent.id;
+        return match;
+    }
+
+    /**
+     * Sets up and starts a Career table: the player against one AI, best of one, no rollbacks (a rollback could
+     * replay a lost game for its payout). {@code register} tells the Career service about the table before anyone
+     * sits, so the game starts with the right setup.
+     *
+     * @return the table id
+     */
+    static String startMatch(ApiContext ctx, RpcCall call, String user, String opponentName, String deckType, DeckCardLists deck,
+                             PlayerType aiType, int skill, DeckCardLists opponentDeck, java.util.function.Consumer<UUID> register) throws RpcException {
+        String sessionId = call.sessionId();
+        UUID roomId = ctx.managers.gamesRoomManager().getMainRoomId();
+        MatchOptions options = new MatchOptions(user + " vs " + opponentName, "Two Player Duel", false);
+        options.setDeckType(deckType);
+        options.setWinsNeeded(1);
+        options.setRollbackTurnsAllowed(false);
+        options.setSpectatorsAllowed(true);
+        PlayerType ai = aiType == null ? PlayerType.COMPUTER_MAD : aiType;
         // the table's seats: without them nobody can join
         options.getPlayerTypes().add(PlayerType.HUMAN);
-        options.getPlayerTypes().add(aiType);
+        options.getPlayerTypes().add(ai);
         UUID tableId = null;
         try {
             TableView table = ctx.server.roomCreateTable(sessionId, roomId, options);
             tableId = table.getTableId();
-            CareerService.get().register(tableId, user, opponent.id, opponent.tier);
+            register.accept(tableId);
             if (!ctx.server.roomJoinTable(sessionId, roomId, tableId, user, PlayerType.HUMAN, 1, deck, "")) {
                 throw RpcException.invalidParams("Your deck wasn't accepted for the table.");
             }
-            String aiName = opponent.name.length() > 14 ? opponent.name.substring(0, 14).trim() : opponent.name;
-            if (!ctx.server.roomJoinTable(sessionId, roomId, tableId, aiName, aiType, skill, opponentDeck, "")) {
-                throw new RpcException(RpcException.SERVER_ERROR, opponent.name + " couldn't take a seat.");
+            String aiName = opponentName.length() > 14 ? opponentName.substring(0, 14).trim() : opponentName;
+            if (!ctx.server.roomJoinTable(sessionId, roomId, tableId, aiName, ai, Math.max(1, skill), opponentDeck, "")) {
+                throw new RpcException(RpcException.SERVER_ERROR, opponentName + " couldn't take a seat.");
             }
             if (!ctx.server.matchStart(sessionId, roomId, tableId)) {
                 throw new RpcException(RpcException.SERVER_ERROR, "The match couldn't start.");
@@ -255,10 +273,7 @@ final class CareerApi {
             abandon(ctx, sessionId, roomId, tableId);
             throw new RpcException(RpcException.SERVER_ERROR, "The Career match couldn't be set up: " + e.getMessage(), e);
         }
-        CareerMatch match = new CareerMatch();
-        match.tableId = tableId.toString();
-        match.opponentId = opponent.id;
-        return match;
+        return tableId.toString();
     }
 
     private static void abandon(ApiContext ctx, String sessionId, UUID roomId, UUID tableId) {

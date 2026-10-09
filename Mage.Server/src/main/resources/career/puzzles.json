@@ -1,0 +1,579 @@
+[
+ {
+  "id": "first-bolt",
+  "name": "First bolt",
+  "text": "Your opponent is at 3 life. Win this turn.",
+  "hint": "Tap the Mountain for red mana, then cast Lightning Bolt at your opponent.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Lightning Bolt"
+   ],
+   "battlefield": [
+    "Mountain"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 3,
+   "hand": [],
+   "battlefield": [],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "two-bears",
+  "name": "Two bears",
+  "text": "Your opponent is at 4 life. Win this turn.",
+  "hint": "Creatures that start your turn under your control can attack.",
+  "you": {
+   "life": 20,
+   "hand": [],
+   "battlefield": [
+    "Grizzly Bears",
+    "Grizzly Bears"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 4,
+   "hand": [],
+   "battlefield": [],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "grow",
+  "name": "Room to grow",
+  "text": "Your opponent is at 6 life. Win this turn.",
+  "hint": "Attack with both, then pump one that isn't blocked.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Giant Growth"
+   ],
+   "battlefield": [
+    "Grizzly Bears",
+    "Grizzly Bears",
+    "Forest"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 6,
+   "hand": [],
+   "battlefield": [],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "over-the-wall",
+  "name": "Over the wall",
+  "text": "Your opponent is at 5 life behind a wall. Win this turn.",
+  "hint": "A creature without flying or reach can't block a flyer.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Giant Growth"
+   ],
+   "battlefield": [
+    "Wind Drake",
+    "Forest"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 5,
+   "hand": [],
+   "battlefield": [
+    "Wall of Wood"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "clear-the-way",
+  "name": "Clear the way",
+  "text": "Your opponent is at 3 life with a blocker. Win this turn.",
+  "hint": "Deal with the blocker before combat.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Shock"
+   ],
+   "battlefield": [
+    "Hill Giant",
+    "Mountain"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 3,
+   "hand": [],
+   "battlefield": [
+    "Grizzly Bears"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "trample",
+  "name": "Trample",
+  "text": "Your opponent is at 4 life behind a wall. Win this turn.",
+  "hint": "Damage past a blocker's toughness tramples over.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Rancor",
+    "Giant Growth"
+   ],
+   "battlefield": [
+    "Grizzly Bears",
+    "Forest",
+    "Forest"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 4,
+   "hand": [],
+   "battlefield": [
+    "Wall of Wood"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "haste",
+  "name": "In a hurry",
+  "text": "Your opponent is at 6 life. Win this turn.",
+  "hint": "Haste lets a creature attack the turn it arrives.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Raging Goblin",
+    "Lightning Bolt",
+    "Shock"
+   ],
+   "battlefield": [
+    "Mountain",
+    "Mountain",
+    "Mountain"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 6,
+   "hand": [],
+   "battlefield": [],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "borrowed-giant",
+  "name": "Borrowed giant",
+  "text": "Your opponent is at 5 life with a giant on guard. Win this turn.",
+  "hint": "Their best blocker can be your best attacker.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Act of Treason"
+   ],
+   "battlefield": [
+    "Grizzly Bears",
+    "Mountain",
+    "Mountain",
+    "Mountain"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 5,
+   "hand": [],
+   "battlefield": [
+    "Hill Giant"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "fling",
+  "name": "Last throw",
+  "text": "Your opponent is at 6 life behind a wall. Win this turn.",
+  "hint": "Make the giant bigger before you throw it.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Giant Growth",
+    "Fling"
+   ],
+   "battlefield": [
+    "Hill Giant",
+    "Mountain",
+    "Mountain",
+    "Forest"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 6,
+   "hand": [],
+   "battlefield": [
+    "Wall of Wood"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "ritual",
+  "name": "Dark bargain",
+  "text": "Your opponent is at 4 life. Win this turn.",
+  "hint": "Sign in Blood can target any player. Ritual first.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Dark Ritual",
+    "Sign in Blood",
+    "Sign in Blood"
+   ],
+   "battlefield": [
+    "Swamp",
+    "Swamp"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 4,
+   "hand": [],
+   "battlefield": [],
+   "graveyard": [],
+   "library": [
+    "Swamp",
+    "Swamp",
+    "Swamp",
+    "Swamp"
+   ]
+  }
+ },
+ {
+  "id": "overrun",
+  "name": "Stampede",
+  "text": "Your opponent is at 9 life with two blockers. Win this turn.",
+  "hint": "Everyone attacks; trample carries the damage through.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Overrun"
+   ],
+   "battlefield": [
+    "Llanowar Elves",
+    "Grizzly Bears",
+    "Grizzly Bears",
+    "Forest",
+    "Forest",
+    "Forest",
+    "Forest",
+    "Forest"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 9,
+   "hand": [],
+   "battlefield": [
+    "Grizzly Bears",
+    "Wall of Wood"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "sleep",
+  "name": "Lullaby",
+  "text": "Your opponent is at 4 life with two blockers. Win this turn.",
+  "hint": "Blockers that are tapped can't block.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Sleep"
+   ],
+   "battlefield": [
+    "Wind Drake",
+    "Grizzly Bears",
+    "Island",
+    "Island",
+    "Island",
+    "Island"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 4,
+   "hand": [],
+   "battlefield": [
+    "Giant Spider",
+    "Wall of Wood"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "unsummon",
+  "name": "Not today",
+  "text": "Your opponent is at 5 life with a spider that can block flyers. Win this turn.",
+  "hint": "Reach blocks flyers. Send the spider home.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Unsummon"
+   ],
+   "battlefield": [
+    "Air Elemental",
+    "Grizzly Bears",
+    "Island"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 5,
+   "hand": [],
+   "battlefield": [
+    "Giant Spider"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "ping",
+  "name": "Ping",
+  "text": "Your opponent is at 3 life. Win this turn.",
+  "hint": "The sorcerer's ability is damage too.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Shock"
+   ],
+   "battlefield": [
+    "Prodigal Sorcerer",
+    "Mountain"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 3,
+   "hand": [],
+   "battlefield": [],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "blaze",
+  "name": "Spend it all",
+  "text": "Your opponent is at 5 life. Win this turn.",
+  "hint": "X can be as big as your mana allows.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Blaze"
+   ],
+   "battlefield": [
+    "Mountain",
+    "Mountain",
+    "Mountain",
+    "Mountain",
+    "Mountain",
+    "Mountain"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 5,
+   "hand": [],
+   "battlefield": [],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "doom",
+  "name": "Clear skies",
+  "text": "Your opponent is at 4 life with an angel on guard. Win this turn.",
+  "hint": "Remove the only creature that can block a flyer.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Doom Blade"
+   ],
+   "battlefield": [
+    "Air Elemental",
+    "Swamp",
+    "Island"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 4,
+   "hand": [],
+   "battlefield": [
+    "Serra Angel"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "pacifism",
+  "name": "Make peace",
+  "text": "Your opponent is at 5 life with a giant. Win this turn.",
+  "hint": "A creature that can't block isn't a blocker.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Pacifism"
+   ],
+   "battlefield": [
+    "Hill Giant",
+    "Grizzly Bears",
+    "Plains",
+    "Plains"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 5,
+   "hand": [],
+   "battlefield": [
+    "Hill Giant"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "threaten",
+  "name": "Borrowed wurm",
+  "text": "Your opponent is at 7 life with a wurm. Win this turn.",
+  "hint": "Use it, then lose it on purpose.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Threaten",
+    "Fling"
+   ],
+   "battlefield": [
+    "Mountain",
+    "Mountain",
+    "Mountain",
+    "Mountain",
+    "Mountain"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 7,
+   "hand": [],
+   "battlefield": [
+    "Craw Wurm"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "reach",
+  "name": "Mind the reach",
+  "text": "Your opponent is at 6 life with a spider. Win this turn.",
+  "hint": "Wait for blocks before you pump.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Giant Growth",
+    "Shock"
+   ],
+   "battlefield": [
+    "Wind Drake",
+    "Hill Giant",
+    "Forest",
+    "Mountain"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 6,
+   "hand": [],
+   "battlefield": [
+    "Giant Spider"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ },
+ {
+  "id": "finale",
+  "name": "Grand finale",
+  "text": "Your opponent is at 6 life with two big blockers. Win this turn.",
+  "hint": "Every point of trample counts. So does the bolt.",
+  "you": {
+   "life": 20,
+   "hand": [
+    "Overrun",
+    "Lightning Bolt"
+   ],
+   "battlefield": [
+    "Llanowar Elves",
+    "Grizzly Bears",
+    "Hill Giant",
+    "Forest",
+    "Forest",
+    "Forest",
+    "Forest",
+    "Mountain",
+    "Mountain"
+   ],
+   "graveyard": [],
+   "library": []
+  },
+  "opponent": {
+   "life": 6,
+   "hand": [],
+   "battlefield": [
+    "Serra Angel",
+    "Giant Spider"
+   ],
+   "graveyard": [],
+   "library": []
+  }
+ }
+]

@@ -64,12 +64,29 @@ public final class CareerStore implements AutoCloseable {
                     "CREATE TABLE progress_games (game_key TEXT PRIMARY KEY, user TEXT NOT NULL, at INTEGER NOT NULL,"
                             + " details TEXT)",
                     "CREATE INDEX progress_games_by_user ON progress_games (user, at)"
+            },
+            {
+                    // M9: campaigns, shop sets opened by campaigns, gauntlet runs, puzzles, weekly challenges, limited runs
+                    "CREATE TABLE campaign_nodes (user TEXT NOT NULL, campaign TEXT NOT NULL, node TEXT NOT NULL,"
+                            + " done_at INTEGER NOT NULL, choice TEXT, PRIMARY KEY (user, campaign, node))",
+                    "CREATE TABLE set_unlocks (user TEXT NOT NULL, set_code TEXT NOT NULL, at INTEGER NOT NULL,"
+                            + " PRIMARY KEY (user, set_code))",
+                    "CREATE TABLE runs (id TEXT PRIMARY KEY, user TEXT NOT NULL, kind TEXT NOT NULL, started INTEGER NOT NULL,"
+                            + " ended INTEGER, state TEXT NOT NULL, wins INTEGER NOT NULL DEFAULT 0, losses INTEGER NOT NULL DEFAULT 0,"
+                            + " data TEXT NOT NULL)",
+                    "CREATE INDEX runs_by_user ON runs (user, kind, state)",
+                    "CREATE TABLE puzzle_results (user TEXT NOT NULL, puzzle TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0,"
+                            + " solved_at INTEGER, stars INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user, puzzle))",
+                    "CREATE TABLE challenge_results (user TEXT NOT NULL, week TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0,"
+                            + " won INTEGER NOT NULL DEFAULT 0, best_turns INTEGER, best_life INTEGER, at INTEGER NOT NULL,"
+                            + " PRIMARY KEY (user, week))",
+                    "CREATE INDEX challenge_results_by_week ON challenge_results (week, won, best_turns)"
             }
     };
 
     /** every table that holds an account's rows, for deleting a Career */
     private static final String[] USER_TABLES = {"profile", "cards", "payouts", "stats", "quests", "achievements",
-            "unlocks", "weekly", "progress_games"};
+            "unlocks", "weekly", "progress_games", "campaign_nodes", "set_unlocks", "runs", "puzzle_results", "challenge_results"};
 
     private static volatile CareerStore instance;
 
@@ -689,5 +706,233 @@ public final class CareerStore implements AutoCloseable {
                 return rows.next() ? rows.getString(1) : null;
             }
         }
+    }
+
+    // ---- M9: campaigns, set unlocks, runs, puzzles, challenges
+
+    /** finished campaign nodes: node id to the option chosen (empty for a duel) */
+    synchronized Map<String, String> campaignNodes(String user, String campaign) throws SQLException {
+        Map<String, String> done = new java.util.LinkedHashMap<>();
+        try (PreparedStatement select = connection.prepareStatement(
+                "SELECT node, choice FROM campaign_nodes WHERE user = ? AND campaign = ? ORDER BY done_at")) {
+            select.setString(1, key(user));
+            select.setString(2, campaign);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    done.put(rows.getString(1), rows.getString(2) == null ? "" : rows.getString(2));
+                }
+            }
+        }
+        return done;
+    }
+
+    /** @return true when the node wasn't finished before */
+    synchronized boolean finishCampaignNode(String user, String campaign, String node, String choice, long now) throws SQLException {
+        try (PreparedStatement insert = connection.prepareStatement(
+                "INSERT OR IGNORE INTO campaign_nodes (user, campaign, node, done_at, choice) VALUES (?, ?, ?, ?, ?)")) {
+            insert.setString(1, key(user));
+            insert.setString(2, campaign);
+            insert.setString(3, node);
+            insert.setLong(4, now);
+            insert.setString(5, choice);
+            return insert.executeUpdate() == 1;
+        }
+    }
+
+    synchronized java.util.Set<String> setUnlocks(String user) throws SQLException {
+        java.util.Set<String> sets = new java.util.LinkedHashSet<>();
+        try (PreparedStatement select = connection.prepareStatement("SELECT set_code FROM set_unlocks WHERE user = ? ORDER BY at")) {
+            select.setString(1, key(user));
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    sets.add(rows.getString(1));
+                }
+            }
+        }
+        return sets;
+    }
+
+    synchronized boolean addSetUnlock(String user, String setCode, long now) throws SQLException {
+        try (PreparedStatement insert = connection.prepareStatement("INSERT OR IGNORE INTO set_unlocks (user, set_code, at) VALUES (?, ?, ?)")) {
+            insert.setString(1, key(user));
+            insert.setString(2, setCode);
+            insert.setLong(3, now);
+            return insert.executeUpdate() == 1;
+        }
+    }
+
+    /** a gauntlet or limited run; data is the mode's own JSON */
+    static class RunRow {
+        String id;
+        String kind;
+        long started;
+        Long ended;
+        String state;
+        int wins;
+        int losses;
+        String data;
+    }
+
+    synchronized void putRun(String user, RunRow run) throws SQLException {
+        try (PreparedStatement upsert = connection.prepareStatement(
+                "INSERT OR REPLACE INTO runs (id, user, kind, started, ended, state, wins, losses, data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            upsert.setString(1, run.id);
+            upsert.setString(2, key(user));
+            upsert.setString(3, run.kind);
+            upsert.setLong(4, run.started);
+            if (run.ended == null) {
+                upsert.setNull(5, java.sql.Types.INTEGER);
+            } else {
+                upsert.setLong(5, run.ended);
+            }
+            upsert.setString(6, run.state);
+            upsert.setInt(7, run.wins);
+            upsert.setInt(8, run.losses);
+            upsert.setString(9, run.data);
+            upsert.executeUpdate();
+        }
+    }
+
+    /** the account's runs of a kind, newest first; only active ones when asked */
+    synchronized List<RunRow> runs(String user, String kind, boolean activeOnly, int limit) throws SQLException {
+        List<RunRow> runs = new ArrayList<>();
+        try (PreparedStatement select = connection.prepareStatement(
+                "SELECT id, kind, started, ended, state, wins, losses, data FROM runs WHERE user = ? AND kind = ?"
+                        + (activeOnly ? " AND state = 'active'" : "") + " ORDER BY started DESC LIMIT ?")) {
+            select.setString(1, key(user));
+            select.setString(2, kind);
+            select.setInt(3, limit);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    RunRow run = new RunRow();
+                    run.id = rows.getString(1);
+                    run.kind = rows.getString(2);
+                    run.started = rows.getLong(3);
+                    long ended = rows.getLong(4);
+                    run.ended = rows.wasNull() ? null : ended;
+                    run.state = rows.getString(5);
+                    run.wins = rows.getInt(6);
+                    run.losses = rows.getInt(7);
+                    run.data = rows.getString(8);
+                    runs.add(run);
+                }
+            }
+        }
+        return runs;
+    }
+
+    synchronized RunRow run(String user, String id) throws SQLException {
+        try (PreparedStatement select = connection.prepareStatement(
+                "SELECT id, kind, started, ended, state, wins, losses, data FROM runs WHERE user = ? AND id = ?")) {
+            select.setString(1, key(user));
+            select.setString(2, id);
+            try (ResultSet rows = select.executeQuery()) {
+                if (!rows.next()) {
+                    return null;
+                }
+                RunRow run = new RunRow();
+                run.id = rows.getString(1);
+                run.kind = rows.getString(2);
+                run.started = rows.getLong(3);
+                long ended = rows.getLong(4);
+                run.ended = rows.wasNull() ? null : ended;
+                run.state = rows.getString(5);
+                run.wins = rows.getInt(6);
+                run.losses = rows.getInt(7);
+                run.data = rows.getString(8);
+                return run;
+            }
+        }
+    }
+
+    /** {attempts, stars, solvedAt or 0} per puzzle */
+    synchronized Map<String, long[]> puzzleResults(String user) throws SQLException {
+        Map<String, long[]> results = new java.util.HashMap<>();
+        try (PreparedStatement select = connection.prepareStatement(
+                "SELECT puzzle, attempts, stars, solved_at FROM puzzle_results WHERE user = ?")) {
+            select.setString(1, key(user));
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    results.put(rows.getString(1), new long[]{rows.getInt(2), rows.getInt(3), rows.getLong(4)});
+                }
+            }
+        }
+        return results;
+    }
+
+    synchronized void puzzleAttempt(String user, String puzzle) throws SQLException {
+        try (PreparedStatement upsert = connection.prepareStatement(
+                "INSERT INTO puzzle_results (user, puzzle, attempts) VALUES (?, ?, 1)"
+                        + " ON CONFLICT (user, puzzle) DO UPDATE SET attempts = attempts + 1")) {
+            upsert.setString(1, key(user));
+            upsert.setString(2, puzzle);
+            upsert.executeUpdate();
+        }
+    }
+
+    /** keeps the best stars; the first solve's time stays */
+    synchronized void puzzleSolved(String user, String puzzle, int stars, long now) throws SQLException {
+        try (PreparedStatement update = connection.prepareStatement(
+                "UPDATE puzzle_results SET stars = MAX(stars, ?), solved_at = COALESCE(solved_at, ?) WHERE user = ? AND puzzle = ?")) {
+            update.setInt(1, stars);
+            update.setLong(2, now);
+            update.setString(3, key(user));
+            update.setString(4, puzzle);
+            update.executeUpdate();
+        }
+    }
+
+    synchronized void challengeAttempt(String user, String week, long now) throws SQLException {
+        try (PreparedStatement upsert = connection.prepareStatement(
+                "INSERT INTO challenge_results (user, week, attempts, at) VALUES (?, ?, 1, ?)"
+                        + " ON CONFLICT (user, week) DO UPDATE SET attempts = attempts + 1")) {
+            upsert.setString(1, key(user));
+            upsert.setString(2, week);
+            upsert.setLong(3, now);
+            upsert.executeUpdate();
+        }
+    }
+
+    /** records a win; the best is the fewest turns, then the most life left */
+    synchronized void challengeWon(String user, String week, int turns, int life, long now) throws SQLException {
+        try (PreparedStatement update = connection.prepareStatement(
+                "UPDATE challenge_results SET won = 1, at = ?,"
+                        + " best_life = CASE WHEN best_turns IS NULL OR ? < best_turns OR (? = best_turns AND ? > best_life) THEN ? ELSE best_life END,"
+                        + " best_turns = CASE WHEN best_turns IS NULL OR ? < best_turns OR (? = best_turns AND ? > best_life) THEN ? ELSE best_turns END"
+                        + " WHERE user = ? AND week = ?")) {
+            update.setLong(1, now);
+            update.setInt(2, turns);
+            update.setInt(3, turns);
+            update.setInt(4, life);
+            update.setInt(5, life);
+            update.setInt(6, turns);
+            update.setInt(7, turns);
+            update.setInt(8, life);
+            update.setInt(9, turns);
+            update.setString(10, key(user));
+            update.setString(11, week);
+            update.executeUpdate();
+        }
+    }
+
+    /** a week's results, best first: winners by fewest turns then most life, then everyone else by attempts */
+    synchronized List<Object[]> challengeBoard(String week, int limit) throws SQLException {
+        List<Object[]> board = new ArrayList<>();
+        try (PreparedStatement select = connection.prepareStatement(
+                "SELECT user, attempts, won, best_turns, best_life FROM challenge_results WHERE week = ?"
+                        + " ORDER BY won DESC, best_turns ASC, best_life DESC, attempts ASC LIMIT ?")) {
+            select.setString(1, week);
+            select.setInt(2, limit);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    int turns = rows.getInt(4);
+                    Integer bestTurns = rows.wasNull() ? null : turns;
+                    int life = rows.getInt(5);
+                    Integer bestLife = rows.wasNull() ? null : life;
+                    board.add(new Object[]{rows.getString(1), rows.getInt(2), rows.getInt(3) == 1, bestTurns, bestLife});
+                }
+            }
+        }
+        return board;
     }
 }

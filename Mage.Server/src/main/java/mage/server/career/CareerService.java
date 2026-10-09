@@ -54,13 +54,27 @@ public final class CareerService {
 
     public static class CareerTable {
         public final String user;
+        /** the roster opponent's id, or the mode and its reference ("campaign:five-paths/white-1") */
         public final String opponentId;
         public final int tier;
+        /** "duel" (the roster), "campaign", "gauntlet", "puzzle", "challenge" or "limited" */
+        public final String kind;
+        /** what the mode needs to finish the game: a campaign node, a run id, a puzzle id, a week */
+        public final String ref;
+        /** how the game starts, or null for a plain duel */
+        public final CareerSetup setup;
 
         CareerTable(String user, String opponentId, int tier) {
+            this(user, opponentId, tier, "duel", null, null);
+        }
+
+        CareerTable(String user, String opponentId, int tier, String kind, String ref, CareerSetup setup) {
             this.user = user;
             this.opponentId = opponentId;
             this.tier = tier;
+            this.kind = kind;
+            this.ref = ref;
+            this.setup = setup;
         }
     }
 
@@ -92,7 +106,14 @@ public final class CareerService {
         public String name;
         public String releaseDate;
         public int price;
+        /** a campaign chapter has to open it first */
+        public boolean locked;
+        /** the chapter that opens it, while locked */
+        public String unlockedBy;
     }
+
+    /** the newest sets are always in the shop; campaign chapters open older ones */
+    public static final int SHOP_NEWEST_SETS = 6;
 
     /** What a pack gave, and the Career afterwards. */
     public static class CareerPackResult {
@@ -149,6 +170,11 @@ public final class CareerService {
             throw new CareerException("You already have a Career.");
         }
         return store.profile(user);
+    }
+
+    /** the Career card for a deck line: its printing, or the preferred printing of its name; null when unknown */
+    CareerCard resolveCard(DeckCardInfo info) {
+        return resolve(info);
     }
 
     private CareerCard resolve(DeckCardInfo info) {
@@ -243,6 +269,23 @@ public final class CareerService {
         tables.put(tableId, new CareerTable(user, opponentId, tier));
     }
 
+    /** a Career table of a mode other than the roster duel */
+    public void register(UUID tableId, String user, String kind, String ref, CareerSetup setup) {
+        tables.put(tableId, new CareerTable(user, kind + ":" + ref, 1, kind, ref, setup));
+    }
+
+    /** how a Career table's game starts; null for a plain game */
+    public CareerSetup setupFor(UUID tableId) {
+        CareerTable table = tableId == null ? null : tables.get(tableId);
+        return table == null ? null : table.setup;
+    }
+
+    /** the Career table's mode ("duel", "campaign", ...), or null when it isn't a Career table */
+    public String kindOf(UUID tableId) {
+        CareerTable table = tableId == null ? null : tables.get(tableId);
+        return table == null ? null : table.kind;
+    }
+
     public boolean isCareerTable(UUID tableId) {
         return tableId != null && tables.containsKey(tableId);
     }
@@ -271,12 +314,18 @@ public final class CareerService {
         if (table == null) {
             return null;
         }
-        CareerRules.Reward reward = CareerRules.reward(table.tier, won, turns);
+        CareerRules.Reward reward = modeReward(table.kind, table.tier, won, turns);
         CareerStore store = CareerStore.get();
         try {
             long now = System.currentTimeMillis();
             CareerTally counted = tally != null && tally.taint() == null ? tally : CareerTally.forTest(null);
-            counted.finish(game, won, turns);
+            if ("puzzle".equals(table.kind)) {
+                // a puzzle is a turn, not a game: it counts for its stars and nothing else
+                counted = CareerTally.forTest(null);
+            } else {
+                counted.finish(game, won, turns);
+            }
+            final CareerTally played = counted;
             CareerProgress.CareerGameResult result = store.transaction(() -> {
                 CareerProfile before = store.profile(table.user);
                 if (before == null || !store.payoutIn(tableId.toString(), table.user, table.opponentId, won,
@@ -293,7 +342,8 @@ public final class CareerService {
                 paid.xp = reward.xp;
                 paid.note = reward.note;
                 Set<Integer> tiersBefore = openTiers(table.user);
-                CareerProgress.get().apply(store, table.user, counted, paid, before.xp, now);
+                finishMode(store, table, won, turns, played, paid, now);
+                CareerProgress.get().apply(store, table.user, played, paid, before.xp, now);
                 for (CareerOpponent opponent : opponents(table.user)) {
                     if (opponent.unlocked && !tiersBefore.contains(opponent.tier) && !paid.opened.contains(opponent.tierName)) {
                         paid.opened.add(opponent.tierName);
@@ -317,6 +367,44 @@ public final class CareerService {
         } catch (SQLException | RuntimeException e) {
             logger.error("Career payout failed for " + table.user + " on table " + tableId, e);
             return null;
+        }
+    }
+
+    /** what the match itself pays: a roster duel by tier; a mode pays through its own rewards */
+    private static CareerRules.Reward modeReward(String kind, int tier, boolean won, int turns) {
+        switch (kind) {
+            case "duel":
+                return CareerRules.reward(tier, won, turns);
+            case "campaign":
+            case "gauntlet":
+            case "limited":
+                // a win pays through the mode; a real loss still pays a little, like a roster loss
+                return won ? new CareerRules.Reward(0, 50, null) : CareerRules.reward(1, false, turns);
+            default:
+                return new CareerRules.Reward(0, 0, null);
+        }
+    }
+
+    private void finishMode(CareerStore store, CareerTable table, boolean won, int turns, CareerTally tally,
+                            CareerProgress.CareerGameResult result, long now) throws SQLException {
+        switch (table.kind) {
+            case "campaign":
+                CareerCampaigns.get().finished(store, table.user, table.ref, won, result, now);
+                break;
+            case "gauntlet":
+                CareerGauntlet.get().finished(store, table.user, table.ref, won, result, now);
+                break;
+            case "puzzle":
+                CareerPuzzles.get().finished(store, table.user, table.ref, won, result, now);
+                break;
+            case "challenge":
+                CareerChallenges.get().finished(store, table.user, table.ref, won, tally, result, now);
+                break;
+            case "limited":
+                CareerLimited.get().finished(store, table.user, table.ref, won, result, now);
+                break;
+            default:
+                break;
         }
     }
 
@@ -451,9 +539,45 @@ public final class CareerService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * The shop as one account sees it: the newest sets, then the sets campaign chapters opened for it. Sets a chapter
+     * opens and the account hasn't opened yet are listed last, locked.
+     */
+    public List<CareerShopSet> shop(String user) throws SQLException {
+        Map<String, String> openedBy = new LinkedHashMap<>();
+        for (CareerCampaigns.Campaign campaign : CareerCampaigns.get().campaigns().values()) {
+            for (CareerCampaigns.Chapter chapter : campaign.chapters) {
+                if (chapter.unlockSet != null) {
+                    openedBy.putIfAbsent(chapter.unlockSet, chapter.name);
+                }
+            }
+        }
+        Set<String> unlocked = CareerStore.get().setUnlocks(user);
+        List<CareerShopSet> all = shop();
+        List<CareerShopSet> open = new ArrayList<>();
+        List<CareerShopSet> locked = new ArrayList<>();
+        int newest = 0;
+        for (CareerShopSet set : all) {
+            if (openedBy.containsKey(set.setCode)) {
+                if (unlocked.contains(set.setCode)) {
+                    open.add(set);
+                } else {
+                    set.locked = true;
+                    set.unlockedBy = openedBy.get(set.setCode);
+                    locked.add(set);
+                }
+            } else if (newest < SHOP_NEWEST_SETS) {
+                newest++;
+                open.add(set);
+            }
+        }
+        open.addAll(locked);
+        return open;
+    }
+
     public CareerPackResult buyPack(String user, String setCode) throws SQLException, CareerException {
         ExpansionSet set = Sets.findSet(setCode);
-        if (set == null || shop().stream().noneMatch(offer -> offer.setCode.equals(set.getCode()))) {
+        if (set == null || shop(user).stream().noneMatch(offer -> offer.setCode.equals(set.getCode()) && !offer.locked)) {
             throw new CareerException("The shop has no packs of " + setCode + ".");
         }
         List<Card> booster = set.createBooster();
@@ -486,23 +610,7 @@ public final class CareerService {
             } else {
                 store.addCoins(user, -CareerRules.PACK_PRICE);
             }
-            for (CareerCard card : cards) {
-                if (CareerRules.LAND.equals(card.rarity)) {
-                    continue;
-                }
-                if (store.owned(user, card.name) >= CareerRules.PLAYSET) {
-                    int coins = CareerRules.spareCoins(card.rarity);
-                    if (coins > 0) {
-                        store.addCoins(user, coins);
-                        card.convertedTo = "coins";
-                    } else {
-                        store.addWildcard(user, card.rarity, 1);
-                        card.convertedTo = "wildcard";
-                    }
-                } else {
-                    store.addCard(user, card, 1);
-                }
-            }
+            addCards(store, user, cards);
             store.addStat(user, "packs_opened", 1);
             CareerProgress.get().achievementsIn(store, user, null, null, System.currentTimeMillis());
             return null;
@@ -512,6 +620,30 @@ public final class CareerService {
         result.cards = cards;
         result.profile = store.profile(user);
         return result;
+    }
+
+    /**
+     * Adds cards to the collection inside the caller's transaction. Copies past the playset become coins (commons,
+     * uncommons) or a wildcard (rares, mythics), and say so in convertedTo. Basic lands are free and skipped.
+     */
+    void addCards(CareerStore store, String user, List<CareerCard> cards) throws SQLException {
+        for (CareerCard card : cards) {
+            if (CareerRules.LAND.equals(card.rarity)) {
+                continue;
+            }
+            if (store.owned(user, card.name) >= CareerRules.PLAYSET) {
+                int coins = CareerRules.spareCoins(card.rarity);
+                if (coins > 0) {
+                    store.addCoins(user, coins);
+                    card.convertedTo = "coins";
+                } else {
+                    store.addWildcard(user, card.rarity, 1);
+                    card.convertedTo = "wildcard";
+                }
+            } else {
+                store.addCard(user, card, 1);
+            }
+        }
     }
 
     // ---- crafting

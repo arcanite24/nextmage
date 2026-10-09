@@ -1,0 +1,698 @@
+{
+  "id": "five-paths",
+  "name": "The Five Paths",
+  "text": "Walk each colour's path with its own deck. Five duels each, a boss at the end, and the deck is yours to keep.",
+  "prologue": "guided",
+  "chapters": [
+    {
+      "id": "white",
+      "name": "The White Path",
+      "color": "W",
+      "text": "Order, armour and wings. Learn to win by holding the line together.",
+      "deck": "white-path.dck",
+      "deckName": "Shield and Feather",
+      "unlockSet": "M21",
+      "nodes": [
+        {
+          "id": "white-1",
+          "type": "duel",
+          "name": "Corporal Wren",
+          "text": "A squad drill that turns rough fast.",
+          "opponent": {
+            "name": "Corporal Wren",
+            "deck": "white-1.dck",
+            "skill": 1
+          },
+          "requires": [],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          }
+        },
+        {
+          "id": "white-2",
+          "type": "duel",
+          "name": "Hedge-Witch Bramble",
+          "text": "She grows walls faster than you can climb them.",
+          "opponent": {
+            "name": "Hedge-Witch Bramble",
+            "deck": "white-2.dck",
+            "skill": 2
+          },
+          "requires": [
+            "white-1"
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          }
+        },
+        {
+          "id": "white-3",
+          "type": "duel",
+          "name": "Ash Pell",
+          "text": "A fire mage who never learned to wait.",
+          "opponent": {
+            "name": "Ash Pell",
+            "deck": "white-3.dck",
+            "skill": 3
+          },
+          "requires": [
+            "white-2"
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          }
+        },
+        {
+          "id": "white-choice",
+          "type": "choice",
+          "name": "A fork in the road",
+          "text": "A merchant on the path offers you a trade.",
+          "requires": [
+            "white-3"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        },
+        {
+          "id": "white-4",
+          "type": "duel",
+          "name": "Archivist Moll",
+          "text": "Every question she asks has two answers, both bad for you.",
+          "opponent": {
+            "name": "Archivist Moll",
+            "deck": "white-4.dck",
+            "skill": 4
+          },
+          "requires": [
+            "white-choice"
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          }
+        },
+        {
+          "id": "white-5",
+          "type": "duel",
+          "name": "The Night Warden",
+          "text": "The keep has never fallen. Its warden has never lost.",
+          "opponent": {
+            "name": "The Night Warden",
+            "deck": "white-5.dck",
+            "skill": 6,
+            "twists": {
+              "startingLife": 25,
+              "extraCards": 1
+            }
+          },
+          "requires": [
+            "white-4"
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "deckCards": true,
+            "unlockSet": "M21"
+          },
+          "boss": true
+        }
+      ]
+    },
+    {
+      "id": "blue",
+      "name": "The Blue Path",
+      "color": "U",
+      "text": "Knowledge is a weapon. Draw more, counter what matters, and strike from the air.",
+      "deck": "blue-path.dck",
+      "deckName": "Tidewise",
+      "unlockSet": "M20",
+      "nodes": [
+        {
+          "id": "blue-1",
+          "type": "duel",
+          "name": "Rook Tallow",
+          "text": "A brawler who hits first and thinks later.",
+          "opponent": {
+            "name": "Rook Tallow",
+            "deck": "blue-1.dck",
+            "skill": 1
+          },
+          "requires": [],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          }
+        },
+        {
+          "id": "blue-2",
+          "type": "duel",
+          "name": "Mother Thistle",
+          "text": "Her garden grows teeth.",
+          "opponent": {
+            "name": "Mother Thistle",
+            "deck": "blue-2.dck",
+            "skill": 2
+          },
+          "requires": [
+            "blue-1"
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          }
+        },
+        {
+          "id": "blue-3",
+          "type": "duel",
+          "name": "Brother Cael",
+          "text": "A paladin with a shield for every spell.",
+          "opponent": {
+            "name": "Brother Cael",
+            "deck": "blue-3.dck",
+            "skill": 3
+          },
+          "requires": [
+            "blue-2"
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          }
+        },
+        {
+          "id": "blue-choice",
+          "type": "choice",
+          "name": "A fork in the road",
+          "text": "A merchant on the path offers you a trade.",
+          "requires": [
+            "blue-3"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        },
+        {
+          "id": "blue-4",
+          "type": "duel",
+          "name": "Velvet Mire",
+          "text": "What dies around her doesn't stay dead.",
+          "opponent": {
+            "name": "Velvet Mire",
+            "deck": "blue-4.dck",
+            "skill": 4
+          },
+          "requires": [
+            "blue-choice"
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          }
+        },
+        {
+          "id": "blue-5",
+          "type": "duel",
+          "name": "The Drowned Admiral",
+          "text": "The fleet sank. The admiral didn't notice.",
+          "opponent": {
+            "name": "The Drowned Admiral",
+            "deck": "blue-5.dck",
+            "skill": 6,
+            "twists": {
+              "startingLife": 25,
+              "extraCards": 1
+            }
+          },
+          "requires": [
+            "blue-4"
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "deckCards": true,
+            "unlockSet": "M20"
+          },
+          "boss": true
+        }
+      ]
+    },
+    {
+      "id": "black",
+      "name": "The Black Path",
+      "color": "B",
+      "text": "Every resource is worth spending, including your own life. Win at any cost.",
+      "deck": "black-path.dck",
+      "deckName": "Night Harvest",
+      "unlockSet": "M19",
+      "nodes": [
+        {
+          "id": "black-1",
+          "type": "duel",
+          "name": "Pip Marlow",
+          "text": "A cheerful birdkeeper with a sharp flock.",
+          "opponent": {
+            "name": "Pip Marlow",
+            "deck": "black-1.dck",
+            "skill": 1
+          },
+          "requires": [],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          }
+        },
+        {
+          "id": "black-2",
+          "type": "duel",
+          "name": "Tamsin Vey",
+          "text": "She studies you before she plays a card.",
+          "opponent": {
+            "name": "Tamsin Vey",
+            "deck": "black-2.dck",
+            "skill": 2
+          },
+          "requires": [
+            "black-1"
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          }
+        },
+        {
+          "id": "black-3",
+          "type": "duel",
+          "name": "Gorrum the Wild",
+          "text": "Big, green and impatient.",
+          "opponent": {
+            "name": "Gorrum the Wild",
+            "deck": "black-3.dck",
+            "skill": 3
+          },
+          "requires": [
+            "black-2"
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          }
+        },
+        {
+          "id": "black-choice",
+          "type": "choice",
+          "name": "A fork in the road",
+          "text": "A merchant on the path offers you a trade.",
+          "requires": [
+            "black-3"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        },
+        {
+          "id": "black-4",
+          "type": "duel",
+          "name": "Cinder Sisters",
+          "text": "Two of them. One deck. A lot of fire.",
+          "opponent": {
+            "name": "Cinder Sisters",
+            "deck": "black-4.dck",
+            "skill": 4
+          },
+          "requires": [
+            "black-choice"
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          }
+        },
+        {
+          "id": "black-5",
+          "type": "duel",
+          "name": "The Pale Choir",
+          "text": "They sing for the dead, and the dead sing back.",
+          "opponent": {
+            "name": "The Pale Choir",
+            "deck": "black-5.dck",
+            "skill": 6,
+            "twists": {
+              "startingLife": 25,
+              "extraCards": 1
+            }
+          },
+          "requires": [
+            "black-4"
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "deckCards": true,
+            "unlockSet": "M19"
+          },
+          "boss": true
+        }
+      ]
+    },
+    {
+      "id": "red",
+      "name": "The Red Path",
+      "color": "R",
+      "text": "Speed and fire. End the game before your opponent can answer.",
+      "deck": "red-path.dck",
+      "deckName": "Wildfire",
+      "unlockSet": "DOM",
+      "nodes": [
+        {
+          "id": "red-1",
+          "type": "duel",
+          "name": "Sela Brightwater",
+          "text": "Patient, careful, hard to hit.",
+          "opponent": {
+            "name": "Sela Brightwater",
+            "deck": "red-1.dck",
+            "skill": 1
+          },
+          "requires": [],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          }
+        },
+        {
+          "id": "red-2",
+          "type": "duel",
+          "name": "Old Hob",
+          "text": "He keeps cats. Many cats.",
+          "opponent": {
+            "name": "Old Hob",
+            "deck": "red-2.dck",
+            "skill": 2
+          },
+          "requires": [
+            "red-1"
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          }
+        },
+        {
+          "id": "red-3",
+          "type": "duel",
+          "name": "Marshal Ide",
+          "text": "Plate armour, a long sword, no sense of humour.",
+          "opponent": {
+            "name": "Marshal Ide",
+            "deck": "red-3.dck",
+            "skill": 3
+          },
+          "requires": [
+            "red-2"
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          }
+        },
+        {
+          "id": "red-choice",
+          "type": "choice",
+          "name": "A fork in the road",
+          "text": "A merchant on the path offers you a trade.",
+          "requires": [
+            "red-3"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        },
+        {
+          "id": "red-4",
+          "type": "duel",
+          "name": "Grisk the Hungry",
+          "text": "He eats what the vampires leave.",
+          "opponent": {
+            "name": "Grisk the Hungry",
+            "deck": "red-4.dck",
+            "skill": 4
+          },
+          "requires": [
+            "red-choice"
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          }
+        },
+        {
+          "id": "red-5",
+          "type": "duel",
+          "name": "The Glacier King",
+          "text": "Cold, slow, and nearly impossible to burn down.",
+          "opponent": {
+            "name": "The Glacier King",
+            "deck": "red-5.dck",
+            "skill": 6,
+            "twists": {
+              "startingLife": 25,
+              "extraCards": 1
+            }
+          },
+          "requires": [
+            "red-4"
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "deckCards": true,
+            "unlockSet": "DOM"
+          },
+          "boss": true
+        }
+      ]
+    },
+    {
+      "id": "green",
+      "name": "The Green Path",
+      "color": "G",
+      "text": "Grow bigger than anything across the table, then walk right through it.",
+      "deck": "green-path.dck",
+      "deckName": "Old Growth",
+      "unlockSet": "ELD",
+      "nodes": [
+        {
+          "id": "green-1",
+          "type": "duel",
+          "name": "Quill",
+          "text": "A wizard's apprentice with too many tricks.",
+          "opponent": {
+            "name": "Quill",
+            "deck": "green-1.dck",
+            "skill": 1
+          },
+          "requires": [],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          }
+        },
+        {
+          "id": "green-2",
+          "type": "duel",
+          "name": "Sergeant Holt",
+          "text": "Disciplined troops, well fed.",
+          "opponent": {
+            "name": "Sergeant Holt",
+            "deck": "green-2.dck",
+            "skill": 2
+          },
+          "requires": [
+            "green-1"
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          }
+        },
+        {
+          "id": "green-3",
+          "type": "duel",
+          "name": "Moth",
+          "text": "Quiet, patient, and always one card ahead.",
+          "opponent": {
+            "name": "Moth",
+            "deck": "green-3.dck",
+            "skill": 3
+          },
+          "requires": [
+            "green-2"
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          }
+        },
+        {
+          "id": "green-choice",
+          "type": "choice",
+          "name": "A fork in the road",
+          "text": "A merchant on the path offers you a trade.",
+          "requires": [
+            "green-3"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        },
+        {
+          "id": "green-4",
+          "type": "duel",
+          "name": "Kettle Jack",
+          "text": "He sets things on fire to see what happens.",
+          "opponent": {
+            "name": "Kettle Jack",
+            "deck": "green-4.dck",
+            "skill": 4
+          },
+          "requires": [
+            "green-choice"
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          }
+        },
+        {
+          "id": "green-5",
+          "type": "duel",
+          "name": "The Hollow Stag",
+          "text": "The forest's oldest hunter wants its forest back.",
+          "opponent": {
+            "name": "The Hollow Stag",
+            "deck": "green-5.dck",
+            "skill": 6,
+            "twists": {
+              "startingLife": 25,
+              "extraCards": 1
+            }
+          },
+          "requires": [
+            "green-4"
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "deckCards": true,
+            "unlockSet": "ELD"
+          },
+          "boss": true
+        }
+      ]
+    }
+  ]
+}

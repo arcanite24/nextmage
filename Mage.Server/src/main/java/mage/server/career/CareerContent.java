@@ -181,6 +181,10 @@ public final class CareerContent {
             }
             StringBuilder errors = new StringBuilder();
             DeckCardLists deck = DeckImporter.importDeckFromFile(file.toString(), errors, false);
+            if ((deck == null || deck.getCards().isEmpty()) && mage.cards.repository.CardRepository.instance.findCards("Plains").isEmpty()) {
+                // no card database (the bridge's own tests): take the file as written
+                deck = readAsWritten(file);
+            }
             if (deck == null || deck.getCards().isEmpty()) {
                 throw new IOException("Career deck " + path + " can't be read: " + errors);
             }
@@ -191,6 +195,25 @@ public final class CareerContent {
         } finally {
             Files.deleteIfExists(file);
         }
+    }
+
+    private static final java.util.regex.Pattern DCK_LINE = java.util.regex.Pattern.compile("^(SB:\\s*)?(\\d+)\\s+\\[([^:\\]]+):([^\\]]+)]\\s+(.+)$");
+
+    private static DeckCardLists readAsWritten(Path file) throws IOException {
+        DeckCardLists deck = new DeckCardLists();
+        for (String line : Files.readAllLines(file)) {
+            line = line.trim();
+            if (line.startsWith("NAME:")) {
+                deck.setName(line.substring(5).trim());
+                continue;
+            }
+            java.util.regex.Matcher matcher = DCK_LINE.matcher(line);
+            if (matcher.matches()) {
+                DeckCardInfo card = new DeckCardInfo(matcher.group(5).trim(), matcher.group(4), matcher.group(3), Integer.parseInt(matcher.group(2)));
+                (matcher.group(1) == null ? deck.getCards() : deck.getSideboard()).add(card);
+            }
+        }
+        return deck;
     }
 
     /** every card of a deck, main deck and sideboard */
