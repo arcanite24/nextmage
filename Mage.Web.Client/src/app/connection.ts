@@ -2,8 +2,8 @@ import { createApi } from '../protocol/generated/api';
 import { RpcClient } from '../core/rpc/RpcClient';
 import { EventBus } from '../core/rpc/EventBus';
 
-/** One connection to the server for the whole app. */
-export const rpc = new RpcClient();
+/** One connection to the server for the whole app; game states come as patches. */
+export const rpc = new RpcClient({ stateDiffs: true });
 export const events = new EventBus(rpc);
 export const api = createApi(rpc);
 

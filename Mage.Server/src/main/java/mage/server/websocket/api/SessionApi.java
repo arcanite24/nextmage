@@ -1,5 +1,6 @@
 package mage.server.websocket.api;
 
+import com.google.gson.JsonElement;
 import mage.server.AccountService;
 import mage.server.Session;
 import mage.players.net.UserData;
@@ -14,9 +15,11 @@ import org.apache.log4j.Logger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static mage.server.websocket.rpc.RpcParam.Type.ARRAY;
 import static mage.server.websocket.rpc.RpcParam.Type.BOOLEAN;
 import static mage.server.websocket.rpc.RpcParam.Type.STRING;
 import static mage.server.websocket.rpc.RpcParam.object;
@@ -56,6 +59,23 @@ final class SessionApi {
                         .params(optional("sessionId", STRING), optional("pingInfo", STRING))
                         .doc("Keep-alive. Extends the logged in user's session; always succeeds before login.")
                         .handler(call -> !call.has(0) || ctx.server.ping(call.string(0), call.optString(1, "websocket"))),
+
+                RpcMethod.named("setCapabilities")
+                        .publicAccess()
+                        .params(of("capabilities", ARRAY).typed("string[]"))
+                        .returns("string[]")
+                        .doc("Turn on optional protocol features for this connection; returns the ones now on. "
+                                + "\"stateDiffs\": game states are sent as patches against the previous one (see State patches). "
+                                + "Call it right after connecting, before logging in; a new connection starts without them.")
+                        .handler(call -> {
+                            List<String> requested = new ArrayList<>();
+                            for (JsonElement capability : call.jsonArray(0)) {
+                                if (capability.isJsonPrimitive()) {
+                                    requested.add(capability.getAsString());
+                                }
+                            }
+                            return call.getConnection().setCapabilities(requested);
+                        }),
 
                 RpcMethod.named("connectUser")
                         .establishes(2)

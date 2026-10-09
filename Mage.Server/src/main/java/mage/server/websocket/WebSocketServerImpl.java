@@ -181,6 +181,7 @@ public class WebSocketServerImpl extends WebSocketServer {
             return;
         }
         BridgeMetrics.get().closed();
+        state.closed();
         if (state.releaseConnectionSlot()) {
             connectionLimiter.release(state.getRemoteHost());
         }

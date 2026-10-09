@@ -38,6 +38,8 @@ export interface BotGameOptions {
   timeoutMs?: number;
   /** concede after this turn so a stalled race still ends */
   maxTurns?: number;
+  /** game states as patches (on by default, like the app) */
+  stateDiffs?: boolean;
 }
 
 export interface BotGameStats {
@@ -55,7 +57,7 @@ export interface BotGameStats {
 
 export async function playBotGame(options: BotGameOptions): Promise<BotGameStats> {
   const playDeck = options.deck ?? RED_AGGRO;
-  const rpc = new RpcClient({ heartbeatMs: 0 });
+  const rpc = new RpcClient({ heartbeatMs: 0, stateDiffs: options.stateDiffs ?? true });
   const bus = new EventBus(rpc);
   const api = createApi(rpc);
   await rpc.connect(options.serverUrl);
