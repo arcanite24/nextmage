@@ -22,9 +22,9 @@
   pointer-events: none;
 }
 
-/* the printed art cross-fades between covers */
+/* the printed art cross-fades between covers; fixed, so its overhang doesn't make the mat scroll */
 .art {
-  position: absolute;
+  position: fixed;
   inset: -4%;
   opacity: 0.32;
   /* quieter behind the name, fuller toward the seat */
@@ -428,7 +428,8 @@
 
 @media (max-width: 860px) {
   .mat {
-    grid-template-columns: 1fr;
+    /* minmax(0, …): the seat's widest line can't push the column past the screen */
+    grid-template-columns: minmax(0, 1fr);
     align-content: center;
     gap: var(--space-6);
   }
