@@ -124,6 +124,13 @@ function Overview({ api }: { api: AdminApi }) {
       <section aria-labelledby="sizes" className={styles.block}>
         <h2 id="sizes">Messages to web clients</h2>
         <p className={styles.quiet}>{(bridge?.messages ?? 0).toLocaleString()} sent, {formatBytes(bridge?.chars ?? 0)} of JSON; {(bridge?.requests ?? 0).toLocaleString()} requests received.</p>
+        {(bridge?.stateFullChars ?? 0) > 0 && (
+          <p className={styles.quiet}>
+            Game states: {(bridge?.statePatches ?? 0).toLocaleString()} sent as patches, {(bridge?.stateComplete ?? 0).toLocaleString()} complete
+            ({(bridge?.stateResyncs ?? 0).toLocaleString()} resyncs); {formatBytes(bridge?.stateChars ?? 0)} instead
+            of {formatBytes(bridge?.stateFullChars ?? 0)}, {Math.round((1 - (bridge?.stateChars ?? 0) / (bridge?.stateFullChars ?? 1)) * 100)}% saved.
+          </p>
+        )}
         <ol className={styles.histogram}>
           {buckets.map((count, index) => (
             <li key={index}>

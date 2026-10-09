@@ -39,6 +39,11 @@ public final class BridgeMetrics {
     private final Map<String, Long> lastWarned = new ConcurrentHashMap<>();
     private final Deque<LargeMessage> large = new ArrayDeque<>();
     private final AtomicInteger connections = new AtomicInteger();
+    private final LongAdder stateComplete = new LongAdder();
+    private final LongAdder statePatches = new LongAdder();
+    private final LongAdder stateResyncs = new LongAdder();
+    private final LongAdder stateChars = new LongAdder();
+    private final LongAdder stateFullChars = new LongAdder();
 
     private static final class MethodTotals {
         final LongAdder count = new LongAdder();
@@ -73,6 +78,16 @@ public final class BridgeMetrics {
         public long[] buckets;
         public List<CallbackStats> heaviest;
         public List<LargeMessage> large;
+        /** game states sent complete to clients that take patches */
+        public long stateComplete;
+        /** game states sent as patches */
+        public long statePatches;
+        /** times a client could not apply a patch and asked for the complete state */
+        public long stateResyncs;
+        /** characters sent for those game states */
+        public long stateChars;
+        /** characters they would have taken without patches */
+        public long stateFullChars;
     }
 
     private BridgeMetrics() {
@@ -124,6 +139,21 @@ public final class BridgeMetrics {
         }
     }
 
+    /**
+     * A game state for a client that takes patches.
+     *
+     * @param fullSize the size it would have had without patches
+     */
+    void state(boolean patch, int fullSize, int size) {
+        (patch ? statePatches : stateComplete).increment();
+        stateFullChars.add(fullSize);
+        stateChars.add(size);
+    }
+
+    void stateResync() {
+        stateResyncs.increment();
+    }
+
     void request() {
         requests.increment();
     }
@@ -161,6 +191,11 @@ public final class BridgeMetrics {
         synchronized (large) {
             snapshot.large = new ArrayList<>(large);
         }
+        snapshot.stateComplete = stateComplete.sum();
+        snapshot.statePatches = statePatches.sum();
+        snapshot.stateResyncs = stateResyncs.sum();
+        snapshot.stateChars = stateChars.sum();
+        snapshot.stateFullChars = stateFullChars.sum();
         return snapshot;
     }
 }

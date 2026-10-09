@@ -6,6 +6,7 @@ import {
   type RpcMethods,
 } from '../../protocol/generated/protocol';
 import type { RpcCaller } from '../../protocol/generated/api';
+import { GameStateCache, readStateHeader } from './statePatch';
 
 /**
  * Connection lifecycle:
@@ -78,6 +79,11 @@ export interface RpcClientOptions {
   maxReconnectAttempts?: number;
   /** how long a call made while (re)connecting waits for the connection */
   waitForOpenMs?: number;
+  /**
+   * ask the server to send game states as patches against the previous one; events still carry complete views
+   * (patches are applied here, before any listener sees them)
+   */
+  stateDiffs?: boolean;
 }
 
 interface PendingCall {
@@ -113,6 +119,7 @@ export class RpcClient implements RpcCaller {
   private readonly eventListeners = new Set<Listener<ServerEvent>>();
   private readonly sessionStartListeners = new Set<Listener<void>>();
   private openWaiters: { resolve: () => void; reject: (error: Error) => void }[] = [];
+  private readonly gameStates = new GameStateCache((gameId) => this.call('gameStateResync', gameId, ''));
 
   constructor(options: RpcClientOptions = {}) {
     this.options = {
@@ -124,6 +131,7 @@ export class RpcClient implements RpcCaller {
       reconnectMaxDelayMs: options.reconnectMaxDelayMs ?? 10_000,
       maxReconnectAttempts: options.maxReconnectAttempts ?? Infinity,
       waitForOpenMs: options.waitForOpenMs ?? 15_000,
+      stateDiffs: options.stateDiffs ?? false,
     };
   }
 
@@ -165,6 +173,7 @@ export class RpcClient implements RpcCaller {
     const id = this.nextId++;
     if (RPC_METHODS[method].access === 'login') {
       // the server starts a new session for this connection before it answers
+      this.gameStates.clear();
       this.sessionStartListeners.forEach((listener) => listener());
     }
 
@@ -211,6 +220,15 @@ export class RpcClient implements RpcCaller {
 
     socket.onopen = () => {
       if (this.socket !== socket) return;
+      this.gameStates.clear();
+      if (this.options.stateDiffs) {
+        // a notification sent before anything else: the connection's requests run in order, so it is on before login
+        try {
+          socket.send(JSON.stringify({ jsonrpc: '2.0', method: 'setCapabilities', params: [['stateDiffs']] }));
+        } catch {
+          // the close event follows
+        }
+      }
       this.reconnectAttempts = 0;
       this.setStatus('open');
       this.startHeartbeat();
@@ -310,11 +328,15 @@ export class RpcClient implements RpcCaller {
     }
 
     if (typeof message.method === 'string' && typeof message.messageId === 'number') {
+      const objectId = typeof message.objectId === 'string' ? message.objectId : null;
+      // game states may come as patches: listeners always get the complete view
+      const received = this.gameStates.receive(message.method, objectId, message.data ?? null, readStateHeader(message.state));
+      if (!received) return;
       const event: ServerEvent = {
         method: message.method as CallbackMethodName,
-        objectId: typeof message.objectId === 'string' ? message.objectId : null,
+        objectId,
         messageId: message.messageId,
-        data: (message.data ?? null) as CallbackPayloads[CallbackMethodName],
+        data: (received.data ?? null) as CallbackPayloads[CallbackMethodName],
       };
       this.eventListeners.forEach((listener) => {
         try {

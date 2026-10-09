@@ -37,6 +37,11 @@ export interface BridgeSnapshot {
     messages?: number;
     requests?: number;
     startedAt?: number;
+    stateChars?: number;
+    stateComplete?: number;
+    stateFullChars?: number;
+    statePatches?: number;
+    stateResyncs?: number;
 }
 
 export interface CallbackStats {
