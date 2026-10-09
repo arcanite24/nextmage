@@ -18,6 +18,7 @@ services:
       # the proxy's network: the server trusts X-Forwarded-For only from these addresses
       XMAGE_TRUSTED_PROXIES: ${XMAGE_TRUSTED_PROXIES:-${CADDY_IP:-10.89.17.10}}
       XMAGE_DISCORD_WEBHOOK: ${XMAGE_DISCORD_WEBHOOK:-}
+      XMAGE_CAREER: ${XMAGE_CAREER:-on}
       XMAGE_PUBLIC_URL: ${XMAGE_PUBLIC_URL:-https://${DOMAIN}}
       XMAGE_SERVER_NAME: ${XMAGE_SERVER_NAME:-}
       XMAGE_SERVER_ADDRESS: ${XMAGE_SERVER_ADDRESS:-}

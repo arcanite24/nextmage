@@ -799,6 +799,9 @@ public class GameController implements GameCallback {
         if (player == null) {
             return "You aren't playing in this game.";
         }
+        if (mage.server.career.CareerService.get().isCareerTable(tableId)) {
+            return "Practice tools are off in Career games.";
+        }
         long humans = game.getPlayers().values().stream().filter(Player::isHuman).count();
         if (humans != 1 || !player.isHuman()) {
             return "Practice tools only work in a game against the computer.";

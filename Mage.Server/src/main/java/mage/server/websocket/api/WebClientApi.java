@@ -20,6 +20,7 @@ public final class WebClientApi {
         dispatcher.registerAll(EventApi.methods(ctx));
         dispatcher.registerAll(AdminApi.methods(ctx));
         dispatcher.registerAll(AccountApi.methods(ctx));
+        dispatcher.registerAll(CareerApi.methods(ctx));
         return dispatcher;
     }
 }
