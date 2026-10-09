@@ -7,10 +7,9 @@ import { useSession } from './session';
 import { readJson, writeJson } from './persist';
 import { deckStorage } from '../../core/decks/DeckStorageService';
 import { toWire } from '../decks/deckModel';
-import type { DeckCardLists as WireDeck, GameTypeView } from '../../protocol/generated/views';
+import type { GameTypeView } from '../../protocol/generated/views';
 import type { DeckCardLists } from '../../core/decks/types';
 import { formatRules, gameTypesFor, isCommanderFormat } from '../../core/decks/formats';
-import { matchOptions } from '../../core/game/tableSetup';
 import { notify } from './toasts';
 
 /** the smallest deck worth a game (limited size; constructed formats are checked by the server) */
@@ -170,6 +169,8 @@ export const usePlay = create<PlayState>((set, get) => ({
       for (const rival of rivals) {
         warmCards([...(rival.cards ?? []), ...(rival.sideboard ?? [])].map((card) => ({ name: card.cardName, setCode: card.setCode, cardNumber: card.cardNumber })));
       }
+      // table setup is only needed here; keep it out of the entry chunk
+      const { matchOptions } = await import('../../core/game/tableSetup');
       const table = await api.roomCreateTable(roomId, matchOptions({
         name: `${userName} vs AI`,
         gameType,

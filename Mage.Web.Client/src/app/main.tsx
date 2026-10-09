@@ -14,7 +14,6 @@ import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { RequestDialog } from './RequestDialog';
 import { RouteError } from './screens/RouteError';
-import { TablesScreen } from './screens/TablesScreen';
 import { useEvents } from './stores/events';
 import { useGames } from './stores/games';
 import { usePlay } from './stores/play';
@@ -76,7 +75,7 @@ const router = createBrowserRouter([
           { path: '/decks/:deckId', lazy: () => import('./decks/DeckBuilderScreen').then((m) => ({ Component: m.DeckBuilderScreen })) },
           { path: '/events', element: <EventsScreen /> },
           { path: '/event/:tournamentId', lazy: () => import('./events/EventScreen').then((m) => ({ Component: m.EventScreen })) },
-          { path: '/tables', element: <TablesScreen /> },
+          { path: '/tables', lazy: () => import('./screens/TablesScreen').then((m) => ({ Component: m.TablesScreen })) },
         ],
       },
     ],
