@@ -218,14 +218,15 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
 
   // games inside an event lead back to the event; others back to Play
   const eventId = useEvents((events) => events.currentTournamentId);
+  const returnPath = usePlay((play) => play.returnPath);
   const leave = useCallback(() => {
     if (onLeave) {
       onLeave();
       return;
     }
     useGames.getState().close(state.gameId);
-    navigate(eventId ? `/event/${eventId}` : '/');
-  }, [navigate, state.gameId, eventId, onLeave]);
+    navigate(eventId ? `/event/${eventId}` : returnPath ?? '/');
+  }, [navigate, state.gameId, eventId, returnPath, onLeave]);
   const deckId = usePlay((play) => play.deckId);
   // players see who is watching them too
   const watchers = useWatchers(state.gameId, mode === 'play' && !state.gameOver);
@@ -437,7 +438,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             {mode === 'play' && <WatcherCount watchers={watchers} className={styles.watchers} />}
             <GameMenu
               gameId={state.gameId}
-              practice={mode === 'play' && !state.gameOver && board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false)}
+              practice={mode === 'play' && !state.gameOver && returnPath !== '/career' && board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false)}
               canConcede={canAct}
               onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })}
               onLeave={leave}
@@ -482,7 +483,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 message={state.gameOver}
                 endInfo={state.endInfo}
                 onLeave={leave}
-                leaveLabel={eventId ? 'Back to the event' : 'Back to Play'}
+                leaveLabel={eventId ? 'Back to the event' : returnPath === '/career' ? 'Back to Career' : 'Back to Play'}
                 onPlayAgain={mode === 'play' && deckId && !eventId ? playAgain : undefined}
               />
             )}

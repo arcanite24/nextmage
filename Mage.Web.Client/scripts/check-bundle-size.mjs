@@ -19,12 +19,14 @@ import { gzipSync } from 'node:zlib';
 // all lazy chunks; the Events screen became lazy to keep the entry under budget
 // app raised 2026-10-09 from 322 kB for B082 (internationalization): the Spanish catalog is a lazy chunk of its own
 // (6.4 kB), downloaded only by players who use Spanish; the Settings dialog went lazy, so the entry shrank 3.7 kB
-// app raised 2026-10-09 from 336 kB for the rest of M6 (spectator broadcast mode, practice tools, the guided first game,
-// playmat settings, state patches, the PWA update prompt): measured 340.6 kB, the extra room is for M7's Career screens
+// app raised 2026-10-09 from 336 kB: first for the rest of M6 (spectator broadcast mode, practice tools, the guided
+// first game, playmat settings, state patches, the PWA update prompt; measured 340.6 kB), then for M7 Career (about
+// 14.5 kB of lazy Career screens and their messages, 2.7 kB more Spanish catalog). The entry only gained the Home
+// entry point and its two messages
 const BUDGET_KB = {
   entry: 68,
   initial: 212,
-  app: 348,
+  app: 372,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

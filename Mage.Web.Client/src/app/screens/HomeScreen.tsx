@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from 'lucide-react';
+import { ChevronRight, SlidersHorizontal, Trophy } from 'lucide-react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rosterOf, sleeveFor, useDecks } from '../stores/decks';
@@ -12,6 +12,7 @@ import { AiSettingsDialog } from './AiSettingsDialog';
 import { useImportDrop, useImportPaste } from '../decks/import/useImportShortcuts';
 import { openImport } from '../stores/importSheet';
 import { describeAi } from './aiSetup';
+import { useServerInfo } from '../queries';
 import styles from './HomeScreen.module.css';
 
 type Mode = 'ai' | 'practice' | 'friend';
@@ -37,6 +38,8 @@ export function HomeScreen() {
   const busy = play.phase !== 'idle';
   const firstGameDone = useCoach((state) => state.firstGameDone);
   const skipFirstGame = useCoach((state) => state.finish);
+  // Career is offered by servers with accounts; it is opt-in, and its screen explains it first
+  const career = useServerInfo().data?.career === true;
   const { dragging, dropProps } = useImportDrop();
   useImportPaste();
 
@@ -151,6 +154,16 @@ export function HomeScreen() {
               {t(busy ? (play.phase === 'waitingForGame' ? 'home.shuffling' : 'home.settingUp') : mode === 'friend' ? 'home.continue' : 'home.play')}
             </Button>
           </div>
+          {career && (
+            <button type="button" className={styles.career} onClick={() => navigate('/career')} disabled={busy}>
+              <Trophy size={18} aria-hidden="true" />
+              <span className={styles.careerText}>
+                <b>{t('home.career')}</b>
+                <small>{t('home.career.note')}</small>
+              </span>
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          )}
         </div>
       </section>
       <AiSettingsDialog open={aiOpen} onOpenChange={setAiOpen} />

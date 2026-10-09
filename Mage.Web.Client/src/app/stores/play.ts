@@ -73,6 +73,8 @@ interface PlayState {
   /** the deck of the latest game against the AI (for its sleeve and for playing again) */
   deckId: string | null;
   lastOptions: PlayOverrides;
+  /** where leaving the game goes when it isn't Play (Career matches lead back to Career) */
+  returnPath: string | null;
   /** how games against the AI are set up (kept in this browser) */
   aiOptions: AiOptions;
   setAiOptions(patch: Partial<AiOptions>): void;
@@ -133,6 +135,7 @@ export const usePlay = create<PlayState>((set, get) => ({
   tableId: null,
   deckId: null,
   lastOptions: {},
+  returnPath: null,
   aiOptions: { ...DEFAULT_AI_OPTIONS, ...readJson<Partial<AiOptions>>(AI_OPTIONS_KEY, {}) },
 
   setAiOptions(patch) {
@@ -150,7 +153,7 @@ export const usePlay = create<PlayState>((set, get) => ({
       ? { ...get().aiOptions, rules: 'casual', opponents: 1, aiType: 'COMPUTER_MAD', skill: 1, winsNeeded: 1, startingLife: null, opponentDeckId: null }
       : { ...get().aiOptions, ...picked };
     useCoach.getState().setGuided(guided);
-    set({ phase: 'starting', error: null, deckId, lastOptions: practice ? { practice } : picked });
+    set({ phase: 'starting', error: null, deckId, returnPath: null, lastOptions: practice ? { practice } : picked });
     // a game outside any event: leaving it goes back to Play
     useEvents.setState({ currentTournamentId: null });
     try {
