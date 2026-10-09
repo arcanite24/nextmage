@@ -10,6 +10,7 @@ import mage.cards.repository.CardInfo;
 import mage.cards.repository.CardRepository;
 import mage.cards.repository.ExpansionInfo;
 import mage.cards.repository.ExpansionRepository;
+import mage.filter.FilterMana;
 import mage.filter.predicate.card.CardTextPredicate;
 import mage.view.CardView;
 
@@ -30,11 +31,16 @@ public final class CardSearchService {
     private static final long MAX_PAGE_SIZE = 1000L;
 
     public List<CardView> search(CardCriteria criteria) {
+        return search(criteria, null);
+    }
+
+    public List<CardView> search(CardCriteria criteria, WebCardFilters web) {
+        Set<Character> identity = web == null || web.getColorIdentity() == null ? null : identityOf(web.getColorIdentity());
         long start = criteria.getStart() == null ? 0L : Math.max(0L, criteria.getStart());
         long count = criteria.getCount() == null ? DEFAULT_PAGE_SIZE : Math.max(0L, Math.min(MAX_PAGE_SIZE, criteria.getCount()));
 
         boolean textSearch = hasTextSearch(criteria);
-        boolean refinements = textSearch || hasRefinements(criteria);
+        boolean refinements = textSearch || identity != null || hasRefinements(criteria);
         if (refinements) {
             // web-only filters run in memory, so the database must return the unpaged list
             criteria.start(null);
@@ -74,7 +80,8 @@ public final class CardSearchService {
         }
         if (refinements) {
             cards = cards.filter(info -> matchesRefinements(info, criteria)
-                    && matchesManaValue(info, manaValue, manaValueOperator));
+                    && matchesManaValue(info, manaValue, manaValueOperator)
+                    && (identity == null || withinIdentity(info, identity)));
             if (criteria.isUniqueNames()) {
                 // one printing per card name: the first the database returns
                 Set<String> seen = new HashSet<>();
@@ -148,6 +155,44 @@ public final class CardSearchService {
         return matchesColors(cardColors, criteria.getWebColors(), criteria.getColorMatch())
                 && !matchesAnyColor(cardColors, criteria.getWebExcludedColors())
                 && !criteria.getExcludedRarities().contains(info.getRarity());
+    }
+
+    private static Set<Character> identityOf(String letters) {
+        Set<Character> identity = new HashSet<>();
+        for (char letter : letters.toUpperCase(Locale.ENGLISH).toCharArray()) {
+            if ("WUBRG".indexOf(letter) >= 0) {
+                identity.add(letter);
+            }
+        }
+        return identity;
+    }
+
+    /**
+     * The card's color identity fits inside the allowed colors (Commander deck building, rule 903.4).
+     */
+    private static boolean withinIdentity(CardInfo info, Set<Character> identity) {
+        // a card's colors are part of its identity: most cards are ruled out without building the card
+        for (String color : colorsOf(info)) {
+            if (!identity.contains(COLOR_LETTERS.get(color))) {
+                return false;
+            }
+        }
+        FilterMana cardIdentity = info.createMockCard().getColorIdentity();
+        return (!cardIdentity.isWhite() || identity.contains('W'))
+                && (!cardIdentity.isBlue() || identity.contains('U'))
+                && (!cardIdentity.isBlack() || identity.contains('B'))
+                && (!cardIdentity.isRed() || identity.contains('R'))
+                && (!cardIdentity.isGreen() || identity.contains('G'));
+    }
+
+    private static final java.util.Map<String, Character> COLOR_LETTERS = new java.util.HashMap<>();
+
+    static {
+        COLOR_LETTERS.put("white", 'W');
+        COLOR_LETTERS.put("blue", 'U');
+        COLOR_LETTERS.put("black", 'B');
+        COLOR_LETTERS.put("red", 'R');
+        COLOR_LETTERS.put("green", 'G');
     }
 
     private static boolean matchesManaValue(CardInfo info, Integer manaValue, String operator) {

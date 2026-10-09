@@ -635,3 +635,120 @@
 .menuItem[data-highlighted] {
   background: rgb(233 228 214 / 0.1);
 }
+
+.setSelect {
+  max-width: 220px;
+}
+
+.landsBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(233 228 214 / 0.08);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fill:hover {
+  background: rgb(233 228 214 / 0.16);
+  color: var(--ink-strong);
+}
+
+.offColor {
+  flex: none;
+  color: var(--oxblood-ink);
+}
+
+/* the command zone heads the list: the deck's leader and the colors it allows */
+.command {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--mat-700);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+
+.commandEmpty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.commanders {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.commander {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.commanderArt {
+  width: 44px;
+  flex: none;
+}
+
+.commanderName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-print);
+  font-size: var(--text-md);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commanderBack {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: rgb(233 228 214 / 0.08);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.commanderBack:hover {
+  background: rgb(233 228 214 / 0.18);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--ink-dim);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+.identity span {
+  margin-right: 4px;
+}

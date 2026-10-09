@@ -1,11 +1,13 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { ArrowLeftRight, Check, ChevronLeft, ClipboardPaste, ListPlus, Minus, Plus, Replace, TriangleAlert } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, Check, ChevronLeft, ClipboardPaste, Crown, Images, ListPlus, Minus, Mountain, Plus, Replace, TriangleAlert } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { CardView } from '../../protocol/generated/views';
+import { BASIC_FOR, MANA_LETTERS, suggestLands, type ManaLetter } from '../../core/decks/analysis';
+import { canCommand, commanderIdentity, formatMenu, formatRules, withinIdentity, type FormatRules } from '../../core/decks/formats';
 import { appendDeckCardLists } from '../../core/decks/merge';
 import { deckStorage } from '../../core/decks/DeckStorageService';
-import type { DeckCardLists } from '../../core/decks/types';
+import type { DeckCardInfo, DeckCardLists } from '../../core/decks/types';
 import { useServerState } from '../queries';
 import { STARTER_PREFIX, useDecks } from '../stores/decks';
 import { openImport, type ImportTarget } from '../stores/importSheet';
@@ -15,14 +17,16 @@ import { CardFace } from '../ui/CardFace';
 import { ManaCost } from '../ui/ManaCost';
 import { useCardInfo, useCardInfoStore } from './cardInfo';
 import { Collection } from './Collection';
+import { DeckInsights } from './DeckInsights';
+import { PrintingPicker } from './PrintingPicker';
 import { ExportMenu } from './ExportMenu';
 import { ManaCurve } from './ManaCurve';
 import { SourceLine } from './import/SourceLine';
 import { useImportPaste } from './import/useImportShortcuts';
 import { useValidation } from './useValidation';
 import {
-  addCard, copiesByName, copyLimit, countZone, entryKey, finalizeDeck, groupDeck, manaCurve, moveCard,
-  printingOf, removeCard, type DeckZone,
+  addCard, changePrinting, copiesByName, copyLimit, countZone, entryKey, finalizeDeck, groupDeck, manaCurve, moveCard,
+  printingOf, removeCard, type DeckRow, type DeckZone,
 } from './deckModel';
 import styles from './DeckBuilder.module.css';
 
@@ -88,8 +92,10 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
   const allEntries = useMemo(() => [...deck.cards, ...deck.sideboard], [deck.cards, deck.sideboard]);
   const info = useCardInfo(allEntries);
   const format = deck.format || DEFAULT_FORMAT;
+  const rules = formatRules(format);
   const server = useServerState();
-  const formats = useMemo(() => (server.data?.deckTypes ?? [DEFAULT_FORMAT]).filter((type) => !/^Variant|Limited/.test(type) || type === 'Limited'), [server.data]);
+  const formats = useMemo(() => formatMenu(server.data?.deckTypes ?? [DEFAULT_FORMAT]), [server.data]);
+  const identity = useCommanderIdentity(deck, info, rules);
 
   // autosave: the deck in storage always matches the screen, a moment later
   const [savedDeck, setSavedDeck] = useState(initial);
@@ -112,7 +118,7 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
     for (const entry of allEntries) map.set(entry.cardName.toLowerCase(), (map.get(entry.cardName.toLowerCase()) ?? 0) + entry.amount);
     return map;
   }, [allEntries]);
-  const limitOf = useCallback((card: CardView) => (format === 'Limited' ? Infinity : copyLimit(card, card.name ?? '')), [format]);
+  const limitOf = useCallback((card: CardView) => (format === 'Limited' ? Infinity : copyLimit(card, card.name ?? '', rules.singleton)), [format, rules.singleton]);
 
   const add = useCallback((card: CardView) => {
     const limit = limitOf(card);
@@ -139,12 +145,14 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
 
   return (
     <div className={styles.page}>
-      <Collection format={format === 'Limited' ? '' : format} counts={counts} limitOf={limitOf} onAdd={add} onRemove={removeOne} onPreview={onPreview} />
+      <Collection format={format === 'Limited' ? '' : format} identity={identity} counts={counts} limitOf={limitOf} onAdd={add} onRemove={removeOne} onPreview={onPreview} />
       <DeckPanel
         deck={deck}
         zone={zone}
         info={info}
         formats={formats}
+        rules={rules}
+        identity={identity}
         saving={saving}
         onZone={setZone}
         onChange={setDeck}
@@ -160,11 +168,22 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
   );
 }
 
-function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPreview, onDone, onPlay }: {
+/** The command zone's color identity once it holds a commander (null: not a commander deck, or no commander yet). */
+function useCommanderIdentity(deck: DeckCardLists, info: ReadonlyMap<string, CardView>, rules: FormatRules): string[] | null {
+  return useMemo(() => {
+    if (!rules.commandZone) return null;
+    const commanders = deck.sideboard.map((entry) => info.get(entryKey(entry))).filter((card): card is CardView => !!card);
+    return commanders.length > 0 ? commanderIdentity(commanders) : null;
+  }, [deck.sideboard, info, rules.commandZone]);
+}
+
+function DeckPanel({ deck, zone, info, formats, rules, identity, saving, onZone, onChange, onPreview, onDone, onPlay }: {
   deck: DeckCardLists;
   zone: DeckZone;
   info: ReadonlyMap<string, CardView>;
-  formats: string[];
+  formats: { label: string; types: string[] }[];
+  rules: FormatRules;
+  identity: string[] | null;
   saving: boolean;
   onZone(zone: DeckZone): void;
   onChange(update: (deck: DeckCardLists) => DeckCardLists): void;
@@ -180,6 +199,12 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
   const validation = useValidation(deck, format);
   const [problemsOpen, setProblemsOpen] = useState(false);
   const problems = validation.data?.errors ?? [];
+  const [printingFor, setPrintingFor] = useState<DeckRow | null>(null);
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const commandZone = rules.commandZone;
+  const listed = formats.some((group) => group.types.includes(format));
+  // a commander deck counts its command zone; other decks count the main deck only
+  const total = commandZone ? mainCount + sideCount : mainCount;
 
   /** where the import sheet puts a list for this deck: in place of its cards, or added to them */
   function intoDeck(mode: 'replace' | 'add'): ImportTarget {
@@ -215,14 +240,17 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
           }}
           aria-label="Format"
         >
-          {(formats.includes(format) ? formats : [format, ...formats]).map((type) => (
-            <option key={type} value={type}>{type.replace(/^Constructed - /, '')}</option>
+          {!listed && <option value={format}>{formatRules(format).label}</option>}
+          {formats.map((group) => (
+            <optgroup key={group.label} label={group.label}>
+              {group.types.map((type) => <option key={type} value={type}>{formatRules(type).label}</option>)}
+            </optgroup>
           ))}
         </select>
       </header>
 
       <div className={styles.status}>
-        <span className={styles.total}>{mainCount}<small> cards</small></span>
+        <span className={styles.total}>{total}{rules.deckSize ? <small> / {rules.deckSize}</small> : <small> cards</small>}</span>
         {validation.data && (validation.data.valid ? (
           <span className={[styles.chip, styles.chipOk].join(' ')}><Check size={15} aria-hidden="true" /> Legal</span>
         ) : (
@@ -240,14 +268,24 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
         </ul>
       )}
 
+      {commandZone && <CommandZone deck={deck} info={info} rules={rules} identity={identity} onChange={onChange} onPreview={onPreview} />}
+
       <div className={styles.tabs} role="tablist" aria-label="Deck zone">
         <button type="button" role="tab" aria-selected={zone === 'cards'} className={zone === 'cards' ? styles.tabOn : styles.tab} onClick={() => onZone('cards')}>Deck {mainCount}</button>
-        <button type="button" role="tab" aria-selected={zone === 'sideboard'} className={zone === 'sideboard' ? styles.tabOn : styles.tab} onClick={() => onZone('sideboard')}>Sideboard {sideCount}</button>
+        <button type="button" role="tab" aria-selected={zone === 'sideboard'} className={zone === 'sideboard' ? styles.tabOn : styles.tab} onClick={() => onZone('sideboard')}>
+          {commandZone ? 'Command zone' : 'Sideboard'} {sideCount}
+        </button>
       </div>
 
       <div className={styles.list} role="tabpanel">
         {groups.length === 0 && (
-          <p className={styles.note}>{zone === 'cards' ? 'Click cards on the left to add them.' : 'Cards added while this tab is open go to the sideboard.'}</p>
+          <p className={styles.note}>
+            {zone === 'cards'
+              ? 'Click cards on the left to add them.'
+              : commandZone
+                ? `Cards added while this tab is open go to the command zone. ${commandZone.cardLabel}: ${commandZone.min === commandZone.max ? commandZone.min : `${commandZone.min} to ${commandZone.max}`}.`
+                : 'Cards added while this tab is open go to the sideboard.'}
+          </p>
         )}
         {groups.map((group) => (
           <section key={group.key} className={styles.group}>
@@ -262,6 +300,9 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
                 >
                   <span className={styles.rowCount}>{row.entry.amount}</span>
                   <span className={styles.rowName}>{row.entry.cardName}</span>
+                  {identity && zone === 'cards' && row.card && !withinIdentity(row.card, identity) && (
+                    <TriangleAlert size={14} className={styles.offColor} aria-label="Outside your commander's colors" />
+                  )}
                   {row.card && <ManaCost cost={row.card.manaCostLeftStr} size="sm" />}
                   <span className={styles.rowActions}>
                     <button type="button" aria-label={`One less ${row.entry.cardName}`} onClick={() => onChange((current) => removeCard(current, zone, row.key))}><Minus size={14} /></button>
@@ -269,14 +310,30 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
                       type="button"
                       aria-label={`One more ${row.entry.cardName}`}
                       onClick={() => onChange((current) => {
-                        const limit = format === 'Limited' ? Infinity : copyLimit(row.card, row.entry.cardName);
+                        const limit = format === 'Limited' ? Infinity : copyLimit(row.card, row.entry.cardName, rules.singleton);
                         return copiesByName(current, row.entry.cardName) >= limit ? current : addCard(current, zone, { cardName: row.entry.cardName, setCode: row.entry.setCode ?? '', cardNumber: row.entry.cardNumber ?? '' });
                       })}
                     >
                       <Plus size={14} />
                     </button>
-                    <button type="button" aria-label={zone === 'cards' ? 'Move one to sideboard' : 'Move one to deck'} title={zone === 'cards' ? 'To sideboard' : 'To deck'} onClick={() => onChange((current) => moveCard(current, zone, row.key))}>
-                      <ArrowLeftRight size={14} />
+                    {commandZone && zone === 'cards' ? (
+                      canCommand(row.card, format) && sideCount < commandZone.max && (
+                        <button type="button" aria-label={`Make ${row.entry.cardName} your ${commandZone.cardLabel.toLowerCase()}`} title={`To the command zone`} onClick={() => onChange((current) => moveCard(current, 'cards', row.key))}>
+                          <Crown size={14} />
+                        </button>
+                      )
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label={zone === 'cards' ? 'Move one to sideboard' : 'Move one to deck'}
+                        title={zone === 'cards' ? 'To sideboard' : 'To deck'}
+                        onClick={() => onChange((current) => moveCard(current, zone, row.key))}
+                      >
+                        <ArrowLeftRight size={14} />
+                      </button>
+                    )}
+                    <button type="button" aria-label={`Choose the printing of ${row.entry.cardName}`} title="Printing" onClick={() => setPrintingFor(row)}>
+                      <Images size={14} />
                     </button>
                   </span>
                 </li>
@@ -288,7 +345,7 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
 
       <ManaCurve curve={curve} className={styles.curve} />
 
-      <BasicLands deck={deck} onChange={onChange} />
+      <BasicLands deck={deck} info={info} rules={rules} identity={identity} onChange={onChange} />
 
       {deck.source && <SourceLine source={deck.source} className={styles.source} />}
 
@@ -310,8 +367,19 @@ function DeckPanel({ deck, zone, info, formats, saving, onZone, onChange, onPrev
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
         <ExportMenu getDeck={() => deck} side="top" />
+        <Button variant="print" size="sm" icon={<BarChart3 size={16} />} onClick={() => setInsightsOpen(true)} disabled={mainCount === 0}>Numbers</Button>
         <Button variant="decision" onClick={onPlay} disabled={mainCount === 0}>Play this deck</Button>
       </footer>
+      <PrintingPicker
+        name={printingFor?.entry.cardName ?? null}
+        current={printingFor?.key ?? null}
+        onClose={() => setPrintingFor(null)}
+        onPick={(printing) => {
+          const row = printingFor;
+          if (row) onChange((current) => changePrinting(current, zone, row.key, printing));
+        }}
+      />
+      <DeckInsights open={insightsOpen} onOpenChange={setInsightsOpen} deck={deck} info={info} />
     </aside>
   );
 }
@@ -324,31 +392,111 @@ const BASICS: { name: string; symbol: string }[] = [
   { name: 'Forest', symbol: 'g' },
 ];
 
-/** Basic lands without searching: steppers for the five basics. */
-function BasicLands({ deck, onChange }: { deck: DeckCardLists; onChange(update: (deck: DeckCardLists) => DeckCardLists): void }) {
+/** Basic lands without searching: steppers for the five basics, and a fill to the usual land count. */
+function BasicLands({ deck, info, rules, identity, onChange }: {
+  deck: DeckCardLists;
+  info: ReadonlyMap<string, CardView>;
+  rules: FormatRules;
+  identity: string[] | null;
+  onChange(update: (deck: DeckCardLists) => DeckCardLists): void;
+}) {
+  const size = rules.deckSize ?? Math.max(rules.minDeck, countZone(deck, 'cards'));
+  const allowed = (identity ?? MANA_LETTERS) as ManaLetter[];
+  // the command zone counts toward a commander deck's size, so the lands fill what is left of the main deck
+  const suggestion = suggestLands(deck.cards, (entry) => info.get(entryKey(entry as DeckCardInfo)), rules.commandZone ? size - countZone(deck, 'sideboard') : size, allowed);
+  const adding = Object.entries(suggestion.add);
+  function fill() {
+    onChange((current) => adding.reduce((next, [name, amount]) => {
+      const existing = next.cards.find((candidate) => candidate.cardName === name);
+      return addCard(next, 'cards', existing
+        ? { cardName: name, setCode: existing.setCode ?? '', cardNumber: existing.cardNumber ?? '' }
+        : { cardName: name, setCode: '', cardNumber: '' }, amount);
+    }, current));
+    notify('Lands added', adding.map(([name, amount]) => `${amount} ${name}`).join(', '));
+  }
   return (
-    <div className={styles.basics} aria-label="Basic lands">
-      {BASICS.map((basic) => {
-        const entry = deck.cards.find((candidate) => candidate.cardName === basic.name);
-        const count = deck.cards.filter((candidate) => candidate.cardName === basic.name).reduce((sum, candidate) => sum + candidate.amount, 0);
-        return (
-          <div key={basic.name} className={styles.basic}>
-            <i className={`ms ms-cost ms-${basic.symbol}`} aria-hidden="true" />
-            <button type="button" aria-label={`One less ${basic.name}`} disabled={!entry} onClick={() => entry && onChange((current) => removeCard(current, 'cards', entryKey(entry)))}><Minus size={13} /></button>
-            <b aria-label={`${count} ${basic.name}`}>{count}</b>
-            <button
-              type="button"
-              aria-label={`One more ${basic.name}`}
-              onClick={() => onChange((current) => addCard(current, 'cards', entry
-                ? { cardName: entry.cardName, setCode: entry.setCode ?? '', cardNumber: entry.cardNumber ?? '' }
-                : { cardName: basic.name, setCode: '', cardNumber: '' }))}
-            >
-              <Plus size={13} />
-            </button>
-          </div>
-        );
-      })}
+    <div className={styles.landsBlock}>
+      <div className={styles.basics} aria-label="Basic lands">
+        {BASICS.map((basic) => {
+          const entry = deck.cards.find((candidate) => candidate.cardName === basic.name);
+          const count = deck.cards.filter((candidate) => candidate.cardName === basic.name).reduce((sum, candidate) => sum + candidate.amount, 0);
+          return (
+            <div key={basic.name} className={styles.basic}>
+              <i className={`ms ms-cost ms-${basic.symbol}`} aria-hidden="true" />
+              <button type="button" aria-label={`One less ${basic.name}`} disabled={!entry} onClick={() => entry && onChange((current) => removeCard(current, 'cards', entryKey(entry)))}><Minus size={13} /></button>
+              <b aria-label={`${count} ${basic.name}`}>{count}</b>
+              <button
+                type="button"
+                aria-label={`One more ${basic.name}`}
+                onClick={() => onChange((current) => addCard(current, 'cards', entry
+                  ? { cardName: entry.cardName, setCode: entry.setCode ?? '', cardNumber: entry.cardNumber ?? '' }
+                  : { cardName: basic.name, setCode: '', cardNumber: '' }))}
+              >
+                <Plus size={13} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      {adding.length > 0 && (
+        <button type="button" className={styles.fill} onClick={fill} title={`Brings the deck to ${suggestion.target} lands, split by the colors of its spells`}>
+          <Mountain size={14} aria-hidden="true" /> Fill to {suggestion.target} lands: {adding.map(([name, amount]) => `${amount} ${name}`).join(', ')}
+        </button>
+      )}
     </div>
+  );
+}
+
+/** The commander (or commanders) at the head of the list, with the colors the deck may use. */
+function CommandZone({ deck, info, rules, identity, onChange, onPreview }: {
+  deck: DeckCardLists;
+  info: ReadonlyMap<string, CardView>;
+  rules: FormatRules;
+  identity: string[] | null;
+  onChange(update: (deck: DeckCardLists) => DeckCardLists): void;
+  onPreview(card: CardView | null, anchor?: DOMRect): void;
+}) {
+  const zone = rules.commandZone!;
+  const commanders = deck.sideboard;
+  return (
+    <section className={styles.command} aria-label={zone.label}>
+      {commanders.length === 0 ? (
+        <p className={styles.commandEmpty}>
+          <Crown size={16} aria-hidden="true" /> No {zone.cardLabel.toLowerCase()} yet. Point at a legendary creature in your deck and press its crown.
+        </p>
+      ) : (
+        <>
+          <ul className={styles.commanders}>
+            {commanders.map((entry) => {
+              const key = entryKey(entry);
+              const card = info.get(key);
+              return (
+                <li
+                  key={key}
+                  className={styles.commander}
+                  onPointerEnter={(event) => card && onPreview(card, event.currentTarget.closest('aside')?.getBoundingClientRect() ?? event.currentTarget.getBoundingClientRect())}
+                  onPointerLeave={() => onPreview(null)}
+                >
+                  <div className={styles.commanderArt}>
+                    <CardFace card={card ?? { name: entry.cardName }} size="small" />
+                  </div>
+                  <span className={styles.commanderName}>{entry.cardName}</span>
+                  <button type="button" className={styles.commanderBack} aria-label={`Put ${entry.cardName} back in the deck`} title="Back to the deck" onClick={() => onChange((current) => moveCard(current, 'sideboard', key, entry.amount))}>
+                    <ArrowLeftRight size={14} />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <p className={styles.identity}>
+            <span>Colors</span>
+            {identity && identity.length > 0
+              ? identity.map((letter) => <i key={letter} className={`ms ms-cost ms-${letter.toLowerCase()}`} aria-label={BASIC_FOR[letter as ManaLetter]} />)
+              : <i className="ms ms-cost ms-c" aria-label="Colorless" />}
+          </p>
+        </>
+      )}
+    </section>
   );
 }
 

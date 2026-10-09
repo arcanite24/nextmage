@@ -80,3 +80,9 @@ export interface WebTournamentOptions {
   matchOptions?: WebMatchOptions;
   limitedOptions?: WebLimitedOptions;
 }
+
+/** Card search filters beyond CardCriteria (see the server's WebCardFilters). */
+export interface WebCardFilters {
+  /** only cards a commander of these colors allows: letters of WUBRG, '' for colorless */
+  colorIdentity?: string;
+}
