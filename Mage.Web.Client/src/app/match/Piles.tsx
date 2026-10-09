@@ -2,6 +2,8 @@ import { BookOpen, Crown, Skull, Sparkles, Ban } from 'lucide-react';
 import { useRef, type ReactNode } from 'react';
 import type { CommanderStatus } from '../../core/game/commander';
 import type { CardView, PlayerView } from '../../protocol/generated/views';
+import { useT } from '../i18n';
+import './matchMessages';
 import { CardFace } from '../ui/CardFace';
 import { cardKey } from './boardModel';
 import { useFlip, useFlipOrigin } from './flip';
@@ -18,6 +20,7 @@ export interface CommandProps {
 
 /** Library, graveyard, exile and command zone of one player, as piles on the mat. */
 export function Piles({ player, sleeve, isMe, commanders = [], clickable, onCast }: { player: PlayerView; sleeve: string; isMe: boolean } & CommandProps) {
+  const t = useT();
   const openViewer = useMatchUi((state) => state.openViewer);
   const libraryRef = useRef<HTMLButtonElement>(null);
   useFlipOrigin(`library:${player.playerId}`, libraryRef);
@@ -32,7 +35,7 @@ export function Piles({ player, sleeve, isMe, commanders = [], clickable, onCast
         ref={libraryRef}
         type="button"
         className={styles.pile}
-        aria-label={`${name} library, ${player.libraryCount ?? 0} cards`}
+        aria-label={t('match.cards', { label: `${name} library`, count: player.libraryCount ?? 0 })}
         onClick={() => player.topCard && openViewer({ title: `${name} library (top card)`, cards: [player.topCard] })}
       >
         <div className={styles.stack} style={{ ['--depth' as string]: Math.min(6, Math.ceil((player.libraryCount ?? 0) / 10)) }}>
@@ -95,9 +98,10 @@ function CommanderPile({ commander, sleeve, castable, onCast, owner }: {
 }
 
 function PileOfCards({ title, label, cards, sleeve, onOpen }: { title: string; label: string; cards: CardView[]; sleeve: string; onOpen(): void }) {
+  const t = useT();
   const top = cards[cards.length - 1];
   return (
-    <button type="button" className={styles.pile} aria-label={`${title}, ${cards.length} cards`} onClick={onOpen} disabled={cards.length === 0}>
+    <button type="button" className={styles.pile} aria-label={t('match.cards', { label: title, count: cards.length })} onClick={onOpen} disabled={cards.length === 0}>
       {/* a new top card is a new element: it lands on the pile from wherever that card was */}
       <PileTop key={top ? cardKey(top) : 'empty'} top={top} count={cards.length} sleeve={sleeve} />
       <span className={styles.count}>{cards.length}</span>
@@ -121,6 +125,7 @@ function PileTop({ top, count, sleeve }: { top: CardView | undefined; count: num
  * Their commander waiting in the command zone shows by name with its tax.
  */
 export function MiniPiles({ player, commanders = [] }: { player: PlayerView } & Pick<CommandProps, 'commanders'>) {
+  const t = useT();
   const openViewer = useMatchUi((state) => state.openViewer);
   const graveyard = Object.values(player.graveyard ?? {});
   const exile = Object.values(player.exile ?? {});
@@ -130,7 +135,7 @@ export function MiniPiles({ player, commanders = [] }: { player: PlayerView } & 
   useFlipOrigin(`library:${player.playerId}`, libraryRef);
   return (
     <div className={styles.mini}>
-      <span ref={libraryRef} className={styles.chip} aria-label={`${name} library, ${player.libraryCount ?? 0} cards`} title="Library">
+      <span ref={libraryRef} className={styles.chip} aria-label={t('match.cards', { label: `${name} library`, count: player.libraryCount ?? 0 })} title="Library">
         <BookOpen size={16} aria-hidden="true" /> {player.libraryCount ?? 0}
       </span>
       <MiniButton icon={<Skull size={16} aria-hidden="true" />} count={graveyard.length} label={`${name} graveyard`} onOpen={() => openViewer({ title: `${name} graveyard`, cards: [...graveyard].reverse() })} />
@@ -158,8 +163,9 @@ export function MiniPiles({ player, commanders = [] }: { player: PlayerView } & 
 }
 
 function MiniButton({ icon, count, label, onOpen }: { icon: ReactNode; count: number; label: string; onOpen(): void }) {
+  const t = useT();
   return (
-    <button type="button" className={styles.chip} aria-label={`${label}, ${count} cards`} title={label} onClick={onOpen} disabled={count === 0}>
+    <button type="button" className={styles.chip} aria-label={t('match.cards', { label, count })} title={label} onClick={onOpen} disabled={count === 0}>
       {icon} {count}
     </button>
   );

@@ -56,6 +56,11 @@ export const RPC_ERROR = {
   DECK_IMPORT_FAILED: -32005,
 } as const;
 
+/** The bridge's answer to a session call on a connection whose session it doesn't know ("Not connected: log in ..."). */
+export function isSessionLost(error: unknown): boolean {
+  return error instanceof RpcError && error.code === RPC_ERROR.NOT_AUTHORIZED && error.message.startsWith('Not connected');
+}
+
 /** The subset of the browser WebSocket the client needs (replaceable in tests). */
 export interface SocketLike {
   readonly readyState: number;
@@ -118,6 +123,7 @@ export class RpcClient implements RpcCaller {
   private readonly statusListeners = new Set<Listener<ConnectionStatus>>();
   private readonly eventListeners = new Set<Listener<ServerEvent>>();
   private readonly sessionStartListeners = new Set<Listener<void>>();
+  private readonly sessionLostListeners = new Set<Listener<string>>();
   private openWaiters: { resolve: () => void; reject: (error: Error) => void }[] = [];
   private readonly gameStates = new GameStateCache((gameId) => this.call('gameStateResync', gameId, ''));
 
@@ -208,6 +214,15 @@ export class RpcClient implements RpcCaller {
   onSessionStart(listener: Listener<void>): () => void {
     this.sessionStartListeners.add(listener);
     return () => this.sessionStartListeners.delete(listener);
+  }
+
+  /**
+   * The server turned a call away because this connection has no session (it restarted, or dropped ours): the
+   * listener gets the method's name.
+   */
+  onSessionLost(listener: Listener<string>): () => void {
+    this.sessionLostListeners.add(listener);
+    return () => this.sessionLostListeners.delete(listener);
   }
 
   private openSocket(status: 'connecting' | 'reconnecting'): void {
@@ -318,9 +333,11 @@ export class RpcClient implements RpcCaller {
       this.pending.delete(id!);
       const error = message.error as { code?: number; message?: string; data?: unknown } | string | undefined;
       if (error) {
-        call.reject(typeof error === 'string'
+        const rejected = typeof error === 'string'
           ? new RpcError(call.method, RPC_ERROR.SERVER_ERROR, error)
-          : new RpcError(call.method, error.code ?? RPC_ERROR.SERVER_ERROR, error.message ?? 'Server error', error.data));
+          : new RpcError(call.method, error.code ?? RPC_ERROR.SERVER_ERROR, error.message ?? 'Server error', error.data);
+        call.reject(rejected);
+        if (isSessionLost(rejected)) this.sessionLostListeners.forEach((listener) => listener(call.method));
       } else {
         call.resolve(message.result ?? null);
       }

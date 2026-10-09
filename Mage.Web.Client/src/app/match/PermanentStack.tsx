@@ -186,7 +186,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
       style={style}
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
-      aria-label={describe(permanent, { tapped, isAttacking, isBlocking, isSelected, keywords: keywords.map((mark) => (mark.gained ? `${mark.name.toLowerCase()} (gained)` : mark.name.toLowerCase())) })}
+      aria-label={describe(permanent, { tapped, isAttacking, isBlocking, isSelected, keywords: keywords.map((mark) => (mark.gained ? `${mark.name.toLowerCase()} (gained)` : mark.name.toLowerCase())) }) + (isClickable && targeting && !isSelected ? ', can be targeted' : '')}
       aria-pressed={isClickable ? isSelected : undefined}
       onClick={() => {
         if (suppressClick.current) {

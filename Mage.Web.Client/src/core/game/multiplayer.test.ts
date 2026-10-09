@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameView } from '../../protocol/generated/views';
-import { defenderChoice, inRange, seatDistance } from './multiplayer';
+import { askedAttacker, defenderChoice, inRange, seatDistance } from './multiplayer';
 import type { Prompt } from './prompt';
 
 const players = ['a', 'b', 'c', 'd', 'e'].map((id) => ({ playerId: id, name: id.toUpperCase(), life: 40 }));
@@ -47,5 +47,28 @@ describe('defenderChoice', () => {
   it('ignores other questions', () => {
     expect(defenderChoice(prompt(['b', 'c'], 'Select target player'), view)).toBeNull();
     expect(defenderChoice(prompt(['b', 'c']), { ...view, step: 'PRECOMBAT_MAIN' })).toBeNull();
+  });
+});
+
+describe('askedAttacker', () => {
+  const goblin = { id: 'g', name: 'Battle Cry Goblin', cardTypes: ['CREATURE'] as const, tapped: true };
+  const token = { id: 't', name: 'Goblin Token', cardTypes: ['CREATURE'] as const, tapped: true };
+  const land = { id: 'l', name: 'Mountain', cardTypes: ['LAND'] as const, tapped: true };
+  const view = (attacking: string[]) => ({
+    players: [{ playerId: 'me', battlefield: { g: goblin, t: token, l: land } }],
+    combat: [{ attackers: Object.fromEntries(attacking.map((id) => [id, {}])) }],
+  }) as unknown as GameView;
+
+  it('names the creature just clicked while it is being declared', () => {
+    expect(askedAttacker(view([]), 'me', 'g')?.name).toBe('Battle Cry Goblin');
+  });
+
+  it('names the creature entering attacking once the clicked one is already in combat', () => {
+    expect(askedAttacker(view(['g']), 'me', 'g')?.name).toBe('Goblin Token');
+  });
+
+  it('says nothing when it cannot tell', () => {
+    expect(askedAttacker(view([]), 'me', null)).toBeNull();
+    expect(askedAttacker(null, 'me', 'g')).toBeNull();
   });
 });
