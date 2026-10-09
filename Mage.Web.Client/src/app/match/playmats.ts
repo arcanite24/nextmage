@@ -6,6 +6,8 @@ export interface MatCloth {
   /** 950, 900, 800, 700, 600, 500, 400 */
   shades: [string, string, string, string, string, string, string];
   dye: string;
+  /** unlocked in Career (a playmat cosmetic of the same id) */
+  career?: boolean;
 }
 
 export const MAT_CLOTHS: MatCloth[] = [
@@ -15,12 +17,22 @@ export const MAT_CLOTHS: MatCloth[] = [
   { id: 'oxblood', shades: ['#0e0707', '#160b0b', '#1d0f0e', '#271413', '#361c1a', '#4b2724', '#663934'], dye: '#7a302a' },
   { id: 'teal', shades: ['#060c0d', '#091315', '#0d191b', '#112225', '#182f33', '#224247', '#335b61'], dye: '#2a6b70' },
   { id: 'charcoal', shades: ['#09090a', '#0e0e10', '#141416', '#1b1b1e', '#25252a', '#34343b', '#4a4a53'], dye: '#55555f' },
+  // Career rewards
+  { id: 'sand', shades: ['#0e0c08', '#16130d', '#1d1912', '#282218', '#372e21', '#4c402e', '#6a5a41'], dye: '#8a7148', career: true },
+  { id: 'slate', shades: ['#08090b', '#0d0f12', '#121519', '#191d22', '#232930', '#323a44', '#48535f'], dye: '#5a6878', career: true },
+  { id: 'midnight', shades: ['#05050c', '#090914', '#0d0d1c', '#131327', '#1b1b37', '#27274f', '#3a3a6e'], dye: '#3e3a8a', career: true },
+  { id: 'rose', shades: ['#0e080a', '#160c10', '#1d1015', '#28161d', '#371e28', '#4c2a38', '#693c4f'], dye: '#8a4a62', career: true },
 ];
 
 export const DEFAULT_CLOTH = MAT_CLOTHS[0];
 
 export function clothOf(id: string | null | undefined): MatCloth {
   return MAT_CLOTHS.find((cloth) => cloth.id === id) ?? DEFAULT_CLOTH;
+}
+
+/** A cloth's swatch: its light middle fading to its dark edge, rimmed in its dye. */
+export function clothSwatch(cloth: MatCloth): CSSProperties {
+  return { background: `radial-gradient(circle at 50% 40%, ${cloth.shades[4]}, ${cloth.shades[1]})`, borderColor: cloth.dye };
 }
 
 const SHADE_NAMES = ['950', '900', '800', '700', '600', '500', '400'];

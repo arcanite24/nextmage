@@ -219,14 +219,22 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   // games inside an event lead back to the event; others back to Play
   const eventId = useEvents((events) => events.currentTournamentId);
   const returnPath = usePlay((play) => play.returnPath);
-  const leave = useCallback(() => {
+  // Career matches come back through their rewards (the return path); a counted game against the AI shows what it
+  // paid on the way out too
+  const career = !!returnPath?.startsWith('/career');
+  const vsAi = board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false);
+  const rewardsAfter = mode === 'play' && !!state.gameOver && !eventId && !career
+    && vsAi && !usePlay.getState().lastOptions.practice && useSettings.getState().settings.careerOptIn;
+  const exit = useCallback((rewards: boolean) => {
     if (onLeave) {
       onLeave();
       return;
     }
     useGames.getState().close(state.gameId);
-    navigate(eventId ? `/event/${eventId}` : returnPath ?? '/');
+    const back = eventId ? `/event/${eventId}` : returnPath ?? '/';
+    navigate(rewards ? `/career/rewards?game=${encodeURIComponent(state.gameId)}&back=${encodeURIComponent(back)}` : back);
   }, [navigate, state.gameId, eventId, returnPath, onLeave]);
+  const leave = useCallback(() => exit(rewardsAfter), [exit, rewardsAfter]);
   const deckId = usePlay((play) => play.deckId);
   // players see who is watching them too
   const watchers = useWatchers(state.gameId, mode === 'play' && !state.gameOver);
@@ -237,9 +245,9 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   }, [mode, state.endInfo]);
   const playAgain = useCallback(() => {
     const { lastOptions } = usePlay.getState();
-    leave();
+    exit(false);
     if (deckId) void usePlay.getState().playVsAi(deckId, lastOptions);
-  }, [leave, deckId]);
+  }, [exit, deckId]);
 
   // the arrow starts at the spell being cast (top of the stack) while it chooses targets
   const choosingTargets = interaction.mode === 'target' && !awaitingServer;
@@ -438,7 +446,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             {mode === 'play' && <WatcherCount watchers={watchers} className={styles.watchers} />}
             <GameMenu
               gameId={state.gameId}
-              practice={mode === 'play' && !state.gameOver && returnPath !== '/career' && board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false)}
+              practice={mode === 'play' && !state.gameOver && !career && board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false)}
               canConcede={canAct}
               onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })}
               onLeave={leave}
@@ -483,7 +491,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 message={state.gameOver}
                 endInfo={state.endInfo}
                 onLeave={leave}
-                leaveLabel={eventId ? 'Back to the event' : returnPath === '/career' ? 'Back to Career' : 'Back to Play'}
+                leaveLabel={eventId ? 'Back to the event' : career ? 'Back to Career' : 'Back to Play'}
                 onPlayAgain={mode === 'play' && deckId && !eventId ? playAgain : undefined}
               />
             )}

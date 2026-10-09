@@ -106,6 +106,8 @@ const router = createBrowserRouter([
           { path: '/career/deck', lazy: () => import('./career/CareerDeckScreen').then((m) => ({ Component: m.CareerDeckScreen })) },
           { path: '/career/collection', lazy: () => import('./career/CareerCollectionScreen').then((m) => ({ Component: m.CareerCollectionScreen })) },
           { path: '/career/shop', lazy: () => import('./career/CareerShopScreen').then((m) => ({ Component: m.CareerShopScreen })) },
+          { path: '/career/progress', lazy: () => import('./career/CareerProgressScreen').then((m) => ({ Component: m.CareerProgressScreen })) },
+          { path: '/career/rewards', lazy: () => import('./career/CareerProgressScreen').then((m) => ({ Component: m.CareerRewardsScreen })) },
           { path: '/history', lazy: () => import('./history/HistoryScreen').then((m) => ({ Component: m.HistoryScreen })) },
         ],
       },
