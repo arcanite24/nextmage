@@ -76,7 +76,7 @@
 .sideName {
   color: var(--ink-strong);
   font-family: var(--font-print);
-  font-size: clamp(2rem, 4.2vw, var(--text-4xl));
+  font-size: var(--text-4xl);
   font-weight: 700;
   line-height: 0.95;
   text-transform: uppercase;
@@ -131,7 +131,7 @@
   left: 50%;
   translate: -50% -50%;
   color: var(--ink-strong);
-  font-size: clamp(4rem, 11vw, 9rem);
+  font-size: 9rem;
   line-height: 1;
   letter-spacing: 0.02em;
   text-shadow: 0 4px 0 rgb(0 0 0 / 0.5), 0 0 40px rgb(0 0 0 / 0.6);
@@ -251,5 +251,16 @@
   .vs,
   .line {
     animation: none;
+  }
+}
+
+/* smaller screens step the display type down (sizes stay in rem, so text zoom still scales them) */
+@media (max-width: 900px) {
+  .sideName {
+    font-size: 2rem;
+  }
+
+  .vs {
+    font-size: 4rem;
   }
 }

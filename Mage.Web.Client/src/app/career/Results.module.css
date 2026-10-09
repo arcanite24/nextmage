@@ -73,7 +73,7 @@
 .stamp {
   margin: 0;
   font-family: var(--font-print);
-  font-size: clamp(3rem, 7vw, 5.5rem);
+  font-size: 5.5rem;
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: var(--tracking-print);
@@ -340,5 +340,12 @@
 
   .levelUp {
     animation: none;
+  }
+}
+
+/* smaller screens step the display type down (sizes stay in rem, so text zoom still scales them) */
+@media (max-width: 900px) {
+  .stamp {
+    font-size: 3rem;
   }
 }
