@@ -227,7 +227,7 @@ export function LoginScreen() {
             <button type="button" className={styles.serverChip} aria-expanded={editServer} onClick={() => setEditServer((value) => !value)}>
               <span className={[styles.dot, styles[status]].join(' ')} aria-hidden="true" />
               <span>{describeServer(serverUrl) ?? t('login.server.choose')}</span>
-              <span className={styles.statusText}>{t(status === 'online' ? 'login.server.online' : status === 'offline' ? 'login.server.offline' : 'login.server.checking')}</span>
+              <span className={styles.statusText}>{t(status === 'online' ? 'login.server.online' : status === 'offline' ? (navigator.onLine ? 'login.server.offline' : 'login.server.noNetwork') : 'login.server.checking')}</span>
               <ChevronDown size={15} aria-hidden="true" className={editServer ? styles.flipped : ''} />
             </button>
             {editServer && (
@@ -330,6 +330,13 @@ function describeServer(url: string): string | null {
  */
 function useServerStatus(url: string): { status: ServerStatus; info: ServerInfo | null } {
   const [result, setResult] = useState<{ url: string; status: ServerStatus; info: ServerInfo | null } | null>(null);
+  // the installed app opens offline too (its shell is cached): check again when the network comes back
+  const [backOnline, setBackOnline] = useState(0);
+  useEffect(() => {
+    const recheck = () => setBackOnline((count) => count + 1);
+    window.addEventListener('online', recheck);
+    return () => window.removeEventListener('online', recheck);
+  }, []);
   useEffect(() => {
     let cancelled = false;
     const timer = setTimeout(async () => {
@@ -351,7 +358,7 @@ function useServerStatus(url: string): { status: ServerStatus; info: ServerInfo 
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [url]);
+  }, [url, backOnline]);
   return result?.url === url ? { status: result.status, info: result.info } : { status: 'checking', info: null };
 }
 

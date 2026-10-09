@@ -48,6 +48,7 @@ export default {
   'login.needsPassword': 'This server needs a password',
   'login.server.online': 'Online',
   'login.server.offline': "Can't reach",
+  'login.server.noNetwork': "You're offline",
   'login.server.checking': 'Checking',
   'login.server.address': 'Server address',
   'login.server.hint': 'For example ws://localhost:17172 or wss://play.example.com',

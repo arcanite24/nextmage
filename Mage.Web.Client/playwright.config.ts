@@ -21,6 +21,8 @@ export default defineConfig({
     baseURL,
     colorScheme: 'dark',
     trace: 'retain-on-failure',
+    // the production build registers a service worker; only e2e/pwa.spec.ts lets it run, so page.route sees every request
+    serviceWorkers: 'block',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },

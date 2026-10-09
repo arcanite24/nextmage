@@ -51,6 +51,7 @@ const es: Catalog = {
   'login.needsPassword': 'Este servidor pide contraseña',
   'login.server.online': 'En línea',
   'login.server.offline': 'Sin respuesta',
+  'login.server.noNetwork': 'Sin conexión',
   'login.server.checking': 'Comprobando',
   'login.server.address': 'Dirección del servidor',
   'login.server.hint': 'Por ejemplo ws://localhost:17172 o wss://play.example.com',
