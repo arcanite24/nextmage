@@ -132,3 +132,9 @@
     transition: none;
   }
 }
+
+/* touch: the steppers are full-size targets */
+:global([data-touch]) .step {
+  width: max(40px, var(--touch-target, 0px));
+  height: max(40px, var(--touch-target, 0px));
+}

@@ -51,3 +51,12 @@
   margin: 6px 4px;
   background: var(--ink-ghost);
 }
+
+/* the menu opens outside the stage, at window size: a finger needs a taller row */
+@media (pointer: coarse) {
+  .menuItem {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+  }
+}

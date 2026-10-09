@@ -7,6 +7,8 @@ import type { Command } from '../../core/game/interaction';
 import { commanderDamageTo, commandersByPlayer, type CommanderStatus } from '../../core/game/commander';
 import { defenderChoice, inRange } from '../../core/game/multiplayer';
 import { parsePayment } from '../../core/game/payment';
+import { delayLabel, isBroadcastDelay } from '../../core/game/broadcastDelay';
+import { spectatorHand } from '../../core/game/spectatorHand';
 import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
 import type { CardView, ChatMessage, GameView, PlayerView } from '../../protocol/generated/views';
@@ -57,20 +59,13 @@ import { useWatchers } from './useWatchers';
 import { Reveals } from './Reveals';
 import { StackZone } from './StackZone';
 import { Stage } from './Stage';
-import { STAGE_HEIGHT } from './stageContext';
+import { matchLayout, type MatchLayout, type RowsPlacement } from './matchLayout';
 import styles from './MatchStage.module.css';
 
-/**
- * The battlefield's horizontal span on the stage, between the seats (left) and the stack and decision corner (right).
- * The stage widens with the window, and the field takes all of the extra width.
- */
-const FIELD_LEFT = 300;
-const FIELD_RIGHT_MARGIN = 470;
 const EMPTY: ReadonlySet<string> = new Set();
+const ignore = () => undefined;
 const NO_CARDS: readonly CardView[] = [];
 const NO_COMMANDERS: readonly CommanderStatus[] = [];
-/** multiplayer: each opponent's seat (plate, counters) in the left column, this far apart */
-const SEAT_SPACING = 172;
 
 /** Attacking and blocking permanents, from the combat groups. */
 function combatSets(combat: GameView['combat']) {
@@ -120,6 +115,15 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   const navigate = useNavigate();
   const animations = useSettings((settings) => settings.settings.animations);
   const autoPay = useSettings((settings) => settings.settings.autoPayMana);
+  // watching and replays: the broadcast options
+  const spectating = mode !== 'play';
+  const broadcastDelay = useSettings((settings) => settings.settings.broadcastDelay);
+  const hideHands = useSettings((settings) => settings.settings.hideHands);
+  const largeZoom = useSettings((settings) => settings.settings.largeZoom);
+  useEffect(() => {
+    // the session only delays a game being watched; turning the delay off catches up at once
+    session.setBroadcastDelay(mode === 'watch' && isBroadcastDelay(broadcastDelay) ? broadcastDelay * 1000 : 0);
+  }, [session, mode, broadcastDelay]);
   const viewer = useMatchUi((ui) => ui.viewer);
   const openViewer = useMatchUi((ui) => ui.openViewer);
   const sleeves = useSleeves();
@@ -154,6 +158,12 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
     return lands;
   }, [interaction.mode, board.me]);
   const hand = useMemo(() => Object.values(view?.myHand ?? {}), [view?.myHand]);
+  // watching: the seat's hand, if its player lets us see it, and only backs while hands are hidden for the broadcast
+  // (a replay of one's own game shows the hand that was held, as before)
+  const seatHand = useMemo(
+    () => (spectating ? spectatorHand(view, board.me?.player, mode === 'watch' && hideHands) : null),
+    [spectating, mode, view, board.me?.player, hideHands],
+  );
   const stack = useMemo(() => Object.values(view?.stack ?? {}), [view?.stack]);
 
   const onCommand = useCallback((command: Command) => {
@@ -294,10 +304,11 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
 
   return (
     <Stage style={matStyle}>
-      {(stageWidth) => {
-        const fieldWidth = stageWidth - FIELD_LEFT - FIELD_RIGHT_MARGIN;
+      {(stage) => {
+        // the stage widens with the window and the field takes the extra width; a portrait window gets the tall layout
+        const layout = matchLayout(stage);
         return (
-          <>
+          <div className={styles.layout} style={{ ['--seam' as string]: `${layout.seam}px`, ['--hand-raise' as string]: `${layout.handRaise}px` }}>
             <div className={styles.mat} aria-hidden="true" />
             {/* each half carries its player's deck art, printed faintly into the mat */}
             <div className={styles.printTheirs}><MatPrint card={opponentArt} /></div>
@@ -322,7 +333,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 blocking={blocking}
                 onClick={onClick}
                 deciding={!!opponent.player.hasPriority && interaction.mode === 'waiting'}
-                fieldWidth={fieldWidth}
+                layout={layout}
                 commanders={commanders.get(opponent.player.playerId!) ?? NO_COMMANDERS}
                 commanderDamage={damageTaken(opponent.player)}
                 outOfRange={!inRange(view, myId, opponent.player.playerId!)}
@@ -331,8 +342,8 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
 
             {board.me && (
               <>
-                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} onBlockDrop={interaction.mode === 'declareBlockers' && canAct ? onBlockDrop : undefined} left={FIELD_LEFT} width={fieldWidth} frontTop={556} backTop={778} />
-                <div className={styles.myPlate}>
+                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} onBlockDrop={interaction.mode === 'declareBlockers' && canAct ? onBlockDrop : undefined} place={layout.me} />
+                <div className={styles.myPlate} style={layout.myPlate}>
                   <PlayerPlate
                     player={board.me.player}
                     isMe={board.me.isMe}
@@ -347,7 +358,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                     commanderDamage={damageTaken(board.me.player)}
                   />
                 </div>
-                <div className={styles.myPiles}>
+                <div className={styles.myPiles} style={layout.myPiles}>
                   <Piles
                     player={board.me.player}
                     sleeve={sleeves.mine}
@@ -364,7 +375,20 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
             <PhaseLadder step={view?.step} myTurn={!!myId && view?.activePlayerId === myId} turn={view?.turn ?? 0} />
 
-            {board.me && !handHidden && (mode === 'play' || (board.me.isMe && hand.length > 0)) && (
+            {board.me && seatHand && (
+              <Hand
+                cards={seatHand.cards}
+                faceDown={seatHand.faceDown}
+                label={`${board.me.player.name ?? 'Player'}'s hand`}
+                clickable={EMPTY}
+                selected={EMPTY}
+                sleeve={sleeves.mine}
+                onPlay={ignore}
+                playLine={0}
+                libraryOrigin={`library:${board.me.player.playerId}`}
+              />
+            )}
+            {board.me && !handHidden && mode === 'play' && (
               <Hand
                 cards={hand}
                 choosing={choosingInHand}
@@ -372,7 +396,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 selected={interaction.selected}
                 sleeve={sleeves.mine}
                 onPlay={onClick}
-                playLine={STAGE_HEIGHT - 300}
+                playLine={layout.playLine}
                 libraryOrigin={`library:${board.me.player.playerId}`}
               />
             )}
@@ -404,7 +428,12 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
             <EmoteBubbles view={view} />
             {mode === 'play' && <Coach view={view ?? null} mode={choosingStarter ? 'panel' : interaction.mode} awaiting={awaitingServer} gameOver={!!state.gameOver} />}
-            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} replayLog={replayLog} />
+            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} replayLog={replayLog} delayMs={state.broadcastDelayMs} />
+            {mode === 'watch' && !view && state.broadcastDelayMs > 0 && (
+              <p className={styles.delayNote} role="status">
+                The table appears in {delayLabel(Math.round(state.broadcastDelayMs / 1000))}: the broadcast delay holds the game back.
+              </p>
+            )}
             {mode === 'play' && <WatcherCount watchers={watchers} className={styles.watchers} />}
             <GameMenu
               gameId={state.gameId}
@@ -457,9 +486,9 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 onPlayAgain={mode === 'play' && deckId && !eventId ? playAgain : undefined}
               />
             )}
-            <CardZoom />
+            <CardZoom large={spectating && largeZoom} />
             <CardDetail view={view} extra={pickerCards ?? viewer?.cards ?? NO_CARDS} sleeveOf={sleeveOf} attacking={attacking} blocking={blocking} />
-          </>
+          </div>
         );
       }}
     </Stage>
@@ -479,18 +508,16 @@ interface RowProps {
 }
 
 /** One player's two rows of permanents. Rows shrink their cards to fit rather than wrapping. */
-const Battlefield = memo(function Battlefield({ board, left, width, frontTop, backTop, ...row }: RowProps & {
+const Battlefield = memo(function Battlefield({ board, place, ...row }: RowProps & {
   board: PlayerBoard;
-  left: number;
-  width: number;
-  frontTop: number;
-  backTop: number;
+  place: RowsPlacement;
 }) {
   const forward = board.isMe ? -1 : 1;
+  const { left, width } = place;
   return (
     <>
-      <Row groups={board.front} left={left} width={width} top={frontTop} ideal={150} min={58} forward={forward} label="Creatures" flip={!board.isMe} {...row} />
-      <Row groups={board.back} left={left} width={width} top={backTop} ideal={112} min={50} forward={forward} label="Lands & permanents" flip={!board.isMe} {...row} />
+      <Row groups={board.front} left={left} width={width} top={place.frontTop} ideal={place.frontIdeal} min={58} forward={forward} label="Creatures" flip={!board.isMe} {...row} />
+      <Row groups={board.back} left={left} width={width} top={place.backTop} ideal={place.backIdeal} min={50} forward={forward} label="Lands & permanents" flip={!board.isMe} {...row} />
     </>
   );
 });
@@ -524,8 +551,8 @@ function Row({ groups, left, width, top, ideal, min, forward, label, flip, ...re
 }
 
 /** An opponent's half: their rows mirrored above the seam, their seat, piles and hidden hand. */
-function OpponentSide({ board, index, count, sleeve, handCount, deciding, fieldWidth, commanders, commanderDamage, outOfRange, ...row }: RowProps & {
-  fieldWidth: number;
+function OpponentSide({ board, index, count, sleeve, handCount, deciding, layout, commanders, commanderDamage, outOfRange, ...row }: RowProps & {
+  layout: MatchLayout;
   board: PlayerBoard;
   index: number;
   count: number;
@@ -535,14 +562,12 @@ function OpponentSide({ board, index, count, sleeve, handCount, deciding, fieldW
   commanderDamage: readonly { name: string; amount: number }[];
   outOfRange: boolean;
 }) {
-  const width = fieldWidth / count;
-  const left = FIELD_LEFT + index * width;
+  const place = layout.them(index, count);
   const player = board.player;
-  const plateTop = count === 1 ? 24 : 16 + index * SEAT_SPACING;
   return (
     <>
-      <Battlefield board={board} sleeve={sleeve} left={left} width={width - (count > 1 ? 24 : 0)} frontTop={count === 1 ? 330 : 300} backTop={count === 1 ? 160 : 150} {...row} />
-      <div className={[styles.theirPlate, count > 1 ? styles.seat : ''].join(' ')} style={{ top: plateTop }}>
+      <Battlefield board={board} sleeve={sleeve} place={place} {...row} />
+      <div className={[styles.theirPlate, count > 1 ? styles.seat : ''].join(' ')} style={layout.theirPlate(index, count)}>
         <PlayerPlate
           player={player}
           isMe={false}
@@ -561,12 +586,12 @@ function OpponentSide({ board, index, count, sleeve, handCount, deciding, fieldW
         )}
       </div>
       {count === 1 && (
-        <div className={styles.theirPiles}>
+        <div className={styles.theirPiles} style={layout.theirPiles}>
           <Piles player={player} sleeve={sleeve} isMe={false} commanders={commanders} />
         </div>
       )}
-      {count > 1 && <span className={styles.seatName} style={{ left: left + 16 }} aria-hidden="true">{player.name}</span>}
-      <HiddenHand playerId={player.playerId!} count={handCount} sleeve={sleeve} left={left + width / 2} />
+      {count > 1 && !layout.tall && <span className={styles.seatName} style={{ left: place.left + 16 }} aria-hidden="true">{player.name}</span>}
+      <HiddenHand playerId={player.playerId!} count={handCount} sleeve={sleeve} left={layout.hiddenHandX(index, count)} />
     </>
   );
 }

@@ -1,6 +1,9 @@
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import type { CombatStops } from '../../core/game/autoPass';
 import type { PhaseStep, SkipPrioritySteps } from '../../protocol/generated/views';
 import { useSettings } from '../stores/settings';
+import { useStage } from './stageContext';
+import { useCoarsePointer } from './useLongPress';
 import styles from './PhaseLadder.module.css';
 
 interface Rung {
@@ -10,23 +13,26 @@ interface Rung {
   stop?: keyof SkipPrioritySteps;
   /** a combat stop (kept by the client: the server always offers priority there) */
   combat?: keyof CombatStops;
+  /** the name in the touch menu of stops, where the two mains need telling apart */
+  menuLabel?: string;
 }
 
 const RUNGS: Rung[] = [
   { label: 'Upkeep', steps: ['UNTAP', 'UPKEEP'], stop: 'upkeep' },
   { label: 'Draw', steps: ['DRAW'], stop: 'draw' },
-  { label: 'Main', steps: ['PRECOMBAT_MAIN'], stop: 'main1' },
+  { label: 'Main', steps: ['PRECOMBAT_MAIN'], stop: 'main1', menuLabel: 'Main, before combat' },
   { label: 'Combat', steps: ['BEGIN_COMBAT'], stop: 'beforeCombat' },
   { label: 'Attack', steps: ['DECLARE_ATTACKERS'], combat: 'attackers' },
   { label: 'Block', steps: ['DECLARE_BLOCKERS'], combat: 'blockers' },
   { label: 'Damage', steps: ['FIRST_COMBAT_DAMAGE', 'COMBAT_DAMAGE', 'END_COMBAT'], stop: 'endOfCombat' },
-  { label: 'Main', steps: ['POSTCOMBAT_MAIN'], stop: 'main2' },
+  { label: 'Main', steps: ['POSTCOMBAT_MAIN'], stop: 'main2', menuLabel: 'Main, after combat' },
   { label: 'End', steps: ['END_TURN', 'CLEANUP'], stop: 'endOfTurn' },
 ];
 
 /**
- * Where the turn is, printed down the right edge. Dots mark where the game stops for you on this player's
- * turn; click a rung to toggle that stop.
+ * Where the turn is, printed down the right edge (across the middle of the table in the tall layout). Dots mark
+ * where the game stops for you on this player's turn; click a rung to toggle that stop. On a touch screen the rungs
+ * are too small to aim at: the whole ladder is one button that opens the stops as a menu of full-size rows.
  */
 export function PhaseLadder({ step, myTurn, turn }: { step: PhaseStep | undefined; myTurn: boolean; turn: number }) {
   const settings = useSettings((state) => state.settings);
@@ -35,6 +41,8 @@ export function PhaseLadder({ step, myTurn, turn }: { step: PhaseStep | undefine
   const stops = settings.stops[side] ?? {};
   const combatStops = settings.combatStops[side];
   const fullControl = useSettings((state) => state.fullControl);
+  const coarse = useCoarsePointer();
+  const tall = useStage().layout === 'tall';
 
   const toggle = (rung: Rung, on: boolean) => {
     if (rung.stop) update({ stops: { ...settings.stops, [side]: { ...stops, [rung.stop]: on } } });
@@ -56,6 +64,16 @@ export function PhaseLadder({ step, myTurn, turn }: { step: PhaseStep | undefine
           const ownStop = rung.stop ? !!stops[rung.stop] : rung.combat ? !!combatStops?.[rung.combat] : false;
           // under full control the game stops everywhere; the player's own stops come back when it is turned off
           const stopOn = fullControl || ownStop;
+          if (coarse) {
+            return (
+              <li key={index}>
+                <span className={[styles.rung, current ? styles.current : ''].join(' ')} aria-current={current ? 'step' : undefined}>
+                  <span className={[styles.dot, stopOn ? styles.dotOn : ''].join(' ')} aria-hidden="true" />
+                  {rung.label}
+                </span>
+              </li>
+            );
+          }
           return (
             <li key={index}>
               <button
@@ -78,6 +96,36 @@ export function PhaseLadder({ step, myTurn, turn }: { step: PhaseStep | undefine
           );
         })}
       </ol>
+      {coarse && (
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger
+            className={styles.touchTrigger}
+            disabled={fullControl}
+            aria-label={fullControl ? 'Full control: the game stops at every step' : `Stops on ${whoseTurn} turn`}
+          />
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content className={styles.menu} side={tall ? 'top' : 'left'} align="center" sideOffset={8} collisionPadding={8}>
+              <DropdownMenu.Label className={styles.menuLabel}>Stop on {whoseTurn} turn at</DropdownMenu.Label>
+              {RUNGS.filter((rung) => rung.stop || rung.combat).map((rung) => {
+                const on = rung.stop ? !!stops[rung.stop] : !!combatStops?.[rung.combat!];
+                return (
+                  <DropdownMenu.CheckboxItem
+                    key={rung.stop ?? rung.combat}
+                    className={styles.menuItem}
+                    checked={on}
+                    onCheckedChange={(checked) => toggle(rung, checked)}
+                    // several stops are often changed at once: the menu stays open
+                    onSelect={(event) => event.preventDefault()}
+                  >
+                    {rung.menuLabel ?? rung.label}{rung.combat ? ', when creatures attack' : ''}
+                    <span className={[styles.dot, on ? styles.dotOn : ''].join(' ')} aria-hidden="true" />
+                  </DropdownMenu.CheckboxItem>
+                );
+              })}
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      )}
     </nav>
   );
 }
