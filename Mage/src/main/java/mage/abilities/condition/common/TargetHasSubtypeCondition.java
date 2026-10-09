@@ -20,10 +20,6 @@ public class TargetHasSubtypeCondition implements Condition {
 
     private final List<SubType> subtypes = new ArrayList<>();
 
-    public TargetHasSubtypeCondition(SubType subType) {
-        this.subtypes.add(subType);
-    }
-
     public TargetHasSubtypeCondition(SubType... subTypes) {
         this.subtypes.addAll(Arrays.asList(subTypes));
     }
