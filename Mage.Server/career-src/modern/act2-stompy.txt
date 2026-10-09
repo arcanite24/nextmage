@@ -1,0 +1,15 @@
+# name: Mono-Green Stompy
+# archetype: aggro
+# season: 2026-10
+4 Experiment One
+4 Pelt Collector
+4 Burning-Tree Emissary
+4 Strangleroot Geist
+4 Steel Leaf Champion
+4 Tarmogoyf
+4 Leatherback Baloth
+4 Rancor
+4 Aspect of Hydra
+2 Primal Might
+2 Pendelhaven
+20 Forest

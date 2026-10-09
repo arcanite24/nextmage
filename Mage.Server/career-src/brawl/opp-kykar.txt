@@ -1,0 +1,45 @@
+# name: Kykar's Flock
+# archetype: aggro (Azorius flyers)
+# season: 2026-10
+CMDR: Kykar, Zephyr Awakener
+1 Healer's Hawk
+1 Spectral Sailor
+1 Strix Lookout
+1 Youthful Valkyrie
+1 Giada, Font of Hope
+1 Mischievous Mystic
+1 Dazzling Angel
+1 Empyrean Eagle
+1 Mocking Sprite
+1 Clinquant Skymage
+1 Vanguard Seraph
+1 Exemplar of Light
+1 Angel of Finality
+1 High Fae Trickster
+1 Sphinx of Forgotten Lore
+1 Icewind Elemental
+1 Skyship Buccaneer
+1 Serra Angel
+1 Lyra Dawnbringer
+1 Curator of Destinies
+1 Faebloom Trick
+1 Fleeting Flight
+1 Banishing Light
+1 Stroke of Midnight
+1 Luminous Rebuke
+1 Joust Through
+1 Run Away Together
+1 Uncharted Voyage
+1 Think Twice
+1 Essence Scatter
+1 Twinblade Blessing
+1 Heraldic Banner
+1 Kaito, Cunning Infiltrator
+1 Fleeting Distraction
+1 Make Your Move
+1 Floodfarm Verge
+1 Meticulous Archive
+1 Tranquil Cove
+1 Evolving Wilds
+10 Plains
+10 Island

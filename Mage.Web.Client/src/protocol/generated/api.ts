@@ -273,6 +273,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('careerCampaigns'),
     careerCampaignPlay: (campaignId: string, nodeId: string) =>
       rpc.call('careerCampaignPlay', campaignId, nodeId),
+    careerCampaignDeck: (campaignId: string, nodeId: string) =>
+      rpc.call('careerCampaignDeck', campaignId, nodeId),
     careerCampaignChoose: (campaignId: string, nodeId: string, optionId: string) =>
       rpc.call('careerCampaignChoose', campaignId, nodeId, optionId),
     careerPuzzles: () =>

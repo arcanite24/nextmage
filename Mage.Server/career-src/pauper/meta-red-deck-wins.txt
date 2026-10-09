@@ -1,0 +1,27 @@
+# name: Red Deck Wins
+# archetype: aggro
+# season: 2026-10
+# source: https://www.mtgtop8.com/archetype?a=549&f=PAU (deck 897789, Akashin0, MTGO League 2026-10-07)
+4 Clockwork Percussionist
+4 Goblin Tomb Raider
+4 Voldaren Epicure
+4 Burning-Tree Emissary
+4 Goblin Bushwhacker
+4 Experimental Synthesizer
+4 Lightning Bolt
+4 Galvanic Blast
+1 Fireblast
+1 Flame Jab
+1 Siege Smash
+2 End the Festivities
+4 Rally at the Hornburg
+2 Reckless Impulse
+1 Wrenn's Resolve
+12 Mountain
+4 Great Furnace
+SB: 2 Cast into the Fire
+SB: 3 Tormod's Crypt
+SB: 1 Overload
+SB: 2 Cleansing Wildfire
+SB: 3 Smash to Smithereens
+SB: 4 Red Elemental Blast

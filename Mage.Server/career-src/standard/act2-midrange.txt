@@ -1,0 +1,19 @@
+# name: Golgari Midrange
+# archetype: midrange
+# season: 2026-10
+4 Llanowar Elves
+2 Gatekeeper of Malakir
+4 Scavenging Ooze
+4 Vampire Nighthawk
+3 Midnight Reaper
+4 Gnarlback Rhino
+3 Tragic Banshee
+1 Rune-Scarred Demon
+3 Stab
+3 Moment of Craving
+3 Bake into a Pie
+2 Maelstrom Pulse
+4 Overgrown Tomb
+4 Jungle Hollow
+8 Forest
+8 Swamp

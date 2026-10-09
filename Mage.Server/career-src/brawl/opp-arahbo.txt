@@ -1,0 +1,39 @@
+# name: Arahbo's Pride
+# archetype: aggro (mono-white cats)
+# season: 2026-10
+CMDR: Arahbo, the First Fang
+1 Savannah Lions
+1 Helpful Hunter
+1 Prideful Parent
+1 Cat Collector
+1 Ajani's Pridemate
+1 Felidar Savior
+1 Skyknight Squire
+1 Dauntless Veteran
+1 Inspiring Paladin
+1 Resolute Reinforcements
+1 Cathar Commando
+1 Dazzling Angel
+1 Vanguard Seraph
+1 Serra Angel
+1 Youthful Valkyrie
+1 Healer's Hawk
+1 Sun-Blessed Healer
+1 Armasaur Guide
+1 Guarded Heir
+1 Exemplar of Light
+1 Mischievous Pup
+1 Lyra Dawnbringer
+1 Claws Out
+1 Banishing Light
+1 Luminous Rebuke
+1 Joust Through
+1 Stroke of Midnight
+1 Fleeting Flight
+1 Make Your Move
+1 Divine Resilience
+1 Heraldic Banner
+1 Ajani, Caller of the Pride
+1 Swiftfoot Boots
+1 Quick-Draw Katana
+25 Plains

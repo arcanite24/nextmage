@@ -1,0 +1,19 @@
+# name: Rakdos Gravedancers
+# archetype: aggro
+# season: 2026-10
+4 Bloodghast
+4 Gravecrawler
+4 Prized Amalgam
+4 Stitcher's Supplier
+4 Insolent Neonate
+3 Kroxa, Titan of Death's Hunger
+4 Ox of Agonas
+4 Cathartic Reunion
+4 Lightning Bolt
+3 Unearth
+4 Blood Crypt
+4 Bloodstained Mire
+2 Marsh Flats
+2 Arid Mesa
+5 Swamp
+5 Mountain

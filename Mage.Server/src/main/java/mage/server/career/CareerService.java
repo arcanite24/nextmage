@@ -57,7 +57,7 @@ public final class CareerService {
         /** the roster opponent's id, or the mode and its reference ("campaign:five-paths/white-1") */
         public final String opponentId;
         public final int tier;
-        /** "duel" (the roster), "campaign", "gauntlet", "puzzle", "challenge" or "limited" */
+        /** "duel" (the roster), "campaign", "trial" (a campaign's set position), "gauntlet", "puzzle", "challenge" or "limited" */
         public final String kind;
         /** what the mode needs to finish the game: a campaign node, a run id, a puzzle id, a week */
         public final String ref;
@@ -327,8 +327,8 @@ public final class CareerService {
         try {
             long now = System.currentTimeMillis();
             CareerTally counted = tally != null && tally.taint() == null ? tally : CareerTally.forTest(null);
-            if ("puzzle".equals(table.kind)) {
-                // a puzzle is a turn, not a game: it counts for its stars and nothing else
+            if ("puzzle".equals(table.kind) || "trial".equals(table.kind)) {
+                // a puzzle or a trial is a turn, not a game: it counts for itself and nothing else
                 counted = CareerTally.forTest(null);
             } else {
                 counted.finish(game, won, turns);
@@ -397,6 +397,7 @@ public final class CareerService {
                             CareerProgress.CareerGameResult result, long now) throws SQLException {
         switch (table.kind) {
             case "campaign":
+            case "trial":
                 CareerCampaigns.get().finished(store, table.user, table.ref, won, result, now);
                 break;
             case "gauntlet":

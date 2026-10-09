@@ -1,0 +1,47 @@
+# name: Dimir Lurrus Control
+# archetype: control
+# season: 2026-10
+# source: https://www.mtgtop8.com/archetype?a=1624&f=VI (MTGO Vintage League, 2026-10-06)
+4 Psychic Frog
+4 Bilbo, Thief in the Night
+4 Force of Will
+3 Force of Negation
+3 Spell Pierce
+1 Mental Misstep
+3 Fatal Push
+2 Thoughtseize
+3 Flow State
+2 Lorien Revealed
+1 Treasure Cruise
+1 Brainstorm
+1 Gitaxian Probe
+1 Ancestral Recall
+1 Time Walk
+1 Demonic Tutor
+1 Demonic Consultation
+1 Null Rod
+1 Soul-Guide Lantern
+1 Black Lotus
+1 Lotus Petal
+1 Mox Jet
+1 Mox Sapphire
+4 Underground Sea
+4 Polluted Delta
+1 Scalding Tarn
+4 Wasteland
+1 Strip Mine
+1 Urza's Saga
+1 Undercity Sewers
+1 Island
+1 Swamp
+SB: 1 Lurrus of the Dream-Den
+SB: 1 Annul
+SB: 1 Consign to Memory
+SB: 1 Pithing Needle
+SB: 1 Feed the Swarm
+SB: 3 Grafdigger's Cage
+SB: 1 Mystical Dispute
+SB: 2 Dismember
+SB: 2 Null Rod
+SB: 1 Soul-Guide Lantern
+SB: 1 Fatal Push

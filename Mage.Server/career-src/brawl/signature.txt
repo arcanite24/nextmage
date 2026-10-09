@@ -1,0 +1,40 @@
+# name: Storm Slayer's Legion
+# archetype: midrange (mono-white tokens, planeswalker commander)
+# season: 2026-10
+CMDR: Elspeth, Storm Slayer
+1 Healer's Hawk
+1 Savannah Lions
+1 Helpful Hunter
+1 Hare Apparent
+1 Resolute Reinforcements
+1 Cathar Commando
+1 Skyknight Squire
+1 Youthful Valkyrie
+1 Giada, Font of Hope
+1 Prideful Parent
+1 Cat Collector
+1 Dauntless Veteran
+1 Inspiring Paladin
+1 Arahbo, the First Fang
+1 Dazzling Angel
+1 Crystal Barricade
+1 Felidar Savior
+1 Vanguard Seraph
+1 Angel of Finality
+1 Exemplar of Light
+1 Serra Angel
+1 Lyra Dawnbringer
+1 Guarded Heir
+1 Herald of Eternal Dawn
+1 Ajani, Caller of the Pride
+1 Banishing Light
+1 Stroke of Midnight
+1 Luminous Rebuke
+1 Make Your Move
+1 Day of Judgment
+1 Divine Resilience
+1 Claws Out
+1 Heraldic Banner
+1 Valkyrie's Call
+1 Swiftfoot Boots
+24 Plains

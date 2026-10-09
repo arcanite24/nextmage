@@ -1,0 +1,14 @@
+# name: Host of Wings
+# archetype: midrange
+# season: 2026-10
+4 Healer's Hawk
+4 Giada, Font of Hope
+4 Youthful Valkyrie
+4 Lyra, Archangel of Dawn
+4 Dazzling Angel
+4 Angel of Vitality
+4 Serra Angel
+2 Lyra Dawnbringer
+3 Elspeth's Smite
+3 Banishing Light
+24 Plains

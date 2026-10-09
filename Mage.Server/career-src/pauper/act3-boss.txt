@@ -1,0 +1,17 @@
+# name: Boros Relic Hunters
+# archetype: aggro
+4 Thraben Inspector
+4 Gorilla Shaman
+4 Kor Skyfisher
+2 Revoke Existence
+2 Daring Skyjek
+4 Porcelain Legionnaire
+4 Attended Knight
+4 Lightning Bolt
+4 Chain Lightning
+4 Journey to Nowhere
+3 Dust to Dust
+3 Fiery Cannonade
+4 Wind-Scarred Crag
+7 Plains
+7 Mountain

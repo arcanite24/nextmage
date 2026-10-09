@@ -131,6 +131,16 @@ export const CAREER_SLEEVES: Record<string, string> = {
   gold: '#7a5f1c',
   obsidian: '#121014',
   foil: '#4a3d78',
+  // a school's graduates
+  'school-pauper': '#3d5a36',
+  'school-commander': '#4b2a5e',
+  'school-limited': '#66583c',
+  'school-pioneer': '#2c4a66',
+  'school-standard': '#22605b',
+  'school-modern': '#6a2a2c',
+  'school-legacy': '#25305e',
+  'school-vintage': '#4f4a1e',
+  'school-brawl': '#7b3550',
 };
 
 /** Career avatars: a crest's colors (light, dark) and its line drawing in a 24px box. */
@@ -154,9 +164,9 @@ export function unlockedIds(unlocks: readonly CareerCosmetic[], kind: CosmeticKi
   return unlocks.filter((unlock) => unlock.kind === kind && unlock.id).map((unlock) => unlock.id!);
 }
 
-/** A title as shown under a name: "questing knight" reads "Questing Knight". */
+/** A title as shown under a name: "questing knight" reads "Questing Knight", "pauper-graduate" "Pauper Graduate". */
 export function titleLabel(id: string): string {
-  return id.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+  return id.replace(/-/g, ' ').replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
 }
 
 /** The Career sleeve a color belongs to, if it's one. */

@@ -1,0 +1,21 @@
+# name: Azorius Control
+# archetype: control
+# season: 2026-10
+4 Opt
+3 Think Twice
+4 Essence Scatter
+3 Refute
+2 Negate
+3 Elspeth's Smite
+3 Banishing Light
+2 Stasis Snare
+3 Day of Judgment
+1 Fumigate
+2 Cloudblazer
+1 Lyra Dawnbringer
+3 Sphinx of the Final Word
+4 Hallowed Fountain
+4 Tranquil Cove
+1 Temple of Enlightenment
+9 Island
+8 Plains

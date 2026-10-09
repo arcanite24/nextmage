@@ -1,0 +1,933 @@
+{
+  "id": "legacy",
+  "name": "The Legacy School",
+  "format": "Legacy",
+  "school": true,
+  "order": 7,
+  "colors": "UR",
+  "summary": "Almost every card ever printed. Brainstorm, Force of Will, dual lands and Wasteland.",
+  "text": "Legacy is Magic's eternal format: nearly every card from every era is legal, so the best spells cost one mana and some cost nothing. Here you'll learn the original dual lands, Wasteland and Daze tempo, and how to fight on the stack with Brainstorm and Force of Will. You'll finish with the decks winning Legacy events today.",
+  "deckType": "Constructed - Legacy",
+  "gameType": "Two Player Duel",
+  "requires": [
+    "modern@2"
+  ],
+  "chapters": [
+    {
+      "id": "legacy-1",
+      "name": "First steps",
+      "text": "Legacy lets you play almost every card ever printed. Start with an honest white creature deck and learn what changes when the old cards come back.",
+      "deck": "legacy/starter.dck",
+      "deckName": "Death and Taxes",
+      "nodes": [
+        {
+          "id": "legacy-1a",
+          "type": "duel",
+          "name": "Nessa Shoal",
+          "text": "A merfolk captain who floods the board with lords.",
+          "requires": [],
+          "opponent": {
+            "name": "Nessa Shoal",
+            "deck": "legacy/opp-merfolk.dck",
+            "skill": 1
+          },
+          "lesson": {
+            "title": "Old lands, new rules",
+            "text": "Legacy is a 60-card format where nearly every card ever printed is legal. Only a short banlist, cards like Sensei's Divining Top and Deathrite Shaman, is kept out. Your Wasteland destroys a nonbasic land, so point it at her Mutavault, a land that turns into a creature. Thalia makes her Aether Vial and Spreading Seas cost one more.",
+            "cards": [
+              "Wasteland",
+              "Thalia, Guardian of Thraben",
+              "Mutavault",
+              "Lord of Atlantis"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Lord of Atlantis",
+              "title": "Lords stack",
+              "text": "Each Lord of Atlantis gives every other Merfolk +1/+1. Kill lords first with Swords to Plowshares; the small fish shrink with them."
+            },
+            {
+              "on": "play:Mutavault",
+              "title": "Waste the 'vault",
+              "text": "Mutavault is a land she can turn into a creature. Wasteland it before it starts attacking."
+            },
+            {
+              "on": "cast:Spreading Seas",
+              "title": "Islandwalk",
+              "text": "Spreading Seas makes one of your lands an Island. Her lords give islandwalk, so those Merfolk can't be blocked while you control an Island."
+            }
+          ],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          },
+          "before": "The tide only comes in. Mind your feet.",
+          "after": "You held the beach. Not many do."
+        },
+        {
+          "id": "legacy-1b",
+          "type": "duel",
+          "name": "Grubb the Loud",
+          "text": "A goblin warboss who never stops shouting or attacking.",
+          "requires": [
+            "legacy-1a"
+          ],
+          "opponent": {
+            "name": "Grubb the Loud",
+            "deck": "legacy/opp-goblins.dck",
+            "skill": 2
+          },
+          "lesson": {
+            "title": "Mana is a target",
+            "text": "In Legacy, lands are threats too. Rishadan Port taps one of his lands during his upkeep, so he has less mana for his turn. Use it on the turns he wants to cast a three- or four-drop like Goblin Rabblemaster or Goblin Ringleader. Mother of Runes keeps your best creature alive through his Gempalm Incinerator.",
+            "cards": [
+              "Rishadan Port",
+              "Mother of Runes",
+              "Goblin Lackey",
+              "Goblin Rabblemaster"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Goblin Lackey",
+              "title": "Kill the Lackey",
+              "text": "Goblin Lackey drops a free Goblin from his hand each time it connects. Block it or remove it right away."
+            },
+            {
+              "on": "play:Rishadan Port",
+              "title": "Port on his upkeep",
+              "text": "Activate Rishadan Port in his upkeep, before he can tap the land for mana. It costs you a mana too, so only do it when it stops something."
+            },
+            {
+              "on": "life:8",
+              "title": "Count his reach",
+              "text": "Goblin Piledriver and Goblin Warchief add up fast. Keep blockers back once you're low."
+            }
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          },
+          "before": "More goblins! MORE! Why aren't there more?",
+          "after": "Fine. Fewer goblins. For now."
+        },
+        {
+          "id": "legacy-1t",
+          "type": "trial",
+          "name": "The legend's land",
+          "text": "He reanimated Griselbrand, a 7/7 flier with lifelink. He's at 7 life. Win this turn.",
+          "hint": "Swords to Plowshares gives the creature's controller life. Look at your lands before your hand.",
+          "requires": [
+            "legacy-1b"
+          ],
+          "lesson": {
+            "title": "Karakas answers legends",
+            "text": "Karakas is a legendary land that returns a legendary creature to its owner's hand. Here that's cleaner than Swords to Plowshares, which would give him 7 life. Clear the blocker, then count Adeline: her power is the number of creatures you control, and her attack makes a token.",
+            "cards": [
+              "Karakas",
+              "Griselbrand",
+              "Adeline, Resplendent Cathar",
+              "Swords to Plowshares"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Swords to Plowshares"
+              ],
+              "battlefield": [
+                "Karakas",
+                "Plains",
+                "Plains",
+                "Mother of Runes",
+                "Thalia, Guardian of Thraben",
+                "Adeline, Resplendent Cathar"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Flickerwisp",
+                "Plains"
+              ]
+            },
+            "opponent": {
+              "life": 7,
+              "hand": [],
+              "battlefield": [
+                "Griselbrand",
+                "Swamp",
+                "Swamp",
+                "Swamp"
+              ],
+              "graveyard": [
+                "Entomb"
+              ],
+              "library": [
+                "Swamp",
+                "Swamp",
+                "Swamp"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "legacy-1boss",
+          "type": "duel",
+          "name": "Forge-Mother Kell",
+          "text": "She runs on Ancient Tomb and impatience.",
+          "requires": [
+            "legacy-1t"
+          ],
+          "opponent": {
+            "name": "Forge-Mother Kell",
+            "deck": "legacy/opp-stompy.dck",
+            "skill": 3,
+            "twists": {
+              "startingLife": 24,
+              "extraCards": 1
+            }
+          },
+          "lesson": {
+            "title": "Fast mana",
+            "text": "Ancient Tomb makes two mana for one land, so her three-drops arrive on turn two. Wasteland her Ancient Tomb or City of Traitors early; that buys you whole turns. Magus of the Moon turns nonbasic lands into Mountains, which is why you play mostly Plains.",
+            "cards": [
+              "Ancient Tomb",
+              "Magus of the Moon",
+              "Wasteland",
+              "Solitude"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Ancient Tomb",
+              "title": "Waste the Tomb",
+              "text": "That Ancient Tomb is two mana a turn. Wasteland it now, before it pays for anything else."
+            },
+            {
+              "on": "play:Magus of the Moon",
+              "title": "Moon on the table",
+              "text": "Your Port, Wasteland and Karakas are Mountains while Magus of the Moon lives. Swords it or exile it with Solitude."
+            },
+            {
+              "on": "cast:Fury",
+              "title": "A free spell",
+              "text": "Fury can be cast for free by exiling a red card. Legacy is full of spells like this; Solitude is yours."
+            }
+          ],
+          "reward": {
+            "coins": 80,
+            "xp": 250,
+            "deckCards": true
+          },
+          "boss": true,
+          "before": "Two mana from one land. Keep up if you can.",
+          "after": "You broke my tempo. The deck's yours; you earned it."
+        }
+      ]
+    },
+    {
+      "id": "legacy-2",
+      "name": "Archetypes",
+      "text": "Four duels, four borrowed decks. Each one has a job: race, grind, answer or combo. Learn who's the beatdown, the player who must win fast, before you pick a side.",
+      "nodes": [
+        {
+          "id": "legacy-2a",
+          "type": "duel",
+          "name": "Warden Ivy",
+          "text": "A ranger whose green creatures grow on fetched duals.",
+          "requires": [
+            "legacy-1boss"
+          ],
+          "deck": "legacy/act2-burn.dck",
+          "deckName": "Burn",
+          "opponent": {
+            "name": "Warden Ivy",
+            "deck": "legacy/opp-maverick.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Aggro: race her",
+            "text": "You're the beatdown. Point burn at her face, not her creatures, unless a creature would stop your plan. Fireblast is free if you sacrifice two Mountains. Price of Progress hits every nonbasic land she controls, and she plays a lot of them.",
+            "cards": [
+              "Price of Progress",
+              "Fireblast",
+              "Eidolon of the Great Revel",
+              "Savannah"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Mother of Runes",
+              "title": "Mother first",
+              "text": "Mother of Runes can protect a creature from red. Bolt her as soon as she lands, before she untaps."
+            },
+            {
+              "on": "cast:Price of Progress",
+              "title": "Count her duals",
+              "text": "Price of Progress deals 2 damage for each nonbasic land she controls. Cast it once she has fetched three or more."
+            },
+            {
+              "on": "opponentLife:8",
+              "title": "Fireblast range",
+              "text": "Fireblast is 4 damage for no mana. Count your hand: two burn spells and a Fireblast usually finish it."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "My garden grows on old land. Mind where you step.",
+          "after": "Burned to the roots. Well played."
+        },
+        {
+          "id": "legacy-2b",
+          "type": "duel",
+          "name": "Captain Sol",
+          "text": "A sun-knight who swarms early and swings every turn.",
+          "requires": [
+            "legacy-2a"
+          ],
+          "deck": "legacy/act2-jund.dck",
+          "deckName": "Jund",
+          "opponent": {
+            "name": "Captain Sol",
+            "deck": "legacy/opp-boros.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Midrange: trade, then turn",
+            "text": "Against aggro you are the control deck for the first turns. Trade removal for his early creatures, block with Tarmogoyf and let Orcish Bowmasters ping his X/1s. Once he's out of creatures, attack.",
+            "cards": [
+              "Orcish Bowmasters",
+              "Tarmogoyf",
+              "Fatal Push",
+              "Thoughtseize"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Goblin Guide",
+              "title": "Guide's gift",
+              "text": "Goblin Guide hits hard, but its attacks can hand you lands. Push it or block it."
+            },
+            {
+              "on": "cast:Thoughtseize",
+              "title": "Seize carefully",
+              "text": "Thoughtseize costs 2 life. Against this deck, take a creature and keep your life total in mind."
+            },
+            {
+              "on": "life:10",
+              "title": "Turn the corner later",
+              "text": "At 10 life, stop attacking unless it's safe. Stabilise first; Bloodbraid Elf will close it later."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Dawn breaks fast, and so will you.",
+          "after": "Trading's a slow death. I never learned it."
+        },
+        {
+          "id": "legacy-2c",
+          "type": "duel",
+          "name": "Rook Vasska",
+          "text": "She plays the Jund deck you just borrowed, and plays it well.",
+          "requires": [
+            "legacy-2b"
+          ],
+          "deck": "legacy/act2-miracles.dck",
+          "deckName": "Miracles",
+          "opponent": {
+            "name": "Rook Vasska",
+            "deck": "legacy/act2-jund.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Control: one for one",
+            "text": "Answer each threat with one card, then win on cards in hand. Brainstorm draws three and puts two back; use a fetchland afterward to shuffle the bad two away. Terminus is a miracle: if it's the first card you draw in a turn, you can cast it for one white mana.",
+            "cards": [
+              "Brainstorm",
+              "Force of Will",
+              "Terminus",
+              "Jace, the Mind Sculptor"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Force of Will",
+              "title": "Force for free",
+              "text": "Force of Will can cost one life and a blue card from your hand. Save it for the spell that would beat you."
+            },
+            {
+              "on": "cast:Brainstorm",
+              "title": "Shuffle the bottom two",
+              "text": "After Brainstorm puts two cards back, crack a fetchland. The shuffle sends them away for good."
+            },
+            {
+              "on": "play:Tarmogoyf",
+              "title": "Goyf grows",
+              "text": "Tarmogoyf counts card types in every graveyard. Swords to Plowshares answers it at any size."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "You borrowed my deck. Let's see if you understood it.",
+          "after": "Card for card, you came out ahead. Annoying."
+        },
+        {
+          "id": "legacy-2d",
+          "type": "duel",
+          "name": "Cinder Pip",
+          "text": "A firebrand who throws every spell at your face.",
+          "requires": [
+            "legacy-2c"
+          ],
+          "deck": "legacy/act2-depths.dck",
+          "deckName": "Golgari Depths",
+          "opponent": {
+            "name": "Cinder Pip",
+            "deck": "legacy/act2-burn.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Combo: goldfish fast",
+            "text": "Your combo is Dark Depths plus Vampire Hexmage or Thespian's Stage. Hexmage removes its counters, or Stage copies it without counters, and you get a 20/20 flying, indestructible Marit Lage. Find the pieces with Crop Rotation and Sylvan Scrying. Ignore her burn unless it stops your combo.",
+            "cards": [
+              "Dark Depths",
+              "Vampire Hexmage",
+              "Thespian's Stage",
+              "Crop Rotation"
+            ]
+          },
+          "tips": [
+            {
+              "on": "mulligan",
+              "title": "Keep a plan",
+              "text": "Keep a hand with Dark Depths or a way to find it. Without one, this deck is just lands."
+            },
+            {
+              "on": "play:Dark Depths",
+              "title": "Two ways in",
+              "text": "Sacrifice Vampire Hexmage to clear the counters, or pay two and tap Thespian's Stage to copy Dark Depths. Keep the copy when the legend rule asks."
+            },
+            {
+              "on": "life:6",
+              "title": "Don't pay life",
+              "text": "Thoughtseize and fetchlands cost life. At 6 or less, skip them unless they win the game."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Twenty life? I'll have that by turn four.",
+          "after": "A twenty-twenty. Out of a land. Unfair."
+        },
+        {
+          "id": "legacy-2choice",
+          "type": "choice",
+          "name": "The library steps",
+          "text": "An old dealer in the stacks offers you something for the road.",
+          "requires": [
+            "legacy-2d"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "legacy-3",
+      "name": "Signature",
+      "text": "Brainstorm, Force of Will, Daze and Wasteland: the cards that make Legacy what it is. Learn to play cheap threats behind free counters, and to win while your opponent can't use their mana.",
+      "deck": "legacy/signature.dck",
+      "deckName": "Temur Tempo",
+      "nodes": [
+        {
+          "id": "legacy-3t1",
+          "type": "trial",
+          "name": "Under the gun",
+          "text": "You're at 4 life. He has Goblin Guide, a Lightning Bolt and a Fireblast. Survive his turn.",
+          "hint": "Kill the creature, Force the spell he casts with mana open, and Daze the one he casts when he's out of lands.",
+          "requires": [
+            "legacy-2choice"
+          ],
+          "lesson": {
+            "title": "The stack under pressure",
+            "text": "Force of Will costs one life and a blue card, so you can counter with no mana. Daze returns an Island instead of mana, but they can pay one to ignore it. So Daze a spell only when they have no untapped land left. Fireblast sacrifices two Mountains, which leaves nothing to pay with.",
+            "cards": [
+              "Force of Will",
+              "Daze",
+              "Fireblast",
+              "Goblin Guide"
+            ]
+          },
+          "trial": {
+            "objective": "survive",
+            "you": {
+              "life": 4,
+              "hand": [
+                "Force of Will",
+                "Daze",
+                "Lightning Bolt",
+                "Brainstorm"
+              ],
+              "battlefield": [
+                "Volcanic Island",
+                "Island"
+              ],
+              "graveyard": [],
+              "library": [
+                "Island",
+                "Nimble Mongoose",
+                "Ponder",
+                "Delver of Secrets",
+                "Tropical Island"
+              ]
+            },
+            "opponent": {
+              "life": 20,
+              "hand": [
+                "Lightning Bolt",
+                "Fireblast"
+              ],
+              "battlefield": [
+                "Mountain",
+                "Mountain",
+                "Goblin Guide"
+              ],
+              "graveyard": [],
+              "library": [
+                "Goblin Rabblemaster",
+                "Goblin Rabblemaster",
+                "Fable of the Mirror-Breaker"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "legacy-3a",
+          "type": "duel",
+          "name": "Abbot Corran",
+          "text": "A silent monk whose temple makes giants out of nothing.",
+          "requires": [
+            "legacy-3t1"
+          ],
+          "opponent": {
+            "name": "Abbot Corran",
+            "deck": "legacy/opp-eldrazi.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Deny the mana",
+            "text": "His deck needs Eldrazi Temple and Ancient Tomb to cast big threats early. Wasteland those lands and Daze his early play when he taps out. A cheap Delver or Mongoose then wins before he catches up.",
+            "cards": [
+              "Wasteland",
+              "Daze",
+              "Delver of Secrets",
+              "Eldrazi Temple"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Eldrazi Temple",
+              "title": "Waste the Temple",
+              "text": "Eldrazi Temple makes two mana for his Eldrazi. Wasteland it before he untaps with it."
+            },
+            {
+              "on": "play:Thought-Knot Seer",
+              "title": "Seer takes a card",
+              "text": "Thought-Knot Seer exiles a card from your hand. Bolt can't kill it; Brazen Borrower can bounce it for a turn."
+            },
+            {
+              "on": "cast:Daze",
+              "title": "Daze the tapped-out turn",
+              "text": "Daze only works if he can't pay one more. Watch his untapped lands before you cast it."
+            }
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          },
+          "before": "The temple asks nothing of me. It gives.",
+          "after": "Without the temple, I was only a monk."
+        },
+        {
+          "id": "legacy-3t2",
+          "type": "trial",
+          "name": "Threshold",
+          "text": "Two Nimble Mongooses and four cards in your graveyard. He's at 9 life with no blockers. Win this turn.",
+          "hint": "Seven cards in your graveyard turns on threshold. Your fetchland, Brainstorm and Bolt each put one there.",
+          "requires": [
+            "legacy-3a"
+          ],
+          "lesson": {
+            "title": "Count to seven",
+            "text": "Nimble Mongoose gets +2/+2 with seven or more cards in your graveyard; that's threshold. Every spell you cast and every fetchland you crack feeds it. Brainstorm first, then crack the fetchland to shuffle away the cards you put back.",
+            "cards": [
+              "Nimble Mongoose",
+              "Brainstorm",
+              "Scalding Tarn",
+              "Lightning Bolt"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Brainstorm",
+                "Lightning Bolt"
+              ],
+              "battlefield": [
+                "Volcanic Island",
+                "Tropical Island",
+                "Scalding Tarn",
+                "Nimble Mongoose",
+                "Nimble Mongoose"
+              ],
+              "graveyard": [
+                "Ponder",
+                "Daze",
+                "Force of Will",
+                "Stifle"
+              ],
+              "library": [
+                "Island",
+                "Mountain",
+                "Volcanic Island",
+                "Tropical Island",
+                "Island"
+              ]
+            },
+            "opponent": {
+              "life": 9,
+              "hand": [],
+              "battlefield": [
+                "Plains",
+                "Plains",
+                "Forest"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Plains",
+                "Forest"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "legacy-3boss",
+          "type": "duel",
+          "name": "Pridelord Aurek",
+          "text": "A cat-king with three colours of dual lands under his paws.",
+          "requires": [
+            "legacy-3t2"
+          ],
+          "opponent": {
+            "name": "Pridelord Aurek",
+            "deck": "legacy/opp-zoo.dck",
+            "skill": 5,
+            "twists": {
+              "startingLife": 24,
+              "extraCards": 1
+            }
+          },
+          "lesson": {
+            "title": "Stifle the fetch",
+            "text": "His three-colour mana rests on fetchlands and dual lands. Stifle counters an ability, so cast it on his fetchland's search and he gets no land. Wasteland his only Taiga or Plateau and his Zoo creatures stay in his hand. Then race with Mongoose and Goyf.",
+            "cards": [
+              "Stifle",
+              "Wasteland",
+              "Nimble Mongoose",
+              "Territorial Kavu"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Wooded Foothills",
+              "title": "Stifle the search",
+              "text": "When he cracks Wooded Foothills, cast Stifle on the search. He has paid the life and gets nothing."
+            },
+            {
+              "on": "play:Territorial Kavu",
+              "title": "Kavu counts types",
+              "text": "Territorial Kavu's size is the number of basic land types among his lands. Wasteland a dual to shrink it."
+            },
+            {
+              "on": "life:7",
+              "title": "Block now",
+              "text": "At 7 life his Bolts can finish you. Keep a creature home and hold Force of Will for burn."
+            }
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "packs": 1
+          },
+          "boss": true,
+          "before": "Every colour bows to the pride.",
+          "after": "You starved the pride. Clever cub."
+        }
+      ]
+    },
+    {
+      "id": "legacy-4",
+      "name": "The meta",
+      "text": "These are the decks winning Legacy events in autumn 2026. You pilot the blue decks and the combo; the table brings the creatures.",
+      "nodes": [
+        {
+          "id": "legacy-4a",
+          "type": "duel",
+          "name": "Sister Vell",
+          "text": "A grey nun who taxes every spell and steals every plan.",
+          "requires": [
+            "legacy-3boss"
+          ],
+          "deck": "legacy/meta-izzet-delver.dck",
+          "deckName": "Izzet Delver",
+          "opponent": {
+            "name": "Sister Vell",
+            "deck": "legacy/meta-death-and-taxes.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Izzet Delver vs Death and Taxes",
+            "text": "You're the tempo deck: cheap threats, counters, burn. Her deck is creatures that make your spells awkward and Wasteland for your Volcanic Islands. Fetch your basic Island early, hold Daze for Orcish Bowmasters, which kills an X/1 as it enters, and save Force of Will for Solitude or Overlord of the Balemurk.",
+            "cards": [
+              "Dragon's Rage Channeler",
+              "Murktide Regent",
+              "Orcish Bowmasters",
+              "Solitude"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Wasteland",
+              "title": "Fetch a basic",
+              "text": "She runs four Wastelands. With one dual already in play, get a basic Island with your next fetchland."
+            },
+            {
+              "on": "cast:Solitude",
+              "title": "Solitude is free",
+              "text": "Solitude can be cast by exiling a white card. It still uses the stack, so Force of Will or Daze can answer it."
+            },
+            {
+              "on": "play:Murktide Regent",
+              "title": "Delve big",
+              "text": "Murktide Regent gets a counter for each instant and sorcery you exile to cast it. Fill the graveyard first."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Every spell you cast owes a tithe.",
+          "after": "Paid in full. Go in peace."
+        },
+        {
+          "id": "legacy-4b",
+          "type": "duel",
+          "name": "Marshal Oona",
+          "text": "An energy-mad general with a cat army.",
+          "requires": [
+            "legacy-4a"
+          ],
+          "deck": "legacy/meta-sneak-show.dck",
+          "deckName": "Sneak and Show",
+          "opponent": {
+            "name": "Marshal Oona",
+            "deck": "legacy/meta-boros-energy.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Sneak and Show vs Boros Energy",
+            "text": "Show and Tell lets each player put a permanent from hand onto the battlefield; Sneak Attack puts in a creature with haste for one red mana. Land one on turn two or three and protect it with Force of Will. Her Karakas can bounce your legendary giants, so value what they do on arrival: Atraxa's cards and Griselbrand's draw-seven stay with you.",
+            "cards": [
+              "Show and Tell",
+              "Sneak Attack",
+              "Emrakul, the Aeons Torn",
+              "Karakas"
+            ]
+          },
+          "tips": [
+            {
+              "on": "mulligan",
+              "title": "Combo or nothing",
+              "text": "Keep a hand with Show and Tell or Sneak Attack, a big creature and a way to cast them. Brainstorm can find the missing piece."
+            },
+            {
+              "on": "play:Thalia, Guardian of Thraben",
+              "title": "Thalia taxes you",
+              "text": "Thalia makes your noncreature spells cost one more. Ancient Tomb and Lotus Petal help you pay it."
+            },
+            {
+              "on": "play:Karakas",
+              "title": "Karakas sees legends",
+              "text": "Karakas returns a legendary creature to hand, and all your giants are legendary. With Griselbrand, pay 7 life and draw seven in response; with Sneak Attack, put it back in next turn."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "My cats run on lightning. Can you keep up?",
+          "after": "A titan from nowhere. I should have kept a Swords."
+        },
+        {
+          "id": "legacy-4c",
+          "type": "duel",
+          "name": "Grim Ferro",
+          "text": "A smith who forges moons and rings.",
+          "requires": [
+            "legacy-4b"
+          ],
+          "deck": "legacy/meta-beanstalk.dck",
+          "deckName": "Bant Beanstalk Control",
+          "opponent": {
+            "name": "Grim Ferro",
+            "deck": "legacy/meta-red-stompy.dck",
+            "skill": 6
+          },
+          "lesson": {
+            "title": "Beanstalk vs Red Stompy",
+            "text": "Blood Moon and Magus of the Moon turn your dual lands into Mountains. Fetch your basic Forest, Island and Plains first, and Force of Will the Blood Moon. Up the Beanstalk draws a card each time you cast a spell with mana value five or more; Force of Will, Quantum Riddler and Leyline Binding all count.",
+            "cards": [
+              "Up the Beanstalk",
+              "Blood Moon",
+              "Force of Will",
+              "Uro, Titan of Nature's Wrath"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Blood Moon",
+              "title": "Force the Moon",
+              "text": "Blood Moon turns nonbasic lands into Mountains. Counter it if you can; it's worth your Force of Will."
+            },
+            {
+              "on": "play:The One Ring",
+              "title": "The Ring draws",
+              "text": "The One Ring protects him for a turn, then draws him more cards every turn. Counter it, or exile it with Leyline Binding."
+            },
+            {
+              "on": "play:Uro, Titan of Nature's Wrath",
+              "title": "Uro gains time",
+              "text": "Uro gains 3 life, draws a card and can put a land from your hand onto the battlefield. Escape it later from your graveyard to keep it."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "The moon rises when I say so.",
+          "after": "Basics. Of course. I forget people still play them."
+        },
+        {
+          "id": "legacy-final",
+          "type": "duel",
+          "boss": true,
+          "name": "The Pale Archivist",
+          "text": "The keeper of the old stacks plays the colourless horde. Best of three.",
+          "requires": [
+            "legacy-4c"
+          ],
+          "deck": "legacy/meta-dimir-tempo.dck",
+          "deckName": "Dimir Tempo",
+          "opponent": {
+            "name": "The Pale Archivist",
+            "deck": "legacy/meta-eldrazi.dck",
+            "skill": 7
+          },
+          "lesson": {
+            "title": "Dimir Tempo vs Eldrazi",
+            "text": "Dimir Tempo is the format's most played deck: cheap threats, Thoughtseize, Daze, Force of Will and Wasteland. Eldrazi wants Ancient Tomb or Eldrazi Temple into Chalice of the Void or Thought-Knot Seer on turn one or two. Wasteland their mana, Daze the early play, and let Nethergoyf and Moonshadow race.",
+            "cards": [
+              "Wasteland",
+              "Chalice of the Void",
+              "Nethergoyf",
+              "Fatal Push"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Chalice of the Void",
+              "title": "Chalice on one",
+              "text": "Chalice with one counter counters every spell with mana value 1, and most of your deck costs one. Counter it with Force of Will or Daze if you can."
+            },
+            {
+              "on": "play:Ancient Tomb",
+              "title": "Tomb first",
+              "text": "Wasteland his Ancient Tomb or Eldrazi Temple before his second turn; that slows him by a whole turn."
+            },
+            {
+              "on": "play:Thought-Knot Seer",
+              "title": "Push needs revolt",
+              "text": "Fatal Push kills a four-drop like Thought-Knot Seer only with revolt: a permanent of yours left play this turn. Crack a fetchland first."
+            }
+          ],
+          "reward": {
+            "coins": 200,
+            "xp": 500,
+            "packs": 2,
+            "wildcard": "rare",
+            "cosmetics": [
+              {
+                "kind": "title",
+                "id": "legacy-graduate"
+              },
+              {
+                "kind": "sleeve",
+                "id": "school-legacy"
+              }
+            ]
+          },
+          "winsNeeded": 2,
+          "sideboard": "Chalice of the Void stops your one-drops. Bring in both Brazen Borrowers, which can bounce Chalice or Thought-Knot Seer, and Snuff Out, which is free with a Swamp (Underground Sea counts). Take out two Thoughtseize and a Ponder: their life cost hurts and Chalice blanks them.",
+          "before": "The old stacks hold every card ever made. Show me you've read them.",
+          "after": "Shelve your deck with pride, graduate. The stacks are yours."
+        }
+      ]
+    }
+  ]
+}

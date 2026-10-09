@@ -1,0 +1,81 @@
+# name: Revel Stampede
+# archetype: midrange (Gruul big creatures with haste)
+# season: 2026-10
+1 Llanowar Elves
+1 Elvish Mystic
+1 Sakura-Tribe Elder
+1 Wood Elves
+1 Questing Beast
+1 Old-Growth Troll
+1 Bloodbraid Elf
+1 Huntmaster of the Fells
+1 Goreclaw, Terror of Qal Sisma
+1 Surrak, the Hunt Caller
+1 Charging Monstrosaur
+1 Rampaging Ferocidon
+1 Thrashing Brontodon
+1 Glorybringer
+1 Thundermaw Hellkite
+1 Stormbreath Dragon
+1 Inferno Titan
+1 Savage Ventmaw
+1 Ilharg, the Raze-Boar
+1 Etali, Primal Storm
+1 Moraug, Fury of Akoum
+1 Polukranos, World Eater
+1 Garruk's Harbinger
+1 Gruul Ragebeast
+1 Thragtusk
+1 Verdurous Gearhulk
+1 Champion of Lambholt
+1 Tireless Tracker
+1 Eternal Witness
+1 Atarka, World Render
+1 Hellkite Charger
+1 Drakuseth, Maw of Flames
+1 Shivan Dragon
+1 Thunderfoot Baloth
+1 Avatar of the Resolute
+1 Lovestruck Beast
+1 Hellrider
+1 Rhythm of the Wild
+1 Fires of Yavimaya
+1 Elemental Bond
+1 Garruk Wildspeaker
+1 Garruk, Primal Hunter
+1 Domri, Anarch of Bolas
+1 Beast Within
+1 Chaos Warp
+1 Lightning Bolt
+1 Rabid Bite
+1 Ram Through
+1 Abrade
+1 Harmonize
+1 Return of the Wildspeaker
+1 Garruk's Uprising
+1 Guardian Project
+1 Swiftfoot Boots
+1 Heroic Intervention
+1 Sol Ring
+1 Arcane Signet
+1 Gruul Signet
+1 Rampant Growth
+1 Nature's Lore
+1 Three Visits
+1 Cultivate
+1 Kodama's Reach
+1 Command Tower
+1 Gruul Turf
+1 Gruul Guildgate
+1 Rootbound Crag
+1 Cinder Glade
+1 Rugged Highlands
+1 Stomping Ground
+1 Karplusan Forest
+1 Game Trail
+1 Evolving Wilds
+1 Myriad Landscape
+1 Kessig Wolf Run
+12 Forest
+12 Mountain
+CMDR: Xenagos, God of Revels

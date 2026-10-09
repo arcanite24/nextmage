@@ -1,0 +1,932 @@
+{
+  "id": "brawl",
+  "name": "The Brawl School",
+  "format": "Brawl",
+  "school": true,
+  "order": 9,
+  "colors": "RW",
+  "summary": "Commander with 60 cards and the Standard pool. Fast duels, planeswalker commanders.",
+  "text": "Brawl takes Commander's best idea, a commander you can always cast, and makes it quick: 60 cards, one of each, only Standard cards, and 25 life in a duel. Planeswalkers can lead too. You'll learn the rules, the four roles, how to play a planeswalker commander, and the commanders people play today.",
+  "deckType": "Variant Magic - Brawl",
+  "gameType": "Brawl Two Player Duel",
+  "requires": [
+    "commander@2"
+  ],
+  "chapters": [
+    {
+      "id": "brawl-1",
+      "name": "First steps",
+      "text": "Brawl is Commander made small: a 60-card deck led by a legendary creature or a planeswalker, one copy of each card, and only cards legal in Standard. Duels start at 25 life and move fast.",
+      "deck": "brawl/starter.dck",
+      "deckName": "Ruby's Stampede",
+      "nodes": [
+        {
+          "id": "brawl-1a",
+          "type": "duel",
+          "name": "Boss Nubb",
+          "text": "A goblin foreman who never stops hiring.",
+          "requires": [],
+          "opponent": {
+            "name": "Boss Nubb",
+            "deck": "brawl/opp-krenko.dck",
+            "skill": 1
+          },
+          "lesson": {
+            "title": "Sixty cards, one of each",
+            "text": "A Brawl deck is exactly 60 cards: your commander plus 59 others, one copy of each except basic lands. Every card must be legal in Standard and fit your commander's colour identity: Ruby is red and green, so no white, blue or black. Duels start at 25 life. Nubb's commander is Krenko, Mob Boss; yours is Ruby.",
+            "cards": [
+              "Ruby, Daring Tracker",
+              "Krenko, Mob Boss",
+              "Mossborn Hydra",
+              "Quakestrider Ceratops"
+            ]
+          },
+          "tips": [
+            {
+              "on": "start",
+              "title": "The command zone",
+              "text": "Ruby starts in the command zone, not in your library. You can cast it from there any time you could cast a creature."
+            },
+            {
+              "on": "turn:2",
+              "title": "Ruby on turn two",
+              "text": "Ruby costs two and has haste. Cast it now and attack; it gets +2/+2 when it attacks beside a creature with power 4 or more."
+            },
+            {
+              "on": "play:Krenko, Mob Boss",
+              "title": "Kill the boss",
+              "text": "Krenko makes a Goblin for every Goblin he controls each time he taps. Burn or fight it before it untaps."
+            }
+          ],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          },
+          "before": "More goblins, more problems. For you.",
+          "after": "Fired. All of them. Again."
+        },
+        {
+          "id": "brawl-1b",
+          "type": "duel",
+          "name": "Mother Purr",
+          "text": "Her cats answer to one great cat.",
+          "requires": [
+            "brawl-1a"
+          ],
+          "opponent": {
+            "name": "Mother Purr",
+            "deck": "brawl/opp-arahbo.dck",
+            "skill": 2
+          },
+          "lesson": {
+            "title": "Commander tax",
+            "text": "When your commander would die or be exiled, you can send it back to the command zone. Each time you cast it from there, it costs 2 more than the last time. Ruby is cheap, so trading it is fine when it buys something. Her commander, Arahbo, makes every cat bigger: kill it and make her pay the tax.",
+            "cards": [
+              "Ruby, Daring Tracker",
+              "Arahbo, the First Fang",
+              "Fiery Annihilation",
+              "Bite Down"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Arahbo, the First Fang",
+              "title": "Her engine",
+              "text": "Arahbo gives her other cats +1/+1 and makes a cat whenever a cat enters. Fiery Annihilation or Bite Down it now; next time it costs her 2 more."
+            },
+            {
+              "on": "cast:Ruby, Daring Tracker",
+              "title": "Paying the tax",
+              "text": "Every time Ruby comes back from the command zone it costs 2 more. Recast it with spare mana, not instead of your best spell."
+            },
+            {
+              "on": "life:12",
+              "title": "Count her cats",
+              "text": "Her cats get bigger together. Below 12 life, count her whole team's power before you attack with your blockers."
+            }
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          },
+          "before": "My kittens have claws. Lots of them.",
+          "after": "Fine. Even cats lose sometimes."
+        },
+        {
+          "id": "brawl-1t",
+          "type": "trial",
+          "name": "Haste from the command zone",
+          "text": "Your opponent is at 6 life behind a 0/5 Aegis Turtle. Ruby, Daring Tracker is in your hand, standing in for the command zone. Win this turn.",
+          "hint": "Cast Ruby with the Mountain and a Forest. Attack with Ruby and Elfsworn Giant, then cast Giant Growth on whichever isn't blocked.",
+          "requires": [
+            "brawl-1b"
+          ],
+          "lesson": {
+            "title": "Haste and a big friend",
+            "text": "Ruby has haste, so it attacks the turn it arrives, and it gets +2/+2 when it attacks while you control a creature with power 4 or more. Your commander is always available, so plan turns around it.",
+            "cards": [
+              "Ruby, Daring Tracker",
+              "Elfsworn Giant",
+              "Giant Growth",
+              "Aegis Turtle"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 25,
+              "hand": [
+                "Ruby, Daring Tracker",
+                "Giant Growth"
+              ],
+              "battlefield": [
+                "Forest",
+                "Forest",
+                "Mountain",
+                "Elfsworn Giant"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Mountain",
+                "Bushwhack"
+              ]
+            },
+            "opponent": {
+              "life": 6,
+              "hand": [],
+              "battlefield": [
+                "Aegis Turtle",
+                "Plains|tapped",
+                "Plains|tapped"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Savannah Lions",
+                "Plains"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "brawl-1boss",
+          "type": "duel",
+          "name": "Elder Thessaly",
+          "text": "The elf court has grown for a hundred years.",
+          "requires": [
+            "brawl-1t"
+          ],
+          "opponent": {
+            "name": "Elder Thessaly",
+            "deck": "brawl/opp-lathril.dck",
+            "skill": 3,
+            "twists": {
+              "startingLife": 30
+            }
+          },
+          "lesson": {
+            "title": "Commanders that snowball",
+            "text": "Lathril makes an Elf for each point of combat damage it deals, and Elvish Archdruid turns Elves into mana. Lathril has menace, so it needs two blockers; burning it is easier. Thessaly starts at 30 life: attack with your big creatures while her Elves are still small.",
+            "cards": [
+              "Lathril, Blade of the Elves",
+              "Elvish Archdruid",
+              "Fiery Annihilation",
+              "Quakestrider Ceratops"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Lathril, Blade of the Elves",
+              "title": "Menace",
+              "text": "Lathril can't be blocked except by two or more creatures. Kill it, or keep two blockers home."
+            },
+            {
+              "on": "play:Elvish Archdruid",
+              "title": "The mana elf",
+              "text": "Elvish Archdruid makes a green mana for each Elf she has and pumps them all. Burst Lightning or Abrade it before it untaps."
+            },
+            {
+              "on": "opponentLife:15",
+              "title": "Halfway there",
+              "text": "She's halfway down from 30. Keep attacking with your biggest creatures and use tricks to win the fights."
+            }
+          ],
+          "reward": {
+            "coins": 80,
+            "xp": 250,
+            "deckCards": true
+          },
+          "boss": true,
+          "before": "My court is old, child. Older than your ambition.",
+          "after": "The court bows. Rarely. Today."
+        }
+      ]
+    },
+    {
+      "id": "brawl-2",
+      "name": "Archetypes",
+      "text": "A commander tells you what the deck wants to do. Four loaner commanders, four roles: aggro, midrange, control and combo. Each duel asks one question: who's the beatdown?",
+      "nodes": [
+        {
+          "id": "brawl-2a",
+          "type": "duel",
+          "name": "Captain Merrow",
+          "text": "Every land she plays draws her a card.",
+          "deck": "brawl/act2-aggro.dck",
+          "deckName": "Alesha's Raiders",
+          "requires": [
+            "brawl-1boss"
+          ],
+          "opponent": {
+            "name": "Captain Merrow",
+            "deck": "brawl/opp-tatyova.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Race the value",
+            "text": "Alesha attacks every turn, gets a +1/+1 counter each time, and with raid brings back a small creature from your graveyard at your end step. Tatyova draws Merrow a card for every land, so the longer the game, the more she has. Race: attack first, count damage, and spend removal on blockers or on Koma.",
+            "cards": [
+              "Alesha, Who Laughs at Fate",
+              "Gorehorn Raider",
+              "Burst Lightning",
+              "Tatyova, Benthic Druid"
+            ]
+          },
+          "tips": [
+            {
+              "on": "attack",
+              "title": "Attack first",
+              "text": "Raid cards and Alesha's return ability need you to have attacked this turn. Attack, then cast Gorehorn Raider after combat."
+            },
+            {
+              "on": "play:Koma, World-Eater",
+              "title": "Don't fight Koma",
+              "text": "Koma can't be countered and has ward 4. Chump-block it and keep racing; you can't out-value it."
+            },
+            {
+              "on": "opponentLife:10",
+              "title": "Reach",
+              "text": "Count your burn and drain: Exsanguinate, Boltwave and Lightning Strike can finish the last points."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "The tide brings me everything eventually.",
+          "after": "You came faster than the tide."
+        },
+        {
+          "id": "brawl-2b",
+          "type": "duel",
+          "name": "Marigold Stitch",
+          "text": "Her toys are small, many and sharp.",
+          "deck": "brawl/act2-midrange.dck",
+          "deckName": "Kutzil's Pride",
+          "requires": [
+            "brawl-2a"
+          ],
+          "opponent": {
+            "name": "Marigold Stitch",
+            "deck": "brawl/opp-arabella.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Stabilise, then turn",
+            "text": "Arabella drains you each time it attacks, once for each of her creatures with power 2 or less. You're the bigger deck: block early, trade, and save removal for Arabella. Kutzil stops her casting spells on your turn, so once you're ahead you can attack without fearing tricks.",
+            "cards": [
+              "Kutzil, Malamet Exemplar",
+              "Felidar Savior",
+              "Stroke of Midnight",
+              "Arabella, Abandoned Doll"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Arabella, Abandoned Doll",
+              "title": "The doll",
+              "text": "Each attack drains you for every small creature she has. Stroke of Midnight or Banishing Light it; recasting costs her 2 more."
+            },
+            {
+              "on": "block",
+              "title": "Trade early",
+              "text": "Her creatures are small. Block with anything that survives or trades; every creature she loses shrinks Arabella's drain."
+            },
+            {
+              "on": "life:12",
+              "title": "Turn the corner later",
+              "text": "Below 12, stop attacking with creatures you need as blockers until her board is smaller than yours."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Want to play with my toys? They want to play with you.",
+          "after": "Back in the box, all of you."
+        },
+        {
+          "id": "brawl-2choice",
+          "type": "choice",
+          "name": "The trading post",
+          "text": "A collector offers a trade for your spare cards.",
+          "requires": [
+            "brawl-2b"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        },
+        {
+          "id": "brawl-2c",
+          "type": "duel",
+          "name": "Old Hollin",
+          "text": "Two rangers, one commander, no retreat.",
+          "deck": "brawl/act2-control.dck",
+          "deckName": "Talion's Court",
+          "requires": [
+            "brawl-2choice"
+          ],
+          "opponent": {
+            "name": "Old Hollin",
+            "deck": "brawl/opp-halana.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Control in a singleton deck",
+            "text": "With one copy of each card, you can't count on drawing your best removal, so count your answers: Hero's Downfall, Murder, Heartless Act, Bake into a Pie and more. Save them for Halana and Alena and the dragons, counter big spells, and let small creatures hit you. Talion flies over the ground once the board is clear.",
+            "cards": [
+              "Talion, the Kindly Lord",
+              "Hero's Downfall",
+              "Essence Scatter",
+              "Halana and Alena, Partners"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Halana and Alena, Partners",
+              "title": "The partners",
+              "text": "Every combat they put counters on another creature and give it haste. Kill them now; each recast costs him 2 more."
+            },
+            {
+              "on": "opponentSpell",
+              "title": "Counter or not",
+              "text": "Counter the spells that would beat you on their own: dragons, Etali, the commander. Let small creatures resolve and block them."
+            },
+            {
+              "on": "play:Talion, the Kindly Lord",
+              "title": "Pick a number",
+              "text": "Talion punishes spells with the chosen mana value, power or toughness. Pick a number his deck plays often, like 4 or 5."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "We hunt together. You'll fall together.",
+          "after": "Clever. We'll track you another day."
+        },
+        {
+          "id": "brawl-2d",
+          "type": "duel",
+          "name": "Sunblade Corra",
+          "text": "She discards her hand to swing harder.",
+          "deck": "brawl/act2-combo.dck",
+          "deckName": "Niv's Engine",
+          "requires": [
+            "brawl-2c"
+          ],
+          "opponent": {
+            "name": "Sunblade Corra",
+            "deck": "brawl/opp-inti.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Build the engine",
+            "text": "Niv-Mizzet draws you a card for each point of noncombat damage you deal her, so Firebrand Archer, Guttersnipe and every burn spell also draw cards. Goldfish: build the engine, keep Niv out of combat, and point burn at her face once Niv is out. Hidetsugu's Second Rite wins on the spot at exactly 10 life. Burn her creatures only when it keeps you alive.",
+            "cards": [
+              "Niv-Mizzet, Visionary",
+              "Guttersnipe",
+              "Impact Tremors",
+              "Hidetsugu's Second Rite"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Niv-Mizzet, Visionary",
+              "title": "Engine online",
+              "text": "Every ping is now cards. Cast cheap burn at her face, then use the cards you draw to find more."
+            },
+            {
+              "on": "opponentLife:12",
+              "title": "Exactly ten",
+              "text": "Hidetsugu's Second Rite deals 10 if she's at exactly 10. Ping her down to 10 first, then cast it."
+            },
+            {
+              "on": "life:8",
+              "title": "Buy a turn",
+              "text": "At low life, burn the biggest attacker. Interact only when it keeps you alive another turn."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "I don't need cards in hand. I need you in front of me.",
+          "after": "You drew more than I could burn."
+        }
+      ]
+    },
+    {
+      "id": "brawl-3",
+      "name": "Planeswalker commanders",
+      "text": "Brawl lets a planeswalker be your commander. It sits on the battlefield, uses one loyalty ability a turn, and can be attacked. When it dies it goes back to the command zone, and it costs 2 more each time you recast it.",
+      "deck": "brawl/signature.dck",
+      "deckName": "Storm Slayer's Legion",
+      "nodes": [
+        {
+          "id": "brawl-3t1",
+          "type": "trial",
+          "name": "One ability a turn",
+          "text": "Your opponent is at 10 life behind three creatures, one with reach. Elspeth, Storm Slayer has 5 loyalty. Win this turn.",
+          "hint": "Stroke of Midnight on Treetop Snarespinner first. Then use Elspeth's 0 ability and attack with everything in the air.",
+          "requires": [
+            "brawl-2d"
+          ],
+          "lesson": {
+            "title": "Choose the ability that wins",
+            "text": "A planeswalker uses one loyalty ability per turn, at sorcery speed. Elspeth's 0 gives each of your creatures a +1/+1 counter and flying; her -3 destroys a creature with mana value 3 or more. Pick the one that wins now, and clear the only creature that can block flyers first.",
+            "cards": [
+              "Elspeth, Storm Slayer",
+              "Stroke of Midnight",
+              "Joust Through",
+              "Treetop Snarespinner"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 25,
+              "hand": [
+                "Stroke of Midnight",
+                "Joust Through"
+              ],
+              "battlefield": [
+                "Plains",
+                "Plains",
+                "Plains",
+                "Plains",
+                "Elspeth, Storm Slayer",
+                "Savannah Lions",
+                "Healer's Hawk",
+                "Inspiring Paladin",
+                "Youthful Valkyrie"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Serra Angel",
+                "Plains"
+              ]
+            },
+            "opponent": {
+              "life": 10,
+              "hand": [],
+              "battlefield": [
+                "Treetop Snarespinner",
+                "Aegis Turtle",
+                "Quakestrider Ceratops",
+                "Forest|tapped",
+                "Forest|tapped",
+                "Forest|tapped",
+                "Island|tapped",
+                "Island|tapped"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Llanowar Elves",
+                "Island"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "brawl-3a",
+          "type": "duel",
+          "name": "Skyward Ilsa",
+          "text": "Her flock goes straight for your planeswalker.",
+          "requires": [
+            "brawl-3t1"
+          ],
+          "opponent": {
+            "name": "Skyward Ilsa",
+            "deck": "brawl/opp-kykar.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Protect your walker",
+            "text": "Creatures can attack planeswalkers, and flyers are hard to block. Use Elspeth's +1 to make two Soldiers (her ability doubles tokens) and keep them home as blockers. Use -3 on Ilsa's best flyer, and Day of Judgment when her board outgrows yours: it doesn't touch Elspeth.",
+            "cards": [
+              "Elspeth, Storm Slayer",
+              "Day of Judgment",
+              "Kykar, Zephyr Awakener",
+              "Serra Angel"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Elspeth, Storm Slayer",
+              "title": "Loyalty first",
+              "text": "Elspeth starts at 5. +1 makes two Soldiers and raises her to 6. Keep her out of reach of the flyers' total power."
+            },
+            {
+              "on": "play:Kykar, Zephyr Awakener",
+              "title": "Spirits",
+              "text": "Kykar makes a 1/1 flying Spirit each time Ilsa casts a noncreature spell. Its mana value is 3, so Elspeth's -3 can destroy it; do it before the flock grows."
+            },
+            {
+              "on": "cast:Day of Judgment",
+              "title": "Reset",
+              "text": "Day of Judgment destroys every creature but leaves Elspeth. Next turn her +1 rebuilds your board first."
+            }
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          },
+          "before": "Your walker looks lonely down there. We'll keep her company.",
+          "after": "Grounded. Every last feather."
+        },
+        {
+          "id": "brawl-3t2",
+          "type": "trial",
+          "name": "Two walkers",
+          "text": "Your opponent is at 9 life, and Herald of Eternal Dawn says they can't lose the game. You have Elspeth and Ajani. Win this turn.",
+          "hint": "Elspeth's -3 destroys Herald of Eternal Dawn. Ajani's -3 gives Serra Angel double strike. Attack with both flyers.",
+          "requires": [
+            "brawl-3a"
+          ],
+          "lesson": {
+            "title": "Removal you don't have to draw",
+            "text": "A planeswalker's minus ability is removal that's already on the battlefield. Elspeth's -3 is your only answer to the Herald here, and Ajani's -3 belongs on your biggest flyer, where double strike adds the most damage.",
+            "cards": [
+              "Elspeth, Storm Slayer",
+              "Ajani, Caller of the Pride",
+              "Serra Angel",
+              "Herald of Eternal Dawn"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 25,
+              "hand": [
+                "Divine Resilience"
+              ],
+              "battlefield": [
+                "Plains",
+                "Plains",
+                "Plains",
+                "Elspeth, Storm Slayer",
+                "Ajani, Caller of the Pride",
+                "Serra Angel",
+                "Healer's Hawk"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Savannah Lions",
+                "Plains"
+              ]
+            },
+            "opponent": {
+              "life": 9,
+              "hand": [],
+              "battlefield": [
+                "Herald of Eternal Dawn",
+                "Aegis Turtle",
+                "Plains|tapped",
+                "Plains|tapped",
+                "Plains|tapped",
+                "Plains|tapped",
+                "Plains|tapped",
+                "Island|tapped",
+                "Island|tapped"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Serra Angel",
+                "Island"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "brawl-3boss",
+          "type": "duel",
+          "name": "Warlord Brisa Vane",
+          "text": "Her angels attack twice and aim for your walker.",
+          "requires": [
+            "brawl-3t2"
+          ],
+          "opponent": {
+            "name": "Warlord Brisa Vane",
+            "deck": "brawl/opp-aurelia.dck",
+            "skill": 5,
+            "twists": {
+              "startingLife": 30
+            }
+          },
+          "lesson": {
+            "title": "Extra combats",
+            "text": "Aurelia, the Warleader untaps Brisa's creatures and gives her a second combat the first time she attacks each turn, and her flyers go for Elspeth. Use Elspeth's -3 on Aurelia when you can, keep Soldiers back to block, and clear a wide board with Day of Judgment. She starts at 30 life.",
+            "cards": [
+              "Aurelia, the Warleader",
+              "Elspeth, Storm Slayer",
+              "Day of Judgment",
+              "Lyra Dawnbringer"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Aurelia, the Warleader",
+              "title": "Two combats",
+              "text": "Aurelia has haste and doubles her combats. Destroy it before it attacks again: Elspeth's -3, Banishing Light or Stroke of Midnight."
+            },
+            {
+              "on": "block",
+              "title": "Guard the walker",
+              "text": "Block the attackers aimed at Elspeth with your Soldiers. A walker that survives makes two more every turn."
+            },
+            {
+              "on": "life:10",
+              "title": "Two combats' worth",
+              "text": "Count her attackers twice: Aurelia's second combat untaps them. Keep enough blockers to survive both."
+            }
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "packs": 1
+          },
+          "boss": true,
+          "before": "My host strikes twice. Your walker falls once.",
+          "after": "One combat too few. Well fought."
+        }
+      ]
+    },
+    {
+      "id": "brawl-4",
+      "name": "The meta",
+      "text": "These are commanders Standard Brawl players build today, from Draftsim's Standard Brawl guide: Tifa's landfall, Aang's flash tempo, The Seriema's legends, Laughing Jasper Flint's stolen cards, Roxanne's ramp and Anim Pakal's gnomes.",
+      "nodes": [
+        {
+          "id": "brawl-4a",
+          "type": "duel",
+          "name": "Kesh Emberroot",
+          "text": "Her meteors fall every time she attacks.",
+          "deck": "brawl/meta-tifa.dck",
+          "deckName": "Tifa Landfall",
+          "requires": [
+            "brawl-3boss"
+          ],
+          "opponent": {
+            "name": "Kesh Emberroot",
+            "deck": "brawl/meta-roxanne.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Tifa: land, then double",
+            "text": "Tifa Lockhart has trample and doubles her power each time a land enters under your control. Play your land before combat, and crack Evolving Wilds or Terramorphic Expanse after blockers for another doubling. Protect her with Snakeskin Veil. Roxanne ramps with Meteorite tokens that deal 2 damage; race her before her big spells land.",
+            "cards": [
+              "Tifa Lockhart",
+              "Evolving Wilds",
+              "Snakeskin Veil",
+              "Roxanne, Starfall Savant"
+            ]
+          },
+          "tips": [
+            {
+              "on": "attack",
+              "title": "Fetch after blocks",
+              "text": "Evolving Wilds and Terramorphic Expanse put a land onto the battlefield at instant speed. Use them after blockers to double Tifa again."
+            },
+            {
+              "on": "play:Roxanne, Starfall Savant",
+              "title": "Meteorites",
+              "text": "Each Meteorite deals 2 damage when it enters and taps for mana. Roxanne makes one on entering and each attack, so kill her early."
+            },
+            {
+              "on": "life:12",
+              "title": "Her big turn",
+              "text": "Roxanne's ramp ends in Summon: Bahamut and Overlord of the Hauntwoods. Below 12, push damage before those land."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Rocks fall. Mostly on you.",
+          "after": "You dodged the sky itself. Impressive."
+        },
+        {
+          "id": "brawl-4b",
+          "type": "duel",
+          "name": "Silas Crowe",
+          "text": "He plays your cards better than you do.",
+          "deck": "brawl/meta-aang.dck",
+          "deckName": "Aang Tempo",
+          "requires": [
+            "brawl-4a"
+          ],
+          "opponent": {
+            "name": "Silas Crowe",
+            "deck": "brawl/meta-jasper-flint.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Draw-go",
+            "text": "Aang's deck acts on the opponent's turn: flash creatures, counterspells and Aang himself, who has flash and flying. Draw-go means you pass your turn with mana open and act at their end step. Counter Silas's threats, flash Aang in when he's tapped out, and tap out only when nothing of his matters.",
+            "cards": [
+              "Aang, Swift Savior",
+              "Three Steps Ahead",
+              "Tishana's Tidebinder",
+              "Laughing Jasper Flint"
+            ]
+          },
+          "tips": [
+            {
+              "on": "opponentSpell",
+              "title": "Counter what matters",
+              "text": "Save counterspells for his commander, his dragons and his removal on Aang. Let small creatures resolve."
+            },
+            {
+              "on": "play:Laughing Jasper Flint",
+              "title": "Your cards, his hand",
+              "text": "Jasper exiles cards from the top of your library every upkeep and lets Silas cast them. Bounce or answer Jasper quickly."
+            },
+            {
+              "on": "turn:4",
+              "title": "End-step Aang",
+              "text": "Cast Aang at the end of his turn: it dodges his sorcery-speed removal and attacks on yours."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Your library is my library. Thanks for sharing.",
+          "after": "Couldn't steal what you never tapped out for."
+        },
+        {
+          "id": "brawl-4c",
+          "type": "duel",
+          "name": "Rowan Thornfield",
+          "text": "Her fist gets twice as heavy with every land.",
+          "deck": "brawl/meta-seriema.dck",
+          "deckName": "The Seriema Legends",
+          "requires": [
+            "brawl-4b"
+          ],
+          "opponent": {
+            "name": "Rowan Thornfield",
+            "deck": "brawl/meta-tifa.dck",
+            "skill": 6
+          },
+          "lesson": {
+            "title": "Station and legends",
+            "text": "The Seriema is a Spacecraft: when it enters it finds a legendary creature, and you station it by tapping your creatures to add charge counters until it's a 5/5 flyer that makes your tapped legends indestructible. Against Tifa, kill her before a land drop doubles her: Get Lost and Elspeth's -3 are your answers.",
+            "cards": [
+              "The Seriema",
+              "Elspeth, Storm Slayer",
+              "Get Lost",
+              "Tifa Lockhart"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Tifa Lockhart",
+              "title": "Before the land",
+              "text": "Tifa doubles with each land Rowan plays. Answer her on your turn with Get Lost or Elspeth's -3, before Rowan's next land."
+            },
+            {
+              "on": "play:The Seriema",
+              "title": "Station",
+              "text": "Tap creatures that would sit idle to station The Seriema. Once charged it flies and protects your tapped legends."
+            },
+            {
+              "on": "life:12",
+              "title": "Trample",
+              "text": "Tifa tramples over chump blockers. Below 12, block with your biggest creature or remove her."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Every land I play, I hit twice as hard. Count them.",
+          "after": "You counted right. Annoying."
+        },
+        {
+          "id": "brawl-final",
+          "type": "duel",
+          "name": "Gnomecaptain Lark",
+          "text": "The final: best of three against the gnome army.",
+          "deck": "brawl/meta-jasper-flint.dck",
+          "deckName": "Laughing Jasper Flint",
+          "requires": [
+            "brawl-4c"
+          ],
+          "opponent": {
+            "name": "Gnomecaptain Lark",
+            "deck": "brawl/meta-anim-pakal.dck",
+            "skill": 7
+          },
+          "winsNeeded": 2,
+          "sideboard": "Brawl has no sideboard: your 60 cards are your 60 cards. Between games, change how you play instead. Mulligan hands with no removal against Anim Pakal, and save Epic Downfall and Hero's Downfall for Anim Pakal, Elspeth and Overlord of the Mistmoors.",
+          "lesson": {
+            "title": "The final",
+            "text": "Laughing Jasper Flint is midrange: removal for their threats, then extra cards from the top of their library every upkeep. Anim Pakal makes tapped, attacking Gnomes every time Lark attacks and grows each time. Kill Anim Pakal early, keep blockers for the swarm, and answer their Elspeth before her Soldiers double. Two wins graduate you.",
+            "cards": [
+              "Laughing Jasper Flint",
+              "Hero's Downfall",
+              "Anim Pakal, Thousandth Moon",
+              "Elspeth, Storm Slayer"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Anim Pakal, Thousandth Moon",
+              "title": "Kill the captain",
+              "text": "Every attack adds a counter and more Gnomes. Hero's Downfall or Murder it now; each recast costs Lark 2 more."
+            },
+            {
+              "on": "play:Elspeth, Storm Slayer",
+              "title": "Attack the walker",
+              "text": "Their Elspeth doubles tokens and her -3 kills your best creature. Attack her or remove her with Hero's Downfall."
+            },
+            {
+              "on": "life:10",
+              "title": "The swarm",
+              "text": "Gnomes enter tapped and attacking, so count them as attackers next turn too. Below 10, keep blockers home."
+            }
+          ],
+          "reward": {
+            "coins": 200,
+            "xp": 500,
+            "packs": 2,
+            "wildcard": "rare",
+            "cosmetics": [
+              {
+                "kind": "title",
+                "id": "brawl-graduate"
+              },
+              {
+                "kind": "sleeve",
+                "id": "school-brawl"
+              }
+            ]
+          },
+          "boss": true,
+          "before": "My gnomes are small. My gnomes are many. My gnomes are coming.",
+          "after": "Fewer gnomes than I thought. Well played."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+# name: Warleader's Banners
+# archetype: aggro (Boros extra combats)
+# season: 2026-10
+1 Goblin Guide
+1 Monastery Swiftspear
+1 Adanto Vanguard
+1 Weathered Wayfarer
+1 Boros Reckoner
+1 Swiftblade Vindicator
+1 Ash Zealot
+1 Precinct Captain
+1 Zurgo Bellstriker
+1 Tajic, Legion's Edge
+1 Legion Warboss
+1 Goblin Rabblemaster
+1 Brimaz, King of Oreskos
+1 Hero of Bladehold
+1 Hellrider
+1 Combat Celebrant
+1 Angel of Sanctions
+1 Aurelia, Exemplar of Justice
+1 Serra Angel
+1 Baneslayer Angel
+1 Lyra Dawnbringer
+1 Archangel of Thune
+1 Resplendent Angel
+1 Akroma, Angel of Fury
+1 Glorybringer
+1 Thundermaw Hellkite
+1 Hellkite Charger
+1 Gisela, Blade of Goldnight
+1 Firemane Angel
+1 Iroas, God of Victory
+1 Relentless Assault
+1 World at War
+1 Seize the Day
+1 Waves of Aggression
+1 Bonesplitter
+1 Embercleave
+1 Sword of Fire and Ice
+1 Shadowspear
+1 Swiftfoot Boots
+1 Lightning Greaves
+1 Swords to Plowshares
+1 Path to Exile
+1 Lightning Bolt
+1 Lightning Helix
+1 Chaos Warp
+1 Boros Charm
+1 Generous Gift
+1 Wear // Tear
+1 Fiery Confluence
+1 Skullclamp
+1 Outpost Siege
+1 Valakut Exploration
+1 Glorious Anthem
+1 Heroic Reinforcements
+1 Assemble the Legion
+1 Legion's Landing
+1 Akroma's Will
+1 Flawless Maneuver
+1 Raid Bombardment
+1 Sol Ring
+1 Arcane Signet
+1 Boros Signet
+1 Talisman of Conviction
+1 Mind Stone
+1 Fellwar Stone
+1 Command Tower
+1 Sacred Foundry
+1 Clifftop Retreat
+1 Inspiring Vantage
+1 Battlefield Forge
+1 Boros Garrison
+1 Boros Guildgate
+1 Wind-Scarred Crag
+1 Rugged Prairie
+1 Furycalm Snarl
+1 Needle Spires
+1 Myriad Landscape
+1 Rogue's Passage
+11 Plains
+10 Mountain
+CMDR: Aurelia, the Warleader

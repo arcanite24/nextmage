@@ -1,0 +1,22 @@
+# name: Miracles
+# archetype: control
+3 Snapcaster Mage
+2 Solitude
+4 Brainstorm
+4 Ponder
+4 Force of Will
+4 Counterspell
+4 Swords to Plowshares
+2 Prismatic Ending
+3 Terminus
+2 Supreme Verdict
+2 Fact or Fiction
+3 Jace, the Mind Sculptor
+2 Teferi, Hero of Dominaria
+4 Tundra
+4 Flooded Strand
+2 Arid Mesa
+2 Prismatic Vista
+1 Karakas
+6 Island
+2 Plains

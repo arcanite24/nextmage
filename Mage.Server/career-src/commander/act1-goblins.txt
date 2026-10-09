@@ -1,0 +1,73 @@
+# name: Tin Street Mob
+# archetype: aggro (goblin tribal)
+# season: 2026-10
+1 Goblin Guide
+1 Legion Loyalist
+1 Foundry Street Denizen
+1 Mogg War Marshal
+1 Goblin Instigator
+1 Skirk Prospector
+1 Battle Cry Goblin
+1 Goblin Bushwhacker
+1 Goblin Rabblemaster
+1 Legion Warboss
+1 Goblin Heelcutter
+1 Goblin Chieftain
+1 Goblin King
+1 Goblin Warchief
+1 Goblin Piledriver
+1 Goblin Matron
+1 Goblin Ringleader
+1 Goblin Cratermaker
+1 Goblin Chainwhirler
+1 Conspicuous Snoop
+1 Goblin Sharpshooter
+1 Moggcatcher
+1 Siege-Gang Commander
+1 Goblin Trashmaster
+1 Muxus, Goblin Grandee
+1 Goblin Motivator
+1 Ember Hauler
+1 Goblin Arsonist
+1 Frenzied Goblin
+1 Fanatical Firebrand
+1 Raging Goblin
+1 Purphoros, God of the Forge
+1 Hordeling Outburst
+1 Krenko's Command
+1 Beetleback Chief
+1 Lightning Bolt
+1 Abrade
+1 Chaos Warp
+1 Shared Animosity
+1 Goblin Bombardment
+1 Impact Tremors
+1 Coat of Arms
+1 Outpost Siege
+1 Goblin War Drums
+1 Sol Ring
+1 Arcane Signet
+1 Fire Diamond
+1 Mind Stone
+1 Commander's Sphere
+1 Throne of the God-Pharaoh
+1 Shadowspear
+1 Castle Embereth
+1 Rogue's Passage
+1 Myriad Landscape
+31 Mountain
+1 Mogg Fanatic
+1 Goblin Lackey
+1 Goblin Sledder
+1 Goblin Wardriver
+1 Goblin Marshal
+1 Goblin Dark-Dwellers
+1 Hellrider
+1 Vandalblast
+1 Skullclamp
+1 Hammer of Purphoros
+1 Goblin Kaboomist
+1 Goblin Goon
+1 Goblin Rally
+1 Pashalik Mons
+CMDR: Krenko, Tin Street Kingpin

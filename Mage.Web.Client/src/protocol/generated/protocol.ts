@@ -139,6 +139,7 @@ export interface RpcMethods {
   careerCountAiGames: { params: [count: boolean]; result: CareerProfile };
   careerCampaigns: { params: []; result: CareerCampaign[] };
   careerCampaignPlay: { params: [campaignId: string, nodeId: string]; result: CareerMatch };
+  careerCampaignDeck: { params: [campaignId: string, nodeId: string]; result: DeckCardLists };
   careerCampaignChoose: { params: [campaignId: string, nodeId: string, optionId: string]; result: CareerGameResult };
   careerPuzzles: { params: []; result: CareerPuzzle[] };
   careerPuzzlePlay: { params: [puzzleId: string]; result: CareerMatch };
@@ -290,6 +291,7 @@ export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: Rp
   careerCountAiGames: { access: 'session', sessionParam: -1 },
   careerCampaigns: { access: 'session', sessionParam: -1 },
   careerCampaignPlay: { access: 'session', sessionParam: -1 },
+  careerCampaignDeck: { access: 'session', sessionParam: -1 },
   careerCampaignChoose: { access: 'session', sessionParam: -1 },
   careerPuzzles: { access: 'session', sessionParam: -1 },
   careerPuzzlePlay: { access: 'session', sessionParam: -1 },

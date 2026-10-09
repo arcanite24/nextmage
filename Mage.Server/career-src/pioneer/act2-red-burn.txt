@@ -1,0 +1,15 @@
+# name: Cinder Post
+# archetype: burn
+# Mono-Red burn: a few hasty creatures and as much face damage as fits.
+4 Monastery Swiftspear
+4 Ghitu Lavarunner
+4 Kumano Faces Kakkazan
+2 Eidolon of the Great Revel
+4 Phoenix of Ash
+4 Burst Lightning
+4 Lightning Strike
+4 Play with Fire
+4 Skewer the Critics
+2 Stoke the Flames
+4 Light Up the Stage
+20 Mountain

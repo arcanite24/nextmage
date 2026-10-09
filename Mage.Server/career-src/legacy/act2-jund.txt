@@ -1,0 +1,23 @@
+# name: Jund
+# archetype: midrange
+4 Tarmogoyf
+4 Barrowgoyf
+4 Scavenging Ooze
+4 Orcish Bowmasters
+3 Bloodbraid Elf
+3 Fable of the Mirror-Breaker
+4 Thoughtseize
+4 Lightning Bolt
+4 Fatal Push
+2 Abrupt Decay
+2 Kolaghan's Command
+3 Badlands
+3 Bayou
+2 Taiga
+4 Bloodstained Mire
+4 Verdant Catacombs
+2 Wooded Foothills
+1 Wasteland
+1 Swamp
+1 Forest
+1 Mountain

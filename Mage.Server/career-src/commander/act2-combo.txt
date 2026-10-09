@@ -1,0 +1,85 @@
+# name: The Firemind's Engine
+# archetype: combo (Niv-Mizzet plus Curiosity; Kiki-Jiki or Splinter Twin plus Pestermite)
+# season: 2026-10
+1 Curiosity
+1 Ophidian Eye
+1 Tandem Lookout
+1 Kiki-Jiki, Mirror Breaker
+1 Splinter Twin
+1 Pestermite
+1 Deceiver Exarch
+1 Zealous Conscripts
+1 Niv-Mizzet, Parun
+1 Murmuring Mystic
+1 Young Pyromancer
+1 Snapcaster Mage
+1 Archmage Emeritus
+1 Magus of the Wheel
+1 Mystical Tutor
+1 Gamble
+1 Imperial Recruiter
+1 Intuition
+1 Spellseeker
+1 Merchant Scroll
+1 Personal Tutor
+1 Brainstorm
+1 Ponder
+1 Preordain
+1 Opt
+1 Consider
+1 Gitaxian Probe
+1 Frantic Search
+1 Thrill of Possibility
+1 Fact or Fiction
+1 Rhystic Study
+1 Mystic Remora
+1 Windfall
+1 Izzet Charm
+1 Expressive Iteration
+1 Prismari Command
+1 Treasure Cruise
+1 Dig Through Time
+1 Valakut Awakening
+1 Counterspell
+1 Mana Drain
+1 Arcane Denial
+1 Swan Song
+1 Negate
+1 Cryptic Command
+1 Sublime Epiphany
+1 Pongify
+1 Rapid Hybridization
+1 Lightning Bolt
+1 Chaos Warp
+1 Fiery Confluence
+1 Anger of the Gods
+1 Blasphemous Act
+1 Cyclonic Rift
+1 Lightning Greaves
+1 Swiftfoot Boots
+1 Sol Ring
+1 Arcane Signet
+1 Izzet Signet
+1 Talisman of Creativity
+1 Mind Stone
+1 Fellwar Stone
+1 Thought Vessel
+1 Coalition Relic
+1 Commander's Sphere
+1 Command Tower
+1 Steam Vents
+1 Sulfur Falls
+1 Shivan Reef
+1 Spirebluff Canal
+1 Izzet Guildgate
+1 Izzet Boilerworks
+1 Swiftwater Cliffs
+1 Frostboil Snarl
+1 Fiery Islet
+1 Scalding Tarn
+1 Reliquary Tower
+1 Myriad Landscape
+1 Evolving Wilds
+11 Island
+9 Mountain
+CMDR: Niv-Mizzet, the Firemind

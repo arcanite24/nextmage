@@ -1,0 +1,29 @@
+# name: Ravager Shops
+# archetype: aggro
+4 Mishra's Workshop
+4 Ancient Tomb
+4 Mishra's Factory
+3 Wasteland
+1 Strip Mine
+1 Black Lotus
+1 Mana Crypt
+1 Sol Ring
+1 Mana Vault
+1 Mox Emerald
+1 Mox Jet
+1 Mox Pearl
+1 Mox Ruby
+1 Mox Sapphire
+4 Sphere of Resistance
+1 Chalice of the Void
+1 Trinisphere
+1 Thorn of Amethyst
+4 Arcbound Ravager
+4 Walking Ballista
+4 Steel Overseer
+4 Stonecoil Serpent
+4 Phyrexian Revoker
+3 Hangarback Walker
+1 Lodestone Golem
+2 Wurmcoil Engine
+2 Triskelion

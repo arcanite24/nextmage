@@ -1,0 +1,30 @@
+# name: BUG Midrange
+# archetype: midrange
+4 Deathrite Shaman
+4 Orcish Bowmasters
+4 Tarmogoyf
+3 Tireless Tracker
+2 Uro, Titan of Nature's Wrath
+2 Brazen Borrower
+2 Oko, Thief of Crowns
+4 Fatal Push
+3 Abrupt Decay
+2 Toxic Deluge
+2 Force of Will
+1 Ancestral Recall
+1 Time Walk
+1 Demonic Tutor
+1 Brainstorm
+1 Mox Jet
+1 Mox Emerald
+1 Mox Sapphire
+4 Polluted Delta
+3 Misty Rainforest
+2 Verdant Catacombs
+3 Bayou
+3 Underground Sea
+2 Tropical Island
+1 Forest
+1 Swamp
+1 Island
+1 Strip Mine

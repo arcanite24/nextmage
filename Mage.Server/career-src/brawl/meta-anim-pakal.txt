@@ -1,0 +1,56 @@
+# name: Anim Pakal Tokens
+# archetype: aggro (Boros tokens)
+# season: 2026-10
+# source: https://draftsim.com/mtg-arena-brawl-guide/ (Standard Brawl commander lists, updated 2025-12-22)
+# Command Tower and Arcane Signet are Arena-only Brawl cards that XMage's Standard pool rejects: a basic land / Patchwork Banner instead
+CMDR: Anim Pakal, Thousandth Moon
+1 Elspeth, Storm Slayer
+1 Basri, Tomorrow's Champion
+1 Lightstall Inquisitor
+1 Warden of the Inner Sky
+1 Clockwork Percussionist
+1 Stadium Headliner
+1 Ironpaw Aspirant
+1 Neighborhood Guardian
+1 Resolute Reinforcements
+1 Spellbook Vendor
+1 Voice of Victory
+1 Arabella, Abandoned Doll
+1 Ash, Party Crasher
+1 Cosmogrand Zenith
+1 Delney, Streetwise Lookout
+1 Sanguine Evangelist
+1 Sheriff of Safe Passage
+1 Toby, Beastie Befriender
+1 Imodane's Recruiter
+1 Roaming Throne
+1 Ertha Jo, Frontier Mentor
+1 Aurelia, the Law Above
+1 Overlord of the Mistmoors
+1 Song of Totentanz
+1 Vengeful Possession
+1 Midnight Mayhem
+1 Not on My Watch
+1 Lightning Helix
+1 Grand Entryway
+1 Caretaker's Talent
+1 Warleader's Call
+1 Virtue of Loyalty
+1 Clay-Fired Bricks
+1 Cori-Steel Cutter
+1 Patchwork Banner
+1 Captivating Cave
+1 Cavern of Souls
+1 Conduit Pylons
+1 Crystal Grotto
+1 Elegant Parlor
+1 Evolving Wilds
+1 Fountainport
+1 Hidden Grotto
+1 Inspiring Vantage
+5 Mountain
+1 Multiversal Passage
+6 Plains
+1 Sacred Foundry
+1 Starting Town
+1 Sunbillow Verge

@@ -1,0 +1,24 @@
+# name: Cat Pride
+# archetype: aggro (mono-white cats, Foundations)
+# season: 2026-10
+2 Savannah Lions
+2 Helpful Hunter
+1 Ajani's Pridemate
+1 Cathar Commando
+1 Resolute Reinforcements
+2 Prideful Parent
+1 Cat Collector
+1 Arahbo, the First Fang
+1 Dauntless Veteran
+1 Inspiring Paladin
+1 Dazzling Angel
+2 Felidar Savior
+1 Armasaur Guide
+1 Claws Out
+1 Joust Through
+1 Fleeting Flight
+1 Banishing Light
+1 Luminous Rebuke
+1 Heraldic Banner
+1 Quick-Draw Katana
+16 Plains

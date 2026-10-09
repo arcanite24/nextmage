@@ -1,0 +1,35 @@
+# name: Domain Zoo
+# archetype: aggro
+# season: 2026-10
+# source: https://www.mtggoldfish.com/archetype/modern-domain-zoo (チャンピオンズカップファイナル シーズン5ラウンド1 Champions Cup Final Season 5 Round 1,1st Place, 13-2-1)
+1 Thundering Falls
+1 Lush Portico
+4 Territorial Kavu
+4 Wild Nacatl
+4 Flooded Strand
+4 Arid Mesa
+4 Lightning Bolt
+2 Stubborn Denial
+1 Misty Rainforest
+1 Temple Garden
+4 Tribal Flames
+1 Mountain
+4 Ragavan, Nimble Pilferer
+4 Leyline of the Guildpact
+4 Wooded Foothills
+1 Spell Pierce
+1 Plains
+2 Steam Vents
+1 Indatha Triome
+1 Blood Crypt
+4 Leyline Binding
+3 Quantum Riddler
+4 Scion of Draco
+SB: 1 Rest in Peace
+SB: 2 Mystical Dispute
+SB: 1 Wear // Tear
+SB: 4 Consign to Memory
+SB: 2 Obsidian Charmaw
+SB: 2 Stern Scolding
+SB: 2 Brotherhood's End
+SB: 1 Containment Priest

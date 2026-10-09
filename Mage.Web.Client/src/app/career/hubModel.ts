@@ -45,6 +45,7 @@ export function unlockFacts(
     if (opponent.unlocked && (opponent.tier ?? 1) > 1) facts.add(`tier:${opponent.tier}`);
   }
   for (const campaign of campaigns) {
+    if (campaign.school && campaign.open) facts.add(`school:${campaign.id}`);
     (campaign.chapters ?? []).forEach((chapter, index) => {
       const open = (chapter.nodes ?? []).some((node) => node.state !== 'locked');
       if (open && index > 0) facts.add(`chapter:${campaign.id}:${chapter.id}`);

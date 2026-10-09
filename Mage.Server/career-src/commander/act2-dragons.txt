@@ -1,0 +1,72 @@
+# name: Queen's Hoard
+# archetype: midrange (dragon tribal)
+# season: 2026-10
+1 Dragonspeaker Shaman
+1 Dragonlord's Servant
+1 Dragonmaster Outcast
+1 Rapacious Dragon
+1 Furnace Whelp
+1 Sarkhan's Whelp
+1 Dragon Whelp
+1 Thunderbreak Regent
+1 Demanding Dragon
+1 Thundermaw Hellkite
+1 Stormbreath Dragon
+1 Glorybringer
+1 Hellkite Charger
+1 Shivan Dragon
+1 Drakuseth, Maw of Flames
+1 Balefire Dragon
+1 Rakdos Pit Dragon
+1 Hellkite Tyrant
+1 Scourge of Valkas
+1 Utvara Hellkite
+1 Terror of the Peaks
+1 Verix Bladewing
+1 Bogardan Hellkite
+1 Steel Hellkite
+1 Goldspan Dragon
+1 Ancient Copper Dragon
+1 Wrathful Red Dragon
+1 Inferno Titan
+1 Dragon Mage
+1 Ryusei, the Falling Star
+1 Skyline Despot
+1 Moltensteel Dragon
+1 Hellkite Igniter
+1 Flameblast Dragon
+1 Dragon Tempest
+1 Sarkhan's Unsealing
+1 Crucible of Fire
+1 Lightning Bolt
+1 Abrade
+1 Chaos Warp
+1 Fiery Confluence
+1 Vandalblast
+1 Dragon's Fire
+1 Spit Flame
+1 Draconic Intervention
+1 Sarkhan, Fireblood
+1 Sarkhan the Masterless
+1 Outpost Siege
+1 Commune with Lava
+1 Light Up the Stage
+1 Swiftfoot Boots
+1 Lightning Greaves
+1 Sword of Fire and Ice
+1 Sol Ring
+1 Arcane Signet
+1 Fire Diamond
+1 Mind Stone
+1 Commander's Sphere
+1 Thought Vessel
+1 Dragon's Hoard
+1 Worn Powerstone
+1 Hedron Archive
+1 Gilded Lotus
+1 Temple of the False God
+1 Myriad Landscape
+1 Rogue's Passage
+1 Path of Ancestry
+32 Mountain
+CMDR: Lathliss, Dragon Queen

@@ -1,0 +1,23 @@
+# name: Oilskin Engine
+# archetype: combo
+# Abzan Greasefang written for the school: bin Parhelion II, cast Greasefang, crew and fly.
+4 Greasefang, Okiba Boss
+4 Parhelion II
+4 Stitcher's Supplier
+4 Grisly Salvage
+4 Satyr Wayfinder
+3 Can't Stay Away
+3 Esika's Chariot
+4 Fatal Push
+2 Thoughtseize
+2 Tamiyo's Safekeeping
+2 Bitter Triumph
+4 Overgrown Tomb
+4 Godless Shrine
+2 Temple Garden
+4 Concealed Courtyard
+4 Blooming Marsh
+2 Brightclimb Pathway
+2 Darkbore Pathway
+1 Plains
+1 Swamp

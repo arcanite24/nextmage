@@ -1,0 +1,31 @@
+# name: Boros Energy
+# archetype: aggro
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91632&d=895853&f=LE
+4 Ajani, Nacatl Pariah
+4 Amped Raptor
+4 Guide of Souls
+2 Hexing Squelcher
+4 Ocelot Pride
+2 Thalia, Guardian of Thraben
+3 Voice of Victory
+4 White Orchid Phantom
+3 Goblin Bombardment
+2 Erode
+4 Swords to Plowshares
+4 Arid Mesa
+1 Elegant Parlor
+3 Flagstones of Trokair
+2 Karakas
+2 Marsh Flats
+1 Mountain
+3 Plains
+2 Plateau
+2 Sunbaked Canyon
+4 Wasteland
+SB: 3 Deafening Silence
+SB: 4 Leyline of the Void
+SB: 2 Containment Priest
+SB: 1 Stony Silence
+SB: 2 Pyroblast
+SB: 3 Price of Progress

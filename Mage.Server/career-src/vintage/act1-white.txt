@@ -1,0 +1,15 @@
+# name: White Weenie
+# archetype: aggro
+4 Thraben Inspector
+4 Thalia, Guardian of Thraben
+4 Adanto Vanguard
+4 Thalia's Lieutenant
+4 Kytheon, Hero of Akros
+4 Adeline, Resplendent Cathar
+4 Brimaz, King of Oreskos
+4 Swords to Plowshares
+2 Glorious Anthem
+1 Mox Pearl
+1 Karakas
+20 Plains
+4 Benalish Marshal

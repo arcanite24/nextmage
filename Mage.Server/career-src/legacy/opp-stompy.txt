@@ -1,0 +1,16 @@
+# name: Red Stompy
+# archetype: aggro
+4 Goblin Rabblemaster
+2 Magus of the Moon
+4 Bonecrusher Giant
+4 Fable of the Mirror-Breaker
+4 Broadside Bombardiers
+4 Pyrogoyf
+3 Laelia, the Blade Reforged
+4 Fury
+3 Embereth Shieldbreaker
+4 Lightning Bolt
+4 Chain Lightning
+4 Ancient Tomb
+2 City of Traitors
+14 Mountain

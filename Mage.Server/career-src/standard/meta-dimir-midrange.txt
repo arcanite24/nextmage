@@ -1,0 +1,36 @@
+# name: Dimir Midrange
+# archetype: midrange
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91890&d=897883&f=ST (2026-10); https://www.mtggoldfish.com/archetype/standard-dimir-midrange-woe
+4 Spyglass Siren
+4 Floodpits Drowner
+4 Dream Beavers
+2 The Wondrous Wasp
+1 Tishana's Tidebinder
+1 Yuriko, Hope from the Shadows
+1 Wan Shi Tong, Librarian
+3 Enduring Curiosity
+4 Kaito, Bane of Nightmares
+4 Requiting Hex
+2 Bitter Triumph
+2 Shoot the Sheriff
+1 We Say Thee Nay!
+1 Spell Pierce
+1 Spell Snare
+1 Theorix Charm
+1 Strategic Betrayal
+4 Island
+4 Swamp
+4 Watery Grave
+4 Gloomlake Verge
+3 Hidden Lair
+2 Restless Reef
+2 Soulstone Sanctuary
+SB: 1 Spell Snare
+SB: 3 Strategic Betrayal
+SB: 3 Raven Eagle
+SB: 2 Flashfreeze
+SB: 1 Annul
+SB: 1 The Ooze
+SB: 1 Disdainful Stroke
+SB: 3 Duress

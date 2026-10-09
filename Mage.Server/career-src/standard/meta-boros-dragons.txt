@@ -1,0 +1,30 @@
+# name: Boros Dragons
+# archetype: midrange
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91928&d=898112&f=ST (MTGO League, 2026-10-08); https://www.mtggoldfish.com/archetype/standard-boros-dragons-woe
+4 Momo, Friendly Flier
+4 Sarkhan, Dragon Ascendant
+4 Voice of Victory
+4 Clarion Conqueror
+4 Magmatic Hellkite
+4 Smaug the Magnificent
+4 Nova Hellkite
+2 Twinmaw Stormbrood
+4 Burst Lightning
+2 Erode
+2 Cavern of Souls
+4 Inspiring Vantage
+4 Maelstrom of the Spirit Dragon
+4 Sacred Foundry
+4 Sunbillow Verge
+4 Multiversal Passage
+1 Mountain
+1 Plains
+SB: 4 Seam Rip
+SB: 2 Boros Charm
+SB: 1 Get Lost
+SB: 1 Magda, the Hoardmaster
+SB: 2 Pyroclasm
+SB: 3 Rest in Peace
+SB: 1 Split Up
+SB: 1 The Legend of Roku

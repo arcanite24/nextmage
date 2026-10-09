@@ -1,0 +1,34 @@
+# name: Dimir Control
+# archetype: control
+# season: 2026-10
+# source: https://www.mtgtop8.com/archetype?a=517&f=PAU (deck 897983, yuxiaoyu, top 4, MTGO Challenge 32, 2026-10-07)
+3 Faerie Seer
+2 Augur of Bolas
+4 Spellstutter Sprite
+2 Ninja of the Deep Hours
+4 Baleful Strix
+2 Thorn of the Black Rose
+1 Moon-Circuit Hacker
+1 Mukotai Ambusher
+4 Counterspell
+2 Dispel
+3 Brainstorm
+3 Cast Down
+4 Snuff Out
+4 Lorien Revealed
+1 Plunder the Trollshaws
+1 Arms of Hadar
+1 Extract a Confession
+4 Contaminated Aquifer
+1 Dimir Aqueduct
+1 Seething Landscape
+1 Bojuka Bog
+10 Island
+1 Swamp
+SB: 4 Hydroblast
+SB: 4 Annul
+SB: 2 Blue Elemental Blast
+SB: 2 Relic of Progenitus
+SB: 1 Okiba-Gang Shinobi
+SB: 1 Arms of Hadar
+SB: 1 Extract a Confession

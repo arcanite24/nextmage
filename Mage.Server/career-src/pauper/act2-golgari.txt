@@ -1,0 +1,18 @@
+# name: Golgari Graveborn
+# archetype: midrange
+4 Elvish Visionary
+4 Thornweald Archer
+4 Carrier Thrall
+4 Sakura-Tribe Elder
+4 Gnarlid Colony
+4 Gravedigger
+3 Krosan Tusker
+3 Gurmag Angler
+2 Pulse of Murasa
+4 Night's Whisper
+4 Cast Down
+3 Diabolic Edict
+4 Jungle Hollow
+2 Golgari Guildgate
+6 Swamp
+5 Forest

@@ -181,11 +181,22 @@ export interface CareerAchievement {
 }
 
 export interface CareerCampaign {
+    bosses?: number;
     chapters?: CareerChapter[];
+    colors?: string;
+    deckType?: string;
     done?: number;
+    format?: string;
+    gameType?: string;
     id?: string;
+    missing?: string[];
     name?: string;
+    open?: boolean;
+    order?: number;
     prologue?: string;
+    requires?: string[];
+    school?: boolean;
+    summary?: string;
     text?: string;
     total?: number;
 }
@@ -277,6 +288,12 @@ export interface CareerGauntletState {
     run?: CareerRun;
 }
 
+export interface CareerLesson {
+    cards?: string[];
+    text?: string;
+    title?: string;
+}
+
 export interface CareerLevelReward {
     coins?: number;
     cosmetic?: CareerCosmetic;
@@ -336,11 +353,13 @@ export interface CareerMatch {
 
 export interface CareerModeResult {
     coins?: number;
+    cosmetics?: CareerCosmetic[];
     kind?: string;
     lines?: string[];
     ref?: string;
     stars?: number;
     title?: string;
+    trial?: boolean;
     unlockedSet?: string;
     xp?: number;
 }
@@ -351,16 +370,26 @@ export interface CareerNode {
     boss?: boolean;
     choice?: string;
     cover?: CareerCover;
+    deckName?: string;
+    gameType?: string;
+    hint?: string;
     id?: string;
+    lesson?: CareerLesson;
     name?: string;
+    objective?: string;
+    opponentName?: string;
     options?: CareerOption[];
+    others?: CareerSeat[];
     requires?: string[];
     reward?: CareerReward;
+    sideboard?: string;
     skill?: number;
     state?: string;
     text?: string;
+    tips?: CareerTip[];
     twists?: CareerTwists;
     type?: string;
+    winsNeeded?: number;
 }
 
 export interface CareerOffer {
@@ -488,6 +517,7 @@ export interface CareerQuests {
 
 export interface CareerReward {
     coins?: number;
+    cosmetics?: CareerCosmetic[];
     deckCards?: boolean;
     packs?: number;
     unlockSet?: string;
@@ -534,6 +564,12 @@ export interface CareerRunReward {
     wins?: number;
 }
 
+export interface CareerSeat {
+    cover?: CareerCover;
+    name?: string;
+    skill?: number;
+}
+
 export interface CareerSetProgress {
     name?: string;
     owned?: number;
@@ -563,6 +599,12 @@ export interface CareerState {
     enabled?: boolean;
     profile?: CareerProfile;
     recent?: CareerPayout[];
+}
+
+export interface CareerTip {
+    on?: string;
+    text?: string;
+    title?: string;
 }
 
 export interface CareerTwists extends Serializable {

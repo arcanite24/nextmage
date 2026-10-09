@@ -1,0 +1,20 @@
+# name: Maverick
+# archetype: midrange
+4 Noble Hierarch
+4 Mother of Runes
+4 Thalia, Guardian of Thraben
+4 Scavenging Ooze
+4 Tarmogoyf
+4 Knight of Autumn
+3 Qasali Pridemage
+3 Ajani, Nacatl Pariah
+2 Brimaz, King of Oreskos
+2 Elspeth, Knight-Errant
+4 Swords to Plowshares
+4 Savannah
+4 Windswept Heath
+4 Wooded Foothills
+2 Horizon Canopy
+2 Karakas
+3 Forest
+3 Plains

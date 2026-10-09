@@ -1,0 +1,27 @@
+# name: Boros Rush
+# archetype: aggro (Boros, Foundations)
+# season: 2026-10
+2 Savannah Lions
+1 Fanatical Firebrand
+1 Cathar Commando
+1 Resolute Reinforcements
+1 Axgard Cavalry
+1 Courageous Goblin
+1 Swiftblade Vindicator
+1 Dauntless Veteran
+2 Inspiring Paladin
+2 Goblin Boarders
+1 Brazen Scourge
+1 Battlesong Berserker
+1 Sower of Chaos
+1 Gorehorn Raider
+1 Burst Lightning
+1 Abrade
+1 Joust Through
+1 Sure Strike
+1 Goblin Surprise
+1 Heroic Reinforcements
+1 Quick-Draw Katana
+8 Mountain
+7 Plains
+1 Wind-Scarred Crag

@@ -1,0 +1,14 @@
+# name: Scrap Breakers
+# archetype: aggro
+4 Gorilla Shaman
+4 Ghitu Lavarunner
+4 Voldaren Epicure
+4 Burning-Tree Emissary
+4 Kessig Flamebreather
+4 Lightning Bolt
+4 Chain Lightning
+4 Skewer the Critics
+3 Electrickery
+3 Smash to Smithereens
+4 Lava Dart
+18 Mountain

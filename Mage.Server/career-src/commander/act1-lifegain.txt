@@ -1,0 +1,79 @@
+# name: The Ghost Council's Ledger
+# archetype: midrange (lifegain)
+# season: 2026-10
+1 Soul Warden
+1 Soul's Attendant
+1 Healer's Hawk
+1 Ajani's Pridemate
+1 Lunarch Veteran
+1 Daxos, Blessed by the Sun
+1 Twinblade Paladin
+1 Bloodbond Vampire
+1 Cliffhaven Vampire
+1 Vito, Thorn of the Dusk Rose
+1 Vampire Nighthawk
+1 Dusk Legion Zealot
+1 Epicure of Blood
+1 Marauding Blight-Priest
+1 Twilight Prophet
+1 Righteous Valkyrie
+1 Serra Ascendant
+1 Linden, the Steadfast Queen
+1 Speaker of the Heavens
+1 Angel of Vitality
+1 Voice of the Blessed
+1 Crested Sunmare
+1 Bishop of Wings
+1 Ayli, Eternal Pilgrim
+1 Celestial Unicorn
+1 Archangel of Thune
+1 Resplendent Angel
+1 Lyra Dawnbringer
+1 Serra Angel
+1 Baneslayer Angel
+1 Valkyrie Harbinger
+1 Archon of Absolution
+1 Inspiring Overseer
+1 Teysa Karlov
+1 Gray Merchant of Asphodel
+1 Sun Titan
+1 Elenda, the Dusk Rose
+1 Heliod, Sun-Crowned
+1 Sorin, Vengeful Bloodlord
+1 Sanguine Bond
+1 Ajani's Welcome
+1 Dawn of Hope
+1 Well of Lost Dreams
+1 Phyrexian Arena
+1 Loxodon Warhammer
+1 Batterskull
+1 Swords to Plowshares
+1 Path to Exile
+1 Vindicate
+1 Mortify
+1 Anguished Unmaking
+1 Utter End
+1 Despark
+1 Kaya's Guile
+1 Night's Whisper
+1 Read the Bones
+1 Painful Truths
+1 Sol Ring
+1 Arcane Signet
+1 Orzhov Signet
+1 Talisman of Hierarchy
+1 Mind Stone
+1 Wayfarer's Bauble
+1 Command Tower
+1 Orzhov Basilica
+1 Orzhov Guildgate
+1 Scoured Barrens
+1 Isolated Chapel
+1 Caves of Koilos
+1 Shambling Vent
+1 Vault of the Archangel
+1 Myriad Landscape
+1 Evolving Wilds
+13 Plains
+13 Swamp
+CMDR: Karlov of the Ghost Council

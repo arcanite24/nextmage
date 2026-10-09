@@ -1,0 +1,26 @@
+# name: Selesnya Vigorbloom
+# archetype: midrange (Selesnya lifegain counters, Reality Fracture)
+# season: 2026-10
+# source: https://www.17lands.com/card_ratings?expansion=FRA&format=PremierDraft (card and colour-pair win rates, 2026-09-30 to 2026-10-09)
+2 Emergency Phytomedic
+2 Unflinching Hortimancer
+1 Vigorbloom Vanguard
+1 Campus Crier
+1 Graft Surgeon
+2 Greenhouse Propagator
+1 Koth of the Homestead
+1 Lyra, Archangel of Dawn
+1 Bloombrute
+1 Blossom-Blessed Angel
+1 Titanbones, Towering Heart
+1 Fateshaper Aspirant
+1 Vinelasher Adept
+1 Vigorbloom Charm
+1 Prophesied End
+1 Surgical Precision
+1 Memory Trap
+1 Compel Brutality
+1 Predictive Preparations
+1 Bestial Incursion
+9 Plains
+8 Forest

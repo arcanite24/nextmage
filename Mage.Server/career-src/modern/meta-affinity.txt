@@ -1,0 +1,36 @@
+# name: Izzet Affinity
+# archetype: aggro
+# season: 2026-10
+# source: https://www.mtggoldfish.com/archetype/modern-affinity (龙盾杯 MTG China Open S13 Regional Championship,5th Place, 8-2)
+4 Fiery Islet
+2 Preordain
+2 Island
+1 Pithing Needle
+4 Engineered Explosives
+4 Kappa Cannoneer
+2 Welding Jar
+1 Skateboard
+4 Mox Opal
+1 Shadowspear
+2 Shivan Reef
+4 Mishra's Bauble
+4 Pinnacle Emissary
+1 Sink into Stupor
+4 Tormod's Crypt
+3 Weapons Manufacturing
+2 Emry, Lurker of the Loch
+4 Spirebluff Canal
+1 Steam Vents
+3 Metallic Rebuke
+4 Urza's Saga
+3 Claws of Gix
+SB: 2 Cursed Totem
+SB: 2 Damping Sphere
+SB: 1 Vexing Bauble
+SB: 1 Blood Moon
+SB: 2 Mystical Dispute
+SB: 2 Consign to Memory
+SB: 1 Grafdigger's Cage
+SB: 2 Galvanic Blast
+SB: 1 Whipflare
+SB: 1 Swan Song

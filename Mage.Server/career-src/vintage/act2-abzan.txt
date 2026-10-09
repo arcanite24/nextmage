@@ -1,0 +1,25 @@
+# name: Abzan Midrange
+# archetype: midrange
+4 Noble Hierarch
+4 Tarmogoyf
+4 Stoneforge Mystic
+3 Knight of Autumn
+4 Scavenging Ooze
+3 Siege Rhino
+1 Batterskull
+1 Kaldra Compleat
+4 Lingering Souls
+4 Swords to Plowshares
+3 Abrupt Decay
+4 Thoughtseize
+1 Mox Pearl
+1 Mox Emerald
+1 Mox Jet
+4 Windswept Heath
+3 Verdant Catacombs
+3 Savannah
+2 Bayou
+2 Scrubland
+2 Forest
+1 Plains
+1 Elspeth, Sun's Champion

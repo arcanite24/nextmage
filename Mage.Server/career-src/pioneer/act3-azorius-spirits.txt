@@ -1,0 +1,20 @@
+# name: Pale Procession
+# archetype: aggro
+# Azorius Spirits: small fliers, lords and a graveyard-eating Cleric.
+4 Mausoleum Wanderer
+4 Spectral Sailor
+4 Supreme Phantom
+3 Rattlechains
+3 Remorseful Cleric
+4 Empyrean Eagle
+4 Selfless Spirit
+3 Skyclave Apparition
+2 Spell Queller
+2 Shacklegeist
+4 Portable Hole
+4 Hallowed Fountain
+4 Glacial Fortress
+4 Hengegate Pathway
+4 Mutavault
+4 Island
+3 Plains

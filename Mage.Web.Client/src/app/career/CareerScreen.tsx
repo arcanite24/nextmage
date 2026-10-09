@@ -17,7 +17,7 @@ import {
   useCareerQuests, useCareerShop, useCareerStarters, useCareerState, useCareerUnlocks, useCareerWeekly,
 } from './careerData';
 import { useCampaigns, useChallenge, useGauntlet, useLimited, usePuzzles } from './careerModesData';
-import { focusNode } from './careerModesModel';
+import { focusNode, graduated, schoolsOf, storiesOf } from './careerModesModel';
 import { useRotatingSceneArt } from './careerScene';
 import { playCareerCue } from './careerSound';
 import { beatenCount, freshUnlocks, nextOpponent, readSeen, unlockFacts, writeSeen } from './hubModel';
@@ -211,8 +211,17 @@ function CareerHub({ profile }: { profile: CareerProfile }) {
   const still = useStill();
   useUnlockMoments(roster, campaigns.data, achievements.data, shop.data, opponents.isSuccess && campaigns.isSuccess && achievements.isSuccess && shop.isSuccess);
 
+  const schools = useMemo(() => schoolsOf(campaigns.data), [campaigns.data]);
+  const school = useMemo(() => {
+    // the school you're furthest into and haven't finished, else the first open one
+    const open = schools.filter((item) => item.open && !graduated(item));
+    const current = [...open].sort((a, b) => (b.done ?? 0) - (a.done ?? 0))[0];
+    const chapters = current?.chapters ?? [];
+    const act = chapters.find((item) => !item.done);
+    return { current, node: act ? focusNode(act) : undefined };
+  }, [schools]);
   const chapter = useMemo(() => {
-    const campaign = campaigns.data?.[0];
+    const campaign = storiesOf(campaigns.data)[0];
     const chapters = campaign?.chapters ?? [];
     const current = chapters.find((item) => !item.done && (item.nodes ?? []).some((node) => node.state === 'open')) ?? chapters.find((item) => !item.done);
     return { campaign, current, node: current ? focusNode(current) : undefined };
@@ -234,6 +243,13 @@ function CareerHub({ profile }: { profile: CareerProfile }) {
       to: '/career/campaign', title: t('career.modes.campaign'), art: chapter.node?.cover ?? null, artName: chapter.node?.name ?? '',
       status: chapter.current ? t('career.hub.campaign', { chapter: chapter.current.name ?? '', done: chapter.campaign?.done ?? 0, total: chapter.campaign?.total ?? 0 }) : t('career.hub.campaignDone'),
     },
+    ...(schools.length > 0 ? [{
+      to: school.current ? `/career/academy/${school.current.id}` : '/career/academy', title: t('career.academy.title'),
+      art: school.node?.cover ?? HUB_ART.academy, artName: school.node?.opponentName ?? '',
+      status: school.current
+        ? t('career.hub.academy', { school: school.current.name ?? '', done: school.current.bosses ?? 0, total: school.current.chapters?.length ?? 4 })
+        : t('career.hub.academyOpen', { open: schools.filter((item) => item.open).length, total: schools.length }),
+    }] : []),
     {
       to: '/career/gauntlet', title: t('career.modes.gauntlet'), art: run?.next?.cover ?? HUB_ART.gauntlet, artName: run?.next?.name ?? '',
       status: runOn ? t('career.hub.gauntletRun', { wins: run?.wins ?? 0 }) : t('career.hub.gauntletEntry', { coins: gauntlet.data?.entryCoins ?? 0 }),
@@ -336,6 +352,7 @@ function CareerHub({ profile }: { profile: CareerProfile }) {
 
 /** Cards whose art stands for a mode that has no opponent of its own to show. */
 const HUB_ART = {
+  academy: { name: 'Daxos of Meletis', setCode: 'THS', cardNumber: '191' },
   gauntlet: { name: 'Stoneshock Giant', setCode: 'THS', cardNumber: '142' },
   puzzles: { name: 'Omenspeaker', setCode: 'THS', cardNumber: '57' },
   limited: { name: 'Chronicler of Heroes', setCode: 'THS', cardNumber: '190' },
@@ -394,6 +411,11 @@ function useUnlockMoments(
           text: t('career.ceremony.tierText', { names: members.map((opponent) => opponent.name).join(', ') }),
           card: first.cover ?? undefined,
         }];
+      }
+      if (kind === 'school') {
+        const school = campaigns?.find((campaign) => campaign.id === rest[0]);
+        if (!school) return [];
+        return [{ id: fact, kicker: t('career.ceremony.school'), title: school.name ?? '', text: school.summary, crest: { name: school.name ?? '', colors: school.colors } }];
       }
       if (kind === 'chapter') {
         const [campaignId, chapterId] = rest;

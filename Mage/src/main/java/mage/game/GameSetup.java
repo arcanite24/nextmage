@@ -24,5 +24,13 @@ public interface GameSetup extends Serializable {
         return null;
     }
 
+    /**
+     * @return true when the game is over for the table once every human player has lost or left: the AI players
+     * still in it don't play it out, and the one with the most life wins
+     */
+    default boolean endsWhenHumansAreOut() {
+        return false;
+    }
+
     void apply(Game game, UUID startingPlayerId);
 }

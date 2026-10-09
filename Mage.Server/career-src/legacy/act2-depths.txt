@@ -1,0 +1,20 @@
+# name: Golgari Depths
+# archetype: combo
+4 Vampire Hexmage
+4 Elvish Reclaimer
+4 Crop Rotation
+4 Sylvan Scrying
+4 Mox Diamond
+4 Thoughtseize
+4 Fatal Push
+2 Abrupt Decay
+2 Sylvan Library
+4 Dark Depths
+4 Thespian's Stage
+4 Bayou
+4 Verdant Catacombs
+3 Misty Rainforest
+2 Wasteland
+2 Ghost Quarter
+3 Forest
+2 Swamp
