@@ -9,23 +9,27 @@ import { useAutoAnswers } from '../stores/autoAnswers';
 import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
 import { APP_NAME } from '../brand';
+import { formatNumber, LOCALES, registerMessages, useT, type LocalePreference, type MessageKey, type Translate } from '../i18n';
+import messages from '../i18n/en/settings';
+import { browserLocale } from '../i18n/locales';
+import { RichText } from '../i18n/RichText';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import styles from './SettingsDialog.module.css';
 
-const STEPS: { key: keyof SkipPrioritySteps; label: string }[] = [
-  { key: 'upkeep', label: 'Upkeep' },
-  { key: 'draw', label: 'Draw' },
-  { key: 'main1', label: 'First main' },
-  { key: 'beforeCombat', label: 'Beginning of combat' },
-  { key: 'endOfCombat', label: 'End of combat' },
-  { key: 'main2', label: 'Second main' },
-  { key: 'endOfTurn', label: 'End step' },
-];
+registerMessages(messages);
+
+const STEPS: (keyof SkipPrioritySteps)[] = ['upkeep', 'draw', 'main1', 'beforeCombat', 'endOfCombat', 'main2', 'endOfTurn'];
+
+const PLAY_STYLES = [
+  ['settings.style.streamlined', STREAMLINED, 'settings.style.streamlined.detail'],
+  ['settings.style.full', FULL_CONTROL, 'settings.style.full.detail'],
+] as const;
 
 export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChange(open: boolean): void }) {
   const settings = useSettings((state) => state.settings);
   const update = useSettings((state) => state.update);
+  const t = useT();
 
   const toggle = (key: keyof PlaySettings) => (
     <Switch checked={!!settings[key]} onChange={(value) => update({ [key]: value } as Partial<PlaySettings>)} />
@@ -36,68 +40,76 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="Settings" width="lg"
-      footer={<Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag })}>Restore defaults</Button>}>
+    <Dialog open={open} onOpenChange={onOpenChange} title={t('settings.title')} width="lg"
+      footer={(
+        <Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag, locale: settings.locale })}>
+          {t('settings.restore')}
+        </Button>
+      )}>
       <Tabs.Root defaultValue="play" className={styles.tabs} orientation="vertical">
-        <Tabs.List className={styles.list} aria-label="Settings sections">
-          <Tabs.Trigger value="play" className={styles.trigger}>Gameplay</Tabs.Trigger>
-          <Tabs.Trigger value="stops" className={styles.trigger}>Stops</Tabs.Trigger>
-          <Tabs.Trigger value="answers" className={styles.trigger}>Auto answers</Tabs.Trigger>
-          <Tabs.Trigger value="display" className={styles.trigger}>Motion</Tabs.Trigger>
-          <Tabs.Trigger value="sound" className={styles.trigger}>Sound</Tabs.Trigger>
-          <Tabs.Trigger value="alerts" className={styles.trigger}>Alerts</Tabs.Trigger>
-          <Tabs.Trigger value="import" className={styles.trigger}>Import</Tabs.Trigger>
+        <Tabs.List className={styles.list} aria-label={t('settings.sections')}>
+          <Tabs.Trigger value="play" className={styles.trigger}>{t('settings.tab.play')}</Tabs.Trigger>
+          <Tabs.Trigger value="stops" className={styles.trigger}>{t('settings.tab.stops')}</Tabs.Trigger>
+          <Tabs.Trigger value="answers" className={styles.trigger}>{t('settings.tab.answers')}</Tabs.Trigger>
+          <Tabs.Trigger value="display" className={styles.trigger}>{t('settings.tab.display')}</Tabs.Trigger>
+          <Tabs.Trigger value="sound" className={styles.trigger}>{t('settings.tab.sound')}</Tabs.Trigger>
+          <Tabs.Trigger value="alerts" className={styles.trigger}>{t('settings.tab.alerts')}</Tabs.Trigger>
+          <Tabs.Trigger value="import" className={styles.trigger}>{t('settings.tab.import')}</Tabs.Trigger>
+          <Tabs.Trigger value="language" className={styles.trigger}>{t('settings.tab.language')}</Tabs.Trigger>
         </Tabs.List>
 
         <Tabs.Content value="play" className={styles.panel}>
           <div className={styles.style}>
-            <span className={styles.styleLabel}>Play style</span>
-            <div className={styles.styleChoices} role="radiogroup" aria-label="Play style">
-              {([['Streamlined', STREAMLINED, 'The game moves on whenever you have nothing to decide, like Arena.'], ['Full control', FULL_CONTROL, 'Every stop and every choice is yours, like classic XMage.']] as const).map(([label, preset, detail]) => {
+            <span className={styles.styleLabel}>{t('settings.style')}</span>
+            <div className={styles.styleChoices} role="radiogroup" aria-label={t('settings.style')}>
+              {PLAY_STYLES.map(([label, preset, detail]) => {
                 const active = Object.entries(preset).every(([key, value]) => settings[key as keyof PlaySettings] === value);
                 return (
                   <button key={label} type="button" role="radio" aria-checked={active} className={active ? styles.styleOn : styles.styleChoice} onClick={() => update(preset)}>
-                    <strong>{label}</strong>
-                    <span>{detail}</span>
+                    <strong>{t(label)}</strong>
+                    <span>{t(detail)}</span>
                   </button>
                 );
               })}
             </div>
           </div>
-          <Row label="Pass when I have nothing to do" detail="Resolves spells and moves through steps when you have nothing to cast, play or activate. Lands that only make mana don't count.">{toggle('autoPass')}</Row>
-          <Row label="Stop for my permanents' abilities on the opponent's turn" detail="With this off, only instants and flash spells stop you during their turn.">{toggle('abilitiesOnTheirTurn')}</Row>
-          <Row label="Skip attacks and blocks when nothing can" detail="Answers for you when no creature can attack or block, and lets the rest of combat go by when nobody attacks.">{toggle('autoSkipCombat')}</Row>
-          <Row label="Resolve my spells right away" detail="After you cast a spell or activate an ability, it resolves unless the opponent responds. Turn off to keep priority and respond to your own spells.">{toggle('passAfterCasting')}</Row>
-          <Row label="Pay mana automatically" detail="Taps the right lands when the payment is clear.">{toggle('autoPayMana')}</Row>
-          <Row label="Only with spare mana" detail="Auto-pay never uses mana a card could need later this turn.">{toggle('autoPayRestricted')}</Row>
-          <Row label="Warn before losing mana" detail="Ask before passing with mana left in your pool.">{toggle('confirmEmptyManaPool')}</Row>
-          <Row label="Order triggers for me" detail="Orders simultaneous triggers when the order doesn't matter.">{toggle('autoOrderTriggers')}</Row>
-          <Row label="Pick obvious targets" detail="Chooses the target when only one is legal.">
+          <Row label={t('settings.autoPass')} detail={t('settings.autoPass.detail')}>{toggle('autoPass')}</Row>
+          <Row label={t('settings.theirTurn')} detail={t('settings.theirTurn.detail')}>{toggle('abilitiesOnTheirTurn')}</Row>
+          <Row label={t('settings.skipCombat')} detail={t('settings.skipCombat.detail')}>{toggle('autoSkipCombat')}</Row>
+          <Row label={t('settings.passAfterCasting')} detail={t('settings.passAfterCasting.detail')}>{toggle('passAfterCasting')}</Row>
+          <Row label={t('settings.autoPay')} detail={t('settings.autoPay.detail')}>{toggle('autoPayMana')}</Row>
+          <Row label={t('settings.autoPayRestricted')} detail={t('settings.autoPayRestricted.detail')}>{toggle('autoPayRestricted')}</Row>
+          <Row label={t('settings.emptyPool')} detail={t('settings.emptyPool.detail')}>{toggle('confirmEmptyManaPool')}</Row>
+          <Row label={t('settings.orderTriggers')} detail={t('settings.orderTriggers.detail')}>{toggle('autoOrderTriggers')}</Row>
+          <Row label={t('settings.autoTarget')} detail={t('settings.autoTarget.detail')}>
             <Switch checked={settings.autoTargetLevel > 0} onChange={(value) => update({ autoTargetLevel: value ? 1 : 0 })} />
           </Row>
-          <Row label="Opponents may ask to see my hand" detail="You still approve every request.">{toggle('allowHandRequests')}</Row>
+          <Row label={t('settings.handRequests')} detail={t('settings.handRequests.detail')}>{toggle('allowHandRequests')}</Row>
         </Tabs.Content>
 
         <Tabs.Content value="stops" className={styles.panel}>
-          <p className={styles.intro}>The game gives you priority at these steps. Elsewhere it passes for you unless something happens.</p>
+          <p className={styles.intro}>{t('settings.stops.intro')}</p>
           <table className={styles.stops}>
             <thead>
-              <tr><th scope="col">Step</th><th scope="col">Your turn</th><th scope="col">Opponent's turn</th></tr>
+              <tr><th scope="col">{t('settings.stops.step')}</th><th scope="col">{t('settings.stops.yourTurn')}</th><th scope="col">{t('settings.stops.theirTurn')}</th></tr>
             </thead>
             <tbody>
-              {STEPS.map((step) => (
-                <tr key={step.key}>
-                  <th scope="row">{step.label}</th>
-                  <td><Switch label={`${step.label}, your turn`} checked={!!settings.stops.yourTurn?.[step.key]} onChange={(value) => setStop('yourTurn', step.key, value)} /></td>
-                  <td><Switch label={`${step.label}, opponent's turn`} checked={!!settings.stops.opponentTurn?.[step.key]} onChange={(value) => setStop('opponentTurn', step.key, value)} /></td>
-                </tr>
-              ))}
+              {STEPS.map((step) => {
+                const label = t(`settings.step.${step}`);
+                return (
+                  <tr key={step}>
+                    <th scope="row">{label}</th>
+                    <td><Switch label={t('settings.stops.yourTurnOf', { step: label })} checked={!!settings.stops.yourTurn?.[step]} onChange={(value) => setStop('yourTurn', step, value)} /></td>
+                    <td><Switch label={t('settings.stops.theirTurnOf', { step: label })} checked={!!settings.stops.opponentTurn?.[step]} onChange={(value) => setStop('opponentTurn', step, value)} /></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-          <Row label="Stop when attackers can be declared">
+          <Row label={t('settings.stops.attackers')}>
             <Switch checked={!!settings.stops.stopOnDeclareAttackers} onChange={(value) => update({ stops: { ...settings.stops, stopOnDeclareAttackers: value } })} />
           </Row>
-          <Row label="Stop when a spell or ability goes on the stack">
+          <Row label={t('settings.stops.stack')}>
             <Switch checked={!!settings.stops.stopOnStackNewObjects} onChange={(value) => update({ stops: { ...settings.stops, stopOnStackNewObjects: value } })} />
           </Row>
         </Tabs.Content>
@@ -107,16 +119,14 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
         </Tabs.Content>
 
         <Tabs.Content value="display" className={styles.panel}>
-          <Row label="Card motion" detail="Cards fly between zones and settle on the mat. Your system's reduced-motion setting always wins.">{toggle('animations')}</Row>
+          <Row label={t('settings.motion')} detail={t('settings.motion.detail')}>{toggle('animations')}</Row>
         </Tabs.Content>
 
         <Tabs.Content value="alerts" className={styles.panel}>
-          <p className={styles.intro}>While {APP_NAME} is in a background tab, the tab title counts what waits for you.</p>
+          <p className={styles.intro}>{t('settings.alerts.intro', { app: APP_NAME })}</p>
           <Row
-            label="Browser notifications"
-            detail={notificationsSupported()
-              ? 'Also show a notification when it is your move, a draft pick is up, a game starts or someone whispers to you.'
-              : "This browser can't show notifications."}
+            label={t('settings.notifications')}
+            detail={notificationsSupported() ? t('settings.notifications.detail') : t('settings.notifications.unsupported')}
           >
             <Switch
               checked={settings.notifications && notificationsSupported()}
@@ -132,8 +142,8 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
         </Tabs.Content>
 
         <Tabs.Content value="sound" className={styles.panel}>
-          <Row label="Sound effects" detail="Short cues for your turn, decisions, spells, combat, life changes and the result. Press M during a game to mute.">{toggle('sound')}</Row>
-          <Row label="Volume">
+          <Row label={t('settings.sound')} detail={t('settings.sound.detail')}>{toggle('sound')}</Row>
+          <Row label={t('settings.volume')}>
             <div className={styles.volume}>
               <input
                 type="range"
@@ -145,29 +155,48 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                 onChange={(event) => update({ volume: Number(event.target.value) })}
                 onPointerUp={previewTurnCue}
                 onKeyUp={previewTurnCue}
-                aria-label="Sound volume"
-                aria-valuetext={`${Math.round(settings.volume * 100)}%`}
+                aria-label={t('settings.volume.label')}
+                aria-valuetext={formatNumber(settings.volume, { style: 'percent' })}
               />
-              <span aria-hidden="true">{Math.round(settings.volume * 100)}%</span>
+              <span aria-hidden="true">{formatNumber(settings.volume, { style: 'percent' })}</span>
             </div>
           </Row>
-          <Row label="Only important cues" detail="Just your turn, decisions, your clock running low and the result.">{toggle('importantCuesOnly')}</Row>
+          <Row label={t('settings.importantCues')} detail={t('settings.importantCues.detail')}>{toggle('importantCuesOnly')}</Row>
         </Tabs.Content>
 
         <Tabs.Content value="import" className={styles.panel}>
           <Bookmarklet />
+        </Tabs.Content>
+
+        <Tabs.Content value="language" className={styles.panel}>
+          <Row label={t('settings.language')} detail={t('settings.language.detail')}>
+            <select
+              className={styles.select}
+              value={settings.locale}
+              aria-label={t('settings.language')}
+              onChange={(event) => update({ locale: event.target.value as LocalePreference })}
+            >
+              <option value="auto">{t('settings.language.auto', { language: languageName(browserLocale(navigator.languages ?? [navigator.language])) })}</option>
+              {LOCALES.map((locale) => <option key={locale.code} value={locale.code} lang={locale.code}>{locale.name}</option>)}
+            </select>
+          </Row>
         </Tabs.Content>
       </Tabs.Root>
     </Dialog>
   );
 }
 
-const CHOICE_LABEL: Record<AutoRule['choice'], string> = { yes: 'Always yes', no: 'Always no', first: 'Always first', last: 'Always last' };
+const CHOICE_LABEL: Record<AutoRule['choice'], MessageKey> = { yes: 'settings.choice.yes', no: 'settings.choice.no', first: 'settings.choice.first', last: 'settings.choice.last' };
+
+function languageName(code: string): string {
+  return LOCALES.find((locale) => locale.code === code)?.name ?? code;
+}
 
 /** Standing answers set with "Always…" in the games in progress, and resetting them. */
 function AutoAnswers() {
   const rules = useAutoAnswers((state) => state.rules);
   const forget = useAutoAnswers((state) => state.forget);
+  const t = useT();
   const sessions = useGames((state) => state.sessions);
   const games = useMemo(() => Object.entries(sessions)
     .filter(([, session]) => session.getState().mode === 'play')
@@ -182,30 +211,30 @@ function AutoAnswers() {
   return (
     <>
       <p className={styles.intro}>
-        When the game asks a yes/no question, or the order of your triggers, “Always…” answers it the same way for the rest of that game.
+        {t('settings.answers.intro')}
       </p>
-      {games.length === 0 && <p className={styles.rowDetail}>You’re not in a game. Answers you set during a game show here.</p>}
+      {games.length === 0 && <p className={styles.rowDetail}>{t('settings.answers.none')}</p>}
       {games.map((game, index) => (
-        <section key={game.gameId} className={styles.answers} aria-label={games.length > 1 ? `Game ${index + 1}` : 'This game'}>
+        <section key={game.gameId} className={styles.answers} aria-label={games.length > 1 ? t('settings.answers.game', { number: index + 1 }) : t('settings.answers.thisGame')}>
           {(['answer', 'trigger'] as const).map((kind) => {
             const list = game.rules.filter((rule) => rule.kind === kind);
             return (
               <div key={kind}>
                 <div className={styles.row}>
                   <div>
-                    <div className={styles.rowLabel}>{kind === 'answer' ? 'Questions' : 'Trigger order'}{games.length > 1 ? ` · game ${index + 1}` : ''}</div>
+                    <div className={styles.rowLabel}>{rowLabel(t, kind, games.length > 1 ? index + 1 : null)}</div>
                     <div className={styles.rowDetail}>
-                      {list.length === 0 ? 'None set from here. Resetting also clears any set elsewhere.' : `${list.length} set`}
+                      {list.length === 0 ? t('settings.answers.empty') : t('settings.answers.count', { count: list.length })}
                     </div>
                   </div>
-                  <Button variant="print" size="sm" onClick={() => reset(game.gameId, kind)}>Reset</Button>
+                  <Button variant="print" size="sm" onClick={() => reset(game.gameId, kind)}>{t('settings.answers.reset')}</Button>
                 </div>
                 {list.length > 0 && (
                   <ul className={styles.answerList}>
                     {list.map((rule) => (
                       <li key={rule.label}>
                         <span>{rule.label}</span>
-                        <b>{CHOICE_LABEL[rule.choice]}</b>
+                        <b>{t(CHOICE_LABEL[rule.choice])}</b>
                       </li>
                     ))}
                   </ul>
@@ -219,9 +248,16 @@ function AutoAnswers() {
   );
 }
 
+/** "Questions", or "Questions · game 2" when several games are in progress. */
+function rowLabel(t: Translate, kind: 'answer' | 'trigger', game: number | null): string {
+  const label = t(kind === 'answer' ? 'settings.answers.questions' : 'settings.answers.triggers');
+  return game === null ? label : t('settings.answers.ofGame', { label, number: game });
+}
+
 /** "Send to Playmat": a bookmark that brings the deck on the page over in one click. */
 function Bookmarklet() {
   const link = useRef<HTMLAnchorElement>(null);
+  const t = useT();
   useEffect(() => {
     // React won't render javascript: links, so the bookmark's address is set by hand
     const code = bookmarkletSource
@@ -236,17 +272,17 @@ function Bookmarklet() {
   return (
     <div className={styles.bookmarklet}>
       <p className={styles.intro}>
-        Moxfield, MTGGoldfish, AetherHub, TappedOut and Deckstats don’t let other apps read their decks. This bookmark reads the deck on the page you’re looking at, with your browser, and brings it here.
+        {t('settings.bookmarklet.intro')}
       </p>
-      <a ref={link} className={styles.bookmarkletLink} draggable onClick={(event) => event.preventDefault()} title="Drag this to your bookmarks bar">
-        <BookmarkPlus size={18} aria-hidden="true" /> Send to {APP_NAME}
+      <a ref={link} className={styles.bookmarkletLink} draggable onClick={(event) => event.preventDefault()} title={t('settings.bookmarklet.drag')}>
+        <BookmarkPlus size={18} aria-hidden="true" /> {t('settings.bookmarklet.name', { app: APP_NAME })}
       </a>
       <ol className={styles.bookmarkletSteps}>
-        <li>Drag <b>Send to {APP_NAME}</b> to your bookmarks bar.</li>
-        <li>Open a deck on any deck site.</li>
-        <li>Click the bookmark. The deck opens here, ready to save.</li>
+        <li><RichText text={t('settings.bookmarklet.step1')} parts={{ link: <b>{t('settings.bookmarklet.name', { app: APP_NAME })}</b> }} /></li>
+        <li>{t('settings.bookmarklet.step2')}</li>
+        <li>{t('settings.bookmarklet.step3')}</li>
       </ol>
-      <p className={styles.rowDetail}>It only reads the deck page it runs on, and the deck travels in the link itself: no server sees it.</p>
+      <p className={styles.rowDetail}>{t('settings.bookmarklet.privacy')}</p>
     </div>
   );
 }
