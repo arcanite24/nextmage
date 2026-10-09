@@ -18,7 +18,9 @@ import { useEvents } from './stores/events';
 import { useGames } from './stores/games';
 import { usePlay } from './stores/play';
 import { useSession } from './stores/session';
+import './stores/lobby';
 import './stores/settings';
+import './stores/social';
 import './stores/toasts';
 
 /** Screens that need a signed-in player; also opens games when the server starts them. */
@@ -65,6 +67,7 @@ const router = createBrowserRouter([
       { path: '/game/:gameId', lazy: () => import('./screens/GameScreen').then((m) => ({ Component: m.GameScreen })) },
       { path: '/draft/:draftId', lazy: () => import('./events/DraftScreen').then((m) => ({ Component: m.DraftScreen })) },
       { path: '/build/:tableId', lazy: () => import('./events/BuildScreen').then((m) => ({ Component: m.BuildScreen })) },
+      { path: '/replay/:gameId', lazy: () => import('./replay/ReplayScreen').then((m) => ({ Component: m.ReplayScreen })) },
       {
         element: <AppShell />,
         errorElement: <RouteError />,
@@ -76,6 +79,9 @@ const router = createBrowserRouter([
           { path: '/events', element: <EventsScreen /> },
           { path: '/event/:tournamentId', lazy: () => import('./events/EventScreen').then((m) => ({ Component: m.EventScreen })) },
           { path: '/tables', lazy: () => import('./screens/TablesScreen').then((m) => ({ Component: m.TablesScreen })) },
+          // an invite link; signing in first comes back here
+          { path: '/join/:tableId', lazy: () => import('./screens/JoinScreen').then((m) => ({ Component: m.JoinScreen })) },
+          { path: '/history', lazy: () => import('./history/HistoryScreen').then((m) => ({ Component: m.HistoryScreen })) },
         ],
       },
     ],

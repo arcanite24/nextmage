@@ -45,6 +45,9 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_ADMIN_PASSWORD` | unset | Admin password (`-Dxmage.adminPassword`). Unset: admin login is disabled. |
 | `XMAGE_AUTH` | `false` | `authenticationActivated`. `true` makes players register and log in with a password. Use it on a public server. |
 | `XMAGE_SAVE_GAMES` | `false` | `saveGameActivated`. Upstream marks game saving as unreliable. |
+| `XMAGE_REPLAYS` | `true` | Record finished games with at least one human player for the web client's replays (`-Dxmage.replays`). |
+| `XMAGE_REPLAY_DAYS` | `30` | Replays older than this many days are deleted. |
+| `XMAGE_REPLAY_MAX` | `300` | At most this many replays are kept; the oldest go first. A replay is gzipped, about 10 kB per turn (a six-turn duel was 59 kB), so 300 replays usually take tens of megabytes. |
 | `XMAGE_MEMORY` | `2g` | Java heap. |
 | `XMAGE_MAX_GAME_THREADS` | `4` | `maxGameThreads`: games that run at the same time. |
 | `XMAGE_MAX_AI_OPPONENTS` | `4` | `maxAiOpponents`: AI players in use at once (draft bots don't count). |
@@ -91,7 +94,7 @@ Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a me
 |---|---|---|---|
 | `xmage-db` | `/opt/xmage/db` | `authorized_user.h2` (accounts), `feedback.h2`, `user_stats.db` (player stats), `table_record.db` (finished tables) | yes, nightly |
 | `xmage-cards` | `/opt/xmage/cards-db` | `cards.h2`, the card database | no: a cache built from the image |
-| `xmage-saved` | `/opt/xmage/saved` | saved games (`XMAGE_SAVE_GAMES`) | optional |
+| `xmage-saved` | `/opt/xmage/saved` | saved games (`XMAGE_SAVE_GAMES`) and web client replays (`saved/replays`) | optional |
 | `xmage-logs` | `/opt/xmage/logs` | `mageserver.log*` | no |
 | `xmage-backups` | `/backups` (backup service) | nightly dumps | copy off the machine |
 | `caddy-data`, `caddy-config` | Caddy | certificates | optional |

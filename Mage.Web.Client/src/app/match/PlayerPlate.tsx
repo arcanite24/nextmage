@@ -5,6 +5,7 @@ import { POOL_MANA, poolId } from '../../core/game/payment';
 import { ROPE_SECONDS, ropeSecondsLeft, ropeVisible } from '../../core/game/rope';
 import type { PlayerView } from '../../protocol/generated/views';
 import { ManaCost } from '../ui/ManaCost';
+import { sigilOf } from '../../core/social/identity';
 import styles from './PlayerPlate.module.css';
 
 export interface PlayerPlateProps {
@@ -65,7 +66,8 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
   const pool = POOL_MANA.filter(({ key }) => (player.manaPool?.[key] ?? 0) > 0);
   const timeLeft = useRopeSeconds(player);
   const ticking = ropeVisible(player.timerActive, player.hasPriority, timeLeft);
-  const initial = (player.name ?? '?').slice(0, 1).toUpperCase();
+  // the player's sigil from their profile, or their initial
+  const initial = sigilOf(player.userData?.avatarId) ?? (player.name ?? '?').slice(0, 1).toUpperCase();
 
   return (
     <div

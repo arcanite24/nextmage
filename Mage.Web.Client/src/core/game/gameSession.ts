@@ -194,6 +194,19 @@ export class GameSession {
     }
   }
 
+  /** Replays: show one recorded moment of the game. */
+  showFrame(view: GameView): void {
+    if (this.store.getState().mode !== 'replay') return;
+    this.applyView(view);
+  }
+
+  /** Watching and replays: whose seat is at the bottom of the table (null: the first player's). */
+  setPerspective(playerId: string | null): void {
+    if (this.store.getState().mode === 'play') return;
+    this.store.setState({ playerId });
+    this.refreshInteraction();
+  }
+
   dispose(): void {
     this.clearReplyTimer();
     this.clearHold();

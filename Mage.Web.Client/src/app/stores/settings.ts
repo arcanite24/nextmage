@@ -39,6 +39,12 @@ export interface PlaySettings {
   volume: number;
   /** only your turn, decisions, the clock and the result make a sound */
   importantCuesOnly: boolean;
+  /** browser notifications while the tab is in the background: your move, a draft pick, a game starting, a whisper */
+  notifications: boolean;
+  /** profile: the sigil shown for the player (server avatar ids 10 to 32; 10 shows the initial) */
+  avatarId: number;
+  /** profile: a country code ("de") or "world" */
+  flag: string;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -68,6 +74,9 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   sound: true,
   volume: 0.6,
   importantCuesOnly: false,
+  notifications: false,
+  avatarId: 10,
+  flag: 'world',
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },
@@ -100,10 +109,10 @@ interface SettingsState {
 export function toUserData(settings: PlaySettings, fullControl = false): UserData {
   return {
     groupId: 0,
-    avatarId: 51,
+    avatarId: settings.avatarId,
     allowRequestShowHandCards: settings.allowHandRequests,
     userSkipPrioritySteps: serverStops(settings.stops, fullControl),
-    flagName: 'world.png',
+    flagName: `${settings.flag || 'world'}.png`,
     askMoveToGraveOrder: false,
     manaPoolAutomatic: settings.autoPayMana,
     manaPoolAutomaticRestricted: settings.autoPayRestricted,

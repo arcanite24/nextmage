@@ -138,19 +138,11 @@
   text-align: center;
 }
 
-.watching {
+.watchers {
   position: absolute;
-  right: 40px;
-  bottom: 40px;
-  z-index: var(--z-rail);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-family: var(--font-print);
-  font-size: 28px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-print);
+  right: 92px;
+  top: 28px;
+  z-index: var(--z-vfx);
 }
 
 .menu {

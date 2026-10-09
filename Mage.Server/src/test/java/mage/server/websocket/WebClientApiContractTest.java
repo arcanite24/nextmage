@@ -50,7 +50,9 @@ public class WebClientApiContractTest {
             "getExpansionSets", "getBasicLandSets", "searchCards", "lookupCards", "deckValidate", // card database services
             "deckImportFromUrl", "deckImportSources", // deck website import service
             "testEndGame", "testConcedeMatch", // test mode helpers on table manager
-            "gameResync" // the bridge resends its own copy of the open question
+            "gameResync", // the bridge resends its own copy of the open question
+            "chatSetIgnored", "gameWatchers", // user and game managers (social/UserRelations, watcher names)
+            "replayList", "replayPage" // replay store (replay/ReplayStoreTest)
     ));
 
     static {

@@ -175,3 +175,13 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
 }
+
+/* a seated table's chat, folded out under its row */
+.tableChat {
+  height: 240px;
+  margin: -4px 0 4px;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-radius: 0 0 10px 10px;
+  background: rgb(var(--ink-rgb) / 0.025);
+  box-shadow: inset 0 0 0 1px var(--ink-ghost);
+}

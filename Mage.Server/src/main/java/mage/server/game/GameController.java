@@ -24,6 +24,7 @@ import mage.players.Player;
 import mage.server.Main;
 import mage.server.User;
 import mage.server.managers.ManagerFactory;
+import mage.server.replay.ReplayRecorder;
 import mage.util.MultiAmountMessage;
 import mage.util.ThreadUtils;
 import mage.util.XmageThreadFactory;
@@ -84,6 +85,7 @@ public class GameController implements GameCallback {
     private final GameOptions gameOptions;
 
     private ConcurrentHashMap<UUID, GameView> defaultGameViews = new ConcurrentHashMap<>(); // default game views on first connect
+    private volatile ReplayRecorder replayRecorder; // null when the game isn't recorded for replay
 
     private UUID userRequestingRollback;
     private int turnsToRollback;
@@ -114,6 +116,9 @@ public class GameController implements GameCallback {
 
         getGameSessions().forEach(GameSessionPlayer::cleanUp);
         getGameSessionWatchers().forEach(GameSessionWatcher::cleanUp);
+        if (replayRecorder != null) {
+            replayRecorder.finish(null); // keeps what was recorded of a game that didn't end normally
+        }
 
         managerFactory.chatManager().destroyChatSession(chatId);
     }
@@ -356,6 +361,8 @@ public class GameController implements GameCallback {
                     GameSessionPlayer.generateDefaultGameViewForPlayer(game, gameSessionPlayer.getPlayerId())
                 );
             }
+
+            replayRecorder = ReplayRecorder.start(game, managerFactory.tableManager().getTable(tableId), chatId);
 
             // send first info to users
             // order matters: GAME_INIT must be in a session queue BEFORE a game thread sends its
@@ -797,6 +804,9 @@ public class GameController implements GameCallback {
     public void endGame(final String message) throws MageException {
         // real game end, all data ready here
         DataCollectorServices.getInstance().onGameEndResult(game);
+        if (replayRecorder != null) {
+            replayRecorder.finish(game.getWinner());
+        }
 
         // send end game message/dialog
         for (final GameSessionPlayer gameSession : getGameSessions()) {
@@ -863,6 +873,9 @@ public class GameController implements GameCallback {
         }
         for (final GameSessionWatcher gameWatcher : getGameSessionWatchers()) {
             gameWatcher.update();
+        }
+        if (replayRecorder != null) {
+            replayRecorder.frame();
         }
     }
 
@@ -970,6 +983,9 @@ public class GameController implements GameCallback {
         for (final GameSessionWatcher watcher : getGameSessionWatchers()) {
             watcher.getGameView();
             destPlayers.add(watcher);
+        }
+        if (replayRecorder != null) {
+            replayRecorder.frame();
         }
 
         // warning, it's game update so make sure it's actual for current time, not on sending time
@@ -1299,6 +1315,18 @@ public class GameController implements GameCallback {
             }
         }
         return sb.append(']').toString();
+    }
+
+    /**
+     * @return names of the users watching this game, sorted
+     */
+    public List<String> getWatcherNames() {
+        List<String> names = new ArrayList<>();
+        for (UUID userId : watchers.keySet()) {
+            managerFactory.userManager().getUser(userId).ifPresent(user -> names.add(user.getName()));
+        }
+        Collections.sort(names, String.CASE_INSENSITIVE_ORDER);
+        return names;
     }
 
     public boolean isAllowedToWatch(UUID userId) {

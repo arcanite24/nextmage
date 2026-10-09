@@ -11,6 +11,7 @@ import {
 import type { CardView, ChatMessage, GameView } from '../../protocol/generated/views';
 import { api, events } from '../connection';
 import { useSession } from '../stores/session';
+import { useSocial } from '../stores/social';
 import { IconButton } from '../ui/Button';
 import { PromptText } from '../ui/PromptText';
 import { useEmotes } from './emotes';
@@ -43,8 +44,8 @@ const ICONS: Record<LogIcon, LucideIcon> = {
   info: Dot,
 };
 
-/** Game chat and the game's running log, joined once per game. */
-function useGameChat(gameId: string, view: GameView | null) {
+/** Game chat and the game's running log, joined once per game (not for replays, which bring their own log). */
+function useGameChat(gameId: string, view: GameView | null, live: boolean) {
   // the latest view, read when a line arrives: it says whose turn the line belongs to
   const latest = useRef(view);
   useEffect(() => {
@@ -55,6 +56,7 @@ function useGameChat(gameId: string, view: GameView | null) {
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
+    if (!live) return;
     let cancelled = false;
     let joined: string | null = null;
     api.chatFindByGame(gameId)
@@ -70,7 +72,7 @@ function useGameChat(gameId: string, view: GameView | null) {
       useEmotes.getState().clear();
       if (joined) api.chatLeave(joined).catch(() => undefined);
     };
-  }, [gameId]);
+  }, [gameId, live]);
 
   useEffect(() => {
     if (!chatId) return;
@@ -100,13 +102,40 @@ function useGameChat(gameId: string, view: GameView | null) {
   return { entries, send, ready: !!chatId, unread, clearUnread: () => setUnread(0) };
 }
 
-export function GameLog({ gameId, notices, canChat, view }: { gameId: string; notices: GameNotice[]; canChat: boolean; view: GameView | null }) {
+/** Recorded log lines, parsed once each however often the replay passes them. */
+const parsedReplayLines = new WeakMap<ChatMessage, LogEntry | null>();
+let replaySeq = 0;
+
+function replayEntries(log: readonly ChatMessage[]): LogEntry[] {
+  const entries: LogEntry[] = [];
+  for (const message of log) {
+    let entry = parsedReplayLines.get(message);
+    if (entry === undefined) {
+      entry = parseChatMessage(message, `r${replaySeq++}`);
+      parsedReplayLines.set(message, entry);
+    }
+    if (entry) entries.push(entry);
+  }
+  return entries.slice(-MAX_LINES);
+}
+
+export function GameLog({ gameId, notices, canChat, view, replayLog }: {
+  gameId: string;
+  notices: GameNotice[];
+  canChat: boolean;
+  view: GameView | null;
+  /** replays: the log up to the moment shown */
+  replayLog?: readonly ChatMessage[];
+}) {
   const open = useMatchUi((state) => state.logOpen);
   const toggle = useMatchUi((state) => state.toggleLog);
   const muted = useEmotes((state) => !!state.muted[gameId]);
   const toggleMute = useEmotes((state) => state.toggleMute);
   const myName = useSession((state) => state.userName);
-  const chat = useGameChat(gameId, view);
+  const ignored = useSocial((state) => state.ignored);
+  const live = useGameChat(gameId, view, !replayLog);
+  const recorded = useMemo(() => (replayLog ? replayEntries(replayLog) : null), [replayLog]);
+  const chat = recorded ? { ...live, entries: recorded } : live;
   const [draft, setDraft] = useState('');
   const list = useRef<HTMLOListElement>(null);
   // every card seen this game, so lines about cards that left the table can still show them
@@ -117,11 +146,13 @@ export function GameLog({ gameId, notices, canChat, view }: { gameId: string; no
 
   const rows = useMemo(() => {
     const errors = notices.filter((notice) => notice.kind === 'error').map((notice) => noticeEntry(`n${notice.id}`, notice.text, notice.at));
-    const visible = muted ? chat.entries.filter((entry) => entry.tone !== 'chat' || entry.who === myName) : chat.entries;
+    const blocked = new Set(ignored.map((name) => name.toLowerCase()));
+    const heard = blocked.size > 0 ? chat.entries.filter((entry) => entry.tone !== 'chat' || !entry.who || !blocked.has(entry.who.toLowerCase())) : chat.entries;
+    const visible = muted ? heard.filter((entry) => entry.tone !== 'chat' || entry.who === myName) : heard;
     // stable sort: lines from the same moment keep the order the server sent them in
     const entries = [...visible, ...errors].sort((a, b) => a.at - b.at);
     return buildLogRows(entries, myName);
-  }, [chat.entries, notices, muted, myName]);
+  }, [chat.entries, notices, muted, myName, ignored]);
 
   useEffect(() => {
     if (open) chat.clearUnread();
