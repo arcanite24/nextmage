@@ -27,7 +27,9 @@
           "reward": {
             "coins": 25,
             "xp": 125
-          }
+          },
+          "before": "On your feet, recruit. Drill starts now.",
+          "after": "Not bad. Keep that shield up."
         },
         {
           "id": "white-2",
@@ -45,7 +47,9 @@
           "reward": {
             "coins": 30,
             "xp": 150
-          }
+          },
+          "before": "My hedges have thorns. Mind your fingers.",
+          "after": "You climbed it. Few do."
         },
         {
           "id": "white-3",
@@ -63,7 +67,9 @@
           "reward": {
             "coins": 35,
             "xp": 175
-          }
+          },
+          "before": "Why wait when you can burn?",
+          "after": "Huh. Waiting worked for you."
         },
         {
           "id": "white-choice",
@@ -113,7 +119,9 @@
           "reward": {
             "coins": 40,
             "xp": 200
-          }
+          },
+          "before": "Answer me this: which way do you want to lose?",
+          "after": "Neither, it seems. Noted."
         },
         {
           "id": "white-5",
@@ -138,7 +146,9 @@
             "deckCards": true,
             "unlockSet": "M21"
           },
-          "boss": true
+          "boss": true,
+          "before": "The keep has stood a thousand years. It will stand tonight.",
+          "after": "The gate is yours. Walk the white path well."
         }
       ]
     },
@@ -165,7 +175,9 @@
           "reward": {
             "coins": 25,
             "xp": 125
-          }
+          },
+          "before": "Hands up. I swing first.",
+          "after": "You saw that coming, didn't you."
         },
         {
           "id": "blue-2",
@@ -183,7 +195,9 @@
           "reward": {
             "coins": 30,
             "xp": 150
-          }
+          },
+          "before": "Feed my garden, would you?",
+          "after": "The weeds win this time."
         },
         {
           "id": "blue-3",
@@ -201,7 +215,9 @@
           "reward": {
             "coins": 35,
             "xp": 175
-          }
+          },
+          "before": "Bring your tricks. I have a shield for each.",
+          "after": "Out of shields. Well thought."
         },
         {
           "id": "blue-choice",
@@ -251,7 +267,9 @@
           "reward": {
             "coins": 40,
             "xp": 200
-          }
+          },
+          "before": "Nothing stays dead around me. Not even you.",
+          "after": "Stay down. Please."
         },
         {
           "id": "blue-5",
@@ -276,7 +294,9 @@
             "deckCards": true,
             "unlockSet": "M20"
           },
-          "boss": true
+          "boss": true,
+          "before": "All hands! We're not sinking. We never sank.",
+          "after": "Perhaps the ship did sink. Thank you for telling me."
         }
       ]
     },
@@ -303,7 +323,9 @@
           "reward": {
             "coins": 25,
             "xp": 125
-          }
+          },
+          "before": "My birds are hungry. Are you a worm?",
+          "after": "Shoo, birds. We lost."
         },
         {
           "id": "black-2",
@@ -321,7 +343,9 @@
           "reward": {
             "coins": 30,
             "xp": 150
-          }
+          },
+          "before": "I've read your deck. Have you read mine?",
+          "after": "I'll need to study you again."
         },
         {
           "id": "black-3",
@@ -339,7 +363,9 @@
           "reward": {
             "coins": 35,
             "xp": 175
-          }
+          },
+          "before": "Grr. Smash now. Think never.",
+          "after": "Gorrum... thinks... maybe a little."
         },
         {
           "id": "black-choice",
@@ -389,7 +415,9 @@
           "reward": {
             "coins": 40,
             "xp": 200
-          }
+          },
+          "before": "Two sisters, one fire. Twice the fun.",
+          "after": "She lost. I lost. We lost."
         },
         {
           "id": "black-5",
@@ -414,7 +442,9 @@
             "deckCards": true,
             "unlockSet": "M19"
           },
-          "boss": true
+          "boss": true,
+          "before": "Sing with us. You'll join the choir soon enough.",
+          "after": "The song ends. Go, and take the dark with you."
         }
       ]
     },
@@ -441,7 +471,9 @@
           "reward": {
             "coins": 25,
             "xp": 125
-          }
+          },
+          "before": "Breathe. Aim. Then strike.",
+          "after": "A clean hit. Well done."
         },
         {
           "id": "red-2",
@@ -459,7 +491,9 @@
           "reward": {
             "coins": 30,
             "xp": 150
-          }
+          },
+          "before": "Mind the cats. They mind you.",
+          "after": "The cats like you. That's rare."
         },
         {
           "id": "red-3",
@@ -477,7 +511,9 @@
           "reward": {
             "coins": 35,
             "xp": 175
-          }
+          },
+          "before": "Hold still. This sword is long.",
+          "after": "Hm. A worthy duel."
         },
         {
           "id": "red-choice",
@@ -527,7 +563,9 @@
           "reward": {
             "coins": 40,
             "xp": 200
-          }
+          },
+          "before": "Leftovers! My favourite.",
+          "after": "Still hungry. Still lost."
         },
         {
           "id": "red-5",
@@ -552,7 +590,9 @@
             "deckCards": true,
             "unlockSet": "DOM"
           },
-          "boss": true
+          "boss": true,
+          "before": "Burn me if you can. Many have tried.",
+          "after": "The ice cracks. The red path is yours."
         }
       ]
     },
@@ -579,7 +619,9 @@
           "reward": {
             "coins": 25,
             "xp": 125
-          }
+          },
+          "before": "Pick a card. Any card. Wrong one!",
+          "after": "Your trick beat my trick."
         },
         {
           "id": "green-2",
@@ -597,7 +639,9 @@
           "reward": {
             "coins": 30,
             "xp": 150
-          }
+          },
+          "before": "Rations up, troops out!",
+          "after": "Rations down. Retreat!"
         },
         {
           "id": "green-3",
@@ -615,7 +659,9 @@
           "reward": {
             "coins": 35,
             "xp": 175
-          }
+          },
+          "before": "...",
+          "after": "...well played."
         },
         {
           "id": "green-choice",
@@ -665,7 +711,9 @@
           "reward": {
             "coins": 40,
             "xp": 200
-          }
+          },
+          "before": "Ever wondered what burns? Let's find out.",
+          "after": "Fire's out. Shame."
         },
         {
           "id": "green-5",
@@ -690,7 +738,9 @@
             "deckCards": true,
             "unlockSet": "ELD"
           },
-          "boss": true
+          "boss": true,
+          "before": "This forest was mine long before you came.",
+          "after": "The old hunter rests. The forest is yours to walk."
         }
       ]
     }

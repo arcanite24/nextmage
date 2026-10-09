@@ -64,6 +64,10 @@ export interface PlaySettings {
   largeZoom: boolean;
   /** Career: the player chose to try it (local only; a server Career profile counts too) */
   careerOptIn: boolean;
+  /** Career: the menu music on Career's screens (synthesized, local only) */
+  careerMusic: boolean;
+  /** Career: the music's volume, 0 to 1, under the master volume (local only) */
+  musicVolume: number;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -104,6 +108,8 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   hideHands: true,
   largeZoom: false,
   careerOptIn: false,
+  careerMusic: true,
+  musicVolume: 0.5,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },

@@ -1,0 +1,190 @@
+/* Opponent portraits: a placed card on the mat with an art window and a printed name plate. */
+
+.art {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, var(--mat-600), var(--mat-900));
+}
+
+.art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drawn {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.drawn svg {
+  width: 70%;
+  height: auto;
+}
+
+.pips {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.pipsSm :global(.ms) {
+  font-size: 0.85em;
+}
+
+.card {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: var(--portrait-w, 220px);
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-zone);
+  overflow: hidden;
+  background: var(--mat-700);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint), var(--shadow-placed);
+  color: var(--ink);
+  text-align: left;
+  transition: transform var(--dur-quick) var(--ease-lift), box-shadow var(--dur-quick) linear;
+}
+
+.sm {
+  --portrait-w: 150px;
+}
+
+.md {
+  --portrait-w: 200px;
+}
+
+.lg {
+  --portrait-w: 300px;
+}
+
+button.card {
+  cursor: pointer;
+}
+
+button.card:hover:not(.locked),
+button.card:focus-visible {
+  transform: translateY(-6px);
+  box-shadow: inset 0 0 0 2px var(--ink-strong), var(--shadow-lifted);
+}
+
+button.card:focus-visible {
+  outline: 2px solid var(--ink-strong);
+  outline-offset: 4px;
+}
+
+.selected {
+  transform: translateY(-6px);
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong), var(--shadow-lifted);
+}
+
+.boss {
+  box-shadow: inset 0 0 0 2px var(--brass), var(--shadow-placed);
+}
+
+.window {
+  position: relative;
+  min-height: 0;
+}
+
+/* the art darkens toward the plate so the name always reads */
+.window::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgb(var(--void-rgb) / 0.75));
+  pointer-events: none;
+}
+
+.crown {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgb(var(--mat-rgb) / 0.85);
+  box-shadow: inset 0 0 0 1.5px var(--brass);
+  color: var(--brass-ink);
+}
+
+.seal {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  background: rgb(var(--void-rgb) / 0.55);
+  color: var(--ink-soft);
+}
+
+.locked .art {
+  filter: grayscale(0.85) brightness(0.6);
+}
+
+.locked {
+  cursor: default;
+}
+
+.plate {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px 10px;
+  background: linear-gradient(180deg, var(--mat-700), var(--mat-800));
+  box-shadow: inset 0 1px 0 var(--ink-ghost);
+}
+
+.name {
+  overflow: hidden;
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.lg .name {
+  font-size: var(--text-xl);
+}
+
+.tagline {
+  overflow: hidden;
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

@@ -1,33 +1,10 @@
 import { Star } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
-import type { MessageKey } from '../i18n';
 import { useT } from '../i18n';
-import { MODE_PATHS, useLastModeResult, type ModeKind } from './careerModesData';
+import { useLastModeResult, type ModeKind } from './careerModesData';
 import { starSlots, type Line } from './careerModesModel';
 import styles from './CareerModes.module.css';
 
-/** The pieces every Career mode screen shares: its own row of links, rewards and twists as lines, stars, the last result. */
-
-const MODES: { kind: ModeKind; label: MessageKey }[] = [
-  { kind: 'campaign', label: 'career.modes.campaign' },
-  { kind: 'puzzle', label: 'career.modes.puzzles' },
-  { kind: 'gauntlet', label: 'career.modes.gauntlet' },
-  { kind: 'limited', label: 'career.modes.limited' },
-  { kind: 'challenge', label: 'career.modes.challenge' },
-];
-
-export function ModesNav() {
-  const t = useT();
-  return (
-    <nav className={styles.modesNav} aria-label={t('career.modes')}>
-      {MODES.map((mode) => (
-        <NavLink key={mode.kind} to={MODE_PATHS[mode.kind]} className={({ isActive }) => [styles.modeLink, isActive ? styles.modeLinkOn : ''].join(' ')}>
-          {t(mode.label)}
-        </NavLink>
-      ))}
-    </nav>
-  );
-}
+/** The pieces every Career mode screen shares: rewards and twists as lines, stars, the last result. */
 
 /** Message lines as a list (rewards, twists); nothing when there are none. */
 export function LineList({ lines, className, label }: { lines: readonly Line[]; className?: string; label?: string }) {

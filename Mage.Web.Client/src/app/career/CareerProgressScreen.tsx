@@ -1,29 +1,29 @@
-import { useQuery } from '@tanstack/react-query';
-import { Gift, HelpCircle, Lock, Package, Trophy, Unlock } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import type { CareerAchievement, CareerCosmetic, CareerGameResult, CareerLevelTrack } from '../../protocol/generated/views';
-import { api } from '../connection';
+import { Download, HelpCircle, Lock, Trophy } from 'lucide-react';
+import { useEffect, useMemo, useRef } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
+import type { CareerAchievement, CareerCosmetic, CareerLevelTrack, CareerPayout, CareerProfile } from '../../protocol/generated/views';
 import { formatNumber, registerMessages, useT, type MessageKey } from '../i18n';
 import messages from '../i18n/en/career';
 import { useSession } from '../stores/session';
-import { useSettings } from '../stores/settings';
+import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
-import { CareerBar } from './CareerBar';
-import { refreshCareer, useCareerAchievements, useCareerLevels, useCareerLook, useCareerOpponents, useCareerState } from './careerData';
-import { CareerAvatar, DoneMark, ProgressBar, WeeklyGoal } from './CareerScreen';
+import { downloadText } from '../ui/download';
+import { exportCareer, useCareerAchievements, useCareerLevels, useCareerLook, useCareerOpponents, useCareerState } from './careerData';
+import { exportFileName } from './careerModel';
+import { CareerAvatar, CountAiGames, DoneMark, ProgressBar } from './CareerScreen';
 import {
-  CAREER_AVATARS, achievementState, cosmeticName, describePay, describeReward, fetchResult, fraction, hasUnlock, levelRows,
-  prefersReducedMotion, resultIsEmpty, rewardParts, safeBack, sortAchievements, titleLabel, unlockedIds, xpSweep,
+  CAREER_AVATARS, achievementState, cosmeticName, describePay, describeReward, fraction, hasUnlock, levelRows, rewardParts, sortAchievements,
+  titleLabel, unlockedIds,
 } from './progressModel';
 import styles from './Career.module.css';
 
 registerMessages(messages);
 
-const TABS: { id: 'levels' | 'achievements' | 'look'; label: MessageKey }[] = [
+const TABS: { id: 'levels' | 'achievements' | 'look' | 'options'; label: MessageKey }[] = [
   { id: 'levels', label: 'career.progress.levels' },
   { id: 'achievements', label: 'career.progress.achievements' },
   { id: 'look', label: 'career.progress.look' },
+  { id: 'options', label: 'career.progress.options' },
 ];
 
 /** Career progress: the level track, achievements, and the cosmetics they unlock. */
@@ -41,7 +41,6 @@ export function CareerProgressScreen() {
 
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
       <div className={styles.tabs} role="group" aria-label={t('career.nav.progress')}>
         {TABS.map((item) => (
           <button
@@ -59,6 +58,7 @@ export function CareerProgressScreen() {
         {tab === 'levels' && (levels.data ? <LevelTrack track={levels.data} /> : <p className={styles.note}>{t('career.loading')}</p>)}
         {tab === 'achievements' && (achievements.data ? <Achievements list={achievements.data} /> : <p className={styles.note}>{t('career.loading')}</p>)}
         {tab === 'look' && (levels.data ? <Look track={levels.data} achievements={achievements.data ?? []} /> : <p className={styles.note}>{t('career.loading')}</p>)}
+        {tab === 'options' && <Options profile={profile} recent={state.data?.recent ?? []} />}
       </div>
     </div>
   );
@@ -231,199 +231,45 @@ function Look({ track, achievements }: { track: CareerLevelTrack; achievements: 
   );
 }
 
-// ---- the rewards screen after a game
-
-/**
- * After a Career match (or a regular game against the AI that counts): everything the game paid, on one screen.
- * Nothing shows during the match; the server applies the result as the game ends, and this screen asks for it.
- */
-export function CareerRewardsScreen() {
+/** The record and the housekeeping: recent games, whether AI games count, and a copy of the Career to keep. */
+function Options({ profile, recent }: { profile: CareerProfile; recent: CareerPayout[] }) {
   const t = useT();
-  const [params] = useSearchParams();
-  const key = params.get('game');
-  const career = params.get('career') === '1';
-  const back = safeBack(params.get('back'));
-  const state = useCareerState();
-  const profile = state.data?.profile;
-  const counts = career || !!profile?.countAiGames;
-  const result = useQuery({
-    queryKey: ['careerResult', key ?? 'latest'],
-    queryFn: () => fetchResult(() => api.careerGameResult(key)),
-    enabled: !!profile && counts,
-    staleTime: Infinity,
-    retry: false,
-  });
-  const ready = result.isSuccess && !!result.data;
-  useEffect(() => {
-    // the payout, quests, level and weekly goal have all moved
-    if (ready) refreshCareer();
-  }, [ready]);
+  const user = useSession((session) => session.userName);
+  const opponents = useCareerOpponents(true);
+  const names = useMemo(() => new Map((opponents.data ?? []).map((opponent) => [opponent.id, opponent.name])), [opponents.data]);
 
-  // nothing for this screen: straight on
-  const skip = state.isError || (state.isSuccess && (!profile || !counts)) || (result.isSuccess && !career && (!result.data || resultIsEmpty(result.data)));
-  if (skip) return <Navigate to={back} replace />;
-
-  return (
-    <div className={styles.rewardsPage}>
-      {ready ? <Rewards result={result.data!} back={back} /> : (
-        <div className={styles.center}>
-          <p>{result.isSuccess ? t('career.rewards.none') : t('career.rewards.waiting')}</p>
-          {result.isSuccess && <ContinueButton back={back} />}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ContinueButton({ back }: { back: string }) {
-  const t = useT();
-  const navigate = useNavigate();
-  return <Button variant="decision" size="lg" onClick={() => navigate(back, { replace: true })}>{t('career.rewards.continue')}</Button>;
-}
-
-function Rewards({ result, back }: { result: CareerGameResult; back: string }) {
-  const t = useT();
-  const navigate = useNavigate();
-  const opponents = useCareerOpponents(!!result.career);
-  const opponent = opponents.data?.find((candidate) => candidate.id === result.opponent)?.name ?? result.opponent ?? '';
-  const headline = result.career
-    ? t(result.won ? 'career.rewards.won' : 'career.rewards.lost', { opponent })
-    : t(result.won ? 'career.rewards.wonAi' : 'career.rewards.lostAi');
-  const quests = result.quests ?? [];
-  const achievements = result.achievements ?? [];
-  const levelRewards = result.levelRewards ?? [];
-  const opened = result.opened ?? [];
-
-  return (
-    <section className={styles.rewards} aria-labelledby="career-rewards-title">
-      <header className={styles.rewardsHead}>
-        <p className={styles.kicker}>{t('career.rewards.title')}</p>
-        <h1 id="career-rewards-title" className={result.won ? styles.rewardsWon : undefined}>{headline}</h1>
-        {result.note ? <p className={styles.small}>{result.note}</p> : !result.career && <p className={styles.small}>{t('career.rewards.aiNote')}</p>}
-      </header>
-
-      <div className={styles.payRow}>
-        <span className={styles.payChip}>+{t('career.coins', { count: result.coins ?? 0 })}</span>
-        <span className={styles.payChip}>+{t('career.reward.xp', { xp: result.xp ?? 0 })}</span>
-      </div>
-
-      <XpSweep result={result} />
-
-      {levelRewards.length > 0 && (
-        <section className={styles.rewardsBlock}>
-          <h2 className={styles.cardLabel}>{t('career.rewards.levels')}</h2>
-          <ul className={styles.rewardList}>
-            {levelRewards.map((reward) => (
-              <li key={reward.level}><Gift size={16} aria-hidden="true" /> {t('career.rewards.levelReward', { level: reward.level ?? 0, reward: describeReward(t, rewardParts(reward)) })}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {quests.length > 0 && (
-        <section className={styles.rewardsBlock}>
-          <h2 className={styles.cardLabel}>{t('career.rewards.quests')}</h2>
-          <ul className={styles.quests}>
-            {quests.map((quest) => (
-              <li key={quest.id} className={[styles.quest, quest.completed ? styles.questDone : ''].join(' ')}>
-                <span>
-                  <b>{quest.text}</b>
-                  <small>{quest.completed ? describePay(t, quest.coins, quest.xp) : null}</small>
-                </span>
-                {quest.completed ? <DoneMark label={t('career.rewards.questDone')} /> : <span />}
-                <ProgressBar value={fraction(quest.after, quest.target)} label={quest.text ?? ''} done={quest.completed} />
-                <small>{quest.before} → {quest.after} / {quest.target}</small>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {achievements.length > 0 && (
-        <section className={styles.rewardsBlock}>
-          <h2 className={styles.cardLabel}>{t('career.rewards.achievements')}</h2>
-          <ul className={styles.achievements}>
-            {achievements.map((achievement) => (
-              <li key={achievement.id} className={[styles.achievement, styles.achievementEarned].join(' ')}>
-                <span aria-hidden="true"><Trophy size={18} /></span>
-                <span>
-                  <b>{achievement.name}</b>
-                  <small>{achievement.text}</small>
-                </span>
-                <span>
-                  <small>{[describePay(t, achievement.coins, achievement.xp), achievement.cosmetic ? describeReward(t, [{ kind: 'cosmetic', cosmetic: achievement.cosmetic }]) : ''].filter(Boolean).join(' · ')}</small>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {opened.length > 0 && (
-        <ul className={styles.rewardList}>
-          {opened.map((name) => <li key={name}><Unlock size={16} aria-hidden="true" /> {t('career.rewards.opened', { name })}</li>)}
-        </ul>
-      )}
-
-      {result.weekly && (
-        <section className={styles.rewardsBlock}>
-          <h2 className={styles.cardLabel}>{t('career.weekly')}</h2>
-          <WeeklyGoal weekly={result.weekly} />
-        </section>
-      )}
-
-      {(result.packs ?? 0) > 0 && (
-        <p className={styles.packNote}>
-          <Package size={18} aria-hidden="true" /> {t('career.rewards.packs', { count: result.packs ?? 0 })}
-        </p>
-      )}
-
-      <footer className={styles.rewardsFoot}>
-        {(result.packs ?? 0) > 0 && <Button variant="print" icon={<Package size={16} />} onClick={() => navigate('/career/shop', { replace: true })}>{t('career.nav.shop')}</Button>}
-        <ContinueButton back={back} />
-      </footer>
-    </section>
-  );
-}
-
-/** The XP bar, filling from where it stood before the game to where it stands now, one level at a time. */
-function XpSweep({ result }: { result: CareerGameResult }) {
-  const t = useT();
-  const animations = useSettings((settings) => settings.settings.animations);
-  const [still] = useState(() => !animations || prefersReducedMotion());
-  const segments = useMemo(() => xpSweep(result), [result]);
-  const [index, setIndex] = useState(still ? segments.length - 1 : 0);
-  const [filled, setFilled] = useState(still);
-  const segment = segments[Math.min(index, segments.length - 1)];
-  const duration = Math.max(350, Math.round(1100 * (segment.to - segment.from)));
-
-  useEffect(() => {
-    if (still) return;
-    if (!filled) {
-      // a beat before the first stretch; level-ups follow on at once
-      const start = setTimeout(() => setFilled(true), index === 0 ? 500 : 60);
-      return () => clearTimeout(start);
+  async function exportNow() {
+    try {
+      downloadText(exportFileName(user, new Date()), await exportCareer());
+      notify(t('career.export.done'), '');
+    } catch (reason) {
+      notify(t('career.export.failed'), reason instanceof Error ? reason.message : String(reason), 'error');
     }
-    if (index >= segments.length - 1) return;
-    const next = setTimeout(() => {
-      setIndex(index + 1);
-      setFilled(false);
-    }, duration + 200);
-    return () => clearTimeout(next);
-  }, [still, filled, index, segments.length, duration]);
+  }
 
-  const width = filled ? segment.to : segment.from;
-  const levelledUp = segment.level > (segments[0]?.level ?? segment.level);
   return (
-    <div className={styles.sweep}>
-      <p className={styles.sweepHead}>
-        <b>{t('career.level', { level: segment.level })}</b>
-        {levelledUp && <span key={segment.level} className={styles.levelUp}>{t('career.rewards.levelUp', { level: segment.level })}</span>}
-        <small>{result.xpForNext ? t('career.xp', { into: result.xpIntoLevel ?? 0, needed: result.xpForNext }) : t('career.xpMax')}</small>
-      </p>
-      <div className={styles.xpBar} role="progressbar" aria-valuemin={0} aria-valuemax={result.xpForNext || 1} aria-valuenow={result.xpIntoLevel ?? 0} aria-label={t('career.level', { level: result.levelAfter ?? 1 })}>
-        <span className={filled && !still ? styles.sweepFill : undefined} style={{ width: `${width * 100}%`, transitionDuration: `${duration}ms` }} />
-      </div>
+    <div className={styles.look}>
+      <section className={styles.card}>
+        <h2 className={styles.cardLabel}>{t('career.recent')}</h2>
+        {recent.length === 0 ? <p className={styles.small}>{t('career.recent.none')}</p> : (
+          <ul className={styles.recent}>
+            {recent.slice(0, 10).map((payout) => {
+              const opponent = names.get(payout.opponent) ?? payout.opponent ?? '';
+              return (
+                <li key={payout.matchKey}>
+                  <span className={payout.won ? styles.won : styles.lost}>{t(payout.won ? 'career.recent.won' : 'career.recent.lost', { opponent })}</span>
+                  <small>{payout.note || t('career.recent.paid', { coins: payout.coins ?? 0, xp: payout.xp ?? 0 })}</small>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+      <section className={styles.card}>
+        <h2 className={styles.cardLabel}>{t('career.settings')}</h2>
+        <CountAiGames profile={profile} />
+        <Button variant="print" size="sm" icon={<Download size={16} />} onClick={() => void exportNow()}>{t('career.export')}</Button>
+      </section>
     </div>
   );
 }

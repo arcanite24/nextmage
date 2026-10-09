@@ -6,6 +6,7 @@ import { api } from '../connection';
 import { toWire } from '../decks/deckModel';
 import { queryClient } from '../queries';
 import { useEvents } from '../stores/events';
+import { useCareerVoice, type VoiceLines } from '../stores/careerVoice';
 import { usePlay } from '../stores/play';
 import { readJson, writeJson } from '../stores/persist';
 import { useSession } from '../stores/session';
@@ -136,8 +137,9 @@ export async function importCareer(data: string): Promise<void> {
  * Start a Career match: the server sets the table up and starts it; the game opens like any other (the signed-in shell
  * follows the server into it), and leaving it comes back to Career.
  */
-export async function playCareer(opponentId: string, deck: DeckCardLists): Promise<void> {
+export async function playCareer(opponentId: string, deck: DeckCardLists, voice: VoiceLines | null = null): Promise<void> {
   useEvents.setState({ currentTournamentId: null });
+  useCareerVoice.getState().speak(voice);
   usePlay.setState({ phase: 'waitingForGame', error: null, deckId: null, returnPath: '/career' });
   warmCards([...deck.cards, ...deck.sideboard].map((card) => ({ name: card.cardName, setCode: card.setCode ?? undefined, cardNumber: card.cardNumber ?? undefined })));
   try {

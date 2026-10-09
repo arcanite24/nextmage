@@ -9,14 +9,16 @@ import { useCoach } from '../stores/coach';
 import { usePlay } from '../stores/play';
 import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
-import { CareerBar } from './CareerBar';
 import { useCareerState } from './careerData';
 import { chooseOption, playMode, playPrologue, useCampaigns } from './careerModesData';
 import {
   chapterDone, chapterPath, focusChapter, focusNode, legCurve, nodeState, rewardLines, twistLines, type NodeState, type PathStop,
 } from './careerModesModel';
-import { Crest, Portrait } from './ModeArt';
-import { LineList, ModeResult, ModesNav } from './ModeParts';
+import { useSceneArt } from './careerScene';
+import { Crest } from './ModeArt';
+import { PortraitCard } from './Portraits';
+import { Versus } from './Versus';
+import { LineList, ModeResult } from './ModeParts';
 import styles from './CareerModes.module.css';
 
 registerMessages(messages);
@@ -32,8 +34,6 @@ export function CareerCampaignScreen() {
   if (!profile) return <Navigate to="/career" replace />;
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
-      <ModesNav />
       <div className={styles.scroll}>
         <ModeResult kind="campaign" />
         {campaigns.isPending && <p className={styles.note}>{t('career.loading')}</p>}
@@ -129,6 +129,7 @@ function Chapter({ campaignId, chapter }: { campaignId: string; chapter: CareerC
   const [chosenId, setChosenId] = useState<string | null>(null);
   const node = nodes.find((item) => item.id === chosenId) ?? focusNode(chapter);
   const boss = nodes.find((item) => item.boss);
+  useSceneArt(boss?.cover);
 
   return (
     <section className={styles.chapter} aria-labelledby={`chapter-${chapter.id}`}>
@@ -200,28 +201,18 @@ function NodeDetail({ campaignId, chapter, node }: { campaignId: string; chapter
   const t = useT();
   const state: NodeState = nodeState(node);
   const playing = usePlay((play) => play.phase !== 'idle');
-  const [starting, setStarting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [versus, setVersus] = useState(false);
   const twists = twistLines(node.twists);
   const reward = rewardLines(node.reward);
-
-  async function play() {
-    setStarting(true);
-    setError(null);
-    try {
-      await playMode('campaign', () => api.careerCampaignPlay(campaignId, node.id!));
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
-      setStarting(false);
-    }
-  }
+  // what they say: the challenge before the duel, the parting word once it's won
+  const line = state === 'done' ? node.after ?? node.before : node.before;
 
   return (
     <article className={styles.detail} aria-labelledby={`node-${node.id}`}>
       <div className={styles.detailArt}>
         {node.type === 'choice'
           ? <span className={styles.choiceArt} aria-hidden="true"><Signpost size={40} /></span>
-          : <Portrait name={node.name ?? ''} colors={chapter.color} boss={node.boss} size={96} />}
+          : <PortraitCard name={node.name ?? ''} colors={chapter.color} cover={node.cover} boss={node.boss} locked={state === 'locked'} size="sm" />}
       </div>
       <div className={styles.detailBody}>
         <header className={styles.detailHead}>
@@ -230,7 +221,12 @@ function NodeDetail({ campaignId, chapter, node }: { campaignId: string; chapter
           {node.boss && <span className={styles.bossBadge}><Crown size={14} aria-hidden="true" /> {t('career.node.boss')}</span>}
         </header>
         {node.text && <p className={styles.lead}>{node.text}</p>}
-        {error && <p className={styles.error} role="alert">{t('career.playFailed')}: {error}</p>}
+        {line && node.type !== 'choice' && (
+          <blockquote className={styles.speech}>
+            <p>“{line}”</p>
+            <footer>{node.name}</footer>
+          </blockquote>
+        )}
 
         {node.type === 'choice' ? (
           <Choice campaignId={campaignId} node={node} state={state} />
@@ -256,8 +252,8 @@ function NodeDetail({ campaignId, chapter, node }: { campaignId: string; chapter
               {state === 'locked' ? (
                 <p className={styles.small}><Lock size={14} aria-hidden="true" /> {t('career.node.lockedHint')}</p>
               ) : (
-                <Button variant={state === 'open' ? 'decision' : 'print'} icon={<Swords size={16} />} busy={starting} disabled={playing} onClick={() => void play()}>
-                  {starting ? t('career.playing') : t(state === 'done' ? 'career.node.playAgain' : 'career.node.play')}
+                <Button variant={state === 'open' ? 'decision' : 'print'} icon={<Swords size={16} />} disabled={playing} onClick={() => setVersus(true)} data-nav>
+                  {t(state === 'done' ? 'career.node.playAgain' : 'career.node.play')}
                 </Button>
               )}
               <small className={styles.small}>{t('career.campaign.youPlay', { deck: chapter.deckName ?? '' })}</small>
@@ -265,6 +261,16 @@ function NodeDetail({ campaignId, chapter, node }: { campaignId: string; chapter
           </>
         )}
       </div>
+      {versus && (
+        <Versus
+          kicker={chapter.name}
+          opponent={{ name: node.name ?? '', colors: chapter.color, cover: node.cover, boss: node.boss, line: node.before }}
+          deck={{ name: chapter.deckName ?? '', colors: chapter.color }}
+          stakes={[...reward, ...twists].map((item) => t(item.key, item.vars))}
+          onFight={() => playMode('campaign', () => api.careerCampaignPlay(campaignId, node.id!), { intro: node.before, lose: node.after })}
+          onClose={() => setVersus(false)}
+        />
+      )}
     </article>
   );
 }

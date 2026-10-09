@@ -6,8 +6,10 @@ import { api } from '../connection';
 import { queryClient } from '../queries';
 import { useDecks } from '../stores/decks';
 import { useEvents } from '../stores/events';
+import { useCareerVoice, type VoiceLines } from '../stores/careerVoice';
 import { usePlay } from '../stores/play';
 import { useSession } from '../stores/session';
+import { rewardsPath } from './progressModel';
 
 /**
  * Career modes from the server: campaigns, the puzzle book, the gauntlet, solo sealed and draft, and the weekly
@@ -71,13 +73,15 @@ let lastPlayed: { kind: ModeKind; gameKey: string } | null = null;
  * Start a mode's game: the server sets the table up and starts it; the game opens like any other, and leaving it comes
  * back to the mode's screen.
  */
-export async function playMode(kind: ModeKind, start: () => Promise<CareerMatch>): Promise<void> {
+export async function playMode(kind: ModeKind, start: () => Promise<CareerMatch>, voice: VoiceLines | null = null): Promise<void> {
   useEvents.setState({ currentTournamentId: null });
+  useCareerVoice.getState().speak(voice);
   usePlay.setState({ phase: 'waitingForGame', error: null, deckId: null, returnPath: MODE_PATHS[kind] });
   try {
     const match = await start();
     lastPlayed = match?.tableId ? { kind, gameKey: match.tableId } : null;
-    usePlay.setState({ tableId: match?.tableId ?? null });
+    // leaving the game tells its result as a scene, then comes back to the mode's screen
+    usePlay.setState({ tableId: match?.tableId ?? null, returnPath: rewardsPath(match?.tableId ?? null, true, MODE_PATHS[kind]) });
   } catch (error) {
     usePlay.setState({ phase: 'idle', tableId: null });
     throw error;
@@ -111,6 +115,7 @@ export async function playPrologue(): Promise<void> {
   if (!useDecks.getState().loaded) await useDecks.getState().refresh();
   const deckId = useDecks.getState().selectedId;
   if (!deckId) throw new Error('No deck to play the guided game with.');
+  useCareerVoice.getState().speak(null);
   const starting = usePlay.getState().playVsAi(deckId, { guided: true });
   // playVsAi clears the way back synchronously, before its first await; point it at the campaign
   usePlay.setState({ returnPath: MODE_PATHS.campaign });

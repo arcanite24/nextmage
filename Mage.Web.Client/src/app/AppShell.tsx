@@ -1,7 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { IdCard, Info, LogOut, Settings, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useMatch, useNavigate } from 'react-router-dom';
 import { APP_NAME } from './brand';
 import { useT, type MessageKey } from './i18n';
 import { Avatar } from './social/Avatar';
@@ -10,6 +10,7 @@ import { useImportSheet } from './stores/importSheet';
 import { useLobby } from './stores/lobby';
 import { useSettings } from './stores/settings';
 import { useSession } from './stores/session';
+import { useShellUi } from './stores/shellUi';
 import { Toaster } from './ui/Toaster';
 import { IconButton } from './ui/Button';
 import { Mark } from './ui/Mark';
@@ -60,63 +61,68 @@ export function AppShell() {
   const signOut = useSession((state) => state.signOut);
   const avatarId = useSettings((state) => state.settings.avatarId);
   const navigate = useNavigate();
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsOpen = useShellUi((state) => state.settingsOpen);
+  const setSettingsOpen = useShellUi((state) => state.setSettingsOpen);
+  // Career is a game mode: its screens fill the mat under their own header
+  const immersive = useMatch('/career/*') !== null;
   const t = useT();
 
   return (
-    <div className={styles.mat}>
+    <div className={[styles.mat, immersive ? styles.immersive : ''].join(' ')}>
       <Stitch />
-      <header className={styles.rail}>
-        <NavLink to="/" className={styles.brand} aria-label={t('shell.home', { app: APP_NAME })}>
-          <Mark />
-          <span>{APP_NAME}</span>
-        </NavLink>
-        <nav className={styles.nav} aria-label={t('shell.nav')}>
-          {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}
-            >
-              {t(item.label)}
-            </NavLink>
-          ))}
-        </nav>
-        <div className={styles.tools}>
-          {connection !== 'open' && (
-            <span className={styles.offline} role="status">
-              <WifiOff size={16} aria-hidden="true" />
-              {connection === 'reconnecting' ? t('shell.reconnecting') : t('shell.offline')}
-            </span>
-          )}
-          <LobbyButton />
-          <IconButton label={t('shell.settings')} icon={<Settings size={18} />} onClick={() => setSettingsOpen(true)} />
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger className={styles.user} aria-label={t('shell.account', { name: userName })}>
-              <Avatar name={userName} avatarId={avatarId} size="sm" />
-              <span>{userName}</span>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content className={styles.menu} align="end" sideOffset={8}>
-                <DropdownMenu.Item className={styles.menuItem} onSelect={() => useLobby.getState().openProfile(userName)}>
-                  <IdCard size={16} aria-hidden="true" /> {t('shell.profile')}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>
-                  <Settings size={16} aria-hidden="true" /> {t('shell.settings')}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item className={styles.menuItem} onSelect={() => navigate('/about')}>
-                  <Info size={16} aria-hidden="true" /> {t('shell.about')}
-                </DropdownMenu.Item>
-                <DropdownMenu.Separator className={styles.menuRule} />
-                <DropdownMenu.Item className={styles.menuItem} onSelect={() => void signOut(false)}>
-                  <LogOut size={16} aria-hidden="true" /> {t('shell.signOut')}
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        </div>
-      </header>
+      {!immersive && (
+        <header className={styles.rail}>
+          <NavLink to="/" className={styles.brand} aria-label={t('shell.home', { app: APP_NAME })}>
+            <Mark />
+            <span>{APP_NAME}</span>
+          </NavLink>
+          <nav className={styles.nav} aria-label={t('shell.nav')}>
+            {NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}
+              >
+                {t(item.label)}
+              </NavLink>
+            ))}
+          </nav>
+          <div className={styles.tools}>
+            {connection !== 'open' && (
+              <span className={styles.offline} role="status">
+                <WifiOff size={16} aria-hidden="true" />
+                {connection === 'reconnecting' ? t('shell.reconnecting') : t('shell.offline')}
+              </span>
+            )}
+            <LobbyButton />
+            <IconButton label={t('shell.settings')} icon={<Settings size={18} />} onClick={() => setSettingsOpen(true)} />
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger className={styles.user} aria-label={t('shell.account', { name: userName })}>
+                <Avatar name={userName} avatarId={avatarId} size="sm" />
+                <span>{userName}</span>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content className={styles.menu} align="end" sideOffset={8}>
+                  <DropdownMenu.Item className={styles.menuItem} onSelect={() => useLobby.getState().openProfile(userName)}>
+                    <IdCard size={16} aria-hidden="true" /> {t('shell.profile')}
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>
+                    <Settings size={16} aria-hidden="true" /> {t('shell.settings')}
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item className={styles.menuItem} onSelect={() => navigate('/about')}>
+                    <Info size={16} aria-hidden="true" /> {t('shell.about')}
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator className={styles.menuRule} />
+                  <DropdownMenu.Item className={styles.menuItem} onSelect={() => void signOut(false)}>
+                    <LogOut size={16} aria-hidden="true" /> {t('shell.signOut')}
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </div>
+        </header>
+      )}
       <main className={styles.main}>
         <Outlet />
       </main>

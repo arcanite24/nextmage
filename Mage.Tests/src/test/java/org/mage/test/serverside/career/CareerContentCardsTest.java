@@ -103,12 +103,26 @@ public class CareerContentCardsTest {
                 JsonElement value = object.get(key);
                 if (CARD_FIELDS.contains(key)) {
                     checked += names(file, value);
+                } else if (key.equals("cover") && value.isJsonObject()) {
+                    checked += cover(file, value.getAsJsonObject());
                 } else {
                     checked += json(file, value);
                 }
             }
         }
         return checked;
+    }
+
+    /** a portrait or deck cover: { name, setCode, cardNumber } names one printing */
+    private int cover(Path file, JsonObject cover) {
+        String card = cover.get("name").getAsString();
+        String set = cover.get("setCode").getAsString();
+        String number = cover.get("cardNumber").getAsString();
+        CardInfo info = CardRepository.instance.findCard(set, number);
+        if (info == null || !info.getName().equals(card)) {
+            problems.add(CAREER.relativize(file) + ": cover " + card + " isn't " + set + ":" + number);
+        }
+        return 1;
     }
 
     private int names(Path file, JsonElement value) {

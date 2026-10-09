@@ -39,6 +39,7 @@ import { CardZoom } from './CardZoom';
 import { DamageAssigner } from './DamageAssigner';
 import { damageCorner, useDamageSplit } from './useDamageSplit';
 import { EmoteBubbles } from './EmoteBubbles';
+import { useOpponentVoice } from './useOpponentVoice';
 import { setCardMotion, useFlipOrigin } from './flip';
 import { GameLog } from './GameLog';
 import { Hand } from './Hand';
@@ -229,6 +230,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   // paid on the way out too
   const career = !!returnPath?.startsWith('/career');
   const vsAi = board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false);
+  useOpponentVoice(state, myId, career);
   const rewardsAfter = mode === 'play' && !!state.gameOver && !eventId && !career
     && vsAi && !usePlay.getState().lastOptions.practice && useSettings.getState().settings.careerOptIn;
   // a match against people (not in an event or Career) was found on Tables, and leads back there
