@@ -247,6 +247,8 @@ final class CareerApi {
         options.setWinsNeeded(1);
         options.setRollbackTurnsAllowed(false);
         options.setSpectatorsAllowed(true);
+        // a solo game against the AI: the player's quit ratio from other matches doesn't bar it (the default 0 refused anyone who ever left one)
+        options.setQuitRatio(100);
         PlayerType ai = aiType == null ? PlayerType.COMPUTER_MAD : aiType;
         // the table's seats: without them nobody can join
         options.getPlayerTypes().add(PlayerType.HUMAN);
