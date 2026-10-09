@@ -163,11 +163,13 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
     }
 
     /**
-     * The JSON message for a callback; pre-game prompts get a marker for the web client (see {@link PromptMarkers}).
+     * The JSON message for a callback; pre-game prompts get a marker for the web client (see {@link PromptMarkers}), and
+     * the end of game summary leaves the players' zones out (see {@link EndGameInfo}).
      */
     static String serialize(ClientCallback clientCallback) {
         ClientCallbackMethod method = clientCallback.getMethod();
-        if (method != ClientCallbackMethod.GAME_ASK && method != ClientCallbackMethod.GAME_TARGET) {
+        if (method != ClientCallbackMethod.GAME_ASK && method != ClientCallbackMethod.GAME_TARGET
+                && method != ClientCallbackMethod.END_GAME_INFO) {
             return JsonCodec.GSON.toJson(clientCallback);
         }
         return JsonCodec.GSON.toJson(serializeTree(clientCallback));
@@ -181,6 +183,8 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
         ClientCallbackMethod method = clientCallback.getMethod();
         if (method == ClientCallbackMethod.GAME_ASK || method == ClientCallbackMethod.GAME_TARGET) {
             PromptMarkers.annotate(json);
+        } else if (method == ClientCallbackMethod.END_GAME_INFO) {
+            EndGameInfo.slim(json);
         }
         return json;
     }

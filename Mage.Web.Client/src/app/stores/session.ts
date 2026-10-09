@@ -34,6 +34,8 @@ export interface SessionState {
   /** counts logins, including the silent one after a dropped connection: the server has just handed our games back */
   loginCount: number;
   error: string | null;
+  /** the server restarted (or forgot this session) while we were signed in: the sign-in screen says so */
+  expired: boolean;
   signIn(serverUrl: string, userName: string, password: string): Promise<boolean>;
   /** creates an account with the chosen password and signs in with it */
   register(serverUrl: string, userName: string, email: string, password: string): Promise<boolean>;
@@ -90,9 +92,10 @@ export const useSession = create<SessionState>((set, get) => ({
   roomId: null,
   loginCount: 0,
   error: null,
+  expired: false,
 
   async signIn(serverUrl, userName, password) {
-    set({ phase: 'signingIn', error: null, serverUrl, userName });
+    set({ phase: 'signingIn', error: null, expired: false, serverUrl, userName });
     try {
       await connectTo(serverUrl);
       const ok = await api.connectUser(userName, password, restoreToken(serverUrl, userName));
@@ -187,13 +190,39 @@ rpc.onStatus((connection) => {
   }
 });
 
+/**
+ * The server no longer knows us (it restarted, or dropped the session): our tables and games are gone, and an account
+ * needs its password again. Back to the sign-in screen, which says why, instead of a shell that only fails.
+ */
+function expire(): void {
+  const { serverUrl, userName, phase } = useSession.getState();
+  if (phase !== 'signedIn') return;
+  sessionPassword = '';
+  writeJson<RememberedRestore | null>(RESTORE_KEY, null);
+  forgetOpenGames(serverUrl, userName);
+  const before = readJson<RememberedLogin | null>(LOGIN_KEY, null);
+  writeJson<RememberedLogin>(LOGIN_KEY, { serverUrl, userName, passwordless: false, account: !!before?.account });
+  useSession.setState({ phase: 'signedOut', roomId: null, error: null, expired: true });
+}
+
 // a reconnect opens a fresh server session: log back in with the restore token to get our tables back
 rpc.onStatus((connection) => {
   const state = useSession.getState();
   if (connection !== 'open' || state.phase !== 'signedIn') return;
-  api.connectUser(state.userName, sessionPassword, restoreToken(state.serverUrl, state.userName))
-    .then(() => rememberRestoreToken(state.serverUrl, state.userName))
-    .then(() => api.serverGetMainRoomId())
-    .then((roomId) => useSession.setState((current) => ({ roomId, loginCount: current.loginCount + 1 })))
-    .catch((error) => useSession.setState({ phase: 'signedOut', error: describeError(error) }));
+  void (async () => {
+    try {
+      // refused: an account the server no longer holds for our token (it restarted) wants its password again
+      if (!await api.connectUser(state.userName, sessionPassword, restoreToken(state.serverUrl, state.userName))) return expire();
+      await rememberRestoreToken(state.serverUrl, state.userName);
+      const roomId = await api.serverGetMainRoomId();
+      // the main room is made when the server starts: a new one means a new server, without our tables
+      if (state.roomId && roomId !== state.roomId) return expire();
+      useSession.setState((current) => ({ roomId, loginCount: current.loginCount + 1 }));
+    } catch (error) {
+      useSession.setState({ phase: 'signedOut', error: describeError(error) });
+    }
+  })();
 });
+
+// a call the server turned away because this connection has no session any more
+rpc.onSessionLost(() => expire());

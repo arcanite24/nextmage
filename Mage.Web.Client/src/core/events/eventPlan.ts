@@ -86,6 +86,24 @@ export function tournamentTypeName(kind: EventKind, swiss: boolean, source: Pack
   return base + suffix[source];
 }
 
+/** The dialog's player choices: as many as the chosen event type takes, within 2 to 8. */
+export function playerCounts(kind: EventKind, swiss: boolean, source: PackSource, types: TournamentTypeView[]): number[] {
+  const type = types.find((candidate) => candidate.name === tournamentTypeName(kind, swiss, source));
+  const min = Math.max(2, type?.minPlayers || 2);
+  const max = Math.min(8, type?.maxPlayers || 8);
+  return Array.from({ length: Math.max(0, max - min + 1) }, (_, index) => min + index);
+}
+
+/** The players asked for, or the nearest count the event takes. */
+export function fitPlayers(wanted: number, counts: number[]): number {
+  return counts.length ? Math.min(counts[counts.length - 1], Math.max(counts[0], wanted)) : wanted;
+}
+
+/** How many rounds single elimination takes: each round halves the field (byes round it up) until one is left. */
+export function eliminationRounds(players: number): number {
+  return Math.max(1, Math.ceil(Math.log2(Math.max(2, players))));
+}
+
 function shuffled<T>(items: T[], random: () => number): T[] {
   const copy = [...items];
   for (let index = copy.length - 1; index > 0; index--) {

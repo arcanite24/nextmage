@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Eye, Layers, Package, Shuffle, Swords, Trophy } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { isCubeFromDeck, maxPoolSets, PACK_SOURCES, planEvent, TIMINGS, type EventChoice, type EventKind, type PackSource } from '../../core/events/eventPlan';
+import { eliminationRounds, fitPlayers, isCubeFromDeck, maxPoolSets, PACK_SOURCES, planEvent, playerCounts, TIMINGS, type EventChoice, type EventKind, type PackSource } from '../../core/events/eventPlan';
 import type { ExpansionSetInfo, PlayerType, TableView, TimingOption } from '../../protocol/generated/views';
 import type { WebTournamentOptions } from '../../protocol/options';
 import { api } from '../connection';
@@ -228,12 +228,16 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
   const usesPool = source === 'random' || source === 'reshuffled' || source === 'richMan';
   // custom jumpstart only comes as single elimination
   const structureFixed = kind === 'jumpstart' && source === 'custom';
+  // only the player counts the event type takes (a draft needs at least 4), keeping the host's pick when it fits
+  const swissChosen = swiss && !structureFixed;
+  const counts = playerCounts(kind, swissChosen, source, types);
+  const players = fitPlayers(seats, counts);
 
   const choice: EventChoice = {
     kind,
-    swiss: swiss && !structureFixed,
+    swiss: swissChosen,
     source,
-    players: seats,
+    players,
     setCode: chosenSet,
     pool: chosenPool,
     cubeName: chosenCube,
@@ -271,7 +275,7 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
       if (typeof plan === 'string') throw new Error(plan);
       // the server's draft bot only drafts and concedes every game; this AI drafts, builds and plays
       const aiType: PlayerType = 'COMPUTER_MAD';
-      const playerTypes: PlayerType[] = ['HUMAN', ...Array.from({ length: seats - 1 }, () => (fillAi ? aiType : 'HUMAN' as PlayerType))];
+      const playerTypes: PlayerType[] = ['HUMAN', ...Array.from({ length: players - 1 }, () => (fillAi ? aiType : 'HUMAN' as PlayerType))];
       const options: WebTournamentOptions = {
         name: name.trim() || translate(`events.defaultName.${kind}`, { name: userName }),
         tournamentType: plan.tournamentType,
@@ -299,7 +303,7 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
       }
       if (!await api.roomJoinTournament(roomId, tableId, userName, 'HUMAN', 1, deck)) throw new Error(translate('events.yourSeatRefused'));
       if (fillAi) {
-        for (let seat = 1; seat < seats; seat++) {
+        for (let seat = 1; seat < players; seat++) {
           const joined = await api.roomJoinTournament(roomId, tableId, `Bot ${seat}`, playerTypes[seat], 4, deck);
           if (!joined) throw new Error(translate('events.aiSeatRefused'));
         }
@@ -408,8 +412,8 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
           )}
           <label className={styles.control}>
             <span>{t('events.players')}</span>
-            <select value={seats} onChange={(event) => setSeats(Number(event.target.value))}>
-              {[2, 3, 4, 5, 6, 7, 8].map((count) => <option key={count} value={count}>{count}</option>)}
+            <select value={players} onChange={(event) => setSeats(Number(event.target.value))}>
+              {(counts.length ? counts : [players]).map((count) => <option key={count} value={count}>{count}</option>)}
             </select>
           </label>
           {!structureFixed && (
@@ -421,13 +425,19 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
               </select>
             </label>
           )}
-          {choice.swiss && (
+          {choice.swiss ? (
             <label className={styles.control}>
               <span>{t('events.rounds')}</span>
               <select value={rounds} onChange={(event) => setRounds(Number(event.target.value))}>
                 {[1, 2, 3, 4, 5].map((count) => <option key={count} value={count}>{count}</option>)}
               </select>
             </label>
+          ) : (
+            // elimination plays until one player is left: the round count follows from the players
+            <div className={styles.control}>
+              <span>{t('events.rounds')}</span>
+              <output>{t('events.rounds.elimination', { count: eliminationRounds(players) })}</output>
+            </div>
           )}
           <label className={styles.control}>
             <span>{t('events.matches')}</span>
@@ -459,7 +469,7 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
             sets={boosterSets}
             pool={chosenPool}
             onChange={setPool}
-            limit={source === 'reshuffled' ? undefined : maxPoolSets(source, seats)}
+            limit={source === 'reshuffled' ? undefined : maxPoolSets(source, players)}
           />
         )}
 

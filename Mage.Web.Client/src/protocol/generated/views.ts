@@ -536,6 +536,7 @@ export interface CareerShopSet {
 
 export interface CareerStarter {
     cards?: number;
+    colors?: string;
     cover?: CareerCover;
     id?: string;
     name?: string;

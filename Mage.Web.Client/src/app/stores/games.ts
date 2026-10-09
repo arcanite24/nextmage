@@ -4,6 +4,7 @@ import { GameSession, type GameSessionMode } from '../../core/game/gameSession';
 import { leaveRequest, type LeaveRequest } from '../../core/game/leave';
 import { stripMarkup } from '../../core/game/prompt';
 import { attention } from './attention';
+import { useCoach } from './coach';
 import { forgetOpenGame, openGamesToRestore, rememberOpenGame } from './openGames';
 import { useSession } from './session';
 import { notify } from './toasts';
@@ -104,6 +105,7 @@ export const useGames = create<GamesState>((set, get) => ({
     const session = get().sessions[gameId];
     if (session) {
       const { mode, gameOver, endInfo } = session.getState();
+      if (gameOver && mode === 'play') useCoach.getState().gamePlayed();
       const table = get().tables[gameId];
       const request = leaveRequest({
         gameId,
@@ -231,4 +233,10 @@ useSession.subscribe((state, previous) => {
     if (session.getState().mode === 'watch' && session.getState().resyncing) watchAgain(session);
   }
   awaitRejoin();
+});
+
+// the server restarted: its games are gone, so ours are dropped rather than shown again after the next sign-in
+useSession.subscribe((state, previous) => {
+  if (!state.expired || previous.expired) return;
+  for (const gameId of Object.keys(useGames.getState().sessions)) useGames.getState().forget(gameId);
 });

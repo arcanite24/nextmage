@@ -37,7 +37,7 @@ export function DeckBox({ deck, sleeve, selected, onSelect, onActivate }: DeckBo
               {deck.colors.map((color) => <i key={color} className={`ms ms-cost ms-${color.toLowerCase()}`} aria-hidden="true" />)}
             </span>
           )}
-          {deck.note}
+          {deck.fromStarter ? t('decks.fromStarter', { count: deck.cardCount }) : deck.note}
         </span>
       </span>
     </button>

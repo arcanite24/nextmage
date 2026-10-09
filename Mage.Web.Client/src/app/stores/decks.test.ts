@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { deckStorage } from '../../core/decks/DeckStorageService';
 import type { DeckCardLists } from '../../core/decks/types';
-import { STARTER_PREFIX, useDecks } from './decks';
+import { rosterOf, STARTER_PREFIX, useDecks } from './decks';
 
 const BURN: DeckCardLists = {
   name: 'Burn',
@@ -25,6 +25,14 @@ beforeEach(async () => {
 });
 
 describe('deck library', () => {
+  test('playing a starter keeps its name, and the roster marks the copy as the starter\'s', async () => {
+    await useDecks.getState().refresh();
+    const { id } = await useDecks.getState().loadForPlay(STARTER_PREFIX + STARTER.file);
+    const roster = rosterOf(useDecks.getState());
+    expect(roster).toHaveLength(1);
+    expect(roster[0]).toMatchObject({ id, name: 'Red Starter', fromStarter: true });
+  });
+
   test('duplicate saves a renamed copy with the same cards and sleeve, without the import source', async () => {
     const id = await deckStorage.saveDeck(BURN, { forceNew: true });
     await useDecks.getState().refresh();
