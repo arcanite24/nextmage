@@ -2,6 +2,7 @@ package mage.server;
 
 import mage.server.managers.ManagerFactory;
 import mage.server.managers.UserManager;
+import mage.server.social.UserRelations;
 import mage.server.record.UserStats;
 import mage.server.record.UserStatsRepository;
 import mage.server.util.ServerMessagesUtil;
@@ -254,6 +255,7 @@ public class UserManagerImpl implements UserManager {
             try {
                 for (User user : usersToRemove) {
                     users.remove(user.getId());
+                    UserRelations.forget(user.getId());
                 }
             } finally {
                 w.unlock();
@@ -290,6 +292,7 @@ public class UserManagerImpl implements UserManager {
             w.lock();
             try {
                 users.remove(userId);
+                UserRelations.forget(userId);
             } finally {
                 w.unlock();
             }

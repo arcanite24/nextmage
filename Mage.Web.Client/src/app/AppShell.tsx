@@ -1,10 +1,14 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { LogOut, Settings, UserRound, WifiOff } from 'lucide-react';
+import { IdCard, LogOut, Settings, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { APP_NAME } from './brand';
 import { SettingsDialog } from './screens/SettingsDialog';
+import { Avatar } from './social/Avatar';
+import { LobbyButton } from './social/LobbyButton';
 import { useImportSheet } from './stores/importSheet';
+import { useLobby } from './stores/lobby';
+import { useSettings } from './stores/settings';
 import { useSession } from './stores/session';
 import { Toaster } from './ui/Toaster';
 import { IconButton } from './ui/Button';
@@ -17,10 +21,22 @@ const NAV = [
   { to: '/decks', label: 'Decks' },
   { to: '/events', label: 'Events' },
   { to: '/tables', label: 'Tables' },
+  { to: '/history', label: 'History' },
 ];
 
 // the import sheet loads the first time it opens, then stays mounted so it can animate out
 const ImportSheet = lazy(() => import('./decks/import/ImportSheet').then((module) => ({ default: module.ImportSheet })));
+
+// the lobby drawer and profiles load the first time they open
+const LobbyDrawer = lazy(() => import('./social/LobbyDrawer').then((module) => ({ default: module.LobbyDrawer })));
+const ProfileDialog = lazy(() => import('./social/ProfileDialog').then((module) => ({ default: module.ProfileDialog })));
+
+function SocialHost() {
+  const lobbyOpened = useLobby((state) => state.open || state.profile !== null);
+  const [loaded, setLoaded] = useState(false);
+  if (lobbyOpened && !loaded) setLoaded(true);
+  return loaded ? <Suspense fallback={null}><LobbyDrawer /><ProfileDialog /></Suspense> : null;
+}
 
 function ImportSheetHost() {
   const opened = useImportSheet((state) => state.session > 0);
@@ -32,6 +48,7 @@ export function AppShell() {
   const userName = useSession((state) => state.userName);
   const connection = useSession((state) => state.connection);
   const signOut = useSession((state) => state.signOut);
+  const avatarId = useSettings((state) => state.settings.avatarId);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -61,14 +78,18 @@ export function AppShell() {
               {connection === 'reconnecting' ? 'Reconnecting…' : 'Offline'}
             </span>
           )}
+          <LobbyButton />
           <IconButton label="Settings" icon={<Settings size={18} />} onClick={() => setSettingsOpen(true)} />
           <DropdownMenu.Root>
             <DropdownMenu.Trigger className={styles.user} aria-label={`Account: ${userName}`}>
-              <UserRound size={16} aria-hidden="true" />
+              <Avatar name={userName} avatarId={avatarId} size="sm" />
               <span>{userName}</span>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content className={styles.menu} align="end" sideOffset={8}>
+                <DropdownMenu.Item className={styles.menuItem} onSelect={() => useLobby.getState().openProfile(userName)}>
+                  <IdCard size={16} aria-hidden="true" /> Profile
+                </DropdownMenu.Item>
                 <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>
                   <Settings size={16} aria-hidden="true" /> Settings
                 </DropdownMenu.Item>
@@ -84,6 +105,7 @@ export function AppShell() {
       <main className={styles.main}>
         <Outlet />
       </main>
+      <SocialHost />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <ImportSheetHost />
       <Toaster />

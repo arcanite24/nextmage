@@ -1,0 +1,146 @@
+import { Ban, History, MessageCircle, Star, StarOff } from 'lucide-react';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { DEFAULT_AVATAR_ID, flagChoices, SIGILS } from '../../core/social/identity';
+import { useLobby } from '../stores/lobby';
+import { useSession } from '../stores/session';
+import { useSettings } from '../stores/settings';
+import { isFriend, isIgnored, useSocial } from '../stores/social';
+import { Button } from '../ui/Button';
+import { Dialog } from '../ui/Dialog';
+import { Avatar, Flag } from './Avatar';
+import styles from './ProfileDialog.module.css';
+
+/** A player's card: ratings, match and event record, what they're doing now; your own sigil and flag. */
+export function ProfileDialog() {
+  const name = useLobby((state) => state.profile);
+  const close = () => useLobby.getState().openProfile(null);
+  return (
+    <Dialog open={!!name} onOpenChange={(open) => !open && close()} title={name ? `${name}` : 'Profile'} width="md">
+      {name && <Profile name={name} onClose={close} />}
+    </Dialog>
+  );
+}
+
+function Profile({ name, onClose }: { name: string; onClose(): void }) {
+  const navigate = useNavigate();
+  const me = useSession((state) => state.userName);
+  const isMe = name === me;
+  const user = useLobby((state) => state.users.find((candidate) => candidate.userName === name) ?? null);
+  const settings = useSettings((state) => state.settings);
+  const friend = useSocial((state) => isFriend(state, name));
+  const ignoredUser = useSocial((state) => isIgnored(state, name));
+  // your own choice shows at once; the server's copy catches up on the next look
+  const avatarId = isMe ? settings.avatarId : user?.avatarId;
+  const flagName = isMe ? `${settings.flag}.png` : user?.flagName;
+
+  const stats = [
+    { label: 'Rating', value: user?.generalRating },
+    { label: 'Constructed', value: user?.constructedRating },
+    { label: 'Limited', value: user?.limitedRating },
+  ];
+
+  return (
+    <div className={styles.profile}>
+      <header className={styles.head}>
+        <Avatar name={name} avatarId={avatarId} size="lg" />
+        <div>
+          <p className={styles.name}>{name} <Flag flagName={flagName} always /></p>
+          <p className={styles.presence}>{user ? (user.infoGames?.trim() || 'Online') : 'Offline'}</p>
+        </div>
+      </header>
+
+      {user ? (
+        <>
+          <dl className={styles.ratings}>
+            {stats.map((stat) => (
+              <div key={stat.label} className={styles.rating}>
+                <dt>{stat.label}</dt>
+                <dd>{stat.value ? Math.round(stat.value) : '—'}</dd>
+              </div>
+            ))}
+          </dl>
+          <dl className={styles.record}>
+            <dt>Matches</dt>
+            <dd>{user.matchHistory?.trim() || 'None yet'}{quit(user.matchQuitRatio)}</dd>
+            <dt>Events</dt>
+            <dd>{user.tourneyHistory?.trim() || 'None yet'}{quit(user.tourneyQuitRatio)}</dd>
+          </dl>
+        </>
+      ) : (
+        <p className={styles.note}>{name} is not online, so their record isn't available right now.</p>
+      )}
+
+      {isMe ? <Identity /> : (
+        <div className={styles.actions}>
+          {user && (
+            <Button size="sm" icon={<MessageCircle size={16} />} onClick={() => { onClose(); useLobby.getState().whisper(name); }}>
+              Whisper
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="quiet"
+            icon={friend ? <StarOff size={16} /> : <Star size={16} />}
+            onClick={() => (friend ? useSocial.getState().removeFriend(name) : useSocial.getState().addFriend(name))}
+          >
+            {friend ? 'Remove friend' : 'Add friend'}
+          </Button>
+          <Button
+            size="sm"
+            variant={ignoredUser ? 'quiet' : 'danger'}
+            icon={<Ban size={16} />}
+            onClick={() => (ignoredUser ? useSocial.getState().unignore(name) : useSocial.getState().ignore(name))}
+          >
+            {ignoredUser ? 'Stop ignoring' : 'Ignore'}
+          </Button>
+        </div>
+      )}
+      {isMe && (
+        <div className={styles.actions}>
+          <Button size="sm" variant="quiet" icon={<History size={16} />} onClick={() => { onClose(); navigate('/history'); }}>
+            Your matches and replays
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function quit(ratio: number | undefined): string {
+  return ratio ? ` · left ${ratio}%` : '';
+}
+
+/** Your own sigil and flag, sent to the server with your other preferences. */
+function Identity() {
+  const avatarId = useSettings((state) => state.settings.avatarId);
+  const flag = useSettings((state) => state.settings.flag);
+  const update = useSettings((state) => state.update);
+  const me = useSession((state) => state.userName);
+  const flags = useMemo(() => flagChoices(), []);
+  return (
+    <div className={styles.identity}>
+      <fieldset className={styles.sigils}>
+        <legend>Sigil</legend>
+        <label className={styles.sigil} title="Your initial">
+          <input type="radio" name="sigil" checked={avatarId === DEFAULT_AVATAR_ID} onChange={() => update({ avatarId: DEFAULT_AVATAR_ID })} />
+          <Avatar name={me} size="md" />
+          <span className="visually-hidden">Your initial</span>
+        </label>
+        {SIGILS.map((sigil) => (
+          <label key={sigil.id} className={styles.sigil} title={sigil.label}>
+            <input type="radio" name="sigil" checked={avatarId === sigil.id} onChange={() => update({ avatarId: sigil.id })} />
+            <Avatar name={me} avatarId={sigil.id} size="md" />
+            <span className="visually-hidden">{sigil.label}</span>
+          </label>
+        ))}
+      </fieldset>
+      <label className={styles.flagField}>
+        <span>Flag</span>
+        <select value={flag} onChange={(event) => update({ flag: event.target.value })}>
+          {flags.map((choice) => <option key={choice.code} value={choice.code}>{choice.glyph} {choice.label}</option>)}
+        </select>
+      </label>
+    </div>
+  );
+}

@@ -9,7 +9,7 @@ import { defenderChoice, inRange } from '../../core/game/multiplayer';
 import { parsePayment } from '../../core/game/payment';
 import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
-import type { CardView, GameView, PlayerView } from '../../protocol/generated/views';
+import type { CardView, ChatMessage, GameView, PlayerView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
 import { useEvents } from '../stores/events';
 import { useGames } from '../stores/games';
@@ -49,6 +49,8 @@ import { PhaseLadder } from './PhaseLadder';
 import { DefenderPicker } from './DefenderPicker';
 import { MiniPiles, Piles } from './Piles';
 import { PlayerPlate } from './PlayerPlate';
+import { SpectatorBar, WatcherCount } from './SpectatorBar';
+import { useWatchers } from './useWatchers';
 import { Reveals } from './Reveals';
 import { StackZone } from './StackZone';
 import { Stage } from './Stage';
@@ -101,7 +103,16 @@ function useSleeves() {
   }, [deckId, sleeves, saved, starters]);
 }
 
-export function MatchStage({ session, state }: { session: GameSession; state: GameSessionState }) {
+export interface MatchStageProps {
+  session: GameSession;
+  state: GameSessionState;
+  /** replays: the game log as it stood at the moment shown (the stage doesn't join a chat) */
+  replayLog?: ChatMessage[];
+  /** where leaving goes, instead of closing the game and going back to Play */
+  onLeave?: () => void;
+}
+
+export function MatchStage({ session, state, replayLog, onLeave }: MatchStageProps) {
   const { view, interaction, playerId, mode, awaitingServer } = state;
   const navigate = useNavigate();
   const animations = useSettings((settings) => settings.settings.animations);
@@ -195,10 +206,16 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   // games inside an event lead back to the event; others back to Play
   const eventId = useEvents((events) => events.currentTournamentId);
   const leave = useCallback(() => {
+    if (onLeave) {
+      onLeave();
+      return;
+    }
     useGames.getState().close(state.gameId);
     navigate(eventId ? `/event/${eventId}` : '/');
-  }, [navigate, state.gameId, eventId]);
+  }, [navigate, state.gameId, eventId, onLeave]);
   const deckId = usePlay((play) => play.deckId);
+  // players see who is watching them too
+  const watchers = useWatchers(state.gameId, mode === 'play' && !state.gameOver);
   // between games of a match the server deals the next game by itself: show the score, not a way out
   const betweenGames = useMemo(() => {
     const progress = mode === 'play' ? matchProgress(state.endInfo) : null;
@@ -339,7 +356,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
             <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
             <PhaseLadder step={view?.step} myTurn={!!myId && view?.activePlayerId === myId} turn={view?.turn ?? 0} />
 
-            {mode === 'play' && board.me && !handHidden && (
+            {board.me && !handHidden && (mode === 'play' || (board.me.isMe && hand.length > 0)) && (
               <Hand
                 cards={hand}
                 choosing={choosingInHand}
@@ -370,10 +387,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                 onCommand={onCommand}
               />
             ) : (
-              <div className={styles.watching}>
-                <p>{mode === 'watch' ? 'Watching' : 'Replay'}</p>
-                <Button variant="print" onClick={leave}>Leave</Button>
-              </div>
+              <SpectatorBar session={session} state={state} onLeave={leave} />
             )}
 
             {damageSplit && canAct && !awaitingServer && <DamageAssigner split={damageSplit} />}
@@ -381,7 +395,8 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
             <EmoteBubbles view={view} />
-            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} />
+            <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} replayLog={replayLog} />
+            {mode === 'play' && <WatcherCount watchers={watchers} className={styles.watchers} />}
             <GameMenu
               canConcede={canAct}
               onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })}

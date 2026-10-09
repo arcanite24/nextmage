@@ -27,17 +27,23 @@ The browser client for this XMage fork: sign in, build decks, play the AI or oth
 src/
 ├── app/            the new app (index.html, served at /)
 │   ├── main.tsx    routes, global error hooks
-│   ├── screens/    login, home (Play), decks, events, tables, game route
-│   ├── match/      the match stage: board, hand, stack, prompts, overlays, card detail
+│   ├── screens/    login, home (Play), decks, events, tables, invite (/join), game route
+│   ├── match/      the match stage: board, hand, stack, prompts, overlays, card detail, spectator bar
 │   ├── decks/      deck builder
 │   ├── events/     draft, deck construction, event (tournament) screens
-│   ├── stores/     the app's Zustand stores (session, games, decks, play, events, settings, toasts)
+│   ├── social/     chat panel, lobby drawer (chat and players online), profiles, avatars
+│   ├── history/    finished matches and saved replays
+│   ├── replay/     the replay player
+│   ├── stores/     the app's Zustand stores (session, games, decks, play, events, settings, toasts, lobby, social, attention)
 │   ├── ui/         shared primitives (Button, Dialog, Field, CardFace, Toaster...)
 │   └── styles/     tokens and base CSS
 ├── core/           framework-free logic, unit tested
 │   ├── rpc/        WebSocket JSON-RPC client and event bus
 │   ├── game/       game session, interaction model, auto-pass and auto-pay, leaving games
 │   ├── decks/      deck types, serializer (.dck/.txt/... import and export), local deck storage
+│   ├── social/     chat input commands, chat lines, invite links, sigils and flags
+│   ├── replay/     replay timeline (frames, log, turns, playback timing)
+│   ├── history/    finished-match summaries
 │   ├── images/     card image resolution and cache
 │   ├── telemetry/  error reporter (console by default, ring buffer of recent errors)
 │   └── headless/   a headless game driver for live tests
@@ -69,6 +75,24 @@ decks remember their site, so the Decks screen offers "Update from <site>" with 
 The parsing and matching live in `src/core/deckImport` (pure, unit tested); the site table is
 `src/core/deckImport/sites.ts`, and the server's sources are in `Mage.Server/.../websocket/service/deckimport`
 (see "Deck import" in `docs/WebSocketAPI.md`).
+
+## Playing together
+
+- **Lobby** (the people button in the rail): the main room's chat and who is online. Whispers (`/w name text`, Tab
+  completes the name) reach you anywhere in the app as a toast. `/help` lists the chat commands.
+- **Friends and ignores** are kept in this browser, per server: `/friend`, `/ignore` or a player's menu. The server
+  learns your ignore list after each login (`chatSetIgnored`) and holds back their chat and whispers; tables you host
+  keep ignored players out (`bannedUsers`). Friends coming online show up as a toast.
+- **Invites**: "Invite" on your waiting table copies a `/join/<table>` link; "Invite to …" in a player's menu
+  whispers it. The link survives signing in first.
+- **Table and event chat** sit on your table's row and on the event screen.
+- **Profiles**: ratings, match and event record, sigil and flag (yours are sent with your preferences).
+- **History**: finished matches on the server, and the replays it keeps (`replayList`). A replay (`/replay/<game>`)
+  plays back on the match stage, from your own seat with your hand when you played it: play, pause, step,
+  jump by turn, scrub, change speed (Space, ←/→, Shift+←/→).
+- **Spectating**: pick whose seat to watch from; players and spectators see how many are watching (`gameWatchers`).
+- **Alerts**: while the tab is in the background, its title counts what waits for you (your move, a draft pick, a
+  game starting, a whisper); Settings → Alerts adds browser notifications.
 
 ## Dev loop
 

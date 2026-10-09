@@ -22,10 +22,19 @@ public class UsersView implements Serializable {
     private final int generalRating;
     private final int constructedRating;
     private final int limitedRating;
+    private final int avatarId;
 
     public UsersView(String flagName, String userName, String matchHistory, int matchQuitRatio,
             String tourneyHistory, int tourneyQuitRatio, String infoGames, String infoPing,
             int generalRating, int constructedRating, int limitedRating) {
+        this(flagName, userName, matchHistory, matchQuitRatio, tourneyHistory, tourneyQuitRatio, infoGames, infoPing,
+                generalRating, constructedRating, limitedRating, 0);
+    }
+
+    public UsersView(String flagName, String userName, String matchHistory, int matchQuitRatio,
+            String tourneyHistory, int tourneyQuitRatio, String infoGames, String infoPing,
+            int generalRating, int constructedRating, int limitedRating, int avatarId) {
+        this.avatarId = avatarId;
         this.flagName = flagName;
         this.matchHistory = matchHistory;
         this.matchQuitRatio = matchQuitRatio;
@@ -37,6 +46,10 @@ public class UsersView implements Serializable {
         this.generalRating = generalRating;
         this.constructedRating = constructedRating;
         this.limitedRating = limitedRating;
+    }
+
+    public int getAvatarId() {
+        return avatarId;
     }
 
     public String getFlagName() {

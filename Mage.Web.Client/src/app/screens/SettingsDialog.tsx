@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import bookmarkletSource from '../decks/import/bookmarklet.source.js?raw';
 import type { SkipPrioritySteps } from '../../protocol/generated/views';
 import { resetCommand, type AutoRule, type AutoRuleKind } from '../../core/game/autoAnswer';
+import { notificationsSupported, requestNotifications } from '../stores/attention';
 import { useAutoAnswers } from '../stores/autoAnswers';
 import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
@@ -35,7 +36,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title="Settings" width="lg"
-      footer={<Button variant="quiet" onClick={() => update(DEFAULT_SETTINGS)}>Restore defaults</Button>}>
+      footer={<Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag })}>Restore defaults</Button>}>
       <Tabs.Root defaultValue="play" className={styles.tabs} orientation="vertical">
         <Tabs.List className={styles.list} aria-label="Settings sections">
           <Tabs.Trigger value="play" className={styles.trigger}>Gameplay</Tabs.Trigger>
@@ -43,6 +44,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <Tabs.Trigger value="answers" className={styles.trigger}>Auto answers</Tabs.Trigger>
           <Tabs.Trigger value="display" className={styles.trigger}>Motion</Tabs.Trigger>
           <Tabs.Trigger value="sound" className={styles.trigger}>Sound</Tabs.Trigger>
+          <Tabs.Trigger value="alerts" className={styles.trigger}>Alerts</Tabs.Trigger>
           <Tabs.Trigger value="import" className={styles.trigger}>Import</Tabs.Trigger>
         </Tabs.List>
 
@@ -105,6 +107,27 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
 
         <Tabs.Content value="display" className={styles.panel}>
           <Row label="Card motion" detail="Cards fly between zones and settle on the mat. Your system's reduced-motion setting always wins.">{toggle('animations')}</Row>
+        </Tabs.Content>
+
+        <Tabs.Content value="alerts" className={styles.panel}>
+          <p className={styles.intro}>While Playmat is in a background tab, the tab title counts what waits for you.</p>
+          <Row
+            label="Browser notifications"
+            detail={notificationsSupported()
+              ? 'Also show a notification when it is your move, a draft pick is up, a game starts or someone whispers to you.'
+              : "This browser can't show notifications."}
+          >
+            <Switch
+              checked={settings.notifications && notificationsSupported()}
+              onChange={(value) => {
+                if (!value) {
+                  update({ notifications: false });
+                  return;
+                }
+                void requestNotifications().then((granted) => update({ notifications: granted }));
+              }}
+            />
+          </Row>
         </Tabs.Content>
 
         <Tabs.Content value="sound" className={styles.panel}>

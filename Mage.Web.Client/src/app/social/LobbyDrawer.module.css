@@ -1,0 +1,188 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: rgb(var(--ink-rgb) / 0.06);
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.button:hover,
+.button[aria-pressed='true'] {
+  background: var(--ink-ghost);
+}
+
+.unread {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--decision);
+  color: var(--decision-ink);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* the lobby lies along the right edge of the mat, over the screen */
+.drawer {
+  position: absolute;
+  top: 72px;
+  right: calc(var(--stitch-inset) + var(--space-3));
+  bottom: calc(var(--stitch-inset) + var(--space-3));
+  z-index: var(--z-held);
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 32px));
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  border-radius: var(--radius-zone);
+  background-color: rgb(var(--mat-rgb) / 0.96);
+  background-image: var(--mat-grain);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint), var(--shadow-held);
+  animation: slide var(--dur-place) var(--ease-place);
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer {
+    animation: none;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.tab {
+  padding: 6px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.tab[aria-selected='true'] {
+  border-bottom-color: var(--ink-strong);
+  color: var(--ink-strong);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+}
+
+.players {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.groupLabel {
+  margin: var(--space-4) 0 var(--space-2);
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+}
+
+.player {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 6px;
+  border-radius: 8px;
+}
+
+.player:hover {
+  background: rgb(var(--ink-rgb) / 0.04);
+}
+
+.offline {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  color: var(--ink-dim);
+}
+
+.ignored {
+  opacity: 0.55;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.identity:hover .playerName,
+.identity:focus-visible .playerName {
+  text-decoration: underline;
+}
+
+.playerName {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.star {
+  flex: none;
+  color: var(--decision);
+}
+
+.status {
+  max-width: 120px;
+  overflow: hidden;
+  color: var(--ink-dim);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

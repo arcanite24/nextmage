@@ -3,12 +3,16 @@
  * Every field is optional; the server applies the same defaults as the desktop client.
  */
 import type {
+  CardView,
+  ChatMessage,
+  GameView,
   MatchBufferTime,
   MatchTimeLimit,
   MulliganType,
   MultiplayerAttackOption,
   PlayerType,
   RangeOfInfluence,
+  ReplayInfo,
   SkillLevel,
   TimingOption,
 } from './generated/views';
@@ -85,4 +89,23 @@ export interface WebTournamentOptions {
 export interface WebCardFilters {
   /** only cards a commander of these colors allows: letters of WUBRG, '' for colorless */
   colorIdentity?: string;
+}
+
+/** One recorded moment of a replay: a snapshot of the table, or a log line (see the server's ReplayStore). */
+export interface ReplayEvent {
+  /** milliseconds since the game started */
+  t?: number;
+  view?: GameView;
+  log?: ChatMessage;
+  /** the reader's own hand at this moment, when they played the game */
+  myHand?: Record<string, CardView>;
+}
+
+/** A page of a replay's events (replayPage). */
+export interface ReplayPage {
+  info: ReplayInfo;
+  /** events in the whole replay */
+  total: number;
+  start: number;
+  events: ReplayEvent[];
 }

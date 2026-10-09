@@ -139,6 +139,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `chatJoin` | `chatId: UUID`, `sessionId: string`, `userName?: string` | `boolean` | session | Subscribe to a chat. |
 | `chatLeave` | `chatId: UUID`, `sessionId: string` | `boolean` | session | Unsubscribe from a chat. |
 | `chatSendMessage` | `chatId: UUID`, `userName?: string`, `message: string` | `boolean` | session | Post to a chat as the logged in user, who must have joined it (chatJoin; the lobby chat is joined on login). userName is ignored; the session decides the author. |
+| `chatSetIgnored` | `names: string[]` | `boolean` | session | Players this user ignores, by name, for as long as the session lasts (the client keeps the list and sends it after each login): their table chat doesn't reach the user and their whispers are refused. At most 500 names; an empty list clears it. |
 | `chatFindByGame` | `gameId: UUID` | `UUID \| null` | session | Chat of a game. |
 | `chatFindByTable` | `tableId: UUID` | `UUID \| null` | session | Chat of a table. |
 | `chatFindByTournament` | `tournamentId: UUID` | `UUID \| null` | session | Chat of a tournament. |
@@ -147,6 +148,9 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `gameResync` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Send this connection the game's open question again, when a reply or the question seems lost. Returns false when nothing is waiting for the player's answer. |
 | `matchQuit` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Concede the whole match. |
 | `gameWatchStart` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Start spectating a game. |
+| `replayList` | - | `ReplayInfo[]` | session | Recorded games available for replay, newest first. Games are recorded as a spectator sees them (xmage.replays, on by default) and kept for xmage.replays.retentionDays (30). |
+| `replayPage` | `gameId: UUID`, `start: number`, `count: number` | `ReplayPage \| null` | session | Events of a recorded game, in order: board snapshots ({t, view, myHand?}) and game log lines ({t, log}). At most 200 per page; myHand is the caller's own hand in games they played. Null when there is no such replay. |
+| `gameWatchers` | `gameId: UUID` | `string[]` | session | Names of the users spectating a running game (empty when the game is over or unknown). |
 | `gameWatchStop` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Stop spectating a game. |
 | `sendPlayerUUID` | `gameId: UUID`, `sessionId: string`, `data?: UUID` | `boolean` | session | Answer a prompt with an object or player id (targets, choices, attackers, blockers). |
 | `sendPlayerString` | `gameId: UUID`, `sessionId: string`, `data: string` | `boolean` | session | Answer a prompt with text (choices, "special" mana payment). |
