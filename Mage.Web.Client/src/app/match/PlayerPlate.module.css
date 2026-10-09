@@ -11,9 +11,9 @@
   min-width: 248px;
   padding: 12px 22px 12px 12px;
   border-radius: var(--radius-zone);
-  background: rgb(7 12 10 / 0.62);
+  background: rgb(var(--mat-rgb) / 0.62);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
-  z-index: 20;
+  z-index: var(--z-seat);
   transition: box-shadow var(--dur-quick) linear;
 }
 
@@ -29,11 +29,11 @@
 
 .targetable {
   cursor: crosshair;
-  box-shadow: inset 0 0 0 2.5px var(--ink-strong), 0 0 0 6px rgb(233 228 214 / 0.16);
+  box-shadow: inset 0 0 0 2.5px var(--ink-strong), 0 0 0 6px rgb(var(--ink-rgb) / 0.16);
 }
 
 .selected {
-  box-shadow: inset 0 0 0 3px var(--decision), 0 0 0 6px rgb(240 177 61 / 0.22);
+  box-shadow: inset 0 0 0 3px var(--decision), 0 0 0 6px rgb(var(--decision-rgb) / 0.22);
 }
 
 .left {
@@ -49,7 +49,7 @@
   height: 72px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--sleeve) 62%, var(--mat-900));
-  box-shadow: inset 0 0 0 2px rgb(246 242 232 / 0.55);
+  box-shadow: inset 0 0 0 2px rgb(var(--ink-strong-rgb) / 0.55);
   font-family: var(--font-print);
   font-size: 38px;
   font-weight: 700;
@@ -160,7 +160,7 @@
 .counter {
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgb(233 228 214 / 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
   font-size: 22px;
   font-weight: 600;
   color: var(--ink);
@@ -183,7 +183,7 @@
   padding: 2px 8px 2px 4px;
   border: 0;
   border-radius: var(--radius-chip);
-  background: rgb(233 228 214 / 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
   box-shadow: 0 0 0 2px var(--ink-soft);
   color: inherit;
   cursor: pointer;
@@ -240,4 +240,50 @@
   .healed {
     animation: none;
   }
+}
+
+/* outside the range of influence: the seat is printed faint */
+.outOfRange {
+  opacity: 0.55;
+}
+
+.range {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgb(var(--ink-rgb) / 0.1);
+  font-size: 14px;
+  letter-spacing: var(--tracking-print);
+}
+
+.commanderDamage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 220px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgb(var(--ink-rgb) / 0.1);
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+
+.hit b {
+  font-family: var(--font-print);
+  font-size: 20px;
+}
+
+/* six from lethal and closer */
+.hitDanger {
+  background: color-mix(in srgb, var(--oxblood) 45%, transparent);
+  color: var(--oxblood-ink);
 }

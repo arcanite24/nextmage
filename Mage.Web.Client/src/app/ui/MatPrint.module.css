@@ -47,7 +47,7 @@
 .dye {
   position: absolute;
   inset: 0;
-  background: #2f6b58;
+  background: var(--print-dye);
   mix-blend-mode: color;
   opacity: 0.9;
 }
@@ -56,7 +56,7 @@
 .halftone {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgb(0 0 0 / 0.28) 0.9px, transparent 1.3px);
+  background-image: radial-gradient(rgb(var(--shade-rgb) / 0.28) 0.9px, transparent 1.3px);
   background-size: 4px 4px;
   mix-blend-mode: multiply;
 }

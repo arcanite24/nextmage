@@ -4,6 +4,7 @@ import mage.cards.decks.DeckCardInfo;
 import mage.cards.decks.DeckCardLists;
 import mage.cards.repository.CardCriteria;
 import mage.server.websocket.rpc.RpcMethod;
+import mage.server.websocket.service.WebCardFilters;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +13,7 @@ import static mage.server.websocket.rpc.RpcParam.Type.STRING;
 import static mage.server.websocket.rpc.RpcParam.object;
 import static mage.server.websocket.rpc.RpcParam.of;
 import static mage.server.websocket.rpc.RpcParam.optional;
+import static mage.server.websocket.rpc.RpcParam.optionalObject;
 
 /**
  * Web client bridge: server state, game/deck/tournament types, sets, card search and deck validation.
@@ -91,10 +93,11 @@ final class CatalogApi {
                         .handler(call -> ctx.cardSearch.basicLandSets()),
 
                 RpcMethod.named("searchCards")
-                        .params(object("criteria", "CardCriteria"))
+                        .params(object("criteria", "CardCriteria"), optionalObject("filters", "WebCardFilters"))
                         .returns("CardView[]")
-                        .doc("Search the card database (paged with start/count, at most 1000 per page).")
-                        .handler(call -> ctx.cardSearch.search(call.object(0, CardCriteria.class))),
+                        .doc("Search the card database (paged with start/count, at most 1000 per page). filters.colorIdentity (letters of WUBRG, \"\" for colorless) keeps cards a commander of those colors allows.")
+                        .handler(call -> ctx.cardSearch.search(call.object(0, CardCriteria.class),
+                                call.has(1) ? call.object(1, WebCardFilters.class) : null)),
 
                 RpcMethod.named("lookupCards")
                         .publicAccess()

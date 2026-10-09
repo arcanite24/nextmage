@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CardView } from '../../protocol/generated/views';
 import type { DeckCardLists } from '../../core/decks/types';
-import { addCard, copiesByName, copyLimit, countZone, entryKey, groupDeck, manaCurve, moveCard, removeCard } from './deckModel';
+import { addCard, changePrinting, copiesByName, copyLimit, countZone, entryKey, groupDeck, manaCurve, moveCard, removeCard } from './deckModel';
 
 const empty: DeckCardLists = { name: 'Test', cards: [], sideboard: [] };
 const bolt = { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146' };
@@ -23,6 +23,13 @@ describe('deck editing', () => {
     expect(deck.cards).toHaveLength(0);
   });
 
+  it('switches an entry to another printing, merging copies', () => {
+    const deck = addCard(addCard(empty, 'cards', bolt, 3), 'cards', boltAlt, 1);
+    const changed = changePrinting(deck, 'cards', entryKey(bolt), boltAlt);
+    expect(changed.cards).toEqual([{ ...boltAlt, amount: 4 }]);
+    expect(changePrinting(deck, 'cards', entryKey(bolt), bolt)).toBe(deck);
+  });
+
   it('moves cards between main deck and sideboard', () => {
     const deck = moveCard(addCard(empty, 'cards', bolt, 3), 'cards', entryKey(bolt), 2);
     expect(countZone(deck, 'cards')).toBe(1);
@@ -36,6 +43,12 @@ describe('copyLimit', () => {
     expect(copyLimit(undefined, 'Mountain')).toBe(Infinity);
     expect(copyLimit({ rules: ['A deck can have any number of cards named Relentless Rats.'] }, 'Relentless Rats')).toBe(Infinity);
     expect(copyLimit({ rules: ['A deck can have up to seven cards named Seven Dwarves.'] }, 'Seven Dwarves')).toBe(7);
+  });
+
+  it('allows one copy in singleton formats, basics aside', () => {
+    expect(copyLimit(undefined, 'Sol Ring', true)).toBe(1);
+    expect(copyLimit(undefined, 'Forest', true)).toBe(Infinity);
+    expect(copyLimit({ rules: ['A deck can have any number of cards named Relentless Rats.'] }, 'Relentless Rats', true)).toBe(Infinity);
   });
 });
 

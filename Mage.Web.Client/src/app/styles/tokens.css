@@ -40,6 +40,28 @@
   /* positive outcomes (victory, legal) */
   --sage: #8fc19a;
 
+  /* colour channels, for tints: rgb(var(--ink-rgb) / 0.1) */
+  --ink-rgb: 233 228 214;
+  --ink-strong-rgb: 246 242 232;
+  --mat-rgb: 7 12 10;
+  --void-rgb: 4 7 6;
+  --shade-rgb: 0 0 0;
+  --gloss-rgb: 255 255 255;
+  --decision-rgb: 240 177 61;
+  --oxblood-rgb: 138 47 42;
+  --danger-rgb: 229 135 124;
+
+  /* physical objects on the mat: card paper and backs, the default sleeve, a print's dye */
+  --paper: #e9e4d6;
+  --paper-shade: #d8d2c0;
+  --paper-ink: #1a1f1b;
+  --paper-ink-dim: #4a5450;
+  --card-void: #111;
+  --card-blank-top: #2b2a26;
+  --card-blank-bottom: #1c1b18;
+  --sleeve-default: #20302b;
+  --print-dye: #2f6b58;
+
   /* mana pips */
   --mana-w: #f3ecd0;
   --mana-u: #6aa3e3;
@@ -89,11 +111,25 @@
   --shadow-lifted: 0 2px 3px rgb(0 0 0 / 0.35), 0 14px 32px rgb(0 0 0 / 0.5);
   --shadow-held: 0 6px 8px rgb(0 0 0 / 0.35), 0 28px 60px rgb(0 0 0 / 0.55);
 
-  /* layers */
+  /* layers, bottom to top; small values (1-5) only order siblings inside one component */
   --z-mat: 0;
   --z-board: 10;
+  /* the match: seats and their piles, then the hand, the stack and controls, then effects drawn over everything */
+  --z-piles: 15;
+  --z-seat: 20;
+  --z-reveal: 22;
+  --z-ladder: 25;
+  --z-hand: 30;
   --z-rail: 40;
+  --z-controls: 45;
+  --z-lifted: 55;
+  --z-assign: 58;
+  --z-vfx: 60;
+  --z-arrows: 70;
+  /* held above the board: a picked-up hand card, the open log */
+  --z-held: 90;
   --z-overlay: 100;
+  --z-zoom: 120;
   --z-dialog: 200;
   --z-toast: 300;
 

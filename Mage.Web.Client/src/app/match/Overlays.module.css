@@ -2,10 +2,10 @@
 .scrim {
   position: absolute;
   inset: 0;
-  z-index: 100;
+  z-index: var(--z-overlay);
   display: grid;
   place-items: center;
-  background: rgb(4 7 6 / 0.72);
+  background: rgb(var(--void-rgb) / 0.72);
   animation: fade var(--dur-place) var(--ease-place);
 }
 
@@ -140,7 +140,7 @@
   left: 50%;
   bottom: 40px;
   translate: -50% 0;
-  z-index: 100;
+  z-index: var(--z-overlay);
 }
 
 .options {
@@ -161,7 +161,7 @@
   padding: 14px 18px;
   border: 0;
   border-radius: 12px;
-  background: rgb(233 228 214 / 0.05);
+  background: rgb(var(--ink-rgb) / 0.05);
   box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
   color: var(--ink-strong);
   font-size: 22px;
@@ -171,7 +171,7 @@
 
 .option:hover,
 .option:focus-visible {
-  background: rgb(233 228 214 / 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
   box-shadow: inset 0 0 0 2px var(--ink);
 }
 
@@ -194,7 +194,7 @@
   padding: 0 16px;
   border: 0;
   border-radius: 10px;
-  background: rgb(7 12 10 / 0.7);
+  background: rgb(var(--mat-rgb) / 0.7);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   color: var(--ink-strong);
   font-size: 22px;
@@ -214,7 +214,7 @@
   padding: 16px;
   border: 0;
   border-radius: 14px;
-  background: rgb(233 228 214 / 0.04);
+  background: rgb(var(--ink-rgb) / 0.04);
   box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
   color: var(--ink);
   cursor: pointer;
@@ -253,7 +253,7 @@
   height: 90px;
   border: 0;
   border-radius: 12px;
-  background: rgb(7 12 10 / 0.7);
+  background: rgb(var(--mat-rgb) / 0.7);
   box-shadow: inset 0 0 0 2px var(--ink-faint);
   color: var(--ink-strong);
   font-family: var(--font-print);
@@ -293,7 +293,7 @@
   height: 52px;
   border: 0;
   border-radius: 10px;
-  background: rgb(7 12 10 / 0.7);
+  background: rgb(var(--mat-rgb) / 0.7);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   color: var(--ink-strong);
   font-family: var(--font-print);
@@ -303,7 +303,7 @@
 }
 
 .endScrim {
-  background: radial-gradient(60% 50% at 50% 45%, rgb(7 12 10 / 0.6), rgb(4 7 6 / 0.9));
+  background: radial-gradient(60% 50% at 50% 45%, rgb(var(--mat-rgb) / 0.6), rgb(var(--void-rgb) / 0.9));
 }
 
 /* the result, printed across the table */

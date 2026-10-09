@@ -32,26 +32,26 @@
 
 .clickable:hover,
 .clickable:focus-visible {
-  z-index: 60 !important;
+  z-index: var(--z-vfx) !important;
 }
 
 .clickable:focus-visible::after {
-  box-shadow: 0 0 0 3px var(--ink-strong), 0 0 0 6px rgb(233 228 214 / 0.25);
+  box-shadow: 0 0 0 3px var(--ink-strong), 0 0 0 6px rgb(var(--ink-rgb) / 0.25);
 }
 
 /* a candidate while choosing a target: a heavy ink ring with a printed halo, lifted above its row */
 .target {
-  z-index: 55 !important;
+  z-index: var(--z-lifted) !important;
 }
 
 .target::after {
   inset: -6px;
   border-radius: 11px;
-  box-shadow: 0 0 0 3px var(--ink-strong), 0 0 0 9px rgb(233 228 214 / 0.18);
+  box-shadow: 0 0 0 3px var(--ink-strong), 0 0 0 9px rgb(var(--ink-rgb) / 0.18);
 }
 
 .target:hover::after {
-  box-shadow: 0 0 0 4px var(--ink-strong), 0 0 0 11px rgb(233 228 214 / 0.26);
+  box-shadow: 0 0 0 4px var(--ink-strong), 0 0 0 11px rgb(var(--ink-rgb) / 0.26);
 }
 
 /* chosen in the current decision: amber, steady */
@@ -85,7 +85,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgb(7 12 10 / 0.85);
+  background: rgb(var(--mat-rgb) / 0.85);
   color: var(--ink);
   box-shadow: 0 0 0 1px var(--ink-faint);
 }
@@ -111,7 +111,7 @@
 }
 
 .keyword {
-  background: rgb(7 12 10 / 0.88);
+  background: rgb(var(--mat-rgb) / 0.88);
   color: var(--ink-strong);
   box-shadow: 0 0 0 1.5px var(--ink-faint);
 }
@@ -147,7 +147,7 @@
   gap: 4px;
   padding: 1px 6px;
   border-radius: 999px;
-  background: rgb(7 12 10 / 0.88);
+  background: rgb(var(--mat-rgb) / 0.88);
   box-shadow: 0 0 0 1px var(--ink-faint);
   font-family: var(--font-print);
   font-size: 20px;
@@ -170,7 +170,7 @@
   gap: 4px;
   padding: 1px 7px;
   border-radius: 6px;
-  background: rgb(7 12 10 / 0.9);
+  background: rgb(var(--mat-rgb) / 0.9);
   box-shadow: 0 0 0 1px var(--ink-faint);
   font-family: var(--font-print);
   font-size: 17px;

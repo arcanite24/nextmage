@@ -1,0 +1,191 @@
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--ink-ghost);
+}
+
+.tab,
+.tabOn {
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.tabOn {
+  border-bottom-color: var(--ink-strong);
+  color: var(--ink-strong);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  max-height: min(66vh, 760px);
+  overflow-y: auto;
+}
+
+.figures,
+.odds {
+  grid-column: 1 / -1;
+}
+
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+}
+
+.figure b {
+  font-family: var(--font-print);
+  font-size: var(--text-2xl);
+  line-height: 1;
+}
+
+.figure span,
+.head {
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+.head {
+  margin: 0 0 8px;
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bars li {
+  display: grid;
+  grid-template-columns: 120px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-sm);
+}
+
+.bars b {
+  text-align: right;
+}
+
+.track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ink-ghost);
+}
+
+.track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ink-soft);
+}
+
+.oddsHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--ink-ghost);
+  text-align: right;
+}
+
+.table th[scope='row'],
+.table thead th:first-child {
+  max-width: 280px;
+  overflow: hidden;
+  font-weight: 500;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table thead th {
+  color: var(--ink-dim);
+  font-weight: 600;
+}
+
+.note {
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+}
+
+.hand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.handCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  max-height: min(60vh, 680px);
+  overflow-y: auto;
+}
+
+.handCard {
+  animation: deal var(--dur-quick) var(--ease-lift) both;
+}
+
+/* cards drawn after the opening hand are set apart */
+.drawn {
+  outline: 2px dashed var(--ink-faint);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+.handActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@keyframes deal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

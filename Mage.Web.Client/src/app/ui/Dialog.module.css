@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-dialog);
-  background: rgb(4 7 6 / 0.72);
+  background: rgb(var(--void-rgb) / 0.72);
   animation: fade var(--dur-place) var(--ease-place);
 }
 
@@ -72,7 +72,7 @@
 .back:hover,
 .close:hover {
   color: var(--ink-strong);
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
 }
 
 .description {

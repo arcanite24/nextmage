@@ -4,10 +4,12 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { GameSession, GameSessionState } from '../../core/game/gameSession';
 import type { Command } from '../../core/game/interaction';
+import { commanderDamageTo, commandersByPlayer, type CommanderStatus } from '../../core/game/commander';
+import { defenderChoice, inRange } from '../../core/game/multiplayer';
 import { parsePayment } from '../../core/game/payment';
 import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
-import type { CardView, GameView } from '../../protocol/generated/views';
+import type { CardView, GameView, PlayerView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
 import { useEvents } from '../stores/events';
 import { useGames } from '../stores/games';
@@ -44,7 +46,8 @@ import { Vfx } from './Vfx';
 import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
 import { PhaseLadder } from './PhaseLadder';
-import { Piles } from './Piles';
+import { DefenderPicker } from './DefenderPicker';
+import { MiniPiles, Piles } from './Piles';
 import { PlayerPlate } from './PlayerPlate';
 import { Reveals } from './Reveals';
 import { StackZone } from './StackZone';
@@ -60,6 +63,9 @@ const FIELD_LEFT = 300;
 const FIELD_RIGHT_MARGIN = 470;
 const EMPTY: ReadonlySet<string> = new Set();
 const NO_CARDS: readonly CardView[] = [];
+const NO_COMMANDERS: readonly CommanderStatus[] = [];
+/** multiplayer: each opponent's seat (plate, counters) in the left column, this far apart */
+const SEAT_SPACING = 172;
 
 /** Attacking and blocking permanents, from the combat groups. */
 function combatSets(combat: GameView['combat']) {
@@ -152,6 +158,8 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   }, [session]);
   // the blocker just chosen: the server's follow-up question ("Select attacker to block") doesn't say which it is
   const [lastBlocker, setLastBlocker] = useState<string | null>(null);
+  // likewise the attacker, when the server asks what it attacks
+  const [lastAttacker, setLastAttacker] = useState<string | null>(null);
   const onClick = useCallback((id: string) => {
     const recipient = damageSplit?.assignment.recipients.findIndex((candidate) => candidate.id === id) ?? -1;
     if (damageSplit && recipient >= 0) {
@@ -159,6 +167,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
       return;
     }
     if (session.getState().interaction.mode === 'declareBlockers') setLastBlocker(id);
+    if (session.getState().interaction.mode === 'declareAttackers') setLastAttacker(id);
     session.click(id);
   }, [session, damageSplit]);
 
@@ -169,6 +178,11 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
   }, [blockDrop]);
 
   const myId = board.me?.player.playerId ?? null;
+  const commanders = useMemo(() => commandersByPlayer(view), [view]);
+  const damageTaken = useCallback(
+    (player: PlayerView) => commanderDamageTo(player, commanders).map((hit) => ({ name: hit.commander.name, amount: hit.amount })),
+    [commanders],
+  );
   useWarmImages(view);
   useAutoPay(session, state, board.me?.isMe ? board.me : null, autoPay && mode === 'play');
   // holding priority means the player wants every stop
@@ -232,6 +246,13 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
     ? Object.values(prompt.cards)
     : choosingFromHand ? hand : null;
   const canAct = mode === 'play' && !state.gameOver;
+  // several opponents: the server asks what each attacker attacks
+  const defenders = useMemo(() => (canAct && !awaitingServer ? defenderChoice(prompt, view) : null), [canAct, awaitingServer, prompt, view]);
+  const attackerName = useMemo(() => {
+    const forced = /\(([^)]+)\)\s*$/.exec(prompt?.text ?? '')?.[1];
+    if (forced) return forced;
+    return board.me?.front.flatMap((group) => group.members).find((card) => card.id === lastAttacker)?.name ?? null;
+  }, [prompt, board.me, lastAttacker]);
   const choosingStarter = pregamePick === 'startingPlayer';
   // one decision, one set of controls: an overlay owns the choice while it's open
   const overlayOpen = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards || interaction.mode === 'panel') && !awaitingServer;
@@ -277,6 +298,9 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                 onClick={onClick}
                 deciding={!!opponent.player.hasPriority && interaction.mode === 'waiting'}
                 fieldWidth={fieldWidth}
+                commanders={commanders.get(opponent.player.playerId!) ?? NO_COMMANDERS}
+                commanderDamage={damageTaken(opponent.player)}
+                outOfRange={!inRange(view, myId, opponent.player.playerId!)}
               />
             ))}
 
@@ -295,10 +319,18 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
                     toPay={canAct && !awaitingServer ? payment?.cost : null}
                     payable={canAct ? clickable : undefined}
                     onPay={onClick}
+                    commanderDamage={damageTaken(board.me.player)}
                   />
                 </div>
                 <div className={styles.myPiles}>
-                  <Piles player={board.me.player} sleeve={sleeves.mine} isMe={board.me.isMe} />
+                  <Piles
+                    player={board.me.player}
+                    sleeve={sleeves.mine}
+                    isMe={board.me.isMe}
+                    commanders={myId ? commanders.get(myId) : undefined}
+                    clickable={canAct ? clickable : undefined}
+                    onCast={onClick}
+                  />
                 </div>
               </>
             )}
@@ -345,6 +377,7 @@ export function MatchStage({ session, state }: { session: GameSession; state: Ga
             )}
 
             {damageSplit && canAct && !awaitingServer && <DamageAssigner split={damageSplit} />}
+            {defenders && <DefenderPicker attacker={attackerName} options={defenders} onPick={onClick} />}
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
             <EmoteBubbles view={view} />
@@ -465,22 +498,25 @@ function Row({ groups, left, width, top, ideal, min, forward, label, flip, ...re
 }
 
 /** An opponent's half: their rows mirrored above the seam, their seat, piles and hidden hand. */
-function OpponentSide({ board, index, count, sleeve, handCount, deciding, fieldWidth, ...row }: RowProps & {
+function OpponentSide({ board, index, count, sleeve, handCount, deciding, fieldWidth, commanders, commanderDamage, outOfRange, ...row }: RowProps & {
   fieldWidth: number;
   board: PlayerBoard;
   index: number;
   count: number;
   handCount: number;
   deciding: boolean;
+  commanders: readonly CommanderStatus[];
+  commanderDamage: readonly { name: string; amount: number }[];
+  outOfRange: boolean;
 }) {
   const width = fieldWidth / count;
   const left = FIELD_LEFT + index * width;
   const player = board.player;
-  const plateTop = count === 1 ? 24 : 24 + index * 120;
+  const plateTop = count === 1 ? 24 : 16 + index * SEAT_SPACING;
   return (
     <>
       <Battlefield board={board} sleeve={sleeve} left={left} width={width - (count > 1 ? 24 : 0)} frontTop={count === 1 ? 330 : 300} backTop={count === 1 ? 160 : 150} {...row} />
-      <div className={styles.theirPlate} style={{ top: plateTop }}>
+      <div className={[styles.theirPlate, count > 1 ? styles.seat : ''].join(' ')} style={{ top: plateTop }}>
         <PlayerPlate
           player={player}
           isMe={false}
@@ -489,13 +525,21 @@ function OpponentSide({ board, index, count, sleeve, handCount, deciding, fieldW
           selected={row.selected.has(player.playerId!)}
           deciding={deciding}
           onClick={() => row.onClick(player.playerId!)}
+          commanderDamage={commanderDamage}
+          outOfRange={outOfRange}
         />
+        {count > 1 && (
+          <div className={styles.theirMini}>
+            <MiniPiles player={player} commanders={commanders} />
+          </div>
+        )}
       </div>
       {count === 1 && (
         <div className={styles.theirPiles}>
-          <Piles player={player} sleeve={sleeve} isMe={false} />
+          <Piles player={player} sleeve={sleeve} isMe={false} commanders={commanders} />
         </div>
       )}
+      {count > 1 && <span className={styles.seatName} style={{ left: left + 16 }} aria-hidden="true">{player.name}</span>}
       <HiddenHand playerId={player.playerId!} count={handCount} sleeve={sleeve} left={left + width / 2} />
     </>
   );

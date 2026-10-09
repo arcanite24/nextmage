@@ -20,10 +20,11 @@ export function difficultyOf(skill: number) {
 /** One line describing the AI setup, for the Play zone. */
 export function describeAi(options: AiOptions, deckName: string | null): string {
   const parts = [
-    `${difficultyOf(options.skill).label} AI`,
+    options.opponents > 1 ? `${options.opponents} ${difficultyOf(options.skill).label} AIs` : `${difficultyOf(options.skill).label} AI`,
     deckName ?? 'random starter deck',
     options.winsNeeded === 2 ? 'best of three' : 'best of one',
   ];
-  if (options.startingLife !== 20) parts.push(`${options.startingLife} life`);
+  if (options.rules === 'deck') parts.push("your deck's format");
+  if (options.startingLife !== null) parts.push(`${options.startingLife} life`);
   return parts.join(' · ');
 }
