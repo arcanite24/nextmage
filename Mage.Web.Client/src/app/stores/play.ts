@@ -7,10 +7,16 @@ import { useSession } from './session';
 import { readJson, writeJson } from './persist';
 import { deckStorage } from '../../core/decks/DeckStorageService';
 import { toWire } from '../decks/deckModel';
-import type { DeckCardLists as WireDeck } from '../../protocol/generated/views';
+import type { DeckCardLists as WireDeck, GameTypeView } from '../../protocol/generated/views';
+import type { DeckCardLists } from '../../core/decks/types';
+import { formatRules, gameTypesFor, isCommanderFormat } from '../../core/decks/formats';
+import { matchOptions } from '../../core/game/tableSetup';
+import { notify } from './toasts';
 
 /** the smallest deck worth a game (limited size; constructed formats are checked by the server) */
 const MIN_DECK_SIZE = 40;
+const FREEFORM = 'Constructed - Freeform';
+const FREEFORM_COMMANDER = 'Variant Magic - Freeform Commander';
 
 export type PlayPhase = 'idle' | 'starting' | 'waitingForGame';
 
@@ -24,7 +30,15 @@ export interface AiOptions {
   aiType: AiType;
   /** games needed to win the match: 1 (best of one) or 2 (best of three) */
   winsNeeded: 1 | 2;
-  startingLife: 20 | 30 | 40;
+  /** null: the format's own (20, or 40 in Commander) */
+  startingLife: 20 | 30 | 40 | null;
+  /**
+   * 'deck': the game is played in the deck's format, and the server holds both decks to it;
+   * 'casual': anything goes (Freeform, or Freeform Commander for a commander deck)
+   */
+  rules: 'casual' | 'deck';
+  /** AI players at the table: one is a duel, more is a free-for-all pod */
+  opponents: 1 | 2 | 3;
 }
 
 const AI_OPTIONS_KEY = 'playmat.aiOptions';
@@ -34,7 +48,9 @@ export const DEFAULT_AI_OPTIONS: AiOptions = {
   opponentDeckId: null,
   aiType: 'COMPUTER_MAD',
   winsNeeded: 1,
-  startingLife: 20,
+  startingLife: null,
+  rules: 'casual',
+  opponents: 1,
 };
 
 interface PlayState {
@@ -51,25 +67,51 @@ interface PlayState {
   cancel(): Promise<void>;
 }
 
-async function aiDeck(deckId: string | null): Promise<WireDeck> {
-  // one of the player's saved decks
-  if (deckId && !deckId.startsWith(STARTER_PREFIX)) {
-    const saved = await deckStorage.loadDeck(deckId);
-    if (saved) return toWire(saved);
-  }
-  const { starters } = useDecks.getState();
-  const starterFile = deckId?.startsWith(STARTER_PREFIX) ? deckId.slice(STARTER_PREFIX.length) : null;
-  const starter = starterFile
-    ? starters.find((candidate) => candidate.file === starterFile)
-    : starters[Math.floor(Math.random() * starters.length)];
-  if (!starter) throw new Error('No deck available for the AI.');
-  const response = await fetch(`/starter-decks/${encodeURIComponent(starter.file)}`);
+async function starterDeck(file: string, name: string): Promise<DeckCardLists> {
+  const response = await fetch(`/starter-decks/${encodeURIComponent(file)}`);
   const text = response.ok ? await response.text() : '';
-  if (!text || /^\s*</.test(text)) throw new Error(`Couldn't load the AI's deck (${starter.name}).`);
+  if (!text || /^\s*</.test(text)) throw new Error(`Couldn't load the AI's deck (${name}).`);
   const { DeckSerializer } = await import('../../core/decks/DeckSerializer');
   const deck = DeckSerializer.importDeck(text);
-  deck.name = starter.name;
-  return toWire(deck);
+  deck.name = name;
+  return deck;
+}
+
+/**
+ * Decks for the AI seats: the one picked in the AI settings for the first seat, random starter decks of the same kind
+ * (commander or not) for the others, never the same starter twice while there are others.
+ */
+export async function aiDecks(chosenId: string | null, count: number, commander: boolean): Promise<DeckCardLists[]> {
+  const decks: DeckCardLists[] = [];
+  if (chosenId && !chosenId.startsWith(STARTER_PREFIX)) {
+    const saved = await deckStorage.loadDeck(chosenId);
+    if (saved && isCommanderFormat(saved.format) === commander) decks.push(saved);
+  }
+  const { starters } = useDecks.getState();
+  const fitting = starters.filter((starter) => isCommanderFormat(starter.format) === commander);
+  const chosenFile = chosenId?.startsWith(STARTER_PREFIX) ? chosenId.slice(STARTER_PREFIX.length) : null;
+  const chosen = fitting.find((starter) => starter.file === chosenFile);
+  if (decks.length === 0 && chosen) decks.push(await starterDeck(chosen.file, chosen.name));
+  const pool = fitting.filter((starter) => starter !== chosen);
+  while (decks.length < count) {
+    const candidates = pool.length > 0 ? pool : fitting;
+    if (candidates.length === 0) throw new Error(commander ? 'No commander deck is available for the AI.' : 'No deck available for the AI.');
+    const starter = candidates.splice(Math.floor(Math.random() * candidates.length), 1)[0];
+    decks.push(await starterDeck(starter.file, starter.name));
+  }
+  return decks;
+}
+
+/** The game type for a format and a number of seats, among the server's. */
+function gameTypeFor(deckType: string, seats: number, available: GameTypeView[]): string {
+  const fits = (type: GameTypeView) => (type.minPlayers ?? 2) <= seats && seats <= (type.maxPlayers ?? 2);
+  const names = gameTypesFor(deckType, available.filter(fits).map((type) => type.name!).filter(Boolean));
+  if (names.length === 0) throw new Error(`The server has no ${formatRules(deckType).label} game for ${seats} players.`);
+  return names[0];
+}
+
+function cardCount(cards: DeckCardLists['cards']): number {
+  return cards.reduce((sum, card) => sum + card.amount, 0);
 }
 
 export const usePlay = create<PlayState>((set, get) => ({
@@ -98,32 +140,55 @@ export const usePlay = create<PlayState>((set, get) => ({
       // both decks' pictures download while the table is set up, before the first card is drawn: nothing either
       // player casts should wait on the network
       warmCards([...deck.cards, ...deck.sideboard].map((card) => ({ name: card.cardName, setCode: card.setCode ?? undefined, cardNumber: card.cardNumber ?? undefined })));
-      const size = deck.cards.reduce((sum, card) => sum + card.amount, 0);
-      if (size < MIN_DECK_SIZE) {
-        throw new Error(`${deck.name || 'This deck'} has ${size} ${size === 1 ? 'card' : 'cards'}. Decks need at least ${MIN_DECK_SIZE}; add more in the deck builder.`);
+      const rules = formatRules(deck.format);
+      const commander = rules.commandZone !== null;
+      const size = cardCount(deck.cards) + (commander ? cardCount(deck.sideboard) : 0);
+      const needed = commander ? rules.minDeck : MIN_DECK_SIZE;
+      if (size < needed) {
+        throw new Error(`${deck.name || 'This deck'} has ${size} ${size === 1 ? 'card' : 'cards'}. It needs at least ${needed}; add more in the deck builder.`);
       }
-      const opponentDeck = await aiDeck(options.opponentDeckId);
-      warmCards([...(opponentDeck.cards ?? []), ...(opponentDeck.sideboard ?? [])].map((card) => ({ name: card.cardName, setCode: card.setCode, cardNumber: card.cardNumber })));
-      const table = await api.roomCreateTable(roomId, {
+      if (commander && deck.sideboard.length === 0) {
+        throw new Error(`${deck.name || 'This deck'} has no commander. Choose one in the deck builder.`);
+      }
+      // a commander deck always plays a commander game; "casual" relaxes the deck rules, not the game
+      const deckType = options.rules === 'deck' ? (deck.format || FREEFORM) : commander ? FREEFORM_COMMANDER : FREEFORM;
+      const opponents = commander ? options.opponents : 1;
+      const seats = opponents + 1;
+      const gameType = gameTypeFor(deckType, seats, await api.getGameTypes());
+      const playerDeck = toWire(deck);
+      const rivals = await Promise.all((await aiDecks(options.opponentDeckId, opponents, commander)).map(async (rival) => {
+        const wire = toWire(rival);
+        if (options.rules !== 'deck') return wire;
+        // the AI has to be legal too; a starter that isn't plays a copy of your deck instead
+        const check = await api.deckValidate(deckType, wire).catch(() => null);
+        if (check && !check.valid) {
+          notify('The AI plays your deck', `${rival.name} isn't legal in ${rules.label}, so the AI plays a copy of yours.`);
+          return { ...playerDeck, name: `${deck.name} (mirror)` };
+        }
+        return wire;
+      }));
+      for (const rival of rivals) {
+        warmCards([...(rival.cards ?? []), ...(rival.sideboard ?? [])].map((card) => ({ name: card.cardName, setCode: card.setCode, cardNumber: card.cardNumber })));
+      }
+      const table = await api.roomCreateTable(roomId, matchOptions({
         name: `${userName} vs AI`,
-        gameType: 'Two Player Duel',
-        deckType: 'Constructed - Freeform',
+        gameType,
+        deckType,
         winsNeeded: options.winsNeeded,
-        customStartLifeEnabled: options.startingLife !== 20,
-        customStartLife: options.startingLife,
-        skillLevel: 'CASUAL',
-        spectatorsAllowed: true,
-        rollbackTurnsAllowed: true,
-        playerTypes: ['HUMAN', options.aiType],
-      });
+        playerTypes: ['HUMAN', ...rivals.map(() => options.aiType)],
+        advanced: { startingLife: options.startingLife },
+      }));
       const tableId = table.tableId;
       if (!tableId) throw new Error('The server did not create the table.');
       set({ tableId });
-      if (!await api.roomJoinTable(roomId, tableId, userName, 'HUMAN', 1, toWire(deck))) {
-        throw new Error('Your deck was not accepted for this table.');
+      if (!await api.roomJoinTable(roomId, tableId, userName, 'HUMAN', 1, playerDeck)) {
+        throw new Error(options.rules === 'deck' ? `Your deck isn't legal in ${rules.label}. Fix it in the deck builder, or play casual.` : 'Your deck was not accepted for this table.');
       }
-      if (!await api.roomJoinTable(roomId, tableId, 'AI Opponent', options.aiType, options.skill, opponentDeck)) {
-        throw new Error('The AI could not take its seat.');
+      for (const [index, rival] of rivals.entries()) {
+        const name = rivals.length === 1 ? 'AI Opponent' : `AI ${index + 1}`;
+        if (!await api.roomJoinTable(roomId, tableId, name, options.aiType, options.skill, rival)) {
+          throw new Error('The AI could not take its seat.');
+        }
       }
       set({ phase: 'waitingForGame' });
       if (!await api.matchStart(roomId, tableId)) throw new Error('The match could not start.');

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { isCommanderFormat } from '../../core/decks/formats';
 import { rosterOf, useDecks } from '../stores/decks';
 import { DEFAULT_AI_OPTIONS, usePlay } from '../stores/play';
 import { AI_TYPES, DIFFICULTIES, difficultyOf } from './aiSetup';
@@ -73,10 +74,15 @@ export function AiSettingsDialog({ open, onOpenChange }: { open: boolean; onOpen
             value={options.opponentDeckId ?? ''}
             onChange={(event) => setOptions({ opponentDeckId: event.target.value || null })}
           >
-            <option value="">A random starter deck</option>
+            <option value="">A random starter deck (commander for a commander game)</option>
             <optgroup label="Starter decks">
-              {starters.map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
+              {starters.filter((deck) => !isCommanderFormat(deck.starter?.format)).map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
             </optgroup>
+            {starters.some((deck) => isCommanderFormat(deck.starter?.format)) && (
+              <optgroup label="Commander starters">
+                {starters.filter((deck) => isCommanderFormat(deck.starter?.format)).map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
+              </optgroup>
+            )}
             {mine.length > 0 && (
               <optgroup label="Your decks">
                 {mine.map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
@@ -105,12 +111,38 @@ export function AiSettingsDialog({ open, onOpenChange }: { open: boolean; onOpen
             <h3 className={styles.label}>Starting life</h3>
             <Segmented
               label="Starting life"
-              value={options.startingLife}
-              options={[20, 30, 40].map((life) => ({ value: life as 20 | 30 | 40, label: String(life) }))}
-              onChange={(startingLife) => setOptions({ startingLife })}
+              value={options.startingLife ?? 0}
+              options={[{ value: 0, label: 'Format' }, ...[20, 30, 40].map((life) => ({ value: life, label: String(life) }))]}
+              onChange={(life) => setOptions({ startingLife: life === 0 ? null : (life as 20 | 30 | 40) })}
             />
           </section>
         </div>
+
+        <section className={styles.row}>
+          <h3 className={styles.label}>Rules</h3>
+          <Segmented
+            label="Rules"
+            value={options.rules}
+            options={[{ value: 'casual' as const, label: 'Casual' }, { value: 'deck' as const, label: 'Deck’s format' }]}
+            onChange={(rules) => setOptions({ rules })}
+          />
+          <p className={styles.detail}>
+            {options.rules === 'casual'
+              ? 'Any deck goes. Commander decks still play with their commander.'
+              : 'The game is played in your deck’s format, and both decks must be legal in it.'}
+          </p>
+        </section>
+
+        <section className={styles.row}>
+          <h3 className={styles.label}>Commander pod</h3>
+          <Segmented
+            label="AI players in a commander game"
+            value={options.opponents}
+            options={[{ value: 1 as const, label: 'One on one' }, { value: 2 as const, label: '3 players' }, { value: 3 as const, label: '4 players' }]}
+            onChange={(opponents) => setOptions({ opponents })}
+          />
+          <p className={styles.detail}>With a commander deck, play a free-for-all against two or three AIs. Other decks always play one on one.</p>
+        </section>
       </div>
     </Dialog>
   );
