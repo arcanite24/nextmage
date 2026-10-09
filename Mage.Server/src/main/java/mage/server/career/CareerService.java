@@ -114,6 +114,8 @@ public final class CareerService {
         public boolean locked;
         /** the campaign chapter that opens it (to beat while locked, beaten once open); null for the newest sets */
         public String unlockedBy;
+        /** the card whose art is on the set's packs; null without a card database */
+        public CareerContent.CareerCover cover;
     }
 
     /** the newest sets are always in the shop; campaign chapters open older ones */
@@ -540,9 +542,69 @@ public final class CareerService {
                     view.name = set.getName();
                     view.releaseDate = new java.text.SimpleDateFormat("yyyy-MM-dd").format(set.getReleaseDate());
                     view.price = CareerRules.PACK_PRICE;
+                    view.cover = packArt(set.getCode());
                     return view;
                 })
                 .collect(Collectors.toList());
+    }
+
+    private static final Map<String, java.util.Optional<CareerContent.CareerCover>> PACK_ART = new ConcurrentHashMap<>();
+
+    /** the card on a set's packs (looked up once per set) */
+    static CareerContent.CareerCover packArt(String setCode) {
+        return PACK_ART.computeIfAbsent(setCode, code -> {
+            try {
+                return java.util.Optional.ofNullable(pickPackArt(CardRepository.instance.findCards(new mage.cards.repository.CardCriteria()
+                        .setCodes(code).rarities(mage.constants.Rarity.MYTHIC, mage.constants.Rarity.RARE))));
+            } catch (RuntimeException e) {
+                return java.util.Optional.empty();
+            }
+        }).orElse(null);
+    }
+
+    /**
+     * A set's face, the way its packs show one: a legendary creature or planeswalker before anything else, mythic
+     * before rare, a creature before other spells, then the lowest collector number of the main set (no showcase or
+     * extended-art reprints, no back faces).
+     */
+    static CareerContent.CareerCover pickPackArt(List<CardInfo> cards) {
+        CardInfo best = null;
+        int[] bestScore = null;
+        for (CardInfo card : cards) {
+            if (card.isNightCard() || card.getTypes().contains(mage.constants.CardType.LAND) || !card.getCardNumber().matches("\\d+")) {
+                continue;
+            }
+            boolean legend = card.getSupertypes().contains(SuperType.LEGENDARY);
+            boolean walker = card.getTypes().contains(mage.constants.CardType.PLANESWALKER);
+            boolean creature = card.getTypes().contains(mage.constants.CardType.CREATURE);
+            int[] score = {
+                    (legend && (creature || walker)) ? 1 : 0,
+                    card.getRarity() == mage.constants.Rarity.MYTHIC ? 1 : 0,
+                    creature || walker ? 1 : 0,
+                    -card.getCardNumberAsInt()
+            };
+            if (bestScore == null || ahead(score, bestScore)) {
+                best = card;
+                bestScore = score;
+            }
+        }
+        if (best == null) {
+            return null;
+        }
+        CareerContent.CareerCover cover = new CareerContent.CareerCover();
+        cover.name = best.getName();
+        cover.setCode = best.getSetCode();
+        cover.cardNumber = best.getCardNumber();
+        return cover;
+    }
+
+    private static boolean ahead(int[] score, int[] other) {
+        for (int i = 0; i < score.length; i++) {
+            if (score[i] != other[i]) {
+                return score[i] > other[i];
+            }
+        }
+        return false;
     }
 
     /**
