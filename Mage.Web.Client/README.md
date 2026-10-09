@@ -107,6 +107,10 @@ npm run dev:all   # builds and starts the Mage server (HTTP 17171, WebSocket 171
 
 To debug errors in the browser, `window.__mageErrors()` lists the last 50 reported errors.
 
+### Installable app (PWA)
+
+Production builds are installable: `scripts/pwa-plugin.ts` writes `manifest.webmanifest` (named after `VITE_APP_NAME`) and `sw.js`, a hand-written service worker (`scripts/sw.template.js`) that precaches the shell (index.html, every JS and CSS chunk, the Barlow latin fonts, the icons). Navigations go to the network first and fall back to the cached shell, so the app opens offline on the sign-in screen, which then says it is offline. `/ws` and `/img` are never touched. A new release installs in the background; open pages get an "Update available" toast with Reload, otherwise the next load activates it. The dev server registers no service worker. To try it: `npm run build && npx vite preview`. In e2e, service workers are blocked except in `e2e/pwa.spec.ts`.
+
 ## Scripts and gates
 
 CI (`.github/workflows/web-client.yml`) runs the four gates on every change under `Mage.Web.Client/`:
