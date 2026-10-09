@@ -204,10 +204,12 @@ export function deriveInteraction(view: GameView | null | undefined, prompt: Pro
       // cancels the spell or ability, or skips an optional effect
       const canAbandon = !prompt.required && selected.size === 0;
       const canFinish = selected.size > 0 && (!prompt.required || prompt.doneLabel !== null);
-      const mainButton: PromptButton | null = canFinish
+      // choosing no card is a normal answer off the board (a library search may find nothing that matches)
+      const pickNone = canAbandon && prompt.cards !== null;
+      const mainButton: PromptButton | null = canFinish || pickNone
         ? { label: prompt.doneLabel ?? 'Done', command: uuid(null), tone: 'primary', shortcut: 'Space' }
         : null;
-      const secondaryButtons: PromptButton[] = canAbandon ? [{ label: 'Cancel', command: uuid(null), tone: 'danger' }] : [];
+      const secondaryButtons: PromptButton[] = canAbandon && !pickNone ? [{ label: 'Cancel', command: uuid(null), tone: 'danger' }] : [];
       return {
         mode: prompt.cards ? 'pickCards' : 'target',
         prompt,
