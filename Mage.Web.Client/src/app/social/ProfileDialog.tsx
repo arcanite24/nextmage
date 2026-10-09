@@ -1,5 +1,5 @@
 import { Ban, Flag as FlagIcon, History, MessageCircle, Star, StarOff } from 'lucide-react';
-import { useMemo } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DEFAULT_AVATAR_ID, flagChoices, SIGILS } from '../../core/social/identity';
 import { useLobby } from '../stores/lobby';
@@ -10,6 +10,9 @@ import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Avatar, Flag } from './Avatar';
 import styles from './ProfileDialog.module.css';
+
+// your Career line loads with the Career screens, for players who opted in
+const CareerSummary = lazy(() => import('../career/CareerScreen').then((m) => ({ default: m.CareerSummary })));
 
 /** A player's card: ratings, match and event record, what they're doing now; your own sigil and flag. */
 export function ProfileDialog() {
@@ -30,6 +33,7 @@ function Profile({ name, onClose }: { name: string; onClose(): void }) {
   const settings = useSettings((state) => state.settings);
   const friend = useSocial((state) => isFriend(state, name));
   const ignoredUser = useSocial((state) => isIgnored(state, name));
+  const career = useSettings((state) => state.settings.careerOptIn);
   // your own choice shows at once; the server's copy catches up on the next look
   const avatarId = isMe ? settings.avatarId : user?.avatarId;
   const flagName = isMe ? `${settings.flag}.png` : user?.flagName;
@@ -99,6 +103,7 @@ function Profile({ name, onClose }: { name: string; onClose(): void }) {
           </Button>
         </div>
       )}
+      {isMe && career && <Suspense fallback={null}><CareerSummary user={name} onOpen={onClose} /></Suspense>}
       {isMe && (
         <div className={styles.actions}>
           <Button size="sm" variant="quiet" icon={<History size={16} />} onClick={() => { onClose(); navigate('/history'); }}>

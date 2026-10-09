@@ -1,14 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import type { CareerPackResult, CareerProfile, CareerState } from '../../protocol/generated/views';
+import { create } from 'zustand';
+import type { CareerCosmetic, CareerPackResult, CareerProfile, CareerQuests, CareerState } from '../../protocol/generated/views';
 import type { DeckCardLists } from '../../core/decks/types';
 import { api } from '../connection';
 import { toWire } from '../decks/deckModel';
 import { queryClient } from '../queries';
 import { useEvents } from '../stores/events';
 import { usePlay } from '../stores/play';
+import { readJson, writeJson } from '../stores/persist';
 import { useSession } from '../stores/session';
+import { useSettings } from '../stores/settings';
 import { warmCards } from '../ui/imageCache';
 import { saveCareerDeck, fetchStarterDeck } from './careerDeck';
+import { rewardsPath } from './progressModel';
 
 /** Career data from the server, cached per screen visit; every change goes through the server and back. */
 const KEY = {
@@ -17,6 +21,11 @@ const KEY = {
   collection: ['career', 'collection'],
   shop: ['career', 'shop'],
   starters: ['career', 'starters'],
+  levels: ['career', 'levels'],
+  quests: ['career', 'quests'],
+  achievements: ['career', 'achievements'],
+  weekly: ['career', 'weekly'],
+  sets: ['career', 'sets'],
 } as const;
 
 function useSignedIn(): boolean {
@@ -42,6 +51,34 @@ export function useCareerShop(enabled: boolean) {
 
 export function useCareerStarters(enabled: boolean) {
   return useQuery({ queryKey: KEY.starters, queryFn: () => api.careerStarters(), enabled: useSignedIn() && enabled, staleTime: Infinity });
+}
+
+export function useCareerQuests(enabled: boolean) {
+  return useQuery({ queryKey: KEY.quests, queryFn: () => api.careerQuests(), enabled: useSignedIn() && enabled, staleTime: 0 });
+}
+
+export function useCareerLevels(enabled: boolean) {
+  return useQuery({ queryKey: KEY.levels, queryFn: () => api.careerLevels(), enabled: useSignedIn() && enabled, staleTime: 30_000 });
+}
+
+const NO_UNLOCKS: CareerCosmetic[] = [];
+
+/** The sleeves, playmats, avatars and titles this account's Career unlocked; asked once the player opted in here. */
+export function useCareerUnlocks(): CareerCosmetic[] {
+  const optedIn = useSettings((settings) => settings.settings.careerOptIn);
+  return useCareerLevels(optedIn).data?.unlocks ?? NO_UNLOCKS;
+}
+
+export function useCareerAchievements(enabled: boolean) {
+  return useQuery({ queryKey: KEY.achievements, queryFn: () => api.careerAchievements(), enabled: useSignedIn() && enabled, staleTime: 30_000 });
+}
+
+export function useCareerWeekly(enabled: boolean) {
+  return useQuery({ queryKey: KEY.weekly, queryFn: () => api.careerWeekly(), enabled: useSignedIn() && enabled, staleTime: 0 });
+}
+
+export function useCareerSetProgress(enabled: boolean) {
+  return useQuery({ queryKey: KEY.sets, queryFn: () => api.careerSetProgress(), enabled: useSignedIn() && enabled, staleTime: 30_000 });
 }
 
 /** A changed profile shows everywhere at once. */
@@ -74,6 +111,18 @@ export async function craftCard(setCode: string, cardNumber: string): Promise<vo
   await queryClient.invalidateQueries({ queryKey: KEY.collection });
 }
 
+/** Swap a waiting quest for another (once a day). */
+export async function rerollQuest(slot: number): Promise<CareerQuests> {
+  const quests = await api.careerRerollQuest(slot);
+  queryClient.setQueryData(KEY.quests, quests);
+  return quests;
+}
+
+/** Whether regular games against the AI count for quests and achievements. */
+export async function setCountAiGames(count: boolean): Promise<void> {
+  setProfile(await api.careerCountAiGames(count));
+}
+
 export async function exportCareer(): Promise<string> {
   return api.careerExport();
 }
@@ -93,7 +142,8 @@ export async function playCareer(opponentId: string, deck: DeckCardLists): Promi
   warmCards([...deck.cards, ...deck.sideboard].map((card) => ({ name: card.cardName, setCode: card.setCode ?? undefined, cardNumber: card.cardNumber ?? undefined })));
   try {
     const match = await api.careerPlay(opponentId, toWire(deck));
-    usePlay.setState({ tableId: match.tableId ?? null });
+    // leaving the match shows what it paid, then comes back to Career
+    usePlay.setState({ tableId: match.tableId ?? null, returnPath: rewardsPath(match.tableId ?? null, true, '/career') });
   } catch (error) {
     usePlay.setState({ phase: 'idle', tableId: null });
     throw error;
@@ -104,3 +154,27 @@ export async function playCareer(opponentId: string, deck: DeckCardLists): Promi
 export function refreshCareer(): void {
   void queryClient.invalidateQueries({ queryKey: ['career'] });
 }
+
+/** The avatar and title a player shows in Career, among the ones unlocked; kept in this browser, per account. */
+export interface CareerLook {
+  avatar: string | null;
+  title: string | null;
+}
+
+const LOOK_KEY = 'playmat.career.look';
+
+interface LookState {
+  looks: Record<string, CareerLook>;
+  choose(user: string, patch: Partial<CareerLook>): void;
+}
+
+export const useCareerLook = create<LookState>((set, get) => ({
+  looks: readJson<Record<string, CareerLook>>(LOOK_KEY, {}),
+  choose(user, patch) {
+    const name = user.toLowerCase();
+    const current: CareerLook = get().looks[name] ?? { avatar: null, title: null };
+    const looks = { ...get().looks, [name]: { ...current, ...patch } };
+    writeJson(LOOK_KEY, looks);
+    set({ looks });
+  },
+}));

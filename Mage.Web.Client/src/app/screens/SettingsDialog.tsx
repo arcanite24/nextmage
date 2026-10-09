@@ -3,7 +3,7 @@ import { BookmarkPlus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { api } from '../connection';
-import { MAT_CLOTHS } from '../match/playmats';
+import { MAT_CLOTHS, clothSwatch } from '../match/playmats';
 import bookmarkletSource from '../decks/import/bookmarklet.source.js?raw';
 import type { SkipPrioritySteps } from '../../protocol/generated/views';
 import { resetCommand, type AutoRule, type AutoRuleKind } from '../../core/game/autoAnswer';
@@ -309,6 +309,10 @@ function PlaymatSettings() {
   const [name, setName] = useState(settings.matCard?.name ?? '');
   const [problem, setProblem] = useState<string | null>(null);
   const listId = useId();
+  // Career cloths show once unlocked (the level track lists the unlocks; the Career screens share this query)
+  const levels = useQuery({ queryKey: ['career', 'levels'], queryFn: () => api.careerLevels(), enabled: settings.careerOptIn, staleTime: 30_000 });
+  const unlocks = levels.data?.unlocks;
+  const cloths = useMemo(() => MAT_CLOTHS.filter((cloth) => !cloth.career || !!unlocks?.some((unlock) => unlock.kind === 'playmat' && unlock.id === cloth.id)), [unlocks]);
   const typed = name.trim();
   const suggestions = useQuery({
     queryKey: ['playmat-names', typed.toLowerCase()],
@@ -332,16 +336,16 @@ function PlaymatSettings() {
     <>
       <Row label={t('settings.playmat.cloth')} detail={t('settings.playmat.cloth.detail')}>
         <div className={styles.cloths} role="radiogroup" aria-label={t('settings.playmat.cloth')}>
-          {MAT_CLOTHS.map((cloth) => (
+          {cloths.map((cloth) => (
             <button
               key={cloth.id}
               type="button"
               role="radio"
               aria-checked={settings.matCloth === cloth.id}
               aria-label={t(`settings.playmat.cloth.${cloth.id}` as MessageKey)}
-              title={t(`settings.playmat.cloth.${cloth.id}` as MessageKey)}
+              title={cloth.career ? `${t(`settings.playmat.cloth.${cloth.id}` as MessageKey)} · ${t('settings.playmat.cloth.career')}` : t(`settings.playmat.cloth.${cloth.id}` as MessageKey)}
               className={styles.cloth}
-              style={{ background: `radial-gradient(circle at 50% 40%, ${cloth.shades[4]}, ${cloth.shades[1]})`, borderColor: cloth.dye }}
+              style={clothSwatch(cloth)}
               onClick={() => update({ matCloth: cloth.id })}
             />
           ))}
