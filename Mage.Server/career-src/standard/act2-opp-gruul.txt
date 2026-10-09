@@ -1,0 +1,19 @@
+# name: Gruul Midrange
+# archetype: midrange
+# season: 2026-10
+4 Llanowar Elves
+4 Bejeweled Warg
+4 Heartfire Immolator
+4 Beast-Kin Ranger
+4 Gnarlback Rhino
+3 Elfsworn Giant
+2 Tajuru Pathwarden
+2 Shivan Dragon
+4 Burst Lightning
+2 Bite Down
+2 Ambush Wolf
+2 Courageous Goblin
+4 Stomping Ground
+4 Rugged Highlands
+8 Forest
+7 Mountain

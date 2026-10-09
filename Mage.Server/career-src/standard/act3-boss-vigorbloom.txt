@@ -1,0 +1,18 @@
+# name: Vigorbloom Lifegain
+# archetype: midrange
+# season: 2026-10
+4 Healer's Hawk
+4 Enlightened Confidant
+4 Liliana the Faultless
+4 Ajani's Pridemate
+4 Koth of the Homestead
+4 Lyra, Archangel of Dawn
+4 Bloombrute
+3 Kwia Vigorbloom
+2 Ajani Resolute
+4 Vigorbloom Charm
+2 Prophesied End
+4 Temple Garden
+4 Overgrown Farmland
+6 Plains
+7 Forest

@@ -1,0 +1,41 @@
+# name: Blue Tinker
+# archetype: combo
+1 Tinker
+1 Blightsteel Colossus
+1 Time Vault
+1 Voltaic Key
+2 Tezzeret the Seeker
+1 Demonic Tutor
+1 Vampiric Tutor
+1 Mystical Tutor
+1 Ancestral Recall
+1 Time Walk
+1 Timetwister
+1 Brainstorm
+3 Ponder
+1 Gitaxian Probe
+1 Dig Through Time
+2 Thirst for Knowledge
+4 Force of Will
+2 Force of Negation
+1 Mental Misstep
+2 Mana Drain
+1 Merchant Scroll
+3 Fatal Push
+2 Snapcaster Mage
+1 Jace, the Mind Sculptor
+1 Black Lotus
+1 Sol Ring
+1 Mana Crypt
+1 Mana Vault
+1 Mox Emerald
+1 Mox Jet
+1 Mox Pearl
+1 Mox Ruby
+1 Mox Sapphire
+4 Underground Sea
+3 Polluted Delta
+2 Flooded Strand
+4 Island
+1 Tolarian Academy
+1 Strip Mine

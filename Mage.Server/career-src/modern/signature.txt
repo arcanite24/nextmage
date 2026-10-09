@@ -1,0 +1,31 @@
+# name: Bant Elementals
+# archetype: midrange
+# season: 2026-10
+# Fury and Phlage are banned in Modern; the deck leans on the legal evoke elementals instead.
+4 Noble Hierarch
+4 Phelia, Exuberant Shepherd
+4 Tarmogoyf
+4 Solitude
+4 Endurance
+3 Subtlety
+3 Quantum Riddler
+4 Ephemerate
+3 Force of Negation
+3 Dismember
+2 Prismatic Ending
+3 Hallowed Fountain
+3 Breeding Pool
+3 Temple Garden
+4 Flooded Strand
+4 Misty Rainforest
+2 Windswept Heath
+1 Forest
+1 Plains
+1 Island
+SB: 2 Rest in Peace
+SB: 2 Surgical Extraction
+SB: 3 Force of Vigor
+SB: 2 Mystical Dispute
+SB: 2 Clarion Conqueror
+SB: 2 Wrath of the Skies
+SB: 2 Consign to Memory

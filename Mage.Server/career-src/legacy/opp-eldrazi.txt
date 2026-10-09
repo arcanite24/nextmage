@@ -1,0 +1,17 @@
+# name: Eldrazi Stompy
+# archetype: aggro
+4 Matter Reshaper
+4 Thought-Knot Seer
+4 Reality Smasher
+4 Glaring Fleshraker
+4 It That Heralds the End
+3 Endbringer
+4 Smuggler's Copter
+3 Dismember
+3 Kozilek's Command
+3 Eldrazi Linebreaker
+4 Eldrazi Temple
+4 Ancient Tomb
+3 Eye of Ugin
+4 Wasteland
+9 Wastes

@@ -1,0 +1,26 @@
+# name: Dimir Theorix
+# archetype: control (Dimir graveyard, Reality Fracture)
+# season: 2026-10
+# source: https://www.17lands.com/card_ratings?expansion=FRA&format=PremierDraft (card and colour-pair win rates, 2026-09-30 to 2026-10-09)
+1 Paradox Shaper
+2 Void Extrapolator
+2 Mindseeker Oculus
+2 Theorix Metamage
+1 Surveillance Phantasm
+1 Theoretical Necromancer
+1 Screeching Soulbreaker
+1 Sphinx of False Conclusions
+1 Undulating Witness
+1 Apex Witchstalker
+1 Lich's Relic
+2 Extended Absence
+1 Last Gasp
+1 Icy Reception
+1 Theorix Charm
+1 Break Under Pressure
+1 Countersculpt
+1 Recursive Recruitment
+1 Protege's Awakening
+8 Island
+7 Swamp
+2 Theorix Annex

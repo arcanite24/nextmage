@@ -1,0 +1,45 @@
+# name: Tatyova's Tide
+# archetype: midrange (Simic landfall)
+# season: 2026-10
+CMDR: Tatyova, Benthic Druid
+1 Llanowar Elves
+1 Gnarlid Colony
+1 Nessian Hornbeetle
+1 Mossborn Hydra
+1 Elfsworn Giant
+1 Grappling Kraken
+1 Bigfin Bouncer
+1 Icewind Elemental
+1 Clinquant Skymage
+1 Beast-Kin Ranger
+1 Treetop Snarespinner
+1 Needletooth Pack
+1 Apothecary Stomper
+1 Quakestrider Ceratops
+1 Elvish Regrower
+1 Zimone, Paradox Sculptor
+1 Koma, World-Eater
+1 Ambush Wolf
+1 Wary Thespian
+1 Erudite Wizard
+1 Burnished Hart
+1 Solemn Simulacrum
+1 Kiora, the Rising Tide
+1 Spinner of Souls
+1 Grow from the Ashes
+1 Bushwhack
+1 Bite Down
+1 Felling Blow
+1 Giant Growth
+1 Snakeskin Veil
+1 Uncharted Voyage
+1 Run Away Together
+1 Think Twice
+1 Garruk's Uprising
+1 Willowrush Verge
+1 Hedge Maze
+1 Thornwood Falls
+1 Evolving Wilds
+1 Fabled Passage
+11 Forest
+9 Island

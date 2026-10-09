@@ -1,0 +1,973 @@
+{
+  "id": "commander",
+  "name": "The Commander School",
+  "format": "Commander",
+  "school": true,
+  "order": 2,
+  "colors": "WUBRG",
+  "summary": "A hundred cards, one of each, and a legend who's always there. The format of the kitchen table.",
+  "text": "Commander is the format most people play with friends: a 100-card deck with one copy of each card, built around a legendary creature, your commander. You start at 40 life, your commander waits in the command zone, and 21 combat damage from one commander knocks a player out. You start with a simple green deck and finish at four-player tables against today's most popular commanders.",
+  "deckType": "Variant Magic - Commander",
+  "gameType": "Commander Two Player Duel",
+  "requires": [
+    "five-paths@1"
+  ],
+  "chapters": [
+    {
+      "id": "commander-1",
+      "name": "First steps",
+      "text": "Your first commander deck: Ghalta, a twelve-power dinosaur that gets cheaper the bigger your board is. Learn the command zone, commander tax and the 21-damage rule. Beat the boss and the deck is yours.",
+      "deck": "commander/starter.dck",
+      "deckName": "Green Giants",
+      "nodes": [
+        {
+          "id": "commander-1a",
+          "type": "duel",
+          "name": "Gutter-Boss Pim",
+          "text": "A goblin boss who thinks more is always better.",
+          "requires": [],
+          "opponent": {
+            "name": "Gutter-Boss Pim",
+            "deck": "commander/act1-goblins.dck",
+            "skill": 1
+          },
+          "lesson": {
+            "title": "The command zone",
+            "text": "Your commander, Ghalta, starts in the command zone, not your library, so you can cast it in every game. Ghalta costs 1 less for each point of power you control: play your creatures first, then bring it in cheap. You start at 40 life, so a few early goblin hits don't matter. Build your board, then stomp.",
+            "cards": [
+              "Ghalta, Primal Hunger",
+              "Steel Leaf Champion",
+              "Kalonian Tusker",
+              "Krenko, Tin Street Kingpin"
+            ]
+          },
+          "tips": [
+            {
+              "on": "start",
+              "title": "Forty life",
+              "text": "Commander starts you at 40 life, not 20. You have time to build a board before you race."
+            },
+            {
+              "on": "play:Krenko, Tin Street Kingpin",
+              "title": "Their commander",
+              "text": "Krenko grows and makes more goblins every time it attacks. Block it or kill it early; it only gets worse."
+            },
+            {
+              "on": "cast:Ghalta, Primal Hunger",
+              "title": "A cheap giant",
+              "text": "Every point of power you control knocks 1 off Ghalta's cost. With ten power on the board it costs just two green mana."
+            }
+          ],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          },
+          "before": "Line up, line up! Every goblin gets a turn to hit you.",
+          "after": "Huh. One big lizard counted for more than all my lads."
+        },
+        {
+          "id": "commander-1b",
+          "type": "duel",
+          "name": "Diva Morrow",
+          "text": "A singer whose every curtain call costs someone a creature.",
+          "requires": [
+            "commander-1a"
+          ],
+          "opponent": {
+            "name": "Diva Morrow",
+            "deck": "commander/act1-rakdos.dck",
+            "skill": 2
+          },
+          "lesson": {
+            "title": "Commander tax",
+            "text": "When your commander would die or be exiled, you may send it back to the command zone. Each time you cast it from there it costs {2} more: that's the commander tax. This deck kills a lot of creatures, so expect Ghalta to die; with a wide board it stays cheap, tax and all. Equip Lightning Greaves or Swiftfoot Boots to stop targeted removal.",
+            "cards": [
+              "Ghalta, Primal Hunger",
+              "Lightning Greaves",
+              "Swiftfoot Boots",
+              "Judith, the Scourge Diva"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Fleshbag Marauder",
+              "title": "Edicts",
+              "text": "An edict makes you sacrifice a creature of your choice, and Boots don't stop it. Keep a small creature around to give up instead of Ghalta."
+            },
+            {
+              "on": "play:Judith, the Scourge Diva",
+              "title": "Every death stings",
+              "text": "Judith deals 1 damage whenever one of their creatures dies. Kill Judith first and their sacrifices stop hurting."
+            },
+            {
+              "on": "turn:5",
+              "title": "The tax adds up",
+              "text": "Each recast of your commander costs {2} more than the last. Ghalta's discount still applies on top, so a wide board pays the tax for you."
+            }
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          },
+          "before": "Take a bow, darling. Then take another. I adore an encore.",
+          "after": "You kept coming back for more. How terribly rude."
+        },
+        {
+          "id": "commander-1t",
+          "type": "trial",
+          "name": "Suit up",
+          "text": "Your opponent is at 17 life with a bear on guard. Win this turn.",
+          "hint": "Your board pays for Ghalta. Something already on the table lets it attack today.",
+          "requires": [
+            "commander-1b"
+          ],
+          "lesson": {
+            "title": "Haste for the big one",
+            "text": "Ghalta costs 1 less for each point of power you control. Lightning Greaves costs nothing to equip and gives haste. In a real game each Ghalta hit is also commander damage: 21 from one commander knocks a player out, whatever their life.",
+            "cards": [
+              "Ghalta, Primal Hunger",
+              "Lightning Greaves",
+              "Steel Leaf Champion"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 40,
+              "hand": [
+                "Ghalta, Primal Hunger"
+              ],
+              "battlefield": [
+                "Steel Leaf Champion",
+                "Kalonian Tusker",
+                "Lightning Greaves",
+                "Forest",
+                "Forest",
+                "Forest",
+                "Forest",
+                "Forest"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Forest",
+                "Forest"
+              ]
+            },
+            "opponent": {
+              "life": 17,
+              "hand": [],
+              "battlefield": [
+                "Grizzly Bears"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Forest",
+                "Forest"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "commander-1boss",
+          "type": "duel",
+          "name": "Auditor Quillon",
+          "text": "He keeps the books at sixty life and gains more every turn.",
+          "requires": [
+            "commander-1t"
+          ],
+          "boss": true,
+          "opponent": {
+            "name": "Auditor Quillon",
+            "deck": "commander/act1-lifegain.dck",
+            "skill": 3,
+            "twists": {
+              "startingLife": 60
+            }
+          },
+          "lesson": {
+            "title": "21 commander damage",
+            "text": "This opponent starts at 60 life and gains more every turn, so racing their life total is hopeless. But a player who takes 21 combat damage from a single commander loses, whatever their life. Ghalta hits for 12 with trample: two hits are enough. Protect it and send it at them every turn.",
+            "cards": [
+              "Ghalta, Primal Hunger",
+              "Karlov of the Ghost Council",
+              "Serra Ascendant",
+              "Swiftfoot Boots"
+            ]
+          },
+          "tips": [
+            {
+              "on": "attack",
+              "title": "Count commander damage",
+              "text": "Only combat damage from your commander counts toward 21, and it never goes away. One Ghalta hit is already 12."
+            },
+            {
+              "on": "play:Karlov of the Ghost Council",
+              "title": "The ghost grows",
+              "text": "Karlov gets two +1/+1 counters each time they gain life, and can spend six to exile a creature. Kill it before it eats Ghalta."
+            },
+            {
+              "on": "play:Serra Ascendant",
+              "title": "High life, big angel",
+              "text": "Serra Ascendant is a 6/6 flyer while its owner has 30 or more life. At 60 it's huge at once: remove it or block it with Hornet Queen's insects."
+            }
+          ],
+          "reward": {
+            "coins": 80,
+            "xp": 250,
+            "deckCards": true
+          },
+          "before": "Sixty life on the books, and more every turn. You will not balance this account.",
+          "after": "Twenty-one from one source. I never thought to audit that column."
+        }
+      ]
+    },
+    {
+      "id": "commander-2",
+      "name": "Archetypes",
+      "text": "Four loaner decks, four jobs. Aggro races, midrange grinds, control answers, combo assembles. In every duel, ask first: who's the beatdown?",
+      "nodes": [
+        {
+          "id": "commander-2a",
+          "type": "duel",
+          "name": "Revel-Master Kett",
+          "text": "His beasts arrive hasty and leave nothing standing.",
+          "requires": [
+            "commander-1boss"
+          ],
+          "deck": "commander/act2-voltron.dck",
+          "deckName": "Steel and Silk",
+          "opponent": {
+            "name": "Revel-Master Kett",
+            "deck": "commander/act2-gruul.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Aggro: race",
+            "text": "You're the beatdown. Wyleth draws a card for each Aura and Equipment on your attackers, so suit it up and attack every turn. Count both clocks: 21 commander damage from Wyleth ends the game faster than 40 life. Ignore their board while you're ahead; block only when it keeps your clock running.",
+            "cards": [
+              "Wyleth, Soul of Steel",
+              "Sword of Fire and Ice",
+              "Puresteel Paladin",
+              "Xenagos, God of Revels"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Xenagos, God of Revels",
+              "title": "Their clock",
+              "text": "Xenagos gives one of their creatures haste and doubles its power each combat. Count their damage too: if your clock is faster, keep attacking."
+            },
+            {
+              "on": "attack",
+              "title": "Count the race",
+              "text": "Before you attack, count your damage this turn and next against theirs. If you win the race, don't hold blockers back."
+            },
+            {
+              "on": "cast:Embercleave",
+              "title": "Mid-combat",
+              "text": "Embercleave has flash and costs {1} less for each attacking creature. Cast it after blockers for a surprise double strike."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Every beast I cast hits twice as hard. Hope you brought a wall.",
+          "after": "You never blocked once. Rude, and it worked."
+        },
+        {
+          "id": "commander-2b",
+          "type": "duel",
+          "name": "Sergeant Tamsin Hale",
+          "text": "Her company grows by one soldier every time it marches.",
+          "requires": [
+            "commander-2a"
+          ],
+          "deck": "commander/act2-midrange.dck",
+          "deckName": "Nel Toth Recursion",
+          "opponent": {
+            "name": "Sergeant Tamsin Hale",
+            "deck": "commander/act2-humans.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Midrange: stabilise",
+            "text": "Now you're the one defending. Adeline makes a token every attack, and their anthems make each one count. Trade early, then sweep with Pernicious Deed or Night of Souls' Betrayal once they've overcommitted. Meren brings a creature back from your graveyard every end step; when their board is gone, turn the corner and attack.",
+            "cards": [
+              "Meren of Clan Nel Toth",
+              "Pernicious Deed",
+              "Night of Souls' Betrayal",
+              "Adeline, Resplendent Cathar"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Adeline, Resplendent Cathar",
+              "title": "Kill the commander",
+              "text": "Adeline's power equals their creature count, and she makes a token every attack. She'll come back with tax, but each answer buys you a turn."
+            },
+            {
+              "on": "life:25",
+              "title": "Trade, don't race",
+              "text": "You're not the beatdown here. Block, trade and sweep; your late game is far stronger than theirs."
+            },
+            {
+              "on": "cast:Moment's Peace",
+              "title": "A fog, twice",
+              "text": "Moment's Peace prevents all combat damage this turn and has flashback. That's two safe turns to set up a sweeper."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Every turn my company grows. By turn six you'll be fighting an army.",
+          "after": "You let us come, then buried us. Textbook."
+        },
+        {
+          "id": "commander-2choice",
+          "type": "choice",
+          "name": "A seat at the table",
+          "text": "Between games, a regular at the store offers you a trade.",
+          "requires": [
+            "commander-2b"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        },
+        {
+          "id": "commander-2c",
+          "type": "duel",
+          "name": "Wyrmkeeper Odalys",
+          "text": "She keeps one dragon in the air and another on the way.",
+          "requires": [
+            "commander-2choice"
+          ],
+          "deck": "commander/act2-control.dck",
+          "deckName": "The Ascetic's Patience",
+          "opponent": {
+            "name": "Wyrmkeeper Odalys",
+            "deck": "commander/act2-dragons.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Control: one for one",
+            "text": "Their deck is a stream of big dragons. Answer each one as it lands: counter it, or remove it on your turn. Oloro gains you 2 life every upkeep even while it sits in the command zone, so time is on your side. Win late on cards: Rhystic Study and Consecrated Sphinx keep your hand full.",
+            "cards": [
+              "Oloro, Ageless Ascetic",
+              "Counterspell",
+              "Swords to Plowshares",
+              "Lathliss, Dragon Queen"
+            ]
+          },
+          "tips": [
+            {
+              "on": "opponentSpell",
+              "title": "Pick your counters",
+              "text": "Counter the cards that win games, like Terror of the Peaks or Lathliss. Let small ones resolve and kill them later."
+            },
+            {
+              "on": "play:Lathliss, Dragon Queen",
+              "title": "The queen",
+              "text": "Lathliss makes a 5/5 flying dragon whenever another dragon of theirs enters. Remove her before the next one lands."
+            },
+            {
+              "on": "cast:Rhystic Study",
+              "title": "A tax on every spell",
+              "text": "Rhystic Study draws you a card each time they cast a spell, unless they pay {1}. Over a long game that's your card advantage."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "One dragon, then another, then another. How many answers did you pack?",
+          "after": "Enough, it seems. One for every dragon."
+        },
+        {
+          "id": "commander-2d",
+          "type": "duel",
+          "name": "Banner-Captain Rusk",
+          "text": "Two combats a turn, and he'll take a third if you let him.",
+          "requires": [
+            "commander-2c"
+          ],
+          "deck": "commander/act2-combo.dck",
+          "deckName": "The Firemind's Engine",
+          "opponent": {
+            "name": "Banner-Captain Rusk",
+            "deck": "commander/act2-boros.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Combo: goldfish",
+            "text": "Your deck wins in one turn with two cards. Niv-Mizzet deals 1 damage whenever you draw, and Curiosity draws a card whenever it deals damage: a loop that ends the game. Kiki-Jiki copying Pestermite or Deceiver Exarch makes endless hasty attackers. Dig with cheap card draw, and only spend a sweeper when it buys you the turn you need.",
+            "cards": [
+              "Niv-Mizzet, the Firemind",
+              "Curiosity",
+              "Kiki-Jiki, Mirror Breaker",
+              "Pestermite"
+            ]
+          },
+          "tips": [
+            {
+              "on": "mulligan",
+              "title": "Keep a fast hand",
+              "text": "Keep lands, mana rocks and card draw. You don't need the combo in hand; you need the tools to find it."
+            },
+            {
+              "on": "play:Aurelia, the Warleader",
+              "title": "Extra combat",
+              "text": "Aurelia gives them a second combat the first time she attacks each turn. If she sticks, it's time for Blasphemous Act or Anger of the Gods."
+            },
+            {
+              "on": "cast:Imperial Recruiter",
+              "title": "Find the missing piece",
+              "text": "Imperial Recruiter finds a creature with power 2 or less: Pestermite or Deceiver Exarch. With Kiki-Jiki out, that's the whole combo."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Two combats a turn. You'll be dead before your little engine starts.",
+          "after": "I hit you twice a turn and you drew your way out of it."
+        }
+      ]
+    },
+    {
+      "id": "commander-3",
+      "name": "Signature",
+      "text": "What Commander does that other formats don't: big mana, card-draw engines, the monarch, and spending removal on the right target. You play Queen Marchesa, a Mardu queen who wants the crown.",
+      "deck": "commander/signature.dck",
+      "deckName": "The Queen's Court",
+      "nodes": [
+        {
+          "id": "commander-3t1",
+          "type": "trial",
+          "name": "Mana now",
+          "text": "Your opponent is at 5 life. Win this turn.",
+          "hint": "Not every mana rock pays you back this turn. Count what you'd have left after each one.",
+          "requires": [
+            "commander-2d"
+          ],
+          "lesson": {
+            "title": "Ramp, counted",
+            "text": "Commander decks play ten or so ramp pieces because the format's spells are big. A Signet or Talisman costs 2 and gives back only 1 this turn: it pays off next turn. Sol Ring costs 1 and gives 2 at once. When you need the mana now, count before you cast.",
+            "cards": [
+              "Sol Ring",
+              "Rakdos Signet",
+              "Talisman of Indulgence",
+              "Banefire"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 40,
+              "hand": [
+                "Sol Ring",
+                "Rakdos Signet",
+                "Talisman of Indulgence",
+                "Banefire"
+              ],
+              "battlefield": [
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Swamp",
+                "Plains"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Swamp",
+                "Mountain"
+              ]
+            },
+            "opponent": {
+              "life": 5,
+              "hand": [],
+              "battlefield": [],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Plains",
+                "Plains"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "commander-3a",
+          "type": "duel",
+          "name": "Ringmaster Oddo",
+          "text": "Every guest brings three friends, and every friend hits harder.",
+          "requires": [
+            "commander-3t1"
+          ],
+          "opponent": {
+            "name": "Ringmaster Oddo",
+            "deck": "commander/act3-tokens.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Spot removal or sweeper",
+            "text": "Jetmir's creatures get +1/+0 at three creatures, trample at six and double strike at nine. Spot removal trades one card for one token, a bad deal. Save Blasphemous Act, Austere Command or Merciless Eviction for when they're wide, and point spot removal at Jetmir and the token makers. Queen Marchesa makes you the monarch: keep blockers home so you stay it.",
+            "cards": [
+              "Queen Marchesa",
+              "Blasphemous Act",
+              "Jetmir, Nexus of Revels",
+              "Hero of Bladehold"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Queen Marchesa",
+              "title": "The crown",
+              "text": "As the monarch you draw an extra card at your end step. If a creature deals you combat damage, its controller takes the crown. Keep blockers home."
+            },
+            {
+              "on": "play:Jetmir, Nexus of Revels",
+              "title": "Thresholds",
+              "text": "Count their creatures: three gives +1/+0, six adds trample, nine adds double strike. Sweep before they reach six."
+            },
+            {
+              "on": "cast:Blasphemous Act",
+              "title": "Wait for value",
+              "text": "Blasphemous Act costs {1} less for each creature on the battlefield. The more tokens they've made, the cheaper and better it gets."
+            }
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          },
+          "before": "Step right up! Every guest brings three friends.",
+          "after": "You cleared the whole tent in one go. Tough crowd."
+        },
+        {
+          "id": "commander-3t2",
+          "type": "trial",
+          "name": "The real threat",
+          "text": "Your opponent is at 9 life behind an angel and a Ghostly Prison. Win this turn.",
+          "hint": "The scariest card isn't always the one stopping you. Count your attack after each possible target.",
+          "requires": [
+            "commander-3a"
+          ],
+          "lesson": {
+            "title": "Threat assessment",
+            "text": "Before you spend removal, ask what stops you from winning right now. A big flyer can block one attacker; a tax on attacking can stop your whole team. Vindicate destroys any permanent: aim it where it unlocks the most damage.",
+            "cards": [
+              "Vindicate",
+              "Ghostly Prison",
+              "Serra Angel"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 40,
+              "hand": [
+                "Vindicate"
+              ],
+              "battlefield": [
+                "Hill Giant",
+                "Hill Giant",
+                "Hill Giant",
+                "Hill Giant",
+                "Plains",
+                "Plains",
+                "Swamp",
+                "Mountain",
+                "Mountain"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Swamp",
+                "Mountain"
+              ]
+            },
+            "opponent": {
+              "life": 9,
+              "hand": [],
+              "battlefield": [
+                "Serra Angel",
+                "Ghostly Prison",
+                "Plains",
+                "Plains",
+                "Plains"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Plains",
+                "Plains"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "commander-3boss",
+          "type": "duel",
+          "name": "Old Ysolde",
+          "text": "She sits on a hoard that refills itself, and her dragons come in pairs.",
+          "requires": [
+            "commander-3t2"
+          ],
+          "boss": true,
+          "opponent": {
+            "name": "Old Ysolde",
+            "deck": "commander/act3-dragons.dck",
+            "skill": 5,
+            "twists": {
+              "permanents": [
+                "Sol Ring",
+                "Phyrexian Arena"
+              ]
+            }
+          },
+          "lesson": {
+            "title": "Card-draw engines",
+            "text": "Ysolde starts with Sol Ring and Phyrexian Arena: more mana and an extra card every turn. Stay the monarch to match her draw, and spend Vindicate or Anguished Unmaking on the Arena if you can spare it. Kill Miirym on sight, before it copies every dragon she casts.",
+            "cards": [
+              "Phyrexian Arena",
+              "Miirym, Sentinel Wyrm",
+              "Queen Marchesa",
+              "Anguished Unmaking"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Miirym, Sentinel Wyrm",
+              "title": "Two of everything",
+              "text": "Every dragon she casts after Miirym arrives twice. Kill Miirym first; it's worth more than any one dragon."
+            },
+            {
+              "on": "turn:3",
+              "title": "Count the cards",
+              "text": "Her Arena draws an extra card each turn. The monarch does the same for you. Take the crown and hold it."
+            },
+            {
+              "on": "life:15",
+              "title": "Hold the line",
+              "text": "Low against flyers? Teferi's Protection keeps your life from changing until your next turn, and a sweeper clears the board it bought time for."
+            }
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "packs": 1
+          },
+          "before": "My hoard grows every turn, and so does my brood. Count your cards, little queen.",
+          "after": "You took the crown and kept it. A hoard is nothing without a ruler."
+        }
+      ]
+    },
+    {
+      "id": "commander-4",
+      "name": "The meta",
+      "text": "Four-player pods with the commanders people play most today. Three opponents means picking your fights, not looking like the biggest threat, and knowing when to strike.",
+      "nodes": [
+        {
+          "id": "commander-4a",
+          "type": "duel",
+          "name": "First pod",
+          "text": "Vampires, goblins and elves. Everyone wants to go wide.",
+          "requires": [
+            "commander-3boss"
+          ],
+          "gameType": "Commander Free For All",
+          "deck": "commander/meta-korvold.dck",
+          "deckName": "Korvold, Fae-Cursed King",
+          "opponent": {
+            "name": "Countess Velka",
+            "deck": "commander/meta-edgar.dck",
+            "skill": 5
+          },
+          "opponents": [
+            {
+              "name": "Boss Grizzlecrank",
+              "deck": "commander/meta-krenko.dck",
+              "skill": 5
+            },
+            {
+              "name": "Thessaly Fernwhisper",
+              "deck": "commander/meta-lathril.dck",
+              "skill": 5
+            }
+          ],
+          "lesson": {
+            "title": "Threat assessment at a pod",
+            "text": "Three opponents means three times the threats, and three times the removal aimed at whoever looks scariest. Korvold grows and draws whenever you sacrifice a permanent, so build quietly and cast it when you can protect it. Attack whoever is winning or has no blockers, not whoever hit you last. Krenko, Mob Boss doubles its goblins every turn: if nobody else kills it, you must.",
+            "cards": [
+              "Korvold, Fae-Cursed King",
+              "Krenko, Mob Boss",
+              "Edgar Markov",
+              "Lathril, Blade of the Elves"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Krenko, Mob Boss",
+              "title": "The doubling goblin",
+              "text": "Krenko doubles their goblins each time it taps. Left alone for two turns it ends the game. Kill it now, even if it isn't attacking you."
+            },
+            {
+              "on": "play:Korvold, Fae-Cursed King",
+              "title": "The archenemy",
+              "text": "A big Korvold makes you the player everyone fears. Keep a sacrifice outlet and protection ready; the table may turn on you."
+            },
+            {
+              "on": "attack",
+              "title": "Pick a target",
+              "text": "In a pod you choose whom to attack. Hit the player with the strongest board, or the one with no blockers, not whoever annoyed you."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Every vampire I cast brings a friend. Do sit, there's room for everyone.",
+          "after": "You let the goblins and elves bleed each other first. Clever."
+        },
+        {
+          "id": "commander-4b",
+          "type": "duel",
+          "name": "Sky pod",
+          "text": "Dragons, angels and dinosaurs. Look up.",
+          "requires": [
+            "commander-4a"
+          ],
+          "gameType": "Commander Free For All",
+          "deck": "commander/meta-yuriko.dck",
+          "deckName": "Yuriko Ninjas",
+          "opponent": {
+            "name": "Wyrmcaller Ossian",
+            "deck": "commander/meta-ur-dragon.dck",
+            "skill": 5
+          },
+          "opponents": [
+            {
+              "name": "Sister Calloway",
+              "deck": "commander/meta-giada.dck",
+              "skill": 5
+            },
+            {
+              "name": "Itzel Sunrunner",
+              "deck": "commander/meta-pantlaza.dck",
+              "skill": 5
+            }
+          ],
+          "lesson": {
+            "title": "Politics: look harmless",
+            "text": "Yuriko is small: a 1/3 that turns ninja hits into cards and lost life. Attack the open player with cheap evasive creatures, swap them for ninjas, and let the dragons, angels and dinosaurs fight each other. Don't kill what isn't threatening you; save Snuff Out and Deadly Rollick for the card that would win the game.",
+            "cards": [
+              "Yuriko, the Tiger's Shadow",
+              "Ninja of the Deep Hours",
+              "The Ur-Dragon",
+              "Giada, Font of Hope"
+            ]
+          },
+          "tips": [
+            {
+              "on": "attack",
+              "title": "Ninjutsu",
+              "text": "Attack with a cheap evasive creature. Once it's unblocked, return it to hand and put a ninja in its place. Yuriko can ninjutsu from the command zone."
+            },
+            {
+              "on": "play:The Ur-Dragon",
+              "title": "Eminence",
+              "text": "The Ur-Dragon makes their dragons cheaper even from the command zone, and its attacks draw cards and drop permanents for free. When it lands, it's everyone's problem."
+            },
+            {
+              "on": "play:Pantlaza, Sun-Favored",
+              "title": "Free spells",
+              "text": "Pantlaza discovers once a turn when a dinosaur enters: a free spell. Point removal at it before the dinosaurs snowball."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Five colours, one brood. When my dragons come, they come all at once.",
+          "after": "You slipped under my wings while everyone watched them."
+        },
+        {
+          "id": "commander-4c",
+          "type": "duel",
+          "name": "War pod",
+          "text": "Kaalia, Isshin and Chatterfang. Every attack triggers something.",
+          "requires": [
+            "commander-4b"
+          ],
+          "gameType": "Commander Free For All",
+          "deck": "commander/meta-kinnan.dck",
+          "deckName": "Kinnan, Bonder Prodigy",
+          "opponent": {
+            "name": "Vashti of the Host",
+            "deck": "commander/meta-kaalia.dck",
+            "skill": 6
+          },
+          "opponents": [
+            {
+              "name": "Two-Blade Ren",
+              "deck": "commander/meta-isshin.dck",
+              "skill": 6
+            },
+            {
+              "name": "Bram Nutkeeper",
+              "deck": "commander/meta-chatterfang.dck",
+              "skill": 6
+            }
+          ],
+          "lesson": {
+            "title": "Combo at a pod",
+            "text": "Kinnan adds one more mana whenever you tap a nonland permanent for mana, so Basalt Monolith becomes endless mana. Pour it into Walking Ballista to ping everyone out, or into Kinnan's ability to find Hullbreaker Horror. Three opponents can stop you, so go off when you can protect the turn, holding Force of Will or Fierce Guardianship. Until then, let them attack each other.",
+            "cards": [
+              "Kinnan, Bonder Prodigy",
+              "Basalt Monolith",
+              "Walking Ballista",
+              "Force of Will"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Kaalia of the Vast",
+              "title": "The gate",
+              "text": "Kaalia puts an angel, demon or dragon into play attacking each time she attacks. Kill her on sight; she comes back taxed."
+            },
+            {
+              "on": "cast:Basalt Monolith",
+              "title": "The engine",
+              "text": "With Kinnan out, Monolith taps for three plus one from Kinnan, and untapping it costs three. Each loop leaves one extra mana. Repeat as often as you like."
+            },
+            {
+              "on": "play:Chatterfang, Squirrel General",
+              "title": "Squirrel tide",
+              "text": "Chatterfang adds a squirrel to every token they make. If the squirrels pile up, spend removal or point another player at them."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Angels, demons, dragons. I don't cast them; I bring them to the fight.",
+          "after": "Fast mana and a quick finish. I never got to open the gate."
+        },
+        {
+          "id": "commander-final",
+          "type": "duel",
+          "name": "Graduation pod",
+          "boss": true,
+          "text": "Best of three at a four-player table. Win two games to graduate.",
+          "requires": [
+            "commander-4c"
+          ],
+          "gameType": "Commander Free For All",
+          "winsNeeded": 2,
+          "deck": "commander/meta-yshtola.dck",
+          "deckName": "Y'shtola, Night's Blessed",
+          "opponent": {
+            "name": "Dax Halloran",
+            "deck": "commander/meta-cloud.dck",
+            "skill": 7
+          },
+          "opponents": [
+            {
+              "name": "Morrow the Pale",
+              "deck": "commander/meta-sephiroth.dck",
+              "skill": 7
+            },
+            {
+              "name": "Tide-Scout Kemi",
+              "deck": "commander/meta-hakbal.dck",
+              "skill": 7
+            }
+          ],
+          "lesson": {
+            "title": "Don't be the archenemy",
+            "text": "Y'shtola drains each opponent for 2 whenever you cast a noncreature spell of mana value 3 or more, and draws you a card at each end step when a player lost 4 life that turn. That drain hits all three opponents at once, so you never need to win a single fight. Ghostly Prison and Propaganda keep attackers off you; save Toxic Deluge for when two boards threaten you together.",
+            "cards": [
+              "Y'shtola, Night's Blessed",
+              "Ghostly Prison",
+              "Toxic Deluge",
+              "Cloud, Ex-SOLDIER"
+            ]
+          },
+          "sideboard": "Commander has no sideboard: you play the same 100 cards every game. Between games, change your plan instead. Who won the last game, and what beat you? Point your first removal at that commander, and keep Ghostly Prison and your counters for the deck that raced you.",
+          "tips": [
+            {
+              "on": "play:Cloud, Ex-SOLDIER",
+              "title": "The swordsman",
+              "text": "Cloud attaches an Equipment when it enters and draws cards when it attacks equipped. Remove it or its best Equipment before it snowballs."
+            },
+            {
+              "on": "play:Sephiroth, Fabled SOLDIER",
+              "title": "Every death drains",
+              "text": "Sephiroth drains 1 whenever another creature dies and transforms after four in a turn. Sweepers feed it: kill it before you sweep."
+            },
+            {
+              "on": "opponentLife:10",
+              "title": "Close it out",
+              "text": "An opponent is low. Each noncreature spell of mana value 3 or more drains everyone for 2. Count the drains before you commit a big turn."
+            }
+          ],
+          "reward": {
+            "coins": 200,
+            "xp": 500,
+            "packs": 2,
+            "wildcard": "rare",
+            "cosmetics": [
+              {
+                "kind": "title",
+                "id": "commander-graduate"
+              },
+              {
+                "kind": "sleeve",
+                "id": "school-commander"
+              }
+            ]
+          },
+          "before": "Best of three, four seats. I've got a sword for each of you.",
+          "after": "Two games, two losses. You read the table better than I read my blade."
+        }
+      ]
+    }
+  ]
+}

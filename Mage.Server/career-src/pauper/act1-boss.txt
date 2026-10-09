@@ -1,0 +1,15 @@
+# name: Black Removal Aggro
+# archetype: midrange
+4 Vampire Lacerator
+4 Carrier Thrall
+4 Dusk Legion Zealot
+4 Chittering Rats
+4 Gurmag Angler
+4 Phyrexian Rager
+3 Gravedigger
+4 Cast Down
+4 Snuff Out
+3 Diabolic Edict
+1 Bojuka Bog
+17 Swamp
+4 Night's Whisper

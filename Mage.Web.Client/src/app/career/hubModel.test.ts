@@ -40,6 +40,11 @@ describe('unlocks', () => {
     expect(unlockFacts(roster, [campaign])).toEqual(['chapter:five:blue', 'tier:2']);
   });
 
+  test('a format school that opens is an unlock; a closed one is not', () => {
+    const schools = [{ id: 'pauper', school: true, open: true, chapters: [] }, { id: 'modern', school: true, open: false, chapters: [] }];
+    expect(unlockFacts([], schools)).toEqual(['school:pauper']);
+  });
+
   test('earned achievements and sets a chapter opened are unlocks too', () => {
     const facts = unlockFacts([], [], [{ id: 'first-win', achieved: true }, { id: 'later' }], [{ setCode: 'THS', unlockedBy: 'white' }, { setCode: 'BNG', unlockedBy: 'blue', locked: true }, { setCode: 'M14' }]);
     expect(facts).toEqual(['achievement:first-win', 'set:THS']);

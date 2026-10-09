@@ -1,0 +1,920 @@
+{
+  "id": "pioneer",
+  "name": "The Pioneer School",
+  "format": "Pioneer",
+  "school": true,
+  "order": 4,
+  "colors": "BR",
+  "summary": "Every card since Return to Ravnica, no rotation, no fetchlands. Real mana, graveyard engines and your first sideboard.",
+  "text": "Pioneer is a constructed format that uses every card printed from Return to Ravnica (2012) on, and it never rotates. It's the first format here where the mana is real: shocklands, pathways, fastlands and checklands. You'll start with a Gruul deck, play every role, learn the graveyard engine behind Arclight Phoenix, and finish with the decks people play this month, sideboard and all.",
+  "deckType": "Constructed - Pioneer",
+  "gameType": "Two Player Duel",
+  "requires": [
+    "pauper@2|five-paths@3"
+  ],
+  "chapters": [
+    {
+      "id": "pioneer-1",
+      "name": "First steps",
+      "text": "Pioneer decks are 60 cards with up to four copies of each and a 15-card sideboard. Every card printed from Return to Ravnica (2012) on is legal, minus a short banned list, and nothing ever rotates out. Learn the table with a Gruul deck that shows you every kind of dual land the format uses.",
+      "deck": "pioneer/starter.dck",
+      "deckName": "Crag and Root",
+      "nodes": [
+        {
+          "id": "pioneer-1a",
+          "type": "duel",
+          "name": "Fenn Tumbledown",
+          "text": "A forest herder whose animals are bigger than they look.",
+          "requires": [],
+          "opponent": {
+            "name": "Fenn Tumbledown",
+            "deck": "pioneer/act1-green-stompy.dck",
+            "skill": 1
+          },
+          "lesson": {
+            "title": "A format that never rotates",
+            "text": "Pioneer uses every card printed since Return to Ravnica, and no card ever leaves because a newer set came out. That makes the decks strong and the mana good. In this duel, curve out: a one-drop, then a two, then a three, and attack every turn.",
+            "cards": [
+              "Llanowar Elves",
+              "Kumano Faces Kakkazan",
+              "Bonecrusher Giant",
+              "Lovestruck Beast"
+            ]
+          },
+          "tips": [
+            {
+              "on": "start",
+              "title": "Curve out",
+              "text": "Spend all your mana every turn. Llanowar Elves on turn one lets you cast a three-drop on turn two."
+            },
+            {
+              "on": "play:Stomping Ground",
+              "title": "A shockland",
+              "text": "Stomping Ground is a shockland: a Mountain Forest that enters tapped unless you pay 2 life. Pay when you need the mana this turn. When you don't, let it come in tapped and keep the life."
+            },
+            {
+              "on": "cast:Steel Leaf Champion",
+              "title": "Too big to chump",
+              "text": "Steel Leaf Champion can't be blocked by creatures with power 2 or less. Lovestruck Beast can block it, or you can race it."
+            }
+          ],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          },
+          "before": "Mind the elk. And the troll. And the other troll.",
+          "after": "The herd's had enough. Good run, stranger."
+        },
+        {
+          "id": "pioneer-1b",
+          "type": "duel",
+          "name": "Sergeant Odile Marsh",
+          "text": "A Boros drill sergeant with burn in one hand and a shield in the other.",
+          "requires": [
+            "pioneer-1a"
+          ],
+          "opponent": {
+            "name": "Sergeant Odile Marsh",
+            "deck": "pioneer/act1-boros-aggro.dck",
+            "skill": 2
+          },
+          "lesson": {
+            "title": "Lands that are almost basics",
+            "text": "Every two-colour land in Pioneer asks for something. A pathway makes one colour, chosen as you play it. A fastland like Copperline Gorge enters untapped only among your first three lands; a checkland like Rootbound Crag only if you already control a Mountain or a Forest. Play fastlands early and checklands late.",
+            "cards": [
+              "Cragcrown Pathway",
+              "Copperline Gorge",
+              "Rootbound Crag",
+              "Stomping Ground"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Cragcrown Pathway",
+              "title": "Pick a side",
+              "text": "A pathway is two lands on one card: Cragcrown makes red, Timbercrown makes green. Look at your hand before you choose. The choice is for good."
+            },
+            {
+              "on": "cast:Boros Charm",
+              "title": "Four to the face",
+              "text": "Boros Charm deals 4 damage to you for two mana. Against burn, every 2 life you pay for a shockland is half a Charm. Pay only when the mana matters."
+            },
+            {
+              "on": "life:10",
+              "title": "Stop paying",
+              "text": "You're at 10 or less against a burn deck. From here, let shocklands enter tapped unless the untapped mana wins the game or saves it."
+            }
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          },
+          "before": "Shields up, recruit. Mine are. Yours are about to be on fire.",
+          "after": "Good footwork. You paid for your lands and still had life to spare."
+        },
+        {
+          "id": "pioneer-1t",
+          "type": "trial",
+          "name": "Pay the two",
+          "text": "You're at 3 life and your opponent is at 6. Win this turn.",
+          "hint": "Only one land drop. A shockland enters untapped if you pay 2 life, and you have 3. The checkland needs a Mountain or a Forest, and you have neither.",
+          "requires": [
+            "pioneer-1b"
+          ],
+          "lesson": {
+            "title": "Life is a resource",
+            "text": "An untapped shockland costs 2 life. At 3 life that feels scary, but life you never needed is worth nothing. Count the mana you need this turn, then pay.",
+            "cards": [
+              "Stomping Ground",
+              "Rootbound Crag",
+              "Lightning Strike",
+              "Llanowar Elves"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 3,
+              "hand": [
+                "Stomping Ground",
+                "Rootbound Crag",
+                "Lightning Strike",
+                "Lightning Strike"
+              ],
+              "battlefield": [
+                "Cragcrown Pathway",
+                "Copperline Gorge",
+                "Llanowar Elves"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Mountain",
+                "Forest"
+              ]
+            },
+            "opponent": {
+              "life": 6,
+              "hand": [],
+              "battlefield": [],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Plains",
+                "Plains"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "pioneer-1boss",
+          "type": "duel",
+          "name": "Abbess Morwen",
+          "text": "She tithes your life to her devotion, a little more each turn.",
+          "requires": [
+            "pioneer-1t"
+          ],
+          "opponent": {
+            "name": "Abbess Morwen",
+            "deck": "pioneer/act1-mono-black-devotion.dck",
+            "skill": 3,
+            "twists": {
+              "permanents": [
+                "Phyrexian Arena"
+              ]
+            }
+          },
+          "boss": true,
+          "lesson": {
+            "title": "Who's the beatdown",
+            "text": "Pioneer bans the five fetchlands and a short list of cards that warped it, so check the banned list before you build. Abbess Morwen starts with Phyrexian Arena: an extra card every turn, for 1 life. You can't out-draw that, so you're the beatdown: attack every turn and make her spend her cards on defence.",
+            "cards": [
+              "Phyrexian Arena",
+              "Gray Merchant of Asphodel",
+              "Questing Beast",
+              "Esika's Chariot"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Gray Merchant of Asphodel",
+              "title": "The tithe",
+              "text": "Gray Merchant drains you for her devotion to black: the black mana symbols among her permanents. Count them so the drain doesn't surprise you."
+            },
+            {
+              "on": "play:Questing Beast",
+              "title": "Past the small fry",
+              "text": "Questing Beast has haste and can't be blocked by creatures with power 2 or less. Most of her creatures are small: attack with it every turn."
+            },
+            {
+              "on": "opponentLife:8",
+              "title": "Close it out",
+              "text": "She's at 8 or less, and Arena costs her a life every turn. Keep attacking: one more Gray Merchant could undo a turn of damage."
+            }
+          ],
+          "reward": {
+            "coins": 80,
+            "xp": 250,
+            "deckCards": true
+          },
+          "before": "Every card I draw is a prayer answered. Arena answers twice.",
+          "after": "You were faster than my faith. The deck is yours; keep it close."
+        }
+      ]
+    },
+    {
+      "id": "pioneer-2",
+      "name": "Archetypes",
+      "text": "Four duels, four roles: aggro, midrange, control and combo. Each loaner is built to beat the deck across the table. Ask yourself every turn who's the beatdown: the player who has to win fast.",
+      "nodes": [
+        {
+          "id": "pioneer-2a",
+          "type": "duel",
+          "name": "Thornwarden Edda",
+          "text": "A Golgari warden who trades one for one and waits for you to run out.",
+          "requires": [
+            "pioneer-1boss"
+          ],
+          "deck": "pioneer/act2-mono-red.dck",
+          "deckName": "Red Line",
+          "opponent": {
+            "name": "Thornwarden Edda",
+            "deck": "pioneer/act2-golgari-midrange.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Aggro against midrange: race",
+            "text": "You're the beatdown. Her creatures are bigger, so don't fight them on the board: attack, and point burn at her face once she's in reach. Every turn, add up your attackers and the burn in your hand.",
+            "cards": [
+              "Monastery Swiftspear",
+              "Bloodthirsty Adversary",
+              "Lightning Strike",
+              "Skewer the Critics"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Skewer the Critics",
+              "title": "Spectacle",
+              "text": "Skewer the Critics costs only R if an opponent lost life this turn. Attack first, then cast it in your second main phase."
+            },
+            {
+              "on": "cast:Ravenous Chupacabra",
+              "title": "Ignore the 2/2",
+              "text": "Chupacabra killed a creature on the way in. What's left is a 2/2. Keep attacking and save your burn for her face."
+            },
+            {
+              "on": "opponentLife:8",
+              "title": "Count to zero",
+              "text": "She's at 8 or less. Add your burn in hand to your attackers. If that's lethal within two turns, stop trading and go face."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Spend your fire, child. I've got roots enough to wait.",
+          "after": "You never let me get to the waiting part."
+        },
+        {
+          "id": "pioneer-2b",
+          "type": "duel",
+          "name": "Banneret Dunmore",
+          "text": "A Humans captain who wins in a rush or not at all.",
+          "requires": [
+            "pioneer-2a"
+          ],
+          "deck": "pioneer/act2-rakdos-midrange.dck",
+          "deckName": "Blood and Ash",
+          "opponent": {
+            "name": "Banneret Dunmore",
+            "deck": "pioneer/act2-mono-white-humans.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Midrange against aggro: trade, then turn the corner",
+            "text": "Now he's the beatdown. Kill his early creatures, especially Thalia's Lieutenant and Adeline, and block when the trade is even. Once his hand is empty, Fable and Sheoldred take over: that's when you turn the corner and attack.",
+            "cards": [
+              "Fatal Push",
+              "The Meathook Massacre",
+              "Fable of the Mirror-Breaker",
+              "Sheoldred, the Apocalypse"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Adeline, Resplendent Cathar",
+              "title": "Kill Adeline",
+              "text": "Adeline makes a token every time he attacks. Go for the Throat or Hero's Downfall her now; Fatal Push needs revolt to reach her, so sacrifice a Treasure from Fable first."
+            },
+            {
+              "on": "cast:The Meathook Massacre",
+              "title": "Sweep small",
+              "text": "The Meathook Massacre gives every creature -X/-X. X=1 or X=2 is enough to clear most of his board, and you gain a life each time one of his creatures dies."
+            },
+            {
+              "on": "life:10",
+              "title": "Not yet",
+              "text": "At 10 life or less, keep your blockers home until his board is clear. Turn the corner once he's out of cards."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Banners up! We'll be through your lines before you've drawn breath.",
+          "after": "Held the line, then broke ours. Textbook. Annoying, but textbook."
+        },
+        {
+          "id": "pioneer-2c",
+          "type": "duel",
+          "name": "Gorm Twotusk",
+          "text": "A Gruul herdmaster whose beasts come one bigger than the last.",
+          "requires": [
+            "pioneer-2b"
+          ],
+          "deck": "pioneer/act2-dimir-control.dck",
+          "deckName": "Deepwater Ledger",
+          "opponent": {
+            "name": "Gorm Twotusk",
+            "deck": "pioneer/act2-gruul-midrange.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Control against midrange: one for one, then more",
+            "text": "Answer each threat as it lands: removal for creatures, a counterspell for the big ones like Glorybringer and Esika's Chariot. You don't need to attack early. Memory Deluge puts you ahead, and The Scarab God or Sheoldred wins once he runs out.",
+            "cards": [
+              "Hero's Downfall",
+              "Make Disappear",
+              "Memory Deluge",
+              "The Scarab God"
+            ]
+          },
+          "tips": [
+            {
+              "on": "opponentSpell",
+              "title": "Pick your counters",
+              "text": "Counter the threats that matter: four-drops and bigger. Let a mana elf resolve and Fatal Push it later if you must."
+            },
+            {
+              "on": "cast:Esika's Chariot",
+              "title": "Hard to answer",
+              "text": "Esika's Chariot makes two Cat tokens and copies one each time it attacks. Counter it if you can. Once it lands, kill the Cats so nothing can crew it."
+            },
+            {
+              "on": "cast:Memory Deluge",
+              "title": "End-of-turn cards",
+              "text": "Cast Memory Deluge at the end of his turn with the mana you held up for a counter. Later, flash it back from your graveyard."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Big beast, bigger beast, biggest beast. You can't stop them all.",
+          "after": "You stopped them all. One at a time. Huh."
+        },
+        {
+          "id": "pioneer-2d",
+          "type": "duel",
+          "name": "Pyre Sellick",
+          "text": "A burn mage with a short temper and a shorter clock.",
+          "requires": [
+            "pioneer-2c"
+          ],
+          "deck": "pioneer/act2-abzan-greasefang.dck",
+          "deckName": "Oilskin Engine",
+          "opponent": {
+            "name": "Pyre Sellick",
+            "deck": "pioneer/act2-red-burn.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Combo against aggro: be faster",
+            "text": "Put Parhelion II in your graveyard with Stitcher's Supplier, Grisly Salvage or Satyr Wayfinder, then cast Greasefang. At the start of combat Greasefang returns Parhelion; crew it with Greasefang and attack with two 4/4 flying Angels beside it. Don't spend turns on his creatures unless that keeps you alive.",
+            "cards": [
+              "Greasefang, Okiba Boss",
+              "Parhelion II",
+              "Stitcher's Supplier",
+              "Grisly Salvage"
+            ]
+          },
+          "tips": [
+            {
+              "on": "mulligan",
+              "title": "Keep a plan",
+              "text": "A good hand has a way to put Parhelion II in the graveyard and a way to cast Greasefang by turn three. Lands and removal alone won't race burn."
+            },
+            {
+              "on": "play:Greasefang, Okiba Boss",
+              "title": "Crew before attacks",
+              "text": "Greasefang's ability triggers at the beginning of combat. Let it return Parhelion II, then crew Parhelion by tapping Greasefang (power 4) before you declare attackers."
+            },
+            {
+              "on": "life:6",
+              "title": "Buy one turn",
+              "text": "Burn can finish you from here. Use Fatal Push or Tamiyo's Safekeeping only if it buys the turn your combo needs."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Tick, tock. I'll have you burnt before your gears turn.",
+          "after": "An airship. From a graveyard. On turn three. I need a bigger fire."
+        },
+        {
+          "id": "pioneer-2choice",
+          "type": "choice",
+          "name": "A quiet carriage",
+          "text": "Between stops, a card trader leans over with an offer.",
+          "requires": [
+            "pioneer-2d"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pioneer-3",
+      "name": "The graveyard engine",
+      "text": "Pioneer's best decks play from the graveyard as if it were a second hand. Izzet Phoenix casts cheap spells, fills its graveyard and brings Arclight Phoenix back again and again. Learn to count the graveyard, and learn the decks that eat it.",
+      "deck": "pioneer/act3-izzet-phoenix.dck",
+      "deckName": "Ashwing",
+      "nodes": [
+        {
+          "id": "pioneer-3t1",
+          "type": "trial",
+          "name": "Three before combat",
+          "text": "Your opponent is at 8 life. Win this turn.",
+          "hint": "Arclight Phoenix checks at the beginning of combat. Cast all three spells in your first main phase, and point the burn at your opponent.",
+          "requires": [
+            "pioneer-2choice"
+          ],
+          "lesson": {
+            "title": "The graveyard is a second hand",
+            "text": "Arclight Phoenix returns from your graveyard at the beginning of combat if you've cast three or more instants and sorceries this turn. Cheap spells like Opt and Consider count as much as burn. Cast them before combat, not after.",
+            "cards": [
+              "Arclight Phoenix",
+              "Opt",
+              "Consider",
+              "Play with Fire"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Opt",
+                "Consider",
+                "Play with Fire"
+              ],
+              "battlefield": [
+                "Island",
+                "Island",
+                "Mountain"
+              ],
+              "graveyard": [
+                "Arclight Phoenix",
+                "Arclight Phoenix"
+              ],
+              "library": [
+                "Island",
+                "Mountain",
+                "Island",
+                "Mountain"
+              ]
+            },
+            "opponent": {
+              "life": 8,
+              "hand": [],
+              "battlefield": [
+                "Thrashing Brontodon",
+                "Forest",
+                "Forest",
+                "Forest"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Forest",
+                "Forest"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "pioneer-3a",
+          "type": "duel",
+          "name": "Vesper Lane",
+          "text": "A Spirit-caller whose fliers arrive faster than you can count.",
+          "requires": [
+            "pioneer-3t1"
+          ],
+          "opponent": {
+            "name": "Vesper Lane",
+            "deck": "pioneer/act3-azorius-spirits.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Spells are removal first",
+            "text": "Spirits floods the air with small fliers and pumps them with Supreme Phantom. Spend Fiery Impulse and Play with Fire on her creatures early; Phoenix can win later. Remorseful Cleric can exile your graveyard, so kill it before you count on Phoenixes.",
+            "cards": [
+              "Fiery Impulse",
+              "Supreme Phantom",
+              "Remorseful Cleric",
+              "Arclight Phoenix"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Supreme Phantom",
+              "title": "Kill the lord",
+              "text": "Supreme Phantom gives her other Spirits +1/+1. Kill it first and the rest shrink back."
+            },
+            {
+              "on": "play:Remorseful Cleric",
+              "title": "Graveyard hate",
+              "text": "Remorseful Cleric can be sacrificed to exile your whole graveyard. While it's on the battlefield, don't rely on Phoenixes coming back."
+            },
+            {
+              "on": "cast:Treasure Cruise",
+              "title": "Delve",
+              "text": "Delve lets you exile cards from your graveyard to pay for Treasure Cruise, one generic mana each. Exile lands and spent spells; keep Phoenixes in the graveyard."
+            }
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          },
+          "before": "Hush. Can you hear them? No? They're already behind you.",
+          "after": "You burned the choir out of the sky. Rude, but effective."
+        },
+        {
+          "id": "pioneer-3t2",
+          "type": "trial",
+          "name": "Count to two",
+          "text": "Your opponent attacks with two 3/3s and you're at 6 life. Survive until your turn.",
+          "hint": "Fiery Impulse deals 3 instead of 2 if two or more instants and sorceries are in your graveyard when it resolves. Count yours, then add one first.",
+          "requires": [
+            "pioneer-3a"
+          ],
+          "lesson": {
+            "title": "Count your graveyard",
+            "text": "Spell mastery, delve and Arclight Phoenix all read your graveyard. Before you cast a spell that cares, count what's there and what you can add first. Lands and creatures don't count for spell mastery.",
+            "cards": [
+              "Fiery Impulse",
+              "Opt",
+              "Treasure Cruise",
+              "Arclight Phoenix"
+            ]
+          },
+          "trial": {
+            "objective": "survive",
+            "you": {
+              "life": 6,
+              "hand": [
+                "Fiery Impulse",
+                "Opt"
+              ],
+              "battlefield": [
+                "Island",
+                "Mountain"
+              ],
+              "graveyard": [
+                "Consider",
+                "Arclight Phoenix",
+                "Island"
+              ],
+              "library": [
+                "Island",
+                "Mountain",
+                "Island"
+              ]
+            },
+            "opponent": {
+              "life": 20,
+              "hand": [],
+              "battlefield": [
+                "Centaur Courser",
+                "Centaur Courser"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Forest",
+                "Forest"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "pioneer-3boss",
+          "type": "duel",
+          "name": "Gravekeeper Osk",
+          "text": "He sweeps graveyards for a living, and yours is full.",
+          "requires": [
+            "pioneer-3t2"
+          ],
+          "opponent": {
+            "name": "Gravekeeper Osk",
+            "deck": "pioneer/act3-rakdos-graveyard.dck",
+            "skill": 5,
+            "twists": {
+              "startingLife": 25,
+              "extraCards": 1
+            }
+          },
+          "boss": true,
+          "lesson": {
+            "title": "When they eat your graveyard",
+            "text": "Osk plays four Graveyard Trespassers, which exile a card from a graveyard whenever they enter or attack. To target one you must discard a card (its ward), so kill it with Lightning Axe and discard a land you don't need. When the graveyard isn't safe, Ledger Shredder and burn can win on their own.",
+            "cards": [
+              "Graveyard Trespasser",
+              "Lightning Axe",
+              "Ledger Shredder",
+              "Arclight Phoenix"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Graveyard Trespasser",
+              "title": "Pay the ward",
+              "text": "Graveyard Trespasser has ward: discard a card. Targeting it costs your spell plus a card from hand, so keep a spare land for it."
+            },
+            {
+              "on": "cast:Lightning Axe",
+              "title": "The classic discard",
+              "text": "Lightning Axe deals 5 if you discard a card. With no Trespasser around, discard Arclight Phoenix: it's ready to come back."
+            },
+            {
+              "on": "play:Ledger Shredder",
+              "title": "Two spells, one bird",
+              "text": "Ledger Shredder connives whenever a player casts their second spell in a turn: you draw, then discard, and it grows if you discard a nonland. Cast two cheap spells a turn."
+            }
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "packs": 1
+          },
+          "before": "Ashes to ashes. Yours go in my sack.",
+          "after": "You kept a bird out of my reach. I'll sweep elsewhere."
+        }
+      ]
+    },
+    {
+      "id": "pioneer-4",
+      "name": "The meta",
+      "text": "These are the decks people played in Pioneer Challenges and leagues in late September and October 2026, taken from Magic Online's published lists. You borrow a different tier deck for each duel; the AI plays the aggro and midrange ones. The final is a best of three with sideboarding.",
+      "nodes": [
+        {
+          "id": "pioneer-4a",
+          "type": "duel",
+          "name": "Mira Coldfen",
+          "text": "She plays the most popular deck in Pioneer, and she plays it patiently.",
+          "requires": [
+            "pioneer-3boss"
+          ],
+          "deck": "pioneer/meta-izzet-prowess.dck",
+          "deckName": "Izzet Prowess",
+          "opponent": {
+            "name": "Mira Coldfen",
+            "deck": "pioneer/meta-golgari-midrange.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Izzet Prowess: spells make creatures bigger",
+            "text": "Prowess gives a creature +1/+1 each time you cast a noncreature spell. Play one threat, attack, and cast your cheap spells after blockers are declared. Golgari has a lot of cheap removal, so deploy one or two threats at a time, never all of them.",
+            "cards": [
+              "Monastery Swiftspear",
+              "Stormchaser's Talent",
+              "Reckless Rage",
+              "Fatal Push"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Fatal Push",
+              "title": "Don't pump into Push",
+              "text": "Fatal Push kills your two-drops at instant speed, and a pump spell won't save them. Attack first, and pump once she has tapped her mana or let the damage through."
+            },
+            {
+              "on": "play:Sheoldred, the Apocalypse",
+              "title": "A five-toughness problem",
+              "text": "Sheoldred costs you 2 life each time you draw and gains her 2 each time she draws. It has 5 toughness: Reckless Rage plus Burst Lightning kills it, or race it if she's low."
+            },
+            {
+              "on": "cast:Thoughtseize",
+              "title": "Her life counts too",
+              "text": "Thoughtseize costs her 2 life. That's 2 less damage you need. Keep count."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Thoughtseize, Push, Sheoldred. I've done this a thousand times.",
+          "after": "A thousand and one, then. And this one was yours."
+        },
+        {
+          "id": "pioneer-4b",
+          "type": "duel",
+          "name": "Nix Hollowtide",
+          "text": "His deck just won a Challenge: faeries, ninjas and a planeswalker who hides.",
+          "requires": [
+            "pioneer-4a"
+          ],
+          "deck": "pioneer/meta-azorius-control.dck",
+          "deckName": "Azorius Control",
+          "opponent": {
+            "name": "Nix Hollowtide",
+            "deck": "pioneer/meta-dimir-aggro.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Azorius Control: sweep the cheap threats",
+            "text": "His deck is built from two-drops plus Kaito. Temporary Lockdown exiles every nonland permanent with mana value 2 or less, and Supreme Verdict destroys every creature. Save No More Lies and Dovin's Veto for Sheoldred, then win with Teferi or The Wandering Emperor.",
+            "cards": [
+              "Temporary Lockdown",
+              "Supreme Verdict",
+              "No More Lies",
+              "Teferi, Hero of Dominaria"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Kaito, Bane of Nightmares",
+              "title": "Hit Kaito on your turn",
+              "text": "On his turn Kaito is a creature with hexproof. On your turn he's only a planeswalker: Get Lost him then, or attack him."
+            },
+            {
+              "on": "play:Mutavault",
+              "title": "The land that attacks",
+              "text": "Mutavault is a land that becomes a creature. Lockdown and Verdict miss it. March of Otherworldly Light with X=0 exiles it while it's animated."
+            },
+            {
+              "on": "cast:Temporary Lockdown",
+              "title": "Wait for value",
+              "text": "Temporary Lockdown is best when it catches two or three of his permanents. If you can afford it, wait a turn for him to commit more."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "You'll never see Kaito coming. That's rather the point.",
+          "after": "Everything I had cost two. You noticed."
+        },
+        {
+          "id": "pioneer-4c",
+          "type": "duel",
+          "name": "Ottilie Greenbough",
+          "text": "She grows an army at instant speed, then shuts your spells down.",
+          "requires": [
+            "pioneer-4b"
+          ],
+          "deck": "pioneer/meta-izzet-phoenix.dck",
+          "deckName": "Izzet Phoenix",
+          "opponent": {
+            "name": "Ottilie Greenbough",
+            "deck": "pioneer/meta-selesnya-company.dck",
+            "skill": 6
+          },
+          "lesson": {
+            "title": "Izzet Phoenix against creatures",
+            "text": "Selesnya Company goes wide with mana elves and Collected Company, which puts two creatures in at instant speed. Use Fiery Impulse and Lightning Axe on the creatures that matter, then let Phoenixes and Picklock Prankster take over. Archon of Emeria lets each player cast only one spell a turn: kill it before you try a Phoenix turn.",
+            "cards": [
+              "Arclight Phoenix",
+              "Fiery Impulse",
+              "Archon of Emeria",
+              "Collected Company"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Archon of Emeria",
+              "title": "One spell a turn",
+              "text": "Archon of Emeria stops your Phoenix turns. Spend this turn's spell to kill it: it has 3 toughness. Then go back to three spells a turn."
+            },
+            {
+              "on": "play:Thalia, Guardian of Thraben",
+              "title": "A tax on your deck",
+              "text": "Thalia makes noncreature spells cost 1 more, and almost your whole deck is noncreature spells. Kill it first."
+            },
+            {
+              "on": "cast:Collected Company",
+              "title": "Instant-speed army",
+              "text": "Collected Company puts up to two creatures onto the battlefield at the end of your turn. Keep Fiery Impulse for whatever it finds."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Two more friends just arrived. Did you see them come in?",
+          "after": "You burned the garden down to the roots. It'll grow back. Not today, though."
+        },
+        {
+          "id": "pioneer-final",
+          "type": "duel",
+          "name": "Sparks Aldane",
+          "text": "The graduation match: best of three, with sideboards, against the fastest red deck in the room.",
+          "requires": [
+            "pioneer-4c"
+          ],
+          "deck": "pioneer/meta-golgari-midrange.dck",
+          "deckName": "Golgari Midrange",
+          "opponent": {
+            "name": "Sparks Aldane",
+            "deck": "pioneer/meta-mono-red-prowess.dck",
+            "skill": 7
+          },
+          "boss": true,
+          "winsNeeded": 2,
+          "sideboard": "Red's threats are cheap creatures. Bring in the third Culling Ritual (it destroys every nonland permanent with mana value 2 or less), both Nowhere to Run and both Extinction Event (choose odd: it exiles Swiftspear, Soul-Scar Mage, Sunspine Lynx and Screaming Nemesis). Take out Duress, both Tear Asunder and two Thoughtseize: they catch little here, and Thoughtseize's 2 life costs too much.",
+          "lesson": {
+            "title": "Golgari against red: survive, then grind",
+            "text": "Mono-Red Prowess wants you dead by turn five. Kill every early creature with Fatal Push and Abrupt Decay, and cast Thoughtseize only when it takes a real threat: it costs you 2 life. Once Sheoldred lands, every card they draw costs them 2.",
+            "cards": [
+              "Fatal Push",
+              "Abrupt Decay",
+              "Sheoldred, the Apocalypse",
+              "Screaming Nemesis"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Screaming Nemesis",
+              "title": "Don't burn the Nemesis",
+              "text": "Whenever Screaming Nemesis is dealt damage, it deals that much to any other target, and a player hit that way can't gain life for the rest of the game. Destroy it with Abrupt Decay or Fatal Push instead of fighting it."
+            },
+            {
+              "on": "cast:Thoughtseize",
+              "title": "Two life is a lot",
+              "text": "Against red, Thoughtseize's 2 life is close to a burn spell. Take a creature or a Monstrous Rage, never a land."
+            },
+            {
+              "on": "life:8",
+              "title": "Sheoldred's job",
+              "text": "At 8 life or less, Sheoldred is your best card: it gains you 2 each turn and taxes every card they draw. Protect it and block with everything else."
+            }
+          ],
+          "reward": {
+            "coins": 200,
+            "xp": 500,
+            "packs": 2,
+            "wildcard": "rare",
+            "cosmetics": [
+              {
+                "kind": "title",
+                "id": "pioneer-graduate"
+              },
+              {
+                "kind": "sleeve",
+                "id": "school-pioneer"
+              }
+            ]
+          },
+          "before": "Two out of three. I only need you to blink twice.",
+          "after": "You read the meta, you sided right, you took the match. Pioneer's yours now."
+        }
+      ]
+    }
+  ]
+}

@@ -21,11 +21,12 @@ export interface VoiceSnapshot {
   won: boolean;
 }
 
-export function voiceSnapshot(state: GameSessionState, myId: string | null): VoiceSnapshot {
+export function voiceSnapshot(state: GameSessionState, myId: string | null, speaker?: string | null): VoiceSnapshot {
   const view = state.view;
   const foes = (view?.players ?? []).filter((player) => player.playerId !== myId);
-  // only a one-on-one game has one voice across the table
-  const foe = foes.length === 1 ? foes[0] : null;
+  // one voice across the table: the only opponent, or at a pod the seat named as the speaker (its seat name may be cut short)
+  const named = (name: string | undefined) => !!speaker && !!name && (speaker.startsWith(name) || name.startsWith(speaker));
+  const foe = foes.length === 1 ? foes[0] : foes.find((player) => named(player.name)) ?? null;
   const stack = Object.values(view?.stack ?? {});
   return {
     foe: foe?.name ?? null,

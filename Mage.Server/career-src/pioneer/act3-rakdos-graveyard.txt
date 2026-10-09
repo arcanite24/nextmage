@@ -1,0 +1,21 @@
+# name: Ashpit Rakdos
+# archetype: midrange
+# Rakdos midrange that eats graveyards: Graveyard Trespasser and Bloodtithe Harvester backed by removal.
+4 Graveyard Trespasser
+4 Bloodtithe Harvester
+4 Fable of the Mirror-Breaker
+4 Bonecrusher Giant
+4 Kitesail Freebooter
+2 Sheoldred, the Apocalypse
+4 Fatal Push
+3 Cut Down
+3 Lightning Strike
+2 Hero's Downfall
+2 Unlicensed Hearse
+4 Blood Crypt
+4 Blackcleave Cliffs
+4 Sulfurous Springs
+4 Dragonskull Summit
+4 Swamp
+2 Mountain
+2 Hive of the Eye Tyrant

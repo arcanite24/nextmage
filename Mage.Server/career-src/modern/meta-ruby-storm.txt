@@ -1,0 +1,36 @@
+# name: Ruby Storm
+# archetype: combo
+# season: 2026-10
+# source: https://www.mtggoldfish.com/archetype/modern-ruby-storm (Ottawa 2026-27 Round 1 Regional Championship,4th Place, 12-4)
+1 Elegant Parlor
+4 Pyretic Ritual
+1 Gemstone Caverns
+1 Grapeshot
+3 Arid Mesa
+2 Twinned Vision
+3 Reckless Impulse
+4 Ruby Medallion
+2 Scalding Tarn
+4 Ral, Monsoon Mage
+1 Sunbaked Canyon
+2 Wish
+4 Mountain
+4 Desperate Ritual
+3 Past in Flames
+4 Wrenn's Resolve
+2 Valakut Awakening
+1 Wooded Foothills
+1 Sacred Foundry
+1 Artist's Talent
+1 Commercial District
+4 Manamorphose
+4 Hex Magic
+3 Bloodstained Mire
+SB: 1 Gemstone Caverns
+SB: 3 Orim's Chant
+SB: 3 Wear // Tear
+SB: 3 Prismatic Ending
+SB: 1 Past in Flames
+SB: 1 Empty the Warrens
+SB: 1 Grapeshot
+SB: 2 Brotherhood's End

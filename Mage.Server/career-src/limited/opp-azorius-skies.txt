@@ -1,0 +1,26 @@
+# name: Azorius Skies
+# archetype: midrange (Azorius flyers, Foundations)
+# season: 2026-10
+1 Healer's Hawk
+2 Strix Lookout
+1 Youthful Valkyrie
+2 Dazzling Angel
+2 Empyrean Eagle
+1 Mocking Sprite
+1 Aegis Turtle
+1 Vanguard Seraph
+1 Exemplar of Light
+1 Bigfin Bouncer
+1 Icewind Elemental
+1 Skyship Buccaneer
+1 Serra Angel
+1 Banishing Light
+1 Luminous Rebuke
+1 Joust Through
+1 Fleeting Flight
+1 Stroke of Midnight
+1 Uncharted Voyage
+1 Faebloom Trick
+9 Plains
+7 Island
+1 Tranquil Cove

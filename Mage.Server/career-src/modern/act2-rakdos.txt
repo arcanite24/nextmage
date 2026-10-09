@@ -1,0 +1,22 @@
+# name: Rakdos Midrange
+# archetype: midrange
+# season: 2026-10
+4 Ragavan, Nimble Pilferer
+4 Dragon's Rage Channeler
+4 Bloodtithe Harvester
+4 Orcish Bowmasters
+2 Dark Confidant
+2 Kroxa, Titan of Death's Hunger
+2 Fable of the Mirror-Breaker
+4 Lightning Bolt
+4 Fatal Push
+3 Thoughtseize
+2 Terminate
+2 Kolaghan's Command
+4 Blood Crypt
+4 Bloodstained Mire
+3 Polluted Delta
+3 Marsh Flats
+2 Arid Mesa
+4 Swamp
+3 Mountain

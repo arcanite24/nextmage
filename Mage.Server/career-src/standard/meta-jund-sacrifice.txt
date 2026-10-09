@@ -1,0 +1,30 @@
+# name: Jund Sacrifice
+# archetype: midrange
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91839&d=897596&f=ST (2026-10); https://www.mtggoldfish.com/archetype/standard-jund-sacrifice-woe
+4 Callous Inspector
+4 Gene Pollinator
+4 Greedy Freebooter
+4 Biotech Specialist
+3 Umbral Collar Zealot
+4 The Sackville-Bagginses
+4 Rottenmouth Viper
+2 Goldvein Hydra
+3 Lively Dirge
+3 Stir Up Trouble
+4 Obsessive Pursuit
+4 Starting Town
+4 Blooming Marsh
+4 Overgrown Tomb
+2 Stomping Ground
+2 Blood Crypt
+2 Wastewood Verge
+1 Blazemire Verge
+1 Forest
+1 Swamp
+SB: 4 Vengeful Tracker
+SB: 2 The Ooze
+SB: 2 Shoot the Sheriff
+SB: 3 Strategic Betrayal
+SB: 1 Maelstrom Pulse
+SB: 3 Duress

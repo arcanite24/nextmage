@@ -1,0 +1,21 @@
+# name: Big Green
+# archetype: midrange (mono-green creatures, Foundations)
+# season: 2026-10
+2 Llanowar Elves
+2 Wary Thespian
+1 Gnarlid Colony
+2 Beast-Kin Ranger
+1 Ambush Wolf
+1 Eager Trufflesnout
+2 Treetop Snarespinner
+1 Cackling Prowler
+2 Elfsworn Giant
+1 Needletooth Pack
+1 Apothecary Stomper
+1 Quakestrider Ceratops
+2 Giant Growth
+1 Bushwhack
+1 Bite Down
+1 Garruk's Uprising
+1 Blanchwood Armor
+17 Forest

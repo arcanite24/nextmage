@@ -1,0 +1,27 @@
+# name: Venom and Thorns
+# archetype: midrange (Golgari deathtouch, Foundations)
+# season: 2026-10
+1 Infestation Sage
+1 Wary Thespian
+1 Vengeful Bloodwitch
+2 Gutless Plunderer
+1 Ambush Wolf
+1 Vampire Nighthawk
+2 Treetop Snarespinner
+1 Cackling Prowler
+1 Wardens of the Cycle
+1 Lathril, Blade of the Elves
+1 Soul-Shackled Zombie
+1 Needletooth Pack
+1 Tragic Banshee
+1 Elfsworn Giant
+1 Stab
+1 Bake into a Pie
+1 Hero's Downfall
+1 Bite Down
+1 Giant Growth
+1 Fake Your Own Death
+1 Snakeskin Veil
+8 Forest
+8 Swamp
+1 Jungle Hollow

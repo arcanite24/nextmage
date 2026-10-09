@@ -1,0 +1,21 @@
+# name: Rootrot Golgari
+# archetype: midrange
+# Golgari midrange: mana elves, value creatures and one-for-one removal.
+4 Llanowar Elves
+4 Jadelight Ranger
+3 Tireless Tracker
+3 Glissa Sunslayer
+4 Ravenous Chupacabra
+4 Scavenging Ooze
+2 Polukranos Reborn
+3 Binding the Old Gods
+4 Fatal Push
+3 Cut Down
+2 Eat to Extinction
+4 Overgrown Tomb
+4 Woodland Cemetery
+4 Llanowar Wastes
+4 Blooming Marsh
+2 Darkbore Pathway
+3 Forest
+3 Swamp

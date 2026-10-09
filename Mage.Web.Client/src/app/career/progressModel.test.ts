@@ -83,6 +83,7 @@ describe('career progress model', () => {
     expect(hasUnlock(unlocks, 'playmat', 'copper')).toBe(false);
     expect(unlockedIds(unlocks, 'sleeve')).toEqual(['copper', 'gold']);
     expect(titleLabel('questing knight')).toBe('Questing Knight');
+    expect(titleLabel('pauper-graduate')).toBe('Pauper Graduate');
     expect(careerSleeveOf('#6E3F24')).toBe('copper');
     expect(careerSleeveOf('#20302b')).toBeNull();
   });

@@ -1,0 +1,36 @@
+# name: Boros Energy
+# archetype: aggro
+# season: 2026-10
+# source: https://www.mtggoldfish.com/archetype/modern-boros-energy (龙盾杯 MTG China Open S13 Regional Championship,3rd Place, 9-2)
+4 Ajani, Nacatl Pariah
+2 Elegant Parlor
+3 Flooded Strand
+3 Seasoned Pyromancer
+4 Arid Mesa
+2 Dalkovan Encampment
+3 Windswept Heath
+1 Arena of Glory
+2 Thraben Charm
+1 Blood Moon
+4 Guide of Souls
+1 Mountain
+4 Galvanic Discharge
+4 Ragavan, Nimble Pilferer
+4 Voice of Victory
+2 Ranger-Captain of Eos
+3 Goblin Bombardment
+3 Sacred Foundry
+4 Ocelot Pride
+1 Prismatic Ending
+3 Plains
+1 Solitude
+1 Marsh Flats
+SB: 2 High Noon
+SB: 2 Sanctifier en-Vec
+SB: 2 Vexing Bauble
+SB: 1 Blood Moon
+SB: 1 Wear // Tear
+SB: 1 The Legend of Roku
+SB: 2 Obsidian Charmaw
+SB: 2 Wrath of the Skies
+SB: 2 Rest in Peace

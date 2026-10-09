@@ -1,0 +1,35 @@
+# name: Izzet Prowess
+# archetype: aggro
+# season: 2026-10
+# source: https://www.mtgo.com/decklist/pioneer-challenge-32-2026-10-0112855464 (Pioneer Challenge 32, 2026-10-01, 1st) (player Mateusf34)
+4 Academic Dispute
+3 Boomerang Basics
+3 Burst Lightning
+4 Emberheart Challenger
+2 Screaming Nemesis
+3 Reckless Rage
+2 Riverglide Pathway
+2 Mountain
+4 Monastery Swiftspear
+4 Steam Vents
+4 Stormchaser's Talent
+3 Shivan Reef
+4 Sleight of Hand
+4 Flow State
+1 Island
+1 Spell Pierce
+3 Riverpyre Verge
+1 Monstrous Rage
+4 Spirebluff Canal
+4 Pompous Battlemage
+SB: 1 Accumulate Wisdom
+SB: 1 Boomerang Basics
+SB: 1 Firebending Lesson
+SB: 2 Scorching Shot
+SB: 2 Redcap Melee
+SB: 1 Iroh's Demonstration
+SB: 1 Octopus Form
+SB: 1 It'll Quench Ya!
+SB: 1 Soul-Guide Lantern
+SB: 2 Spell Pierce
+SB: 2 Quantum Riddler

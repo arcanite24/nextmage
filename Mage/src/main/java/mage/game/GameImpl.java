@@ -921,6 +921,20 @@ public abstract class GameImpl implements Game {
         }
     }
 
+    /** whether the game had human players and none of them is still in it */
+    private boolean humansAreOut() {
+        boolean humans = false;
+        for (Player player : state.getPlayers().values()) {
+            if (player.isHuman()) {
+                humans = true;
+                if (!player.hasLeft() && !player.hasLost()) {
+                    return false;
+                }
+            }
+        }
+        return humans;
+    }
+
     @Override
     public boolean checkIfGameIsOver() {
         if (state.isGameOver()) {
@@ -941,6 +955,22 @@ public abstract class GameImpl implements Game {
             if (player.hasLost()) {
                 numLosers++;
             }
+        }
+
+        // a game set up to end with its humans (a Career pod): the AI players left don't play it out
+        GameSetup setup = gameOptions == null ? null : gameOptions.setup;
+        if (setup != null && setup.endsWhenHumansAreOut() && humansAreOut()) {
+            end();
+            Player leader = null;
+            for (Player player : state.getPlayers().values()) {
+                if (!player.hasLeft() && !player.hasLost() && (leader == null || player.getLife() > leader.getLife())) {
+                    leader = player;
+                }
+            }
+            if (leader != null) {
+                leader.won(this);
+            }
+            return true;
         }
 
         // stop on no more active players

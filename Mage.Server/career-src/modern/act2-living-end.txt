@@ -1,0 +1,23 @@
+# name: Temur Living End
+# archetype: combo
+# season: 2026-10
+4 Living End
+4 Shardless Agent
+4 Violent Outburst
+4 Street Wraith
+4 Generous Ent
+4 Curator of Mysteries
+4 Striped Riverwinder
+4 Endurance
+4 Subtlety
+3 Force of Negation
+2 Oliphaunt
+4 Misty Rainforest
+3 Wooded Foothills
+1 Scalding Tarn
+2 Breeding Pool
+2 Stomping Ground
+1 Steam Vents
+3 Forest
+2 Island
+1 Mountain

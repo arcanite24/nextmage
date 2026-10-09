@@ -171,6 +171,10 @@ public final class CareerProgress {
         public int stars;
         /** the run or week this game belongs to */
         public String ref;
+        /** a campaign trial: a set position, not a game */
+        public boolean trial;
+        /** sleeves, titles and the like this game gave */
+        public List<CareerCosmetic> cosmetics = new ArrayList<>();
 
         public CareerModeResult() {
         }
@@ -449,7 +453,8 @@ public final class CareerProgress {
         }
 
         // the weekly goal: Career wins only, and not puzzles or the weekly challenge
-        boolean weeklyGame = result.mode == null || !("puzzle".equals(result.mode.kind) || "challenge".equals(result.mode.kind));
+        boolean weeklyGame = result.mode == null
+                || !("puzzle".equals(result.mode.kind) || "challenge".equals(result.mode.kind) || result.mode.trial);
         if (result.career && result.won && weeklyGame) {
             String week = week();
             int before = store.weeklyWins(user, week);

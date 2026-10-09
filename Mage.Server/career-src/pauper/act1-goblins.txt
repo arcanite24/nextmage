@@ -1,0 +1,14 @@
+# name: Goblin Rush
+# archetype: aggro
+4 Goblin Arsonist
+4 Mogg War Marshal
+4 Goblin Instigator
+4 Goblin Heelcutter
+4 Beetleback Chief
+4 Goblin Bushwhacker
+4 Lightning Bolt
+4 Chain Lightning
+2 Fireblast
+4 Goblin Sledder
+4 Skirk Prospector
+18 Mountain

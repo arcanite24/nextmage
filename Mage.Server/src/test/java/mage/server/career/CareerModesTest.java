@@ -95,11 +95,61 @@ public class CareerModesTest {
         }
     }
 
+    /** a format school's shape (CURRICULUM.md); Mage.Tests' CareerSchoolsTest checks its decks are legal and its cards real */
+    private void school(Map<String, CareerCampaigns.Campaign> campaigns, CareerCampaigns.Campaign school) throws Exception {
+        assertNotNull(school.format, school.id);
+        assertNotNull(school.deckType, school.id);
+        assertNotNull(school.gameType, school.id);
+        assertEquals(4, school.chapters.size(), school.id + " has four acts");
+        assertNotNull(school.requires, school.id + " opens by its requirements");
+        for (String requirement : school.requires) {
+            for (String alternative : requirement.split("\\|")) {
+                String id = alternative.contains("@") ? alternative.substring(0, alternative.indexOf('@')) : alternative;
+                assertTrue(campaigns.containsKey(id), school.id + " requires a campaign, not " + alternative);
+            }
+        }
+        Set<String> ids = new HashSet<>();
+        CareerCampaigns.Node last = null;
+        for (CareerCampaigns.Chapter chapter : school.chapters) {
+            for (CareerCampaigns.Node node : chapter.nodes) {
+                assertTrue(ids.add(node.id), "node ids are unique: " + node.id);
+                if ("duel".equals(node.type)) {
+                    assertNotNull(node.deck != null ? node.deck : chapter.deck, node.id + " has a deck to play");
+                    deck(node.deck != null ? node.deck : chapter.deck);
+                    assertNotNull(node.opponent, node.id);
+                    deck(node.opponent.deck);
+                    twists(node.id, node.opponent.twists);
+                    if (node.opponents != null) {
+                        for (CareerCampaigns.NodeOpponent other : node.opponents) {
+                            deck(other.deck);
+                        }
+                    }
+                    assertNotNull(node.lesson, node.id + " teaches something");
+                } else if ("trial".equals(node.type)) {
+                    assertNotNull(node.trial, node.id);
+                    side(node.id + " you", node.trial.you);
+                    side(node.id + " opponent", node.trial.opponent);
+                } else {
+                    assertEquals("choice", node.type, node.id);
+                }
+                last = node;
+            }
+        }
+        assertNotNull(last);
+        assertEquals(2, last.winsNeeded, school.id + " ends in a best of three");
+        assertTrue(last.reward != null && last.reward.cosmetics != null && last.reward.cosmetics.size() >= 2,
+                school.id + " graduates with a title and a sleeve");
+    }
+
     @Test
     public void theContentIsWellFormed() throws Exception {
         Map<String, CareerCampaigns.Campaign> campaigns = CareerCampaigns.get().campaigns();
         assertFalse(campaigns.isEmpty(), "a campaign");
         for (CareerCampaigns.Campaign campaign : campaigns.values()) {
+            if (campaign.school) {
+                school(campaigns, campaign);
+                continue;
+            }
             assertEquals(5, campaign.chapters.size(), campaign.id + " has five chapters");
             Set<String> ids = new HashSet<>();
             for (CareerCampaigns.Chapter chapter : campaign.chapters) {
@@ -217,6 +267,117 @@ public class CareerModesTest {
         assertEquals("M21", beat.mode.unlockedSet, "the chapter opens its set");
         assertTrue(store.setUnlocks("Ana").contains("M21"));
         assertTrue(campaigns.campaigns("Ana").get(0).chapters.get(0).done);
+    }
+
+    // ---- schools
+
+    private CareerCampaigns.CareerCampaign view(String id) throws Exception {
+        return CareerCampaigns.get().campaigns("Ana").stream().filter(campaign -> campaign.id.equals(id)).findFirst().orElse(null);
+    }
+
+    private CareerCampaigns.Node node(String campaign, String id) {
+        return CareerCampaigns.get().campaigns().get(campaign).chapters.stream().flatMap(chapter -> chapter.nodes.stream())
+                .filter(node -> node.id.equals(id)).findFirst().orElse(null);
+    }
+
+    @Test
+    public void aSchoolOpensByItsRequirements() throws Exception {
+        CareerCampaigns campaigns = CareerCampaigns.get();
+        CareerCampaigns.CareerCampaign pauper = view("pauper");
+        assertTrue(pauper.school);
+        assertFalse(pauper.open, "closed until a Five Paths boss falls");
+        assertEquals(Arrays.asList("five-paths@1"), pauper.missing);
+        assertEquals("locked", pauper.chapters.get(0).nodes.get(0).state, "a closed school's first duel is locked");
+        assertThrows(CareerService.CareerException.class, () -> campaigns.plan("Ana", "pauper", "pauper-1a"));
+
+        store.finishCampaignNode("Ana", "five-paths", "white-5", null, 1L);
+        pauper = view("pauper");
+        assertTrue(pauper.open);
+        assertEquals("open", pauper.chapters.get(0).nodes.get(0).state);
+        assertEquals(1, view("five-paths").bosses);
+        assertFalse(view("pioneer").open, "Pioneer wants two Pauper acts or three Five Paths chapters");
+
+        store.finishCampaignNode("Ana", "five-paths", "blue-5", null, 1L);
+        store.finishCampaignNode("Ana", "five-paths", "black-5", null, 1L);
+        assertTrue(view("pioneer").open, "either alternative opens it");
+    }
+
+    @Test
+    public void aSchoolDuelIsPlayedInItsFormat() throws Exception {
+        CareerCampaigns campaigns = CareerCampaigns.get();
+        store.finishCampaignNode("Ana", "five-paths", "white-5", null, 1L);
+        CareerCampaigns.DuelPlan first = campaigns.plan("Ana", "pauper", "pauper-1a");
+        assertEquals("campaign", first.kind);
+        assertEquals("Constructed - Pauper", first.deckType);
+        assertEquals("Two Player Duel", first.gameType);
+        assertEquals(1, first.winsNeeded);
+        assertEquals(1, first.seats.size());
+        assertEquals(first.opponentName, first.seats.get(0).name);
+        assertTrue(first.setup == null || !first.setup.endsWhenHumansAreOut());
+
+        // a pod: the same table seats every AI, as a free-for-all
+        CareerCampaigns.Node pod = node("commander", "commander-4a");
+        before:
+        for (CareerCampaigns.Chapter chapter : campaigns.campaigns().get("commander").chapters) {
+            for (CareerCampaigns.Node node : chapter.nodes) {
+                if (node == pod) {
+                    break before;
+                }
+                store.finishCampaignNode("Ana", "commander", node.id, node.options == null ? null : node.options.get(0).id, 1L);
+            }
+        }
+        CareerCampaigns.DuelPlan podPlan = campaigns.plan("Ana", "commander", "commander-4a");
+        assertEquals("Commander Free For All", podPlan.gameType);
+        assertEquals("Variant Magic - Commander", podPlan.deckType);
+        assertEquals(1 + pod.opponents.size(), podPlan.seats.size());
+        assertTrue(podPlan.seats.size() >= 3, "a four-player pod");
+        assertTrue(podPlan.setup.endsWhenHumansAreOut(), "a pod ends once the player is out");
+    }
+
+    @Test
+    public void aTrialIsATurnThatFinishesItsNode() throws Exception {
+        CareerCampaigns campaigns = CareerCampaigns.get();
+        store.finishCampaignNode("Ana", "five-paths", "white-5", null, 1L);
+        CareerCampaigns.Node trial = node("pauper", "pauper-1t");
+        assertEquals("trial", trial.type);
+        for (String id : trial.requires) {
+            store.finishCampaignNode("Ana", "pauper", id, null, 1L);
+        }
+        CareerCampaigns.DuelPlan plan = campaigns.plan("Ana", "pauper", "pauper-1t");
+        assertEquals("trial", plan.kind);
+        assertTrue(plan.setup.replacesOpeningHands(), "a set position");
+        assertNotNull(plan.setup.puzzle().you);
+
+        CareerProgress.CareerGameResult failed = play("trial", plan.key, plan.setup, false);
+        assertEquals(0, failed.coins, "a failed trial pays nothing");
+        assertTrue(failed.mode.trial);
+        CareerProgress.CareerGameResult passed = play("trial", plan.key, plan.setup, true);
+        assertEquals(trial.reward.coins, passed.coins, "only the node's reward: a trial isn't a game");
+        assertEquals("done", view("pauper").chapters.get(0).nodes.stream().filter(node -> node.id.equals("pauper-1t"))
+                .findFirst().get().state);
+        assertEquals(0, store.weeklyWins("Ana", CareerProgress.get().week()), "a trial isn't a weekly win");
+    }
+
+    @Test
+    public void graduationPaysTheSchoolsTitleAndSleeve() throws Exception {
+        store.finishCampaignNode("Ana", "five-paths", "white-5", null, 1L);
+        CareerCampaigns.Campaign pauper = CareerCampaigns.get().campaigns().get("pauper");
+        CareerCampaigns.Node last = null;
+        for (CareerCampaigns.Chapter chapter : pauper.chapters) {
+            for (CareerCampaigns.Node node : chapter.nodes) {
+                if (last != null) {
+                    store.finishCampaignNode("Ana", "pauper", last.id, last.options == null ? null : last.options.get(0).id, 1L);
+                }
+                last = node;
+            }
+        }
+        CareerCampaigns.DuelPlan finalPlan = CareerCampaigns.get().plan("Ana", "pauper", last.id);
+        assertEquals(2, finalPlan.winsNeeded, "the final is a best of three");
+        CareerProgress.CareerGameResult graduated = play("campaign", finalPlan.key, finalPlan.setup, true);
+        assertEquals(2, graduated.mode.cosmetics.size(), "a title and a sleeve");
+        assertTrue(graduated.mode.lines.stream().anyMatch(line -> line.startsWith("You graduated")));
+        assertEquals(Integer.valueOf(1), store.stats("Ana").get("schools_graduated"));
+        assertEquals(pauper.chapters.size(), view("pauper").bosses);
     }
 
     // ---- puzzles

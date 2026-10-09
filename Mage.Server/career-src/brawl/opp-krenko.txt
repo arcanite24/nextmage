@@ -1,0 +1,39 @@
+# name: Krenko's Mob
+# archetype: aggro (mono-red goblins)
+# season: 2026-10
+CMDR: Krenko, Mob Boss
+1 Fanatical Firebrand
+1 Searslicer Goblin
+1 Courageous Goblin
+1 Goblin Boarders
+1 Frenzied Goblin
+1 Heartfire Immolator
+1 Axgard Cavalry
+1 Brazen Scourge
+1 Battlesong Berserker
+1 Sower of Chaos
+1 Gorehorn Raider
+1 Strongbox Raider
+1 Spitfire Lagac
+1 Dragon Trainer
+1 Shivan Dragon
+1 Firespitter Whelp
+1 Crime Novelist
+1 Hexing Squelcher
+1 Dragonlord's Servant
+1 Breeches, Eager Pillager
+1 Guttersnipe
+1 Emberheart Challenger
+1 Burst Lightning
+1 Abrade
+1 Lightning Strike
+1 Shock
+1 Fiery Annihilation
+1 Goblin Surprise
+1 Dragon Fodder
+1 Impact Tremors
+1 Quick-Draw Katana
+1 Goldvein Pick
+1 Swiftfoot Boots
+1 Heraldic Banner
+25 Mountain

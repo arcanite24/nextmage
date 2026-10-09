@@ -1,0 +1,932 @@
+{
+  "id": "limited",
+  "name": "The Limited School",
+  "format": "Limited",
+  "school": true,
+  "order": 3,
+  "colors": "GW",
+  "summary": "Forty cards from one set. Curve, combat maths and the draft table.",
+  "text": "In Limited you build your deck on the day, from packs you open or draft. Every deck has 40 cards and about 17 lands, every game is decided in combat, and the best players are the ones who count. You'll learn the curve, the two-colour archetypes, combat tricks and removal, and finish with the decks winning the newest set's drafts.",
+  "deckType": "Limited",
+  "gameType": "Two Player Duel",
+  "requires": [
+    "five-paths@1"
+  ],
+  "chapters": [
+    {
+      "id": "limited-1",
+      "name": "First steps",
+      "text": "Limited means you build a deck from cards you open on the day: a draft, where you pick one card at a time from packs passed around a table, or sealed, where you open six packs and build from those. Forty cards, one set, no banlist. These duels use Foundations, a set built to teach.",
+      "deck": "limited/starter.dck",
+      "deckName": "Leaf and Banner",
+      "unlockSet": "FDN",
+      "nodes": [
+        {
+          "id": "limited-1a",
+          "type": "duel",
+          "name": "Old Bram Furrow",
+          "text": "A farmer whose beasts are bigger than his barn.",
+          "requires": [],
+          "opponent": {
+            "name": "Old Bram Furrow",
+            "deck": "limited/opp-big-green.dck",
+            "skill": 1
+          },
+          "lesson": {
+            "title": "Forty cards, seventeen lands",
+            "text": "A Limited deck is 40 cards: about 17 lands, 15 to 17 creatures, and a few tricks and removal spells. Play a land every turn and a creature on curve: a two-drop on turn two, a three-drop on turn three. Bram's beasts are big but slow, so get your board down first and attack where he can't block well.",
+            "cards": [
+              "Wary Thespian",
+              "Prideful Parent",
+              "Felidar Savior",
+              "Beast-Kin Ranger"
+            ]
+          },
+          "tips": [
+            {
+              "on": "mulligan",
+              "title": "Keep two to five lands",
+              "text": "With 17 lands in 40 cards, a hand with two to five lands and something cheap to cast is a keep. One land or six is a mulligan."
+            },
+            {
+              "on": "turn:2",
+              "title": "Spend your mana",
+              "text": "Mana you don't spend this turn is gone. On turn two, cast a two-mana creature if you have one."
+            },
+            {
+              "on": "cast:Giant Growth",
+              "title": "A combat trick",
+              "text": "Giant Growth gives +3/+3 until end of turn, cast during combat. Before you attack into Bram, count his untapped Forests."
+            }
+          ],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          },
+          "before": "Got beasts bigger than your barn, I have. Come and see.",
+          "after": "Small critters, played early. Should've thought of that."
+        },
+        {
+          "id": "limited-1b",
+          "type": "duel",
+          "name": "Pip Kestrel",
+          "text": "She plays a creature every turn and attacks with all of them.",
+          "requires": [
+            "limited-1a"
+          ],
+          "opponent": {
+            "name": "Pip Kestrel",
+            "deck": "limited/opp-boros-rush.dck",
+            "skill": 2
+          },
+          "lesson": {
+            "title": "Curve and blockers",
+            "text": "Pip's deck is cheap creatures and she attacks with everything. You don't need to race her. Block with creatures that survive, trade your two-drops for hers, and let your four- and five-drops take over. If her board could kill you in two turns, keep blockers home.",
+            "cards": [
+              "Treetop Snarespinner",
+              "Felidar Savior",
+              "Luminous Rebuke",
+              "Elfsworn Giant"
+            ]
+          },
+          "tips": [
+            {
+              "on": "block",
+              "title": "Good trades",
+              "text": "Block when your creature survives, or when it trades with something that cost as much or more. Treetop Snarespinner has deathtouch: any damage it deals is enough to destroy a creature."
+            },
+            {
+              "on": "play:Swiftblade Vindicator",
+              "title": "Double strike",
+              "text": "Swiftblade Vindicator deals first-strike damage and then regular damage. Small blockers die before they hit back, so use removal on it."
+            },
+            {
+              "on": "life:10",
+              "title": "Halfway",
+              "text": "Below 10 life against an aggro deck, stop attacking with creatures you need as blockers. Stabilise first, then turn the corner."
+            }
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          },
+          "before": "Fast hands win, slowpoke. Let's go!",
+          "after": "You just stood there and blocked. Rude."
+        },
+        {
+          "id": "limited-1t",
+          "type": "trial",
+          "name": "Spend it all",
+          "text": "Your opponent is at 7 life behind a 0/5 Aegis Turtle. You have five lands. Win this turn.",
+          "hint": "Cast Felidar Savior before combat with both Plains and two Forests, and put its counters on both attackers. Attack with both, then cast Giant Growth after blockers.",
+          "requires": [
+            "limited-1b"
+          ],
+          "lesson": {
+            "title": "Use your mana",
+            "text": "Mana you don't use is wasted. Before you attack, cast what makes the attack better, and keep enough open for your trick. Here your creature spell and your trick together are exactly enough.",
+            "cards": [
+              "Felidar Savior",
+              "Beast-Kin Ranger",
+              "Giant Growth",
+              "Aegis Turtle"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Felidar Savior",
+                "Giant Growth"
+              ],
+              "battlefield": [
+                "Forest",
+                "Forest",
+                "Forest",
+                "Plains",
+                "Plains",
+                "Wary Thespian",
+                "Beast-Kin Ranger"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Prideful Parent",
+                "Forest"
+              ]
+            },
+            "opponent": {
+              "life": 7,
+              "hand": [],
+              "battlefield": [
+                "Aegis Turtle",
+                "Island|tapped",
+                "Island|tapped"
+              ],
+              "graveyard": [],
+              "library": [
+                "Island",
+                "Strix Lookout",
+                "Island"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "limited-1boss",
+          "type": "duel",
+          "name": "Wing-Captain Odile",
+          "text": "Her squadron has never had to land.",
+          "requires": [
+            "limited-1t"
+          ],
+          "opponent": {
+            "name": "Wing-Captain Odile",
+            "deck": "limited/opp-azorius-skies.dck",
+            "skill": 3,
+            "twists": {
+              "extraCards": 1
+            }
+          },
+          "lesson": {
+            "title": "Answer the air",
+            "text": "Odile wins in the air, where most of your creatures can't block. Your answers are reach (Treetop Snarespinner, Elfsworn Giant), removal (Banishing Light, Luminous Rebuke) and racing her on the ground. She starts with an extra card. Save removal for Empyrean Eagle, which makes her other flyers bigger.",
+            "cards": [
+              "Treetop Snarespinner",
+              "Elfsworn Giant",
+              "Banishing Light",
+              "Empyrean Eagle"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Empyrean Eagle",
+              "title": "The lord",
+              "text": "Empyrean Eagle gives her other flyers +1/+1. It's the best target for Banishing Light or Luminous Rebuke."
+            },
+            {
+              "on": "attack",
+              "title": "Race on the ground",
+              "text": "Her flyers are small and can't block your big ground creatures well. If you're ahead on damage, keep attacking."
+            },
+            {
+              "on": "life:8",
+              "title": "Count her flyers",
+              "text": "Add up the power of her flyers. If that kills you next turn, keep your reach creatures home and spend removal now."
+            }
+          ],
+          "reward": {
+            "coins": 80,
+            "xp": 250,
+            "deckCards": true,
+            "unlockSet": "FDN"
+          },
+          "boss": true,
+          "before": "Look up, groundling. That's where the fight is.",
+          "after": "Grounded by a spider. I'll never live it down."
+        }
+      ]
+    },
+    {
+      "id": "limited-2",
+      "name": "Archetypes",
+      "text": "Every Limited set is built around two-colour archetypes, one for each pair of colours. In a game, each deck plays a role: the beatdown attacks, the control deck answers. Four loaner decks, four roles.",
+      "nodes": [
+        {
+          "id": "limited-2a",
+          "type": "duel",
+          "name": "Wend Mirelock",
+          "text": "A patient grower whose creatures get bigger every turn.",
+          "deck": "limited/act2-aggro.dck",
+          "deckName": "Raid Party",
+          "requires": [
+            "limited-1boss"
+          ],
+          "opponent": {
+            "name": "Wend Mirelock",
+            "deck": "limited/opp-simic-counters.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "You're the beatdown",
+            "text": "Your deck is cheap Rakdos creatures and burn; Wend's creatures grow with +1/+1 counters, so you lose a long game. Race: attack every turn, count damage, and spend removal on blockers rather than on threats you can outrun. Raid cards reward attacking first and casting them after combat.",
+            "cards": [
+              "Goblin Boarders",
+              "Gorehorn Raider",
+              "Burst Lightning",
+              "Perforating Artist"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Gorehorn Raider",
+              "title": "Raid",
+              "text": "Raid checks whether you attacked this turn. Attack first, then cast Gorehorn Raider in your second main phase for its 2 damage."
+            },
+            {
+              "on": "play:Zimone, Paradox Sculptor",
+              "title": "Kill the engine",
+              "text": "Zimone puts counters on two creatures every turn. If you can't race that, spend your removal on her now."
+            },
+            {
+              "on": "opponentLife:7",
+              "title": "Reach",
+              "text": "Count your burn. Burst Lightning, Boltwave and Gorehorn Raider can deal the last points without getting past blockers."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Patience, little raider. Everything I plant grows.",
+          "after": "Too fast for my garden. Next season, maybe."
+        },
+        {
+          "id": "limited-2b",
+          "type": "duel",
+          "name": "Scrap Tully",
+          "text": "A goblin boss with more friends than sense.",
+          "deck": "limited/act2-midrange.dck",
+          "deckName": "Morbid Garden",
+          "requires": [
+            "limited-2a"
+          ],
+          "opponent": {
+            "name": "Scrap Tully",
+            "deck": "limited/opp-red-goblins.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Trade, then take over",
+            "text": "Now you're the bigger Golgari deck against a swarm. Trade early: block goblins, Stab and Bite Down their best attackers, and don't race. Once their hand is empty, your four- and five-drops outclass anything they have. Then turn the corner and attack.",
+            "cards": [
+              "Gutless Plunderer",
+              "Treetop Snarespinner",
+              "Stab",
+              "Needletooth Pack"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Krenko, Mob Boss",
+              "title": "Krenko first",
+              "text": "Krenko, Mob Boss doubles the goblins every time it taps. Kill it before it untaps."
+            },
+            {
+              "on": "block",
+              "title": "Deathtouch blocks",
+              "text": "Gutless Plunderer and Treetop Snarespinner destroy whatever they block. Put them in front of the biggest attacker."
+            },
+            {
+              "on": "life:8",
+              "title": "Hold the line",
+              "text": "Below 8 life, keep enough blockers home to survive their whole team plus a Burst Lightning."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "More goblins than you've got blockers. Do the maths.",
+          "after": "You did the maths. I hate maths."
+        },
+        {
+          "id": "limited-2choice",
+          "type": "choice",
+          "name": "The draft table",
+          "text": "A drafter across the table offers a trade for your spare picks.",
+          "requires": [
+            "limited-2b"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        },
+        {
+          "id": "limited-2c",
+          "type": "duel",
+          "name": "Sister Marrow",
+          "text": "She turns every point of life she gains into a weapon.",
+          "deck": "limited/act2-control.dck",
+          "deckName": "Threshold Tide",
+          "requires": [
+            "limited-2choice"
+          ],
+          "opponent": {
+            "name": "Sister Marrow",
+            "deck": "limited/opp-orzhov-lifegain.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Control: one for one",
+            "text": "You're the Dimir control deck. Answer each of her creatures with a removal spell or a counter, block with high-toughness creatures, and draw extra cards with Dreadwing Scavenger and Think Twice. Seven cards in your graveyard turn on threshold and make your creatures bigger. You win late, with more cards and flyers.",
+            "cards": [
+              "Dreadwing Scavenger",
+              "Bake into a Pie",
+              "Essence Scatter",
+              "Consuming Aberration"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Marauding Blight-Priest",
+              "title": "The drain",
+              "text": "Marauding Blight-Priest makes you lose 1 life every time she gains life. It's worth a removal spell."
+            },
+            {
+              "on": "opponentSpell",
+              "title": "Counter or not",
+              "text": "Counter the creatures that would take over the game; let small ones resolve and block them. Essence Scatter only counters creature spells."
+            },
+            {
+              "on": "graveyard:7",
+              "title": "Threshold",
+              "text": "Seven cards in your graveyard: Dreadwing Scavenger gets +1/+1 and deathtouch, and Billowing Shriekmass gets bigger."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Every drop of life is a blessing. I'll take yours too.",
+          "after": "You answered every prayer. Rudely."
+        },
+        {
+          "id": "limited-2d",
+          "type": "duel",
+          "name": "Juno Fairweather",
+          "text": "Her cats come in litters.",
+          "deck": "limited/act2-combo.dck",
+          "deckName": "Spellslinger",
+          "requires": [
+            "limited-2c"
+          ],
+          "opponent": {
+            "name": "Juno Fairweather",
+            "deck": "limited/opp-white-cats.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Your engine first",
+            "text": "Your Izzet deck is a spells engine: Firebrand Archer and Firespitter Whelp hit your opponent each time you cast a noncreature spell, and prowess creatures grow. Play as if Juno weren't there, keep your engine creatures out of combat, and spend burn on her cats only when it buys you a turn.",
+            "cards": [
+              "Firebrand Archer",
+              "Firespitter Whelp",
+              "Balmor, Battlemage Captain",
+              "Burst Lightning"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Arahbo, the First Fang",
+              "title": "Kill the lord",
+              "text": "Arahbo makes her other cats bigger and makes more of them. Burn it now; this is the spell that buys you turns."
+            },
+            {
+              "on": "cast:Boltwave",
+              "title": "Face",
+              "text": "Boltwave only hits players. With Firebrand Archer out, one spell is 4 damage."
+            },
+            {
+              "on": "life:6",
+              "title": "Buy a turn",
+              "text": "At low life, use your spells as removal on the biggest attackers. Interact only when it keeps you alive another turn."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "My cats don't care how clever your spells are.",
+          "after": "Fine. They care a little."
+        }
+      ]
+    },
+    {
+      "id": "limited-3",
+      "name": "The combat step",
+      "text": "Limited games are decided in combat: who blocks what, which trick comes when, and which creature your removal kills. This act is about doing the maths before you click.",
+      "deck": "limited/signature.dck",
+      "deckName": "Fight Club",
+      "nodes": [
+        {
+          "id": "limited-3t1",
+          "type": "trial",
+          "name": "Add, then multiply",
+          "text": "Your opponent is at 11 life behind a 0/5 Aegis Turtle. You have three lands and three tricks. Win this turn.",
+          "hint": "Attack with both creatures. After blockers, cast Giant Growth first and Bulk Up second, both on the creature that wasn't blocked.",
+          "requires": [
+            "limited-2d"
+          ],
+          "lesson": {
+            "title": "Combat maths",
+            "text": "Cast tricks after blockers are declared, when you know which creature got through. Order matters too: Bulk Up doubles power, so add +3 first and double afterwards. Count before you click.",
+            "cards": [
+              "Bulk Up",
+              "Giant Growth",
+              "Sure Strike",
+              "Brazen Scourge"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Giant Growth",
+                "Bulk Up",
+                "Sure Strike"
+              ],
+              "battlefield": [
+                "Forest",
+                "Mountain",
+                "Mountain",
+                "Brazen Scourge",
+                "Wary Thespian"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Mountain",
+                "Elfsworn Giant"
+              ]
+            },
+            "opponent": {
+              "life": 11,
+              "hand": [],
+              "battlefield": [
+                "Aegis Turtle",
+                "Plains|tapped",
+                "Plains|tapped"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Dazzling Angel",
+                "Plains"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "limited-3a",
+          "type": "duel",
+          "name": "Nettle Vane",
+          "text": "Everything she grows is poisonous.",
+          "requires": [
+            "limited-3t1"
+          ],
+          "opponent": {
+            "name": "Nettle Vane",
+            "deck": "limited/opp-golgari-deathtouch.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Deathtouch changes the maths",
+            "text": "Nettle's creatures have deathtouch, so any damage they deal destroys a creature. Don't attack your best creature into a deathtouch blocker: remove the blocker first with Burst Lightning or Abrade, or attack with something you don't mind trading. Bite Down and Felling Blow let your creature deal damage without taking any back.",
+            "cards": [
+              "Bite Down",
+              "Burst Lightning",
+              "Gutless Plunderer",
+              "Treetop Snarespinner"
+            ]
+          },
+          "tips": [
+            {
+              "on": "attack",
+              "title": "Check for deathtouch",
+              "text": "Before you attack, look at her untapped creatures. A 1/4 deathtouch blocker trades with your 12/8. Remove it or attack with something small."
+            },
+            {
+              "on": "cast:Bite Down",
+              "title": "One-sided",
+              "text": "Bite Down makes your creature deal damage without taking any back, even from a deathtouch creature."
+            },
+            {
+              "on": "play:Lathril, Blade of the Elves",
+              "title": "Menace",
+              "text": "Lathril has menace (it can't be blocked except by two or more creatures) and makes Elves when it hits you. Burn it or keep two blockers back."
+            }
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          },
+          "before": "Touch anything of mine and it touches you back. Once.",
+          "after": "You never let them touch you. Clever."
+        },
+        {
+          "id": "limited-3t2",
+          "type": "trial",
+          "name": "The bomb comes first",
+          "text": "Your opponent is at 6 life, and Herald of Eternal Dawn says they can't lose the game. Win this turn.",
+          "hint": "Bite Down with Quakestrider Ceratops on Herald of Eternal Dawn, then Fiery Annihilation on Vampire Nighthawk, then attack with everything.",
+          "requires": [
+            "limited-3a"
+          ],
+          "lesson": {
+            "title": "Removal priority",
+            "text": "A bomb is a card that wins the game alone, and your removal belongs on it first. Here the Herald stops you winning at all, and only one of your cards can kill a 6/6. Then spend the rest on the blocker that would gain them life.",
+            "cards": [
+              "Bite Down",
+              "Fiery Annihilation",
+              "Quakestrider Ceratops",
+              "Herald of Eternal Dawn"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Bite Down",
+                "Fiery Annihilation"
+              ],
+              "battlefield": [
+                "Forest",
+                "Forest",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Quakestrider Ceratops",
+                "Brazen Scourge",
+                "Wary Thespian"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Mountain",
+                "Giant Growth"
+              ]
+            },
+            "opponent": {
+              "life": 6,
+              "hand": [],
+              "battlefield": [
+                "Herald of Eternal Dawn",
+                "Vampire Nighthawk",
+                "Aegis Turtle",
+                "Plains|tapped",
+                "Plains|tapped",
+                "Plains|tapped",
+                "Plains|tapped",
+                "Plains|tapped",
+                "Swamp|tapped",
+                "Swamp|tapped"
+              ],
+              "graveyard": [],
+              "library": [
+                "Plains",
+                "Serra Angel",
+                "Swamp"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "limited-3boss",
+          "type": "duel",
+          "name": "Sabra Cinderwing",
+          "text": "Her roost holds two dragons that end games on their own.",
+          "requires": [
+            "limited-3t2"
+          ],
+          "opponent": {
+            "name": "Sabra Cinderwing",
+            "deck": "limited/opp-izzet-dragons.dck",
+            "skill": 5,
+            "twists": {
+              "startingLife": 25
+            }
+          },
+          "lesson": {
+            "title": "Bombs and answers",
+            "text": "Sabra's deck holds real bombs: Twinflame Tyrant doubles her damage, and Drakuseth burns three things every time it attacks. Hold Fiery Annihilation for them, not for the first flyer you see. Win on the ground with big creatures and tricks before her dragons take over. She starts at 25 life.",
+            "cards": [
+              "Fiery Annihilation",
+              "Twinflame Tyrant",
+              "Drakuseth, Maw of Flames",
+              "Ashroot Animist"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Twinflame Tyrant",
+              "title": "Bomb on the table",
+              "text": "Twinflame Tyrant doubles all the damage she deals to you and your creatures. This is what Fiery Annihilation was for."
+            },
+            {
+              "on": "play:Drakuseth, Maw of Flames",
+              "title": "Answer it now",
+              "text": "Drakuseth deals 10 damage across three targets when it attacks. Kill it before her next combat."
+            },
+            {
+              "on": "cast:Bulk Up",
+              "title": "After blockers",
+              "text": "Cast tricks after blocks, when you know which fight you're in. Bulk Up after Giant Growth doubles the bigger number."
+            }
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "packs": 1
+          },
+          "boss": true,
+          "before": "Bring your little tricks. My dragons don't do tricks.",
+          "after": "You saved your answer for the right dragon. Hm."
+        }
+      ]
+    },
+    {
+      "id": "limited-4",
+      "name": "The meta",
+      "text": "Reality Fracture is the newest set, and these are the decks winning its drafts right now: the strongest two-colour pairs on 17lands, a site that collects draft results. Learn them here, then draft them for real in Career's solo draft and sealed.",
+      "nodes": [
+        {
+          "id": "limited-4a",
+          "type": "duel",
+          "name": "Vex Harrow",
+          "text": "Every cut she deals is small. She deals a lot of them.",
+          "deck": "limited/meta-gruul-konstrari.dck",
+          "deckName": "Gruul Konstrari",
+          "requires": [
+            "limited-3boss"
+          ],
+          "opponent": {
+            "name": "Vex Harrow",
+            "deck": "limited/meta-rakdos-stingerquill.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Reality Fracture: Gruul",
+            "text": "Gruul artifacts is one of the set's best decks: Heartwood tokens, artifacts that tap for red or green, ramp you into Craftwork Crusher and Hungering Puppetbeast. Vex plays Rakdos, which chips you with damage that doesn't need to attack. Block early, kill Master of Barbs on sight, and let your big creatures take over.",
+            "cards": [
+              "Craftwork Crusher",
+              "Konstrari Improviser",
+              "Hungering Puppetbeast",
+              "Master of Barbs"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Konstrari Improviser",
+              "title": "Prepared",
+              "text": "Konstrari Improviser enters prepared: while it is, you may cast a copy of the spell printed on it. Its Soul Tether makes a Heartwood token."
+            },
+            {
+              "on": "play:Master of Barbs",
+              "title": "Barbs",
+              "text": "Master of Barbs pumps her team whenever you're dealt noncombat damage. Kill it with No Admittance or Wrath of the Bloodmane."
+            },
+            {
+              "on": "life:8",
+              "title": "Burn range",
+              "text": "Rakdos finishes games with No Admittance and Stingerquill Charm. At 8 life or less, stop taking damage you could block."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Every little cut counts. I'll count yours.",
+          "after": "Too many big things. Not enough little cuts."
+        },
+        {
+          "id": "limited-4b",
+          "type": "duel",
+          "name": "Abbess Tamsin Vale",
+          "text": "Her garden heals itself faster than you can trample it.",
+          "deck": "limited/meta-dimir-theorix.dck",
+          "deckName": "Dimir Theorix",
+          "requires": [
+            "limited-4a"
+          ],
+          "opponent": {
+            "name": "Abbess Tamsin Vale",
+            "deck": "limited/meta-selesnya-vigorbloom.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Jace tokens",
+            "text": "Many cards in this set empower Jace: you get a Jace planeswalker token, or more loyalty on the one you have. Its -3 draws a card and its -1 surveils. Dimir trades removal for her creatures, fills the graveyard for threshold and wins with flyers. Kill Bloombrute and Lyra first: they turn her lifegain into cards and size.",
+            "cards": [
+              "Mindseeker Oculus",
+              "Extended Absence",
+              "Lich's Relic",
+              "Bloombrute"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Mindseeker Oculus",
+              "title": "Empower Jace 4",
+              "text": "You now have a Jace token with 4 loyalty. Use -3 to draw a card, or -1 each turn to surveil. Her creatures can attack it."
+            },
+            {
+              "on": "play:Lyra, Archangel of Dawn",
+              "title": "Angel lord",
+              "text": "Lyra grows every Angel each time she gains life. Extended Absence it before it snowballs."
+            },
+            {
+              "on": "graveyard:7",
+              "title": "Threshold",
+              "text": "Seven cards in your graveyard: Void Extrapolator and Theorix Metamage get bigger, and the Metamage gains flying."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Every life I save makes my garden stronger.",
+          "after": "You let nothing grow. That's its own kind of skill."
+        },
+        {
+          "id": "limited-4c",
+          "type": "duel",
+          "name": "Professor Quill Arden",
+          "text": "She has studied every outcome of this duel.",
+          "deck": "limited/meta-izzet-thopters.dck",
+          "deckName": "Izzet Thopters",
+          "requires": [
+            "limited-4b"
+          ],
+          "opponent": {
+            "name": "Professor Quill Arden",
+            "deck": "limited/meta-azorius-fatehold.dck",
+            "skill": 6
+          },
+          "lesson": {
+            "title": "Izzet tempo",
+            "text": "Izzet casts cheap spells: each one makes a 1/1 flying Thopter with Saheeli and grows prowess creatures. Azorius is the set's best deck, flyers that grow when she surveils. Trade your burn for her flyers, then attack with the board you built.",
+            "cards": [
+              "Saheeli, Jewel of Avishkar",
+              "Twinned Vision",
+              "No Admittance",
+              "Denzilore Fatehold"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Denzilore Fatehold",
+              "title": "Kill the sphinx",
+              "text": "Denzilore Fatehold puts a +1/+1 counter on her whole team every time she surveils. Violent Echoes or Wrath of the Bloodmane it right away."
+            },
+            {
+              "on": "cast:Twinned Vision",
+              "title": "Flashback",
+              "text": "Twinned Vision draws a card from your hand, and two when you flash it back from the graveyard by discarding a card. Plan to cast it twice."
+            },
+            {
+              "on": "play:Saheeli, Jewel of Avishkar",
+              "title": "Thopters",
+              "text": "Every noncreature spell now makes a 1/1 flying Thopter with haste. Cast cheap spells even when they only draw a card."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "I've surveyed every outcome. You lose in most of them.",
+          "after": "An outcome I hadn't surveyed. I'll study it."
+        },
+        {
+          "id": "limited-final",
+          "type": "duel",
+          "name": "Brakka Steelroot",
+          "text": "The final: the set's two best decks, best of three.",
+          "deck": "limited/meta-azorius-fatehold.dck",
+          "deckName": "Azorius Fatehold",
+          "requires": [
+            "limited-4c"
+          ],
+          "opponent": {
+            "name": "Brakka Steelroot",
+            "deck": "limited/meta-gruul-konstrari.dck",
+            "skill": 7
+          },
+          "winsNeeded": 2,
+          "sideboard": "In Limited your sideboard is the rest of your pool. Against Gruul's green creatures, bring in Refute Destiny (it exiles a green or blue creature) and Infinite Coursework. Take out Unsummon and Campus Crier: bouncing a big creature only lets them replay it.",
+          "lesson": {
+            "title": "The final: the top two",
+            "text": "Azorius, the set's best pair, against Gruul's big artifacts. Fly over their ground creatures, keep enough blockers to survive, and surveil every turn to grow Denzilore Fatehold and Prudent Fateseer. When you graduate, draft this set for real: Career's solo draft and sealed sell Reality Fracture packs.",
+            "cards": [
+              "Denzilore Fatehold",
+              "Prudent Fateseer",
+              "Surveillance Phantasm",
+              "Craftwork Crusher"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Craftwork Crusher",
+              "title": "Seven mana of trouble",
+              "text": "Craftwork Crusher is a 7/5 trampler that already dealt 4 damage. Chump-block it or exile it with Memory Trap; don't bounce it, or they get its enter-the-battlefield effect again."
+            },
+            {
+              "on": "attack",
+              "title": "Race in the air",
+              "text": "Their creatures with reach are Sureshot Sower and Tether Technician. If neither is untapped, every flyer you have can attack safely."
+            },
+            {
+              "on": "life:7",
+              "title": "Stop racing",
+              "text": "Gruul hits hard all at once. At 7 life or less, keep flyers back to block until you can win in one swing."
+            }
+          ],
+          "reward": {
+            "coins": 200,
+            "xp": 500,
+            "packs": 2,
+            "wildcard": "rare",
+            "cosmetics": [
+              {
+                "kind": "title",
+                "id": "limited-graduate"
+              },
+              {
+                "kind": "sleeve",
+                "id": "school-limited"
+              }
+            ]
+          },
+          "boss": true,
+          "before": "Big things. Lots of them. Your birds won't stop that.",
+          "after": "Birds stopped it. I'll draft bigger things."
+        }
+      ]
+    }
+  ]
+}

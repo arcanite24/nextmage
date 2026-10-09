@@ -1,5 +1,6 @@
+import type { GameSessionState } from '../../core/game/gameSession';
 import { describe, expect, test } from 'vitest';
-import { pickVoice, type VoiceMoment, type VoiceSnapshot } from './voiceRules';
+import { pickVoice, type VoiceMoment, type VoiceSnapshot, voiceSnapshot } from './voiceRules';
 
 const at = (over: Partial<VoiceSnapshot> = {}): VoiceSnapshot => ({ foe: 'Wren', turn: 1, step: 'MAIN1', foeLife: 20, foeBigSpell: false, over: false, won: false, ...over });
 const said = (...moments: VoiceMoment[]) => new Set(moments);
@@ -32,5 +33,21 @@ describe('pickVoice', () => {
 
   test('stays quiet with no single opponent', () => {
     expect(pickVoice(null, at({ foe: null }), said())).toBeNull();
+  });
+});
+
+describe('voiceSnapshot', () => {
+  const state = (names: string[]) => ({
+    view: { players: [{ playerId: 'me', name: 'me' }, ...names.map((name, index) => ({ playerId: `ai${index}`, name, life: 40 - index }))] },
+  }) as unknown as GameSessionState;
+
+  test('one opponent is the voice', () => {
+    expect(voiceSnapshot(state(['Wren']), 'me').foe).toBe('Wren');
+  });
+
+  test('at a pod only the named seat speaks, even with its name cut short', () => {
+    expect(voiceSnapshot(state(['Ada', 'Bram', 'Cyr']), 'me').foe).toBeNull();
+    expect(voiceSnapshot(state(['Ada', 'Bram', 'Cyr']), 'me', 'Bram').foeLife).toBe(39);
+    expect(voiceSnapshot(state(['Ada', 'Bram the Unbo', 'Cyr']), 'me', 'Bram the Unbowed').foe).toBe('Bram the Unbo');
   });
 });

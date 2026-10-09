@@ -112,6 +112,44 @@ think time, which these board states never use up. Tier 3 also had a weak deck: 
 With 36 games, one opponent's score has a standard error of about 8 points; for a whole tier (144 games) it's
 about 4 points.
 
+## The schools (2026-10-09)
+
+The academy's one-on-one duels were measured with the schools mode: each node's loaner played by the reference AI
+(skill 4) against the node's opponent at its own skill, 4 games per node (12 for the nodes changed below). Commander
+and Brawl duels and the act 4 pods aren't covered: the calibration plays two-player games without a command zone.
+
+```sh
+java -cp <test classpath> -Dxmage.careerCalibration.schools=pauper,limited -Dxmage.careerCalibration.games=4 \
+    -Dxmage.careerCalibration.shard=0/4 mage.server.career.CareerCalibrationTest
+```
+
+`schools` takes school ids (or `all`), `nodes` limits the run to node ids, and the merged table's "tier" is the act.
+
+Starter-side score per act (games in brackets):
+
+| school | act 1 | act 2 | act 3 | act 4 |
+|---|---|---|---|---|
+| pauper | 75% (12) | 62% (16) | 25% (8) | 28% (16) |
+| limited | 58% (12) | 53% (16) | 62% (8) | 47% (16) |
+| pioneer | 75% (12) | 38% (16) | 25% (8) | 3% (16) |
+| standard | 58% (12) | 38% (16) | 50% (8) | 44% (16) |
+| modern | 55% (28) | 12% (16) | 0% (8) | 6% (16) |
+| legacy | 48% (20) | 16% (16) | 50% (8) | 44% (16) |
+| vintage | 75% (12) | 9% (16) | 38% (8) | 22% (16) |
+| **all** | **61%** (108) | **33%** (112) | **36%** (56) | **28%** (112) |
+
+**Changes:** the first run had Modern's act 1 at 0% and 25% and Legacy's first duel at 25%: both schools opened on a
+full Merfolk deck with twelve lords. The act 1 Merfolk decks (`modern/act1-merfolk`, `legacy/opp-merfolk`) now run
+Coral Merfolk and Merfolk Looter instead of Master of the Pearl Trident and Merrow Reejerey, and Modern's act 1 Burn
+runs Shock and Raging Goblin instead of Skewer the Critics and Searing Blaze. 12 games each after the change:
+modern-1a 0% to 75%, modern-1b 25% to 42%, legacy-1a 25% to 62%.
+
+**Reading the rest:** with 4 games a node, one node's score is noise (a standard error of about 25 points); an act's
+16 games narrow it to about 12. Acts 2 to 4 hand the player combo and control loaners on purpose (CURRICULUM.md), and
+the AI pilots those badly, so the starter side's score there understates a human. Still, the hot spots to watch in
+play are Modern's acts 2 to 4, Pioneer's act 4, and every school's act 2 combo and control duels (`-2c`, `-2d`):
+if humans lose them as often, soften the opponent's deck the way act 1 was.
+
 ## Caveats
 
 - The AI is not a human. A human who plays better than skill 4 will find every tier easier, and the gaps

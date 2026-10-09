@@ -1,0 +1,33 @@
+# name: Dimir Tempo
+# archetype: tempo
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91934&d=898152&f=LE
+1 Kaito, Bane of Nightmares
+4 Brainstorm
+4 Thoughtseize
+4 Ponder
+4 Force of Will
+4 Daze
+4 Mishra's Bauble
+4 Fatal Push
+2 Bilbo, Thief in the Night
+2 Orcish Bowmasters
+4 Nethergoyf
+4 Moonshadow
+1 Undercity Sewers
+1 Swamp
+1 Bloodstained Mire
+2 Marsh Flats
+2 Verdant Catacombs
+4 Wasteland
+4 Underground Sea
+4 Polluted Delta
+SB: 1 Hydroblast
+SB: 3 Consign to Memory
+SB: 1 Snuff Out
+SB: 2 Massacre
+SB: 2 Brazen Borrower
+SB: 1 Force of Negation
+SB: 2 Nihil Spellbomb
+SB: 1 Bilbo, Thief in the Night
+SB: 2 Orcish Bowmasters

@@ -1,0 +1,20 @@
+# name: Fracture Gruul
+# archetype: midrange
+# season: 2026-10
+# The newest set's deck: Reality Fracture (Oct 2026) brings Tarmogoyf, Konstrari Charm and Chandra into Standard.
+4 Tarmogoyf
+4 Bejeweled Warg
+4 Koth, the Geomancer
+3 Aerid Konstrari
+2 Hungering Puppetbeast
+2 Chandra, Torch of Defiance
+1 Garruk, Curse Breaker
+4 Konstrari Charm
+4 Impractical Joke
+4 Lightning Strike
+2 Fulminous Forte
+4 Rockfall Vale
+4 Stomping Ground
+7 Forest
+7 Mountain
+4 Evolving Wilds

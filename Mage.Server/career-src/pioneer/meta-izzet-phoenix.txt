@@ -1,0 +1,30 @@
+# name: Izzet Phoenix
+# archetype: tempo
+# season: 2026-10
+# source: https://www.mtgo.com/decklist/pioneer-challenge-32-2026-09-2812854947 (Pioneer Challenge 32, 2026-09-28, 1st) (player hugofreitas1)
+4 Arclight Phoenix
+4 Artist's Talent
+4 Consider
+4 Fiery Impulse
+1 Temporal Trespass
+3 Into the Flood Maw
+3 Lightning Axe
+4 Island
+4 Spirebluff Canal
+1 Otawara, Soaring City
+4 Picklock Prankster
+1 Prismari Command
+1 Proft's Eidetic Memory
+1 Stormcarved Coast
+4 Treasure Cruise
+4 Opt
+4 Riverglide Pathway
+4 Sleight of Hand
+1 Galvanic Iteration
+4 Steam Vents
+SB: 1 Abrade
+SB: 2 Disdainful Stroke
+SB: 4 Ledger Shredder
+SB: 3 Mystical Dispute
+SB: 3 Redcap Melee
+SB: 2 Brazen Borrower

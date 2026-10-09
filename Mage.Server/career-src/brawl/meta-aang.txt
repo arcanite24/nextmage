@@ -1,0 +1,52 @@
+# name: Aang Tempo
+# archetype: control (Azorius flash tempo)
+# season: 2026-10
+# source: https://draftsim.com/mtg-arena-brawl-guide/ (Standard Brawl commander lists, updated 2025-12-22)
+# Command Tower and Arcane Signet are Arena-only Brawl cards that XMage's Standard pool rejects: a basic land / Patchwork Banner instead
+CMDR: Aang, Swift Savior
+# Ademi of the Silkchutes isn't in XMage yet: Spectral Sailor instead
+1 Spectral Sailor
+1 Mockingbird
+1 Momo, Friendly Flier
+1 Nurturing Pixie
+1 Spyglass Siren
+1 Wan Shi Tong, Librarian
+1 Fear of Isolation
+1 Malcolm, Alluring Scoundrel
+1 Aven Interrupter
+1 Tishana's Tidebinder
+1 Beza, the Bounding Spring
+1 Enduring Curiosity
+1 Twining Twins
+1 Quantum Riddler
+1 Horned Loch-Whale
+1 Split Up
+1 Stock Up
+1 Ultima
+1 Getaway Glamer
+1 Magic Damper
+1 Phantom Interference
+1 Spell Pierce
+1 Three Steps Ahead
+1 Parting Gust
+1 No More Lies
+1 Consult the Star Charts
+1 Disdainful Stroke
+1 Essence Scatter
+1 Negate
+1 This Town Ain't Big Enough
+1 Seam Rip
+1 Airbender Ascension
+1 Aang's Iceberg
+1 Abandoned Air Temple
+1 Cavern of Souls
+1 Demolition Field
+1 Fabled Passage
+1 Floodfarm Verge
+1 Fountainport
+9 Island
+1 Meticulous Archive
+1 Multiversal Passage
+7 Plains
+1 Restless Anchorage
+1 Temple of Enlightenment

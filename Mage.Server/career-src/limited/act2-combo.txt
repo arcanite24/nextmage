@@ -1,0 +1,24 @@
+# name: Spellslinger
+# archetype: combo (Izzet spells engine, Foundations)
+# season: 2026-10
+2 Firebrand Archer
+2 Elementalist Adept
+1 Heartfire Immolator
+1 Balmor, Battlemage Captain
+1 Mocking Sprite
+2 Crackling Cyclops
+1 Firespitter Whelp
+1 Lightshell Duo
+1 Archmage of Runes
+2 Burst Lightning
+1 Abrade
+2 Fleeting Distraction
+1 Think Twice
+1 Thrill of Possibility
+1 Sure Strike
+1 Boltwave
+1 Run Away Together
+1 Incinerating Blast
+8 Mountain
+8 Island
+1 Swiftwater Cliffs
