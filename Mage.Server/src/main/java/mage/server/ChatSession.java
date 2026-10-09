@@ -7,6 +7,8 @@ import mage.game.tournament.Tournament;
 import mage.interfaces.callback.ClientCallback;
 import mage.interfaces.callback.ClientCallbackMethod;
 import mage.server.managers.ManagerFactory;
+import mage.server.replay.ReplayRecorder;
+import mage.server.social.UserRelations;
 import mage.view.ChatMessage;
 import mage.view.ChatMessage.MessageColor;
 import mage.view.ChatMessage.MessageType;
@@ -129,7 +131,8 @@ public class ChatSession {
     }
 
     public boolean broadcastWhisperToUser(User fromUser, User toUser, String message) {
-        if (users.containsKey(toUser.getId())) {
+        // an ignored player's whisper is refused like one to a player who isn't here
+        if (users.containsKey(toUser.getId()) && !UserRelations.ignores(toUser.getId(), fromUser.getName())) {
             toUser.fireCallback(new ClientCallback(ClientCallbackMethod.CHATMESSAGE, chatId,
                     new ChatMessage(fromUser.getName(), message, new Date(), null, MessageColor.YELLOW, MessageType.WHISPER_FROM, SoundToPlay.PlayerWhispered)));
             if (users.containsKey(fromUser.getId())) {
@@ -148,6 +151,9 @@ public class ChatSession {
         // TODO: send messages in another thread?!
         if (!message.isEmpty()) {
             ChatMessage chatMessage = new ChatMessage(userName, message, (withTime ? new Date() : null), game, color, messageType, soundToPlay);
+            if (messageType == MessageType.GAME) {
+                ReplayRecorder.onLog(chatId, chatMessage);
+            }
 
             switch (messageType) {
                 case USER_INFO:
@@ -189,6 +195,9 @@ public class ChatSession {
             List<User> recipients = new ArrayList<>(chatUserIds.size());
             for (UUID userId : chatUserIds) {
                 Optional<User> user = managerFactory.userManager().getUser(userId);
+                if (user.isPresent() && messageType == MessageType.TALK && UserRelations.ignores(userId, userName)) {
+                    continue; // they ignore the author
+                }
                 if (user.isPresent()) {
                     user.get().addCallback(new ClientCallback(ClientCallbackMethod.CHATMESSAGE, chatId, chatMessage));
                     recipients.add(user.get());

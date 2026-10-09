@@ -1,0 +1,39 @@
+.avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--mat-500);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sm {
+  width: 28px;
+  height: 28px;
+  font-size: 15px;
+}
+
+.md {
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+}
+
+.lg {
+  width: 72px;
+  height: 72px;
+  font-size: 36px;
+}
+
+.sigil {
+  background: var(--mat-600);
+}
+
+.flag {
+  font-size: 1.05em;
+  line-height: 1;
+}

@@ -27,24 +27,30 @@ The browser client for this XMage fork: sign in, build decks, play the AI or oth
 src/
 ├── app/            the new app (index.html, served at /)
 │   ├── main.tsx    routes, global error hooks
-│   ├── screens/    login, home (Play), decks, events, tables, game route
-│   ├── match/      the match stage: board, hand, stack, prompts, overlays, card detail
+│   ├── screens/    login, home (Play), decks, events, tables, invite (/join), game route
+│   ├── match/      the match stage: board, hand, stack, prompts, overlays, card detail, spectator bar
 │   ├── decks/      deck builder
 │   ├── events/     draft, deck construction, event (tournament) screens
-│   ├── stores/     the app's Zustand stores (session, games, decks, play, events, settings, toasts)
+│   ├── social/     chat panel, lobby drawer (chat and players online), profiles, avatars
+│   ├── history/    finished matches and saved replays
+│   ├── replay/     the replay player
+│   ├── stores/     the app's Zustand stores (session, games, decks, play, events, settings, toasts, lobby, social, attention)
 │   ├── ui/         shared primitives (Button, Dialog, Field, CardFace, Toaster...)
 │   └── styles/     tokens and base CSS
 ├── core/           framework-free logic, unit tested
 │   ├── rpc/        WebSocket JSON-RPC client and event bus
 │   ├── game/       game session, interaction model, auto-pass and auto-pay, leaving games
 │   ├── decks/      deck types, serializer (.dck/.txt/... import and export), local deck storage
+│   ├── social/     chat input commands, chat lines, invite links, sigils and flags
+│   ├── replay/     replay timeline (frames, log, turns, playback timing)
+│   ├── history/    finished-match summaries
 │   ├── images/     card image resolution and cache
 │   ├── telemetry/  error reporter (console by default, ring buffer of recent errors)
 │   └── headless/   a headless game driver for live tests
 └── protocol/generated/   types and API generated from the server's RPC registry (do not edit)
 ```
 
-`src/app` and `src/core` never import the legacy client. The legacy client (`src/components`, `src/services`, `src/stores`, `src/types`, `legacy.html`) and the visual harness (`visual.html`) remain until every screen is replaced; legacy imports deck code from `src/core/decks`.
+The legacy client and its visual harness were deleted in October 2026 (backlog B054); `src/app` is the only UI.
 
 The protocol files are regenerated from the server: `mvn -pl Mage.Server test -Dtest=WebClientApiDocsTest -Dxmage.updateWebApiDocs=true`.
 
@@ -70,6 +76,24 @@ The parsing and matching live in `src/core/deckImport` (pure, unit tested); the 
 `src/core/deckImport/sites.ts`, and the server's sources are in `Mage.Server/.../websocket/service/deckimport`
 (see "Deck import" in `docs/WebSocketAPI.md`).
 
+## Playing together
+
+- **Lobby** (the people button in the rail): the main room's chat and who is online. Whispers (`/w name text`, Tab
+  completes the name) reach you anywhere in the app as a toast. `/help` lists the chat commands.
+- **Friends and ignores** are kept in this browser, per server: `/friend`, `/ignore` or a player's menu. The server
+  learns your ignore list after each login (`chatSetIgnored`) and holds back their chat and whispers; tables you host
+  keep ignored players out (`bannedUsers`). Friends coming online show up as a toast.
+- **Invites**: "Invite" on your waiting table copies a `/join/<table>` link; "Invite to …" in a player's menu
+  whispers it. The link survives signing in first.
+- **Table and event chat** sit on your table's row and on the event screen.
+- **Profiles**: ratings, match and event record, sigil and flag (yours are sent with your preferences).
+- **History**: finished matches on the server, and the replays it keeps (`replayList`). A replay (`/replay/<game>`)
+  plays back on the match stage, from your own seat with your hand when you played it: play, pause, step,
+  jump by turn, scrub, change speed (Space, ←/→, Shift+←/→).
+- **Spectating**: pick whose seat to watch from; players and spectators see how many are watching (`gameWatchers`).
+- **Alerts**: while the tab is in the background, its title counts what waits for you (your move, a draft pick, a
+  game starting, a whisper); Settings → Alerts adds browser notifications.
+
 ## Dev loop
 
 ```bash
@@ -78,7 +102,6 @@ npm run dev:all   # builds and starts the Mage server (HTTP 17171, WebSocket 171
 ```
 
 - New app: http://localhost:5173/
-- Legacy client: http://localhost:5173/legacy.html (until it is deleted)
 - `Ctrl-C` stops both. If a server survives a failed shutdown, `npm run dev:kill` frees ports 17171 and 17172.
 - `npm run dev` starts Vite alone, against a server you run yourself (default `ws://localhost:17172`).
 
@@ -90,12 +113,12 @@ CI (`.github/workflows/web-client.yml`) runs the four gates on every change unde
 
 ```bash
 npm run typecheck   # tsc -b
-npm run lint        # ESLint; zero errors, warnings capped by --max-warnings
+npm run lint        # ESLint; zero errors and zero warnings
 npm test            # Vitest unit tests, then the accessibility check
-npm run build       # tsc -b and the Vite production bundle (new app, legacy, visual harness)
+npm run build       # tsc -b and the Vite production bundle
 ```
 
-The lint warning cap only goes down: lower `--max-warnings` in `package.json` whenever you remove warnings.
+Lint runs with `--max-warnings 0`: fix a warning rather than raising the cap.
 
 Other scripts:
 
@@ -104,9 +127,8 @@ npm run test:watch          # Vitest in watch mode
 npm run test:e2e            # Playwright specs against the dev server; specs that need a game server skip
 npm run test:e2e:ci         # what CI runs: the same specs against `vite preview` (run `npm run build` first)
 npm run test:e2e:app        # the new app's live specs (e2e/app-*.spec.ts) against a running local server
-npm run test:e2e:local      # legacy-client specs against a running local server (MAGE_E2E_SERVER_URL, MAGE_E2E_USERNAME, MAGE_E2E_PASSWORD)
+npm run test:e2e:import     # deck import against a running local server (MAGE_E2E_NETWORK=1 adds a real Archidekt deck)
 npm run size                # bundle-size budget of the last build (also in CI)
-npm run test:visual         # Playwright visual baselines (macOS only, predate the rebuild, not in CI)
 npm run preview             # serve the production bundle
 ```
 
@@ -114,7 +136,7 @@ Playwright's bundled browsers may not match the installed `@playwright/test`; se
 
 Unit tests: `*.test.ts` runs in node; `*.test.tsx` runs in happy-dom with `@testing-library/react` (setup in `src/test/setupDom.ts`). A `.ts` test that needs `localStorage` or the DOM starts with `// @vitest-environment happy-dom`. Stores that wire themselves to the connection at import are tested against `src/test/fakeConnection.ts`.
 
-End-to-end: CI runs every spec that needs no game server (sign-in, the axe check of the sign-in screen, the visual-harness workflows) against `vite preview`. Specs that play on a real server skip unless `MAGE_E2E_REQUIRE_SERVER=1`; they stay opt-in because CI does not build or start the Java server. To run them, start the server (`npm run dev:server`, or `npm run dev:all` for both) and then:
+End-to-end: CI runs every spec that needs no game server (sign-in and the axe check of the sign-in screen) against `vite preview`. Specs that play on a real server skip unless `MAGE_E2E_REQUIRE_SERVER=1`; they stay opt-in because CI does not build or start the Java server. To run them, start the server (`npm run dev:server`, or `npm run dev:all` for both) and then:
 
 ```bash
 PLAYWRIGHT_CHANNEL=chrome npm run test:e2e:app                                    # new app: AI match, decks, tables, full axe pass

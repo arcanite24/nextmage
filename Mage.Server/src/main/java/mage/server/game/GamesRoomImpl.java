@@ -98,7 +98,7 @@ public class GamesRoomImpl extends RoomImpl implements GamesRoom, Serializable {
                             user.getMatchHistory(), user.getMatchQuitRatio(), user.getTourneyHistory(),
                             user.getTourneyQuitRatio(), user.getGameInfo(), user.getPingInfo(),
                             user.getUserData().getGeneralRating(), user.getUserData().getConstructedRating(),
-                            user.getUserData().getLimitedRating()));
+                            user.getUserData().getLimitedRating(), user.getUserData().getAvatarId()));
                 } catch (Exception ex) {
                     LOGGER.fatal("User update exception: " + user.getName() + " - " + ex.toString(), ex);
                     users.add(new UsersView(

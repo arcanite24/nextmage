@@ -1,18 +1,18 @@
 # Accessibility Coverage
 
-This document tracks the automated accessibility checks that guard the web client while the Java-client parity work continues.
+This document tracks the automated accessibility checks that guard the web client (`npm run test:a11y`, part of `npm test`).
 
 ## Keyboard-only play
 
-Interactive controls must remain reachable without a mouse. The coverage script checks shared modal focus behavior, and visual/local-server promotion specs should add stable assertions for new command surfaces before they become required gates.
+Interactive controls must remain reachable without a mouse. The coverage script checks that the shared Dialog is built on Radix (focus trap and return), and `e2e/app-accessibility.spec.ts` runs axe over every screen and a live game; add assertions there for new command surfaces.
 
 ## Focus traps
 
-The shared `Modal` component owns dialog semantics, Tab trapping, Escape handling, initial focus, and focus restoration. New modal-like surfaces should reuse it or provide equivalent behavior before landing.
+The shared `Dialog` (`src/app/ui/Dialog.tsx`, on Radix Dialog) owns dialog semantics, Tab trapping, Escape handling, initial focus, and focus restoration. New modal-like surfaces should reuse it or provide equivalent behavior before landing.
 
 ## Readable contrast
 
-The base theme color tokens are checked against dark surfaces for primary, secondary, warning, and danger text. New component-specific colors should use existing tokens or maintain the same contrast floor.
+The ink and status tokens in `src/app/styles/tokens.css` (ink, strong, soft and dim ink, danger, sage at 4.5:1; the decision amber at 3:1) are checked against the four darkest mat surfaces, with translucent inks blended over each. New colors should use existing tokens or keep the same contrast floor.
 
 ## Reduced motion
 

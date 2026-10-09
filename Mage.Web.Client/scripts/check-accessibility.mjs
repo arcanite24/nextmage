@@ -27,14 +27,13 @@ if (failures.length > 0) {
 console.log('Accessibility coverage check passed.');
 
 async function checkModalAccessibility() {
-    const source = await readProjectFile('src/components/common/Modal.tsx');
+    // every dialog goes through the app's Dialog, built on Radix: it supplies role="dialog", aria-modal,
+    // the focus trap and focus return; the title names the dialog
+    const source = await readProjectFile('src/app/ui/Dialog.tsx');
     const requiredSnippets = [
-        ['role="dialog"', 'shared modal must use dialog role'],
-        ['aria-modal="true"', 'shared modal must mark background content modal'],
-        ['aria-labelledby=', 'shared modal must connect titles to dialogs'],
-        ['onKeyDown={handleKeyDown}', 'shared modal must trap Tab focus'],
-        ['getFocusableElements', 'shared modal must discover focusable controls'],
-        ['previouslyFocused.focus()', 'shared modal must restore focus on close'],
+        ["from '@radix-ui/react-dialog'", 'the shared dialog must be built on Radix Dialog (focus trap, aria-modal, focus return)'],
+        ['RadixDialog.Content', 'the shared dialog must render Radix dialog content'],
+        ['RadixDialog.Title', 'the shared dialog must name itself with a Radix title'],
     ];
 
     for (const [snippet, label] of requiredSnippets) {
@@ -54,18 +53,21 @@ async function checkReducedMotion() {
 }
 
 async function checkReadableContrast() {
-    const source = await readProjectFile('src/index.css');
-    const colors = extractCssHexVariables(source);
-    const darkSurfaces = ['--color-bg-darkest', '--color-bg-dark', '--color-bg-base', '--color-bg-elevated'];
+    // ink and status colours on the mat surfaces text sits on; translucent inks are blended over each surface
+    const colors = extractCssColorVariables(await readProjectFile('src/app/styles/tokens.css'));
+    const surfaces = ['--mat-950', '--mat-900', '--mat-800', '--mat-700'];
     const textPairs = [
-        ['--color-text-primary', 4.5],
-        ['--color-text-secondary', 4.5],
-        ['--color-accent-warning', 3],
-        ['--color-accent-danger', 3],
+        ['--ink', 4.5],
+        ['--ink-strong', 4.5],
+        ['--ink-soft', 4.5],
+        ['--ink-dim', 4.5],
+        ['--danger-text', 4.5],
+        ['--sage', 4.5],
+        ['--decision', 3],
     ];
 
     for (const [textVariable, minimumRatio] of textPairs) {
-        for (const surfaceVariable of darkSurfaces) {
+        for (const surfaceVariable of surfaces) {
             const textColor = colors.get(textVariable);
             const surfaceColor = colors.get(surfaceVariable);
 
@@ -74,7 +76,7 @@ async function checkReadableContrast() {
                 continue;
             }
 
-            const ratio = contrastRatio(textColor, surfaceColor);
+            const ratio = contrastRatio(blend(textColor, surfaceColor), surfaceColor);
             if (ratio < minimumRatio) {
                 failures.push(`${textVariable} contrast on ${surfaceVariable} is ${ratio.toFixed(2)}:1, below ${minimumRatio}:1`);
             }
@@ -189,16 +191,22 @@ async function listFiles(root, predicate) {
     return files;
 }
 
-function extractCssHexVariables(source) {
+/** `--name: #rrggbb` and `--name: rgb(r g b / a)` declarations, as [r, g, b, a]. */
+function extractCssColorVariables(source) {
     const colors = new Map();
-    const variablePattern = /(--color-[\w-]+)\s*:\s*(#[0-9a-f]{6})\b/gi;
-    let match;
-
-    while ((match = variablePattern.exec(source)) !== null) {
-        colors.set(match[1], match[2]);
+    for (const match of source.matchAll(/(--[\w-]+)\s*:\s*#([0-9a-f]{6})\b/gi)) {
+        const value = Number.parseInt(match[2], 16);
+        colors.set(match[1], [(value >> 16) & 255, (value >> 8) & 255, value & 255, 1]);
     }
-
+    for (const match of source.matchAll(/(--[\w-]+)\s*:\s*rgb\(\s*(\d+)\s+(\d+)\s+(\d+)\s*(?:\/\s*([\d.]+))?\s*\)/gi)) {
+        colors.set(match[1], [Number(match[2]), Number(match[3]), Number(match[4]), match[5] === undefined ? 1 : Number(match[5])]);
+    }
     return colors;
+}
+
+/** A translucent colour as it shows over an opaque one. */
+function blend([r, g, b, a], [sr, sg, sb]) {
+    return [r * a + sr * (1 - a), g * a + sg * (1 - a), b * a + sb * (1 - a), 1];
 }
 
 function contrastRatio(foreground, background) {
@@ -210,8 +218,8 @@ function contrastRatio(foreground, background) {
     return (lighter + 0.05) / (darker + 0.05);
 }
 
-function relativeLuminance(hexColor) {
-    const [red, green, blue] = hexToRgb(hexColor).map(channel => {
+function relativeLuminance(color) {
+    const [red, green, blue] = color.slice(0, 3).map(channel => {
         const normalized = channel / 255;
         return normalized <= 0.03928
             ? normalized / 12.92
@@ -219,15 +227,6 @@ function relativeLuminance(hexColor) {
     });
 
     return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-}
-
-function hexToRgb(hexColor) {
-    const value = Number.parseInt(hexColor.slice(1), 16);
-    return [
-        (value >> 16) & 255,
-        (value >> 8) & 255,
-        value & 255,
-    ];
 }
 
 function lineNumberAt(source, index) {
