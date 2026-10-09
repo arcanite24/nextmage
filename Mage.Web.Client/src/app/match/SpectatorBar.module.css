@@ -131,3 +131,9 @@
   margin: 6px 4px;
   background: var(--ink-ghost);
 }
+
+/* tall: in the band above the hand */
+:global([data-layout='tall']) .bar {
+  right: 24px;
+  bottom: calc(140px + var(--hand-raise, 0px));
+}

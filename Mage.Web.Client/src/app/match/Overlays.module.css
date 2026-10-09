@@ -105,6 +105,9 @@
   gap: 18px;
   padding: 6px;
   overflow: auto;
+  /* the table blocks panning; a list that scrolls takes the finger back */
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .pick {
@@ -152,6 +155,9 @@
 .optionsScroll {
   max-height: 520px;
   overflow: auto;
+  /* the table blocks panning; a list that scrolls takes the finger back */
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .option {
@@ -344,4 +350,40 @@
 
 @keyframes stamp {
   from { opacity: 0; transform: scale(1.25); filter: blur(6px); }
+}
+
+/* tall: the stage is 1080 wide; panels keep a margin and the opening hand wraps into rows */
+:global([data-layout='tall']) .panel,
+:global([data-layout='tall']) .panelNarrow,
+:global([data-layout='tall']) .panelWide {
+  width: auto;
+  max-width: calc(100% - 48px);
+  max-height: calc(var(--stage-height) - 160px);
+}
+
+:global([data-layout='tall']) .panel {
+  width: calc(100% - 48px);
+}
+
+:global([data-layout='tall']) .panelNarrow {
+  width: 720px;
+}
+
+:global([data-layout='tall']) .handRow {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1000px;
+}
+
+:global([data-layout='tall']) .handCard {
+  width: 220px;
+}
+
+:global([data-layout='tall']) .bigTitle {
+  font-size: 60px;
+}
+
+/* touch: every choice is a full-size target */
+:global([data-touch]) .option {
+  min-height: var(--touch-target, 0px);
 }

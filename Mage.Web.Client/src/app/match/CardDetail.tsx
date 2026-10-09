@@ -1,6 +1,6 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { Check, Info, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isStackAbility } from '../../core/game/cards';
 import { keywordMarks } from '../../core/game/keywords';
 import { explainCard, LINE_KIND_HELP, LINE_KIND_LABEL, type LineKind, type Term } from '../../core/game/glossary';
@@ -12,6 +12,7 @@ import { ManaCost } from '../ui/ManaCost';
 import { PromptText } from '../ui/PromptText';
 import { useMatchUi } from './matchUi';
 import { useStage } from './stageContext';
+import { useLongPress } from './useLongPress';
 import styles from './CardDetail.module.css';
 
 /** Every card the table shows, by id: battlefield, hands, stack, graveyards, exile and revealed cards. */
@@ -87,7 +88,7 @@ function stateOf(card: PermanentView, view: GameView | null, attacking: Readonly
 }
 
 /**
- * The detail view (right click, or the context-menu key on a focused card): the card at full size beside what it is
+ * The detail view (right click, a long press on a touch screen, or the context-menu key on a focused card): the card at full size beside what it is
  * doing on the table and what its text means, the way Arena explains a card. Opens from any card on the stage.
  */
 export function CardDetail({ view, extra, sleeveOf, attacking, blocking }: {
@@ -104,22 +105,45 @@ export function CardDetail({ view, extra, sleeveOf, attacking, blocking }: {
   const [backFace, setBackFace] = useState(false);
   const sheet = useRef<HTMLDivElement>(null);
 
+  // the card under a pointer, when it can be opened: anything on the stage that carries its id
+  const cardAt = useCallback((element: EventTarget | null) => {
+    const target = element instanceof Element ? element.closest<HTMLElement>('[data-object-id], [data-card-id]') : null;
+    const id = target?.dataset.objectId ?? target?.dataset.cardId;
+    const card = id ? findCard(view, id, extra) : null;
+    return card && id && !card.hideInfo ? { id, card } : null;
+  }, [view, extra]);
+
   // one listener for the whole stage: any card that carries its id can be opened
   useEffect(() => {
     const element = stage.element;
     if (!element) return;
     const onContextMenu = (event: MouseEvent) => {
-      const target = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-object-id], [data-card-id]');
-      const id = target?.dataset.objectId ?? target?.dataset.cardId;
-      const card = id ? findCard(view, id, extra) : null;
       event.preventDefault();
-      if (!card || !id || card.hideInfo) return;
+      // a finger held on a card opened it already (Android also calls that a context menu)
+      if ((event as PointerEvent).pointerType === 'touch' || (event as PointerEvent).pointerType === 'pen') return;
+      const found = cardAt(event.target);
+      if (!found) return;
       setBackFace(false);
-      openDetail({ id, card });
+      openDetail(found);
     };
     element.addEventListener('contextmenu', onContextMenu);
     return () => element.removeEventListener('contextmenu', onContextMenu);
-  }, [stage.element, view, extra, openDetail]);
+  }, [stage.element, cardAt, openDetail]);
+
+  // touch has no hover and no right button: a finger held on a card opens it (one dragged from hand, or onto an attacker, isn't)
+  useLongPress(stage.element, {
+    onLongPress: (target) => {
+      const found = cardAt(target);
+      if (!found || useMatchUi.getState().detail) return false;
+      setBackFace(false);
+      openDetail(found);
+      return true;
+    },
+    isBusy: () => {
+      const ui = useMatchUi.getState();
+      return !!ui.dragging || !!ui.blockDrag;
+    },
+  });
 
   // the latest state of the card while it stays on the table; the snapshot once it has left
   const live = detail ? findCard(view, detail.id, extra) ?? detail.card : null;
@@ -145,7 +169,14 @@ export function CardDetail({ view, extra, sleeveOf, attacking, blocking }: {
   return (
     <RadixDialog.Root open onOpenChange={(open) => !open && close()}>
       <RadixDialog.Portal container={stage.element}>
-        <RadixDialog.Overlay className={styles.scrim} onContextMenu={(event) => { event.preventDefault(); close(); }} />
+        <RadixDialog.Overlay
+          className={styles.scrim}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            // the finger that opened it is still down: Android follows the long press with a context menu
+            if ((event.nativeEvent as PointerEvent).pointerType !== 'touch') close();
+          }}
+        />
         <RadixDialog.Content
           ref={sheet}
           className={styles.sheet}

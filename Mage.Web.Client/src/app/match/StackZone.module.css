@@ -75,3 +75,15 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
+
+/* tall: over the left end of the opponent's creatures, its top card just above the seam */
+:global([data-layout='tall']) .zone {
+  left: 24px;
+  right: auto;
+  top: calc(var(--seam) - 340px);
+  width: 190px;
+}
+
+:global([data-layout='tall']) .item {
+  width: 170px;
+}
