@@ -11,6 +11,7 @@ import type { GameTypeView } from '../../protocol/generated/views';
 import type { DeckCardLists } from '../../core/decks/types';
 import { formatRules, gameTypesFor, isCommanderFormat } from '../../core/decks/formats';
 import { notify } from './toasts';
+import { useCoach } from './coach';
 
 /** the smallest deck worth a game (limited size; constructed formats are checked by the server) */
 const MIN_DECK_SIZE = 40;
@@ -53,7 +54,7 @@ export const DEFAULT_AI_OPTIONS: AiOptions = {
 };
 
 /** One game's changes to the saved AI setup; `practice` is a goldfish game against an AI that only has lands. */
-export type PlayOverrides = Partial<AiOptions> & { practice?: boolean };
+export type PlayOverrides = Partial<AiOptions> & { practice?: boolean; guided?: boolean };
 
 /**
  * The goldfish's deck: lands only, so it never casts anything and your deck plays against an empty board. A commander
@@ -143,11 +144,13 @@ export const usePlay = create<PlayState>((set, get) => ({
   async playVsAi(deckId, overrides = {}) {
     const { roomId, userName } = useSession.getState();
     if (!roomId) return;
-    const { practice = false, ...picked } = overrides;
-    const options: AiOptions = practice
-      ? { ...get().aiOptions, rules: 'casual', opponents: 1, aiType: 'COMPUTER_MAD', skill: 1, winsNeeded: 1 }
+    const { practice = false, guided = false, ...picked } = overrides;
+    // the guided first game: the easiest AI with a random starter deck, one game, nothing unusual
+    const options: AiOptions = practice || guided
+      ? { ...get().aiOptions, rules: 'casual', opponents: 1, aiType: 'COMPUTER_MAD', skill: 1, winsNeeded: 1, startingLife: null, opponentDeckId: null }
       : { ...get().aiOptions, ...picked };
-    set({ phase: 'starting', error: null, deckId, lastOptions: overrides });
+    useCoach.getState().setGuided(guided);
+    set({ phase: 'starting', error: null, deckId, lastOptions: practice ? { practice } : picked });
     // a game outside any event: leaving it goes back to Play
     useEvents.setState({ currentTournamentId: null });
     try {

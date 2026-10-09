@@ -2,6 +2,7 @@ import { SlidersHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rosterOf, sleeveFor, useDecks } from '../stores/decks';
+import { useCoach } from '../stores/coach';
 import { usePlay } from '../stores/play';
 import { useT, type MessageKey } from '../i18n';
 import { Button } from '../ui/Button';
@@ -34,6 +35,8 @@ export function HomeScreen() {
   const selected = roster.find((deck) => deck.id === decks.selectedId) ?? roster[0] ?? null;
   const sleeve = sleeveFor(decks.sleeves, selected);
   const busy = play.phase !== 'idle';
+  const firstGameDone = useCoach((state) => state.firstGameDone);
+  const skipFirstGame = useCoach((state) => state.finish);
   const { dragging, dropProps } = useImportDrop();
   useImportPaste();
 
@@ -97,6 +100,17 @@ export function HomeScreen() {
 
         <div className={styles.playZone} role="group" aria-labelledby="play-zone-label">
           <h2 id="play-zone-label" className={styles.zoneLabel}>{t('home.play')}</h2>
+          {!firstGameDone && (
+            <div className={styles.firstGame}>
+              <p className={styles.firstGameText}>{t('home.firstGame.text')}</p>
+              <span className={styles.firstGameActions}>
+                <Button variant="quiet" size="sm" onClick={skipFirstGame} disabled={busy}>{t('home.firstGame.skip')}</Button>
+                <Button variant="print" size="sm" onClick={() => selected && void play.playVsAi(selected.id, { guided: true })} disabled={busy || !selected}>
+                  {t('home.firstGame.start')}
+                </Button>
+              </span>
+            </div>
+          )}
           <div className={styles.modes} role="radiogroup" aria-label={t('home.opponent')}>
             {MODES.map((item) => (
               <button
