@@ -48,6 +48,8 @@ export interface BotGameStats {
   maxTurn: number;
   /** milliseconds from match start to game over */
   millis: number;
+  /** game events the views carried (damage, zone changes...), by kind */
+  events: Record<string, number>;
   gameOver: boolean;
 }
 
@@ -79,6 +81,7 @@ export async function playBotGame(options: BotGameOptions): Promise<BotGameStats
     const session = new GameSession(api, bus, { gameId: start.gameId, playerId: start.playerId ?? null, mode: 'play' });
     await api.gameJoin(start.gameId);
 
+    const events: Record<string, number> = {};
     const stats = { commands: 0, landsPlayed: 0, spellsCast: 0, attacks: 0, maxTurn: 0 };
     const finished = new Promise<void>((resolve, reject) => {
       const deadline = setTimeout(() => reject(new Error(`Game did not finish: ${JSON.stringify(stats)}`)), options.timeoutMs ?? 240_000);
@@ -132,13 +135,20 @@ export async function playBotGame(options: BotGameOptions): Promise<BotGameStats
           }, 50);
         });
       };
+      let lastView = session.getState().view;
+      session.store.subscribe((state) => {
+        if (state.view !== lastView) {
+          lastView = state.view;
+          for (const event of state.view?.events ?? []) events[event.kind ?? '?'] = (events[event.kind ?? '?'] ?? 0) + 1;
+        }
+      });
       session.store.subscribe(step);
       step();
     });
 
     await finished;
     session.dispose();
-    return { ...stats, millis: Date.now() - startedAt, gameOver: !!session.getState().gameOver };
+    return { ...stats, events, millis: Date.now() - startedAt, gameOver: !!session.getState().gameOver };
   } finally {
     await api.disconnectSession(false).catch(() => undefined);
     rpc.disconnect();

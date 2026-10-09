@@ -34,6 +34,21 @@ describe('GameSession', () => {
     expect(session.getState().interaction.clickable.has('land')).toBe(true);
   });
 
+  it('passes on each game event once, even when the server repeats a cached view', () => {
+    const { bus, emit } = fakeBus();
+    const session = new GameSession({} as never, bus, { gameId: 'g1', playerId: 'me', mode: 'play' });
+    const hit = { seq: 1, kind: 'DAMAGE' as const, targetId: 'bear', amount: 3 };
+    emit('GAME_UPDATE', { ...base, events: [hit] });
+    expect(session.getState().view?.events).toEqual([hit]);
+
+    emit('GAME_UPDATE', { ...base, turn: 5, events: [hit] });
+    expect(session.getState().view?.events).toBeUndefined();
+
+    const heal = { seq: 2, kind: 'LIFE_GAIN' as const, playerId: 'me', amount: 2 };
+    emit('GAME_UPDATE', { ...base, turn: 5, events: [hit, heal] });
+    expect(session.getState().view?.events).toEqual([heal]);
+  });
+
   it('takes a new prompt view as is, even with nothing playable', () => {
     const { bus, emit } = fakeBus();
     const session = new GameSession({} as never, bus, { gameId: 'g1', playerId: 'me', mode: 'play' });

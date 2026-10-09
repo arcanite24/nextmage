@@ -380,6 +380,21 @@ export interface GameEndView extends Serializable {
     won?: boolean;
 }
 
+export interface GameEventView extends Serializable {
+    amount?: number;
+    combat?: boolean;
+    counter?: string;
+    fromZone?: string;
+    kind?: GameEventKind;
+    playerId?: string;
+    seq?: number;
+    sourceId?: string;
+    sourceName?: string;
+    targetId?: string;
+    targetName?: string;
+    toZone?: string;
+}
+
 export interface GameTypeView extends Serializable {
     maxPlayers?: number;
     minPlayers?: number;
@@ -398,6 +413,7 @@ export interface GameView extends Serializable {
     canPlayObjects?: PlayableObjectsList;
     combat?: CombatGroupView[];
     companion?: RevealedView[];
+    events?: GameEventView[];
     exiles?: { [index: string]: CardView }[];
     gameCycle?: number;
     lookedAt?: LookedAtView[];
@@ -907,6 +923,8 @@ export type ChoiceHintType = "TEXT" | "CARD" | "CARD_DUNGEON" | "GAME_OBJECT";
 export type DateAsNumber = number;
 
 export type FrameStyle = "M15_NORMAL" | "BFZ_FULL_ART_BASIC" | "KLD_INVENTION" | "ZEN_FULL_ART_BASIC" | "MPRP_FULL_ART_BASIC" | "MPOP_FULL_ART_BASIC" | "UNH_FULL_ART_BASIC" | "UGL_FULL_ART_BASIC" | "UST_FULL_ART_BASIC" | "ANA_FULL_ART_BASIC" | "LEA_ORIGINAL_DUAL_LAND_ART_BASIC" | "RETRO";
+
+export type GameEventKind = "DAMAGE" | "LIFE_GAIN" | "LIFE_LOSS" | "ZONE" | "COUNTERS_ADDED" | "COUNTERS_REMOVED" | "TAP" | "UNTAP" | "CAST" | "ATTACK" | "BLOCK" | "DRAW" | "TOKEN";
 
 export type MageObjectType = "ABILITY_STACK_FROM_CARD" | "ABILITY_STACK_FROM_TOKEN" | "CARD" | "COPY_CARD" | "TOKEN" | "SPELL" | "PERMANENT" | "DUNGEON" | "EMBLEM" | "COMMANDER" | "DESIGNATION" | "PLANE" | "NULL";
 
