@@ -1326,6 +1326,10 @@ public abstract class GameImpl implements Game {
         }
 
         //20091005 - 103.2
+        GameSetup setup = gameOptions == null ? null : gameOptions.setup;
+        if (startingPlayerId == null && setup != null) {
+            startingPlayerId = setup.startingPlayer(this);
+        }
         Player choosingPlayer = null;
         if (startingPlayerId == null) {
             TargetPlayer targetPlayer = new TargetPlayer();
@@ -1380,13 +1384,15 @@ public abstract class GameImpl implements Game {
             if (!gameOptions.testMode || player.getLife() == 0) {
                 player.initLife(this.getStartingLife());
             }
-            if (!gameOptions.testMode) {
+            if (!gameOptions.testMode && (setup == null || !setup.replacesOpeningHands())) {
                 mulligan.drawHand(startingHandSize, player, this);
             }
         }
 
         //20091005 - 103.4
-        mulligan.executeMulliganPhase(this, startingHandSize);
+        if (setup == null || !setup.replacesOpeningHands()) {
+            mulligan.executeMulliganPhase(this, startingHandSize);
+        }
         getState().setChoosingPlayerId(null);
         state.resetWatchers(); // watcher objects from cards are reused during match so reset all card watchers already added
 
@@ -1461,6 +1467,10 @@ public abstract class GameImpl implements Game {
         }
 
         initGameDefaultHelperEmblems();
+
+        if (setup != null) {
+            setup.apply(this, startingPlayerId);
+        }
     }
 
     public void initGameDefaultWatchers() {

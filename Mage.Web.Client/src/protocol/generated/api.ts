@@ -269,6 +269,42 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('careerSetProgress'),
     careerCountAiGames: (count: boolean) =>
       rpc.call('careerCountAiGames', count),
+    careerCampaigns: () =>
+      rpc.call('careerCampaigns'),
+    careerCampaignPlay: (campaignId: string, nodeId: string) =>
+      rpc.call('careerCampaignPlay', campaignId, nodeId),
+    careerCampaignChoose: (campaignId: string, nodeId: string, optionId: string) =>
+      rpc.call('careerCampaignChoose', campaignId, nodeId, optionId),
+    careerPuzzles: () =>
+      rpc.call('careerPuzzles'),
+    careerPuzzlePlay: (puzzleId: string) =>
+      rpc.call('careerPuzzlePlay', puzzleId),
+    careerChallenge: () =>
+      rpc.call('careerChallenge'),
+    careerChallengePlay: () =>
+      rpc.call('careerChallengePlay'),
+    careerGauntlet: () =>
+      rpc.call('careerGauntlet'),
+    careerGauntletStart: () =>
+      rpc.call('careerGauntletStart'),
+    careerGauntletPick: (optionIds: unknown[]) =>
+      rpc.call('careerGauntletPick', optionIds),
+    careerGauntletPlay: () =>
+      rpc.call('careerGauntletPlay'),
+    careerGauntletAbandon: () =>
+      rpc.call('careerGauntletAbandon'),
+    careerLimited: () =>
+      rpc.call('careerLimited'),
+    careerLimitedStart: (kind: string, setCode: string) =>
+      rpc.call('careerLimitedStart', kind, setCode),
+    careerLimitedPick: (index: number) =>
+      rpc.call('careerLimitedPick', index),
+    careerLimitedDeck: (deck: DeckCardLists) =>
+      rpc.call('careerLimitedDeck', deck),
+    careerLimitedPlay: () =>
+      rpc.call('careerLimitedPlay'),
+    careerLimitedAbandon: () =>
+      rpc.call('careerLimitedAbandon'),
   };
 }
 
