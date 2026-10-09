@@ -891,6 +891,15 @@ const es: Catalog = {
   'career.versus.record': { one: 'Vencido {count} vez', other: 'Vencido {count} veces' },
   'career.versus.oneLoss': 'Una derrota termina la carrera',
 
+  'career.binder': 'Carpeta',
+  'career.binder.search': 'Buscar y fabricar',
+  'career.binder.complete': '{have} de {total}',
+  'career.binder.page': 'Páginas {page} de {pages}',
+  'career.binder.previous': 'Páginas anteriores',
+  'career.binder.next': 'Páginas siguientes',
+  'career.binder.missing': 'aún no la tienes',
+  'career.binder.new': 'Nueva',
+
   'career.results.victory': 'Victoria',
   'career.results.defeat': 'Derrota',
   'career.results.earned': 'Conseguido',

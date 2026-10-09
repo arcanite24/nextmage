@@ -939,7 +939,13 @@
 
 .tabs {
   display: flex;
+  align-items: center;
   gap: 4px;
+}
+
+.tabsNote {
+  margin: 0 0 0 auto;
+  color: var(--ink-dim);
 }
 
 .tab {
