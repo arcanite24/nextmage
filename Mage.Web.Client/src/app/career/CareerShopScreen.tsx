@@ -31,6 +31,8 @@ export function CareerShopScreen() {
   if (!profile) return <Navigate to="/career" replace />;
   const coins = profile.coins ?? 0;
   const price = shop.data?.[0]?.price ?? 100;
+  // free packs (level rewards, the weekly goal) are spent before coins
+  const tokens = profile.packTokens ?? 0;
 
   async function buy(set: CareerShopSet) {
     setBuying(set.setCode ?? null);
@@ -59,7 +61,7 @@ export function CareerShopScreen() {
       {shop.data && sets.length === 0 && <p className={styles.note}>{t('career.shop.none')}</p>}
       <ul className={styles.shop}>
         {sets.map((set) => {
-          const short = coins < (set.price ?? price);
+          const short = tokens === 0 && coins < (set.price ?? price);
           return (
             <li key={set.setCode} className={styles.pack}>
               <Package size={22} aria-hidden="true" className={styles.packIcon} />
@@ -75,7 +77,7 @@ export function CareerShopScreen() {
                 aria-describedby={short ? 'career-short' : undefined}
                 onClick={() => void buy(set)}
               >
-                {t('career.shop.buy', { price: set.price ?? price })}
+                {tokens > 0 ? t('career.shop.free', { count: tokens }) : t('career.shop.buy', { price: set.price ?? price })}
               </Button>
             </li>
           );
@@ -86,7 +88,7 @@ export function CareerShopScreen() {
           key={opened.serial}
           setName={opened.set.name ?? opened.result.setCode ?? ''}
           cards={opened.result.cards ?? []}
-          canBuyAnother={(opened.result.profile?.coins ?? 0) >= (opened.set.price ?? price) && buying === null}
+          canBuyAnother={((opened.result.profile?.packTokens ?? 0) > 0 || (opened.result.profile?.coins ?? 0) >= (opened.set.price ?? price)) && buying === null}
           onAnother={() => void buy(opened.set)}
           onClose={() => setOpened(null)}
         />

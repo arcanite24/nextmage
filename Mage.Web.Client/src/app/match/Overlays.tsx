@@ -95,9 +95,12 @@ export function CardPicker({ title, cards, interaction, sleeve, footer, onComman
             );
           })}
         </div>
-        {(main || footer) && (
+        {(main || footer || interaction.secondaryButtons.length > 0) && (
           <footer className={styles.panelFoot}>
             {footer}
+            {interaction.secondaryButtons.map((button) => (
+              <Button key={button.label} variant="quiet" size="lg" onClick={() => onCommand(button.command)}>{button.label}</Button>
+            ))}
             {main && <Button variant="decision" size="lg" onClick={() => onCommand(main.command)}>{main.label}</Button>}
           </footer>
         )}

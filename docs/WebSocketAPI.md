@@ -247,6 +247,14 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `careerCraft` | `setCode: string`, `cardNumber: string` | `CareerProfile` | session | Craft one copy of a card: commons and uncommons cost coins, rares and mythics a wildcard of their rarity. |
 | `careerExport` | - | `string` | session | The account's whole Career as a signed text file, to keep a copy. |
 | `careerImport` | `data: string` | `CareerProfile` | session | Bring back an exported Career, for an account that has none. Only files this server made for this account are taken. |
+| `careerQuests` | - | `CareerQuests \| null` | session | The quests waiting (up to three; a new one arrives each day) and whether one can be swapped today. Null before the account opens a Career. |
+| `careerRerollQuest` | `slot: number` | `CareerQuests` | session | Swap the quest in a slot for a different one, once a day. The new quest starts from zero. |
+| `careerAchievements` | - | `CareerAchievement[]` | session | Every achievement, earned or not, with progress on the Career-long ones. A secret one has no name or text until it's earned. |
+| `careerLevels` | - | `CareerLevelTrack \| null` | session | The level track: the account's level and XP, what every level gives, and the cosmetics unlocked so far. |
+| `careerWeekly` | - | `CareerWeekly` | session | Career wins this week (ISO weeks, UTC) and the goals that each give a free pack. |
+| `careerGameResult` | `gameKey?: string` | `CareerGameResult \| null` | session | What a finished game paid: the match's coins and XP, quest progress, achievements, level rewards and the weekly goal. The key is the Career table id (or the game id of a regular AI game); without one, the latest game. Null when that game paid nothing. |
+| `careerSetProgress` | - | `CareerSetProgress[]` | session | How much of each set the collection has: different cards owned (any printing) out of the cards its packs hold, basic lands left out. Most complete first. |
+| `careerCountAiGames` | `count: boolean` | `CareerProfile` | session | Whether regular games against the AI also count for quests and achievements (off by default). They never pay coins for the match itself, and practice, goldfish and cheat games never count. |
 <!-- END GENERATED: methods -->
 
 ## Server events

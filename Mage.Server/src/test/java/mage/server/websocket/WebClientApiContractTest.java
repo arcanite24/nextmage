@@ -60,6 +60,8 @@ public class WebClientApiContractTest {
             "gamePractice", // game controller practice tools, with readable errors
             "careerState", "careerStarters", "careerStart", "careerCollection", "careerOpponents", "careerPlay", "careerShop",
             "careerBuyPack", "careerCraft", "careerExport", "careerImport", // career store and service (career/CareerServiceTest)
+            "careerQuests", "careerRerollQuest", "careerAchievements", "careerLevels", "careerWeekly", "careerGameResult",
+            "careerSetProgress", "careerCountAiGames", // career progress (career/CareerProgressTest)
             "authRegister", "authSendTokenToEmail", "authResetPassword" // session and AccountService, with readable errors
     ));
 

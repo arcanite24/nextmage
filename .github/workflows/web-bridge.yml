@@ -1,11 +1,13 @@
 name: Web bridge
 
-# The WebSocket bridge tests (contract, transport, API docs) for every branch and PR that touches
+# The WebSocket bridge and Career tests (contract, transport, API docs, Career rules) for every branch and PR that touches
 # the bridge, its shared types or its documentation. The full build in maven.yml runs only on master.
 on:
   push:
     paths:
       - "Mage.Server/src/main/java/mage/server/websocket/**"
+      - "Mage.Server/src/main/java/mage/server/career/**"
+      - "Mage.Server/src/main/resources/career/**"
       - "Mage.Server/src/test/**"
       - "Mage.Server/pom.xml"
       - "Mage.Common/**"
@@ -14,6 +16,8 @@ on:
   pull_request:
     paths:
       - "Mage.Server/src/main/java/mage/server/websocket/**"
+      - "Mage.Server/src/main/java/mage/server/career/**"
+      - "Mage.Server/src/main/resources/career/**"
       - "Mage.Server/src/test/**"
       - "Mage.Server/pom.xml"
       - "Mage.Common/**"
@@ -42,7 +46,7 @@ jobs:
       - name: Bridge tests
         run: >
           mvn -B -pl Mage.Server test
-          -Dtest='mage/server/websocket/**/*Test'
+          -Dtest='mage/server/websocket/**/*Test,mage/server/career/**/*Test'
           -Dsurefire.failIfNoSpecifiedTests=false
           -Dxmage.dataCollectors.printGameLogs=false
           -Dlog4j.configuration=file:${GITHUB_WORKSPACE}/.travis/log4j.properties

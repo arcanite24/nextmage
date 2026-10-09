@@ -108,7 +108,23 @@ public class GameController implements GameCallback {
         // what happens in the game, for web clients to animate (see GameEventRecorder)
         GameEventFeed.open(game.getId());
         game.getState().addWatcher(new GameEventRecorder(game.getId()));
+        tallyForCareer();
         init();
+    }
+
+    /**
+     * A game of one person against the AI is tallied for Career quests and achievements: always at a Career table, and
+     * at other tables when the player lets regular AI games count (decided when the game ends). Never in test mode.
+     */
+    private void tallyForCareer() {
+        if (Main.isTestMode()
+                || !mage.server.career.CareerService.enabled(managerFactory.configSettings().isAuthenticationActivated())) {
+            return;
+        }
+        List<Player> humans = game.getPlayers().values().stream().filter(Player::isHuman).collect(Collectors.toList());
+        if (humans.size() == 1 && game.getPlayers().size() > 1) {
+            game.getState().addWatcher(mage.server.career.CareerTally.open(game.getId(), humans.get(0).getId()));
+        }
     }
 
     public void cleanUp() {
@@ -815,10 +831,12 @@ public class GameController implements GameCallback {
             return problem.toString();
         }
         player.queueGameThreadAction(action);
+        mage.server.career.CareerTally.taint(game.getId(), "practice tools were used");
         return null;
     }
 
     public void cheatShow(UUID playerId) {
+        mage.server.career.CareerTally.taint(game.getId(), "a cheat was used");
         Player player = game.getPlayer(playerId);
         if (player != null) {
             player.signalPlayerCheat();
