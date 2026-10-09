@@ -12,11 +12,12 @@ import { openImport } from '../stores/importSheet';
 import { describeAi } from './aiSetup';
 import styles from './HomeScreen.module.css';
 
-type Mode = 'ai' | 'friend';
+type Mode = 'ai' | 'practice' | 'friend';
 
 // open tables and events have their own pages in the rail; here the only question is who you play
 const MODES: { id: Mode; label: string }[] = [
   { id: 'ai', label: 'The AI' },
+  { id: 'practice', label: 'Practice' },
   { id: 'friend', label: 'A friend' },
 ];
 
@@ -43,6 +44,9 @@ export function HomeScreen() {
     switch (mode) {
       case 'ai':
         void play.playVsAi(selected.id);
+        break;
+      case 'practice':
+        void play.playVsAi(selected.id, { practice: true });
         break;
       case 'friend':
         navigate('/tables', { state: { host: selected.id } });
@@ -71,6 +75,7 @@ export function HomeScreen() {
                 onActivate={() => {
                   decks.select(deck.id);
                   if (mode === 'ai') void play.playVsAi(deck.id);
+                  if (mode === 'practice') void play.playVsAi(deck.id, { practice: true });
                 }}
               />
             </div>
@@ -112,6 +117,12 @@ export function HomeScreen() {
               <span className={styles.aiSetupAction}>Change</span>
             </button>
           )}
+          {mode === 'practice' && (
+            <p className={styles.modeNote}>
+              Goldfish: an opponent that only plays lands. In the game, Practice tools put any card in your hand or on
+              the battlefield, draw, untap and set your life.
+            </p>
+          )}
           {mode === 'friend' && <p className={styles.modeNote}>You host a table with this deck; your friend joins it from Tables.</p>}
           {play.error && <p className={styles.error} role="alert">{play.error}</p>}
           <div className={styles.playRow}>
@@ -126,7 +137,7 @@ export function HomeScreen() {
               onClick={start}
               className={styles.playButton}
             >
-              {busy ? (play.phase === 'waitingForGame' ? 'Shuffling' : 'Setting up') : mode === 'ai' ? 'Play' : 'Continue'}
+              {busy ? (play.phase === 'waitingForGame' ? 'Shuffling' : 'Setting up') : mode === 'friend' ? 'Continue' : 'Play'}
             </Button>
           </div>
         </div>

@@ -159,6 +159,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `sendPlayerManaType` | `gameId: UUID`, `playerId: UUID`, `sessionId: string`, `manaType: ManaType` | `boolean` | session | Pay from the mana pool with one mana type. |
 | `sendPlayerAction` | `action: PlayerAction`, `gameId: UUID`, `sessionId: string`, `data?: unknown` | `boolean` | session | Send a player action: pass modes (F-keys), concede, undo, rollback, auto-answer and trigger-order settings. |
 | `cheatShow` | `gameId: UUID`, `sessionId: string`, `playerId: UUID` | `boolean` | session | Test mode only: reveal a player's library. |
+| `gamePractice` | `gameId: UUID`, `sessionId: string`, `tool: string`, `cardName?: string`, `amount?: number` | `boolean` | session | Practice tools in a game against the AI only: tool HAND or BATTLEFIELD (cardName, amount cards), DRAW (amount), UNTAP_ALL, LIFE (amount). Runs the next time you are asked something; announced in the game log. |
 | `replayInit` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Open a saved game for replay. |
 | `replayStart` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Start the replay. |
 | `replayStop` | `gameId: UUID`, `sessionId: string` | `boolean` | session | Stop the replay. |

@@ -5,6 +5,7 @@ import com.google.gson.JsonPrimitive;
 import mage.constants.ManaType;
 import mage.constants.PlayerAction;
 import mage.server.game.GameController;
+import mage.server.game.PracticeTools;
 import mage.server.replay.ReplayStore;
 import mage.server.websocket.rpc.RpcCall;
 import mage.server.websocket.rpc.RpcException;
@@ -179,6 +180,29 @@ final class GameApi {
                         .doc("Test mode only: reveal a player's library.")
                         .handler(call -> {
                             ctx.server.cheatShow(call.uuid(0), call.string(1), call.uuid(2));
+                            return true;
+                        }),
+
+                RpcMethod.named("gamePractice")
+                        .session(1)
+                        .params(gameId(), of("sessionId", STRING), of("tool", STRING), optional("cardName", STRING), optional("amount", INT))
+                        .doc("Practice tools in a game against the AI only: tool HAND or BATTLEFIELD (cardName, amount cards), DRAW (amount), UNTAP_ALL, LIFE (amount). Runs the next time you are asked something; announced in the game log.")
+                        .handler(call -> {
+                            GameController controller = ctx.managers.gameManager().getGameController().get(call.uuid(0));
+                            if (controller == null) {
+                                throw new RpcException(RpcException.INVALID_PARAMS, "That game isn't running.");
+                            }
+                            mage.server.Session session = ctx.managers.sessionManager().getSession(call.sessionId())
+                                    .orElseThrow(() -> RpcException.notAuthorized("Sign in first"));
+                            PracticeTools.Tool tool = PracticeTools.parse(call.string(2));
+                            if (tool == null) {
+                                throw new RpcException(RpcException.INVALID_PARAMS, "Unknown practice tool: " + call.string(2));
+                            }
+                            String problem = controller.practice(session.getUserId(), tool,
+                                    call.has(3) ? call.string(3) : null, call.has(4) ? call.integer(4) : 1);
+                            if (problem != null) {
+                                throw new RpcException(RpcException.INVALID_PARAMS, problem);
+                            }
                             return true;
                         }),
 

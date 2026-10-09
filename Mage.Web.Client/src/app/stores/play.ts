@@ -52,17 +52,30 @@ export const DEFAULT_AI_OPTIONS: AiOptions = {
   opponents: 1,
 };
 
+/** One game's changes to the saved AI setup; `practice` is a goldfish game against an AI that only has lands. */
+export type PlayOverrides = Partial<AiOptions> & { practice?: boolean };
+
+/**
+ * The goldfish's deck: lands only, so it never casts anything and your deck plays against an empty board. A commander
+ * game needs a commander; it gets a vanilla six-drop it will rarely reach.
+ */
+export function goldfishDeck(commander: boolean): DeckCardLists {
+  return commander
+    ? { name: 'Goldfish', cards: [{ cardName: 'Island', amount: 99 }], sideboard: [{ cardName: 'Sivitri Scarzam', amount: 1 }] }
+    : { name: 'Goldfish', cards: [{ cardName: 'Plains', amount: 60 }], sideboard: [] };
+}
+
 interface PlayState {
   phase: PlayPhase;
   error: string | null;
   tableId: string | null;
   /** the deck of the latest game against the AI (for its sleeve and for playing again) */
   deckId: string | null;
-  lastOptions: Partial<AiOptions>;
+  lastOptions: PlayOverrides;
   /** how games against the AI are set up (kept in this browser) */
   aiOptions: AiOptions;
   setAiOptions(patch: Partial<AiOptions>): void;
-  playVsAi(deckId: string, options?: Partial<AiOptions>): Promise<void>;
+  playVsAi(deckId: string, options?: PlayOverrides): Promise<void>;
   cancel(): Promise<void>;
 }
 
@@ -130,7 +143,10 @@ export const usePlay = create<PlayState>((set, get) => ({
   async playVsAi(deckId, overrides = {}) {
     const { roomId, userName } = useSession.getState();
     if (!roomId) return;
-    const options: AiOptions = { ...get().aiOptions, ...overrides };
+    const { practice = false, ...picked } = overrides;
+    const options: AiOptions = practice
+      ? { ...get().aiOptions, rules: 'casual', opponents: 1, aiType: 'COMPUTER_MAD', skill: 1, winsNeeded: 1 }
+      : { ...get().aiOptions, ...picked };
     set({ phase: 'starting', error: null, deckId, lastOptions: overrides });
     // a game outside any event: leaving it goes back to Play
     useEvents.setState({ currentTournamentId: null });
@@ -155,7 +171,8 @@ export const usePlay = create<PlayState>((set, get) => ({
       const seats = opponents + 1;
       const gameType = gameTypeFor(deckType, seats, await api.getGameTypes());
       const playerDeck = toWire(deck);
-      const rivals = await Promise.all((await aiDecks(options.opponentDeckId, opponents, commander)).map(async (rival) => {
+      const rivalDecks = practice ? [goldfishDeck(commander)] : await aiDecks(options.opponentDeckId, opponents, commander);
+      const rivals = await Promise.all(rivalDecks.map(async (rival) => {
         const wire = toWire(rival);
         if (options.rules !== 'deck') return wire;
         // the AI has to be legal too; a starter that isn't plays a copy of your deck instead
@@ -172,7 +189,7 @@ export const usePlay = create<PlayState>((set, get) => ({
       // table setup is only needed here; keep it out of the entry chunk
       const { matchOptions } = await import('../../core/game/tableSetup');
       const table = await api.roomCreateTable(roomId, matchOptions({
-        name: `${userName} vs AI`,
+        name: practice ? `${userName} practice` : `${userName} vs AI`,
         gameType,
         deckType,
         winsNeeded: options.winsNeeded,
@@ -186,7 +203,7 @@ export const usePlay = create<PlayState>((set, get) => ({
         throw new Error(options.rules === 'deck' ? `Your deck isn't legal in ${rules.label}. Fix it in the deck builder, or play casual.` : 'Your deck was not accepted for this table.');
       }
       for (const [index, rival] of rivals.entries()) {
-        const name = rivals.length === 1 ? 'AI Opponent' : `AI ${index + 1}`;
+        const name = practice ? 'Goldfish' : rivals.length === 1 ? 'AI Opponent' : `AI ${index + 1}`;
         if (!await api.roomJoinTable(roomId, tableId, name, options.aiType, options.skill, rival)) {
           throw new Error('The AI could not take its seat.');
         }
