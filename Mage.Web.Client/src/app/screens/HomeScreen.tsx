@@ -2,7 +2,9 @@ import { SlidersHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rosterOf, sleeveFor, useDecks } from '../stores/decks';
+import { useCoach } from '../stores/coach';
 import { usePlay } from '../stores/play';
+import { useT, type MessageKey } from '../i18n';
 import { Button } from '../ui/Button';
 import { DeckBox } from '../ui/DeckBox';
 import { MatPrint } from '../ui/MatPrint';
@@ -12,17 +14,19 @@ import { openImport } from '../stores/importSheet';
 import { describeAi } from './aiSetup';
 import styles from './HomeScreen.module.css';
 
-type Mode = 'ai' | 'friend';
+type Mode = 'ai' | 'practice' | 'friend';
 
 // open tables and events have their own pages in the rail; here the only question is who you play
-const MODES: { id: Mode; label: string }[] = [
-  { id: 'ai', label: 'The AI' },
-  { id: 'friend', label: 'A friend' },
+const MODES: { id: Mode; label: MessageKey }[] = [
+  { id: 'ai', label: 'home.mode.ai' },
+  { id: 'practice', label: 'home.mode.practice' },
+  { id: 'friend', label: 'home.mode.friend' },
 ];
 
 /** Home: your deck on your mat, one decision away from a game. */
 export function HomeScreen() {
   const navigate = useNavigate();
+  const t = useT();
   const decks = useDecks();
   const play = usePlay();
   const [mode, setMode] = useState<Mode>('ai');
@@ -31,6 +35,8 @@ export function HomeScreen() {
   const selected = roster.find((deck) => deck.id === decks.selectedId) ?? roster[0] ?? null;
   const sleeve = sleeveFor(decks.sleeves, selected);
   const busy = play.phase !== 'idle';
+  const firstGameDone = useCoach((state) => state.firstGameDone);
+  const skipFirstGame = useCoach((state) => state.finish);
   const { dragging, dropProps } = useImportDrop();
   useImportPaste();
 
@@ -44,6 +50,9 @@ export function HomeScreen() {
       case 'ai':
         void play.playVsAi(selected.id);
         break;
+      case 'practice':
+        void play.playVsAi(selected.id, { practice: true });
+        break;
       case 'friend':
         navigate('/tables', { state: { host: selected.id } });
         break;
@@ -52,12 +61,12 @@ export function HomeScreen() {
 
   return (
     <div className={styles.home}>
-      <aside className={styles.roster} aria-label="Your decks">
+      <aside className={styles.roster} aria-label={t('home.yourDecks')}>
         <header className={styles.rosterHead}>
-          <h2>Your decks</h2>
+          <h2>{t('home.yourDecks')}</h2>
           <span className={styles.rosterActions}>
-            <Button variant="quiet" size="sm" onClick={() => openImport()}>Import</Button>
-            <Button variant="quiet" size="sm" onClick={() => navigate('/decks')}>Manage</Button>
+            <Button variant="quiet" size="sm" onClick={() => openImport()}>{t('home.import')}</Button>
+            <Button variant="quiet" size="sm" onClick={() => navigate('/decks')}>{t('home.manage')}</Button>
           </span>
         </header>
         <div className={[styles.rosterList, dragging ? styles.dropping : ''].join(' ')} role="list" {...dropProps}>
@@ -71,12 +80,13 @@ export function HomeScreen() {
                 onActivate={() => {
                   decks.select(deck.id);
                   if (mode === 'ai') void play.playVsAi(deck.id);
+                  if (mode === 'practice') void play.playVsAi(deck.id, { practice: true });
                 }}
               />
             </div>
           ))}
           {decks.loaded && roster.length === 0 && (
-            <p className={styles.empty}>No decks yet. Paste a deck link or list here, or choose Import.</p>
+            <p className={styles.empty}>{t('home.empty')}</p>
           )}
         </div>
       </aside>
@@ -84,13 +94,24 @@ export function HomeScreen() {
       <section className={styles.mat} style={{ '--sleeve': sleeve } as CSSProperties}>
         <MatPrint card={selected?.cover ?? null} />
         <div className={styles.deckTitle}>
-          <h1 className={styles.deckName}>{selected?.name ?? 'Choose a deck'}</h1>
+          <h1 className={styles.deckName}>{selected?.name ?? t('home.chooseDeck')}</h1>
           <p className={styles.deckNote}>{selected?.note ?? ' '}</p>
         </div>
 
         <div className={styles.playZone} role="group" aria-labelledby="play-zone-label">
-          <h2 id="play-zone-label" className={styles.zoneLabel}>Play</h2>
-          <div className={styles.modes} role="radiogroup" aria-label="Opponent">
+          <h2 id="play-zone-label" className={styles.zoneLabel}>{t('home.play')}</h2>
+          {!firstGameDone && (
+            <div className={styles.firstGame}>
+              <p className={styles.firstGameText}>{t('home.firstGame.text')}</p>
+              <span className={styles.firstGameActions}>
+                <Button variant="quiet" size="sm" onClick={skipFirstGame} disabled={busy}>{t('home.firstGame.skip')}</Button>
+                <Button variant="print" size="sm" onClick={() => selected && void play.playVsAi(selected.id, { guided: true })} disabled={busy || !selected}>
+                  {t('home.firstGame.start')}
+                </Button>
+              </span>
+            </div>
+          )}
+          <div className={styles.modes} role="radiogroup" aria-label={t('home.opponent')}>
             {MODES.map((item) => (
               <button
                 key={item.id}
@@ -101,22 +122,23 @@ export function HomeScreen() {
                 onClick={() => setMode(item.id)}
                 disabled={busy}
               >
-                {item.label}
+                {t(item.label)}
               </button>
             ))}
           </div>
           {mode === 'ai' && (
             <button type="button" className={styles.aiSetup} onClick={() => setAiOpen(true)} disabled={busy}>
               <SlidersHorizontal size={16} aria-hidden="true" />
-              <span>{describeAi(play.aiOptions, roster.find((deck) => deck.id === play.aiOptions.opponentDeckId)?.name ?? null)}</span>
-              <span className={styles.aiSetupAction}>Change</span>
+              <span>{describeAi(t, play.aiOptions, roster.find((deck) => deck.id === play.aiOptions.opponentDeckId)?.name ?? null)}</span>
+              <span className={styles.aiSetupAction}>{t('home.change')}</span>
             </button>
           )}
-          {mode === 'friend' && <p className={styles.modeNote}>You host a table with this deck; your friend joins it from Tables.</p>}
+          {mode === 'practice' && <p className={styles.modeNote}>{t('home.practiceNote')}</p>}
+          {mode === 'friend' && <p className={styles.modeNote}>{t('home.friendNote')}</p>}
           {play.error && <p className={styles.error} role="alert">{play.error}</p>}
           <div className={styles.playRow}>
             {busy && (
-              <Button variant="quiet" onClick={() => void play.cancel()}>Cancel</Button>
+              <Button variant="quiet" onClick={() => void play.cancel()}>{t('home.cancel')}</Button>
             )}
             <Button
               variant="decision"
@@ -126,7 +148,7 @@ export function HomeScreen() {
               onClick={start}
               className={styles.playButton}
             >
-              {busy ? (play.phase === 'waitingForGame' ? 'Shuffling' : 'Setting up') : mode === 'ai' ? 'Play' : 'Continue'}
+              {t(busy ? (play.phase === 'waitingForGame' ? 'home.shuffling' : 'home.settingUp') : mode === 'friend' ? 'home.continue' : 'home.play')}
             </Button>
           </div>
         </div>

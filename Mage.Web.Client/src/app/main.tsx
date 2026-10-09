@@ -8,6 +8,7 @@ import { installGlobalErrorHandlers, setReporter } from '../core/telemetry/repor
 import { serverReporter } from '../core/telemetry/serverReporter';
 import { api, rpc } from './connection';
 import { AppShell } from './AppShell';
+import { i18nReady } from './i18n';
 import { queryClient } from './queries';
 import { ImportRoute } from './decks/import/ImportRoute';
 import { DecksScreen } from './screens/DecksScreen';
@@ -68,6 +69,11 @@ setReporter(serverReporter(
   { path: () => window.location.pathname, userAgent: navigator.userAgent, appVersion: import.meta.env.VITE_APP_VERSION },
 ));
 
+// installable app with an offline shell; the dev server has no service worker
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => void import('./pwa').then((m) => m.registerServiceWorker()));
+}
+
 const router = createBrowserRouter([
   { path: '/login', element: <LoginScreen /> },
   // credits and legal notices, readable before signing in
@@ -103,7 +109,8 @@ const router = createBrowserRouter([
   { path: '*', element: <Navigate to="/" replace /> },
 ]);
 
-createRoot(document.getElementById('root')!).render(
+// a Spanish (or other non-English) player's catalog loads first, so the first paint is already in their language
+void i18nReady.then(() => createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <Tooltip.Provider delayDuration={300}>
@@ -111,4 +118,4 @@ createRoot(document.getElementById('root')!).render(
       </Tooltip.Provider>
     </QueryClientProvider>
   </StrictMode>,
-);
+));

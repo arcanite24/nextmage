@@ -43,15 +43,16 @@ class FakeSocket implements SocketLike {
     this.onmessage?.({ data: JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } }) });
   }
 
-  push(method: string, messageId: number, data: unknown): void {
-    this.onmessage?.({ data: JSON.stringify({ method, messageId, objectId: null, data }) });
+  push(method: string, messageId: number, data: unknown, extra: Record<string, unknown> = {}): void {
+    this.onmessage?.({ data: JSON.stringify({ method, messageId, objectId: null, data, ...extra }) });
   }
 }
 
 const last = () => FakeSocket.instances[FakeSocket.instances.length - 1];
 
-function createClient() {
+function createClient(options: { stateDiffs?: boolean } = {}) {
   return new RpcClient({
+    ...options,
     createSocket: (url) => new FakeSocket(url),
     heartbeatMs: 0,
     reconnectInitialDelayMs: 10,
@@ -176,5 +177,58 @@ describe('EventBus', () => {
     last().push('GAME_UPDATE', 1, {});
 
     expect(seen).toEqual(['update-5', 'target-4', 'update-1']);
+  });
+
+  test('with state patches, asks for them first and hands listeners complete views', async () => {
+    const client = createClient({ stateDiffs: true });
+    const bus = new EventBus(client);
+    const connected = client.connect('ws://test');
+    last().open();
+    await connected;
+    expect(last().sent[0]).toEqual({ jsonrpc: '2.0', method: 'setCapabilities', params: [['stateDiffs']] });
+
+    const views: unknown[] = [];
+    bus.on('GAME_UPDATE', (view) => views.push(view));
+    bus.on('GAME_ASK', (message) => views.push(message.gameView));
+    last().push('GAME_UPDATE', 1, { turn: 1, players: [{ life: 20 }] }, { objectId: 'g', state: { seq: 1 } });
+    last().push('GAME_UPDATE', 2, undefined, { objectId: 'g', state: { seq: 2, base: 1, patch: { players: [1, { 0: { life: [18] } }] } } });
+    last().push('GAME_ASK', 3, { message: 'Attack?' }, { objectId: 'g', state: { seq: 3, base: 2, patch: { turn: [2] } } });
+    expect(views).toEqual([
+      { turn: 1, players: [{ life: 20 }] },
+      { turn: 1, players: [{ life: 18 }] },
+      { turn: 2, players: [{ life: 18 }] },
+    ]);
+  });
+
+  test('a patch on a lost state is dropped and the whole state is asked for', async () => {
+    const client = createClient({ stateDiffs: true });
+    const bus = new EventBus(client);
+    const connected = client.connect('ws://test');
+    last().open();
+    await connected;
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const updates = vi.fn();
+    bus.on('GAME_UPDATE', updates);
+
+    last().push('GAME_UPDATE', 1, { turn: 1 }, { objectId: 'g', state: { seq: 1 } });
+    last().push('GAME_UPDATE', 2, undefined, { objectId: 'g', state: { seq: 3, base: 2, patch: { turn: [3] } } });
+    expect(updates).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(last().sent.some((request) => request.method === 'gameStateResync')).toBe(true));
+    const request = last().sent.find((sent) => sent.method === 'gameStateResync')!;
+    expect(request.params).toEqual(['g', '']);
+
+    // the server resends the state complete, with the newest message id
+    last().push('GAME_UPDATE', 2, { turn: 3 }, { objectId: 'g', state: { seq: 4 } });
+    last().reply(request.id as number, true);
+    expect(updates).toHaveBeenLastCalledWith({ turn: 3 }, expect.anything());
+    warn.mockRestore();
+  });
+
+  test('without state patches, nothing extra is sent', async () => {
+    const client = createClient();
+    const connected = client.connect('ws://test');
+    last().open();
+    await connected;
+    expect(last().sent).toEqual([]);
   });
 });

@@ -17,6 +17,8 @@ export function createApi(rpc: RpcCaller) {
   return {
     ping: (pingInfo?: string | null) =>
       rpc.call('ping', SESSION, pingInfo),
+    setCapabilities: (capabilities: string[]) =>
+      rpc.call('setCapabilities', capabilities),
     connectUser: (userName: string, password: string, restoreSessionId?: string | null, clientVersion?: string | null, userIdStr?: string | null) =>
       rpc.call('connectUser', userName, password, SESSION, restoreSessionId, clientVersion, userIdStr),
     connectAdmin: (password: string) =>
@@ -119,6 +121,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('gameJoin', gameId, SESSION),
     gameResync: (gameId: UUID) =>
       rpc.call('gameResync', gameId, SESSION),
+    gameStateResync: (gameId: UUID) =>
+      rpc.call('gameStateResync', gameId, SESSION),
     matchQuit: (gameId: UUID) =>
       rpc.call('matchQuit', gameId, SESSION),
     gameWatchStart: (gameId: UUID) =>
@@ -145,6 +149,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('sendPlayerAction', action, gameId, SESSION, data),
     cheatShow: (gameId: UUID, playerId: UUID) =>
       rpc.call('cheatShow', gameId, SESSION, playerId),
+    gamePractice: (gameId: UUID, tool: string, cardName?: string | null, amount?: number | null) =>
+      rpc.call('gamePractice', gameId, SESSION, tool, cardName, amount),
     replayInit: (gameId: UUID) =>
       rpc.call('replayInit', gameId, SESSION),
     replayStart: (gameId: UUID) =>

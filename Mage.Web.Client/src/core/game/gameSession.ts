@@ -3,6 +3,7 @@ import type { Api } from '../../protocol/generated/api';
 import type { GameClientMessage, GameEndView, GameView } from '../../protocol/generated/views';
 import type { EventBus } from '../rpc/EventBus';
 import type { ServerEvent } from '../rpc/RpcClient';
+import { DelayedRelay } from './broadcastDelay';
 import { deriveInteraction, type Command, type Interaction } from './interaction';
 import { PROMPT_EVENTS, parsePrompt, promptGameView, stripMarkup, type Prompt, type PromptEventName } from './prompt';
 import { structuralShare } from './structuralShare';
@@ -36,6 +37,8 @@ export interface GameSessionState {
   /** final message when the game ends */
   gameOver: string | null;
   endInfo: GameEndView | null;
+  /** watching: the broadcast delay in ms (0: live); what the server sends is shown this much later */
+  broadcastDelayMs: number;
 }
 
 const MAX_NOTICES = 50;
@@ -64,6 +67,10 @@ export class GameSession {
   private readonly replyTimeoutMs: number;
   /** the last answer sent, for "Send again" */
   private lastCommand: Command | null = null;
+  /** the newest game event a view has carried; a view repeated from the server's cache carries old ones again */
+  private lastEventSeq = 0;
+  /** every server event for this game passes through here: at once, or after the broadcast delay when watching */
+  private readonly relay = new DelayedRelay<() => void>((apply) => apply());
 
   constructor(
     private readonly api: Api,
@@ -86,6 +93,7 @@ export class GameSession {
       notices: [],
       gameOver: null,
       endInfo: null,
+      broadcastDelayMs: 0,
     }));
 
     const forThisGame = <T>(handler: (data: T, event: ServerEvent) => void) =>
@@ -93,7 +101,9 @@ export class GameSession {
         if (event.objectId !== null && event.objectId !== init.gameId) return;
         // any word from the server about this game shows it is alive and working on our answer
         this.heard();
-        handler(data, event);
+        // a delayed board is behind on purpose: hearing from the server again is enough to end the resync
+        if (this.relay.delay > 0 && this.store.getState().resyncing) this.store.setState({ resyncing: false });
+        this.relay.push(() => handler(data, event));
       };
 
     this.unsubscribers.push(
@@ -207,7 +217,31 @@ export class GameSession {
     this.refreshInteraction();
   }
 
+  /**
+   * Watching only: show the game this many ms behind the server (0: live, catching up at once). The delay keeps a
+   * stream of the game from giving the players away.
+   */
+  setBroadcastDelay(delayMs: number): void {
+    const next = this.store.getState().mode === 'watch' ? Math.max(0, delayMs) : 0;
+    if (next === this.relay.delay) return;
+    this.store.setState({ broadcastDelayMs: next });
+    this.relay.setDelay(next);
+  }
+
+  /**
+   * Watching: asks every player to let us see their hand. The computer agrees at once; people are asked, and the
+   * hands they show arrive with the next updates (GameView.watchedHands). Resolves with how many were asked.
+   */
+  async requestToSeeHands(): Promise<number> {
+    const { mode, gameId, view } = this.store.getState();
+    if (mode !== 'watch') return 0;
+    const players = (view?.players ?? []).filter((player) => player.playerId && !player.hasLeft);
+    await Promise.all(players.map((player) => this.api.sendPlayerAction('REQUEST_PERMISSION_TO_SEE_HAND_CARDS', gameId, player.playerId!)));
+    return players.length;
+  }
+
   dispose(): void {
+    this.relay.dispose();
     this.clearReplyTimer();
     this.clearHold();
     this.unsubscribers.forEach((unsubscribe) => unsubscribe());
@@ -276,15 +310,24 @@ export class GameSession {
     // offers, or highlights vanish and auto-pass would think there is nothing to do.
     const hasPlayables = (candidate: GameView | null | undefined) => Object.keys(candidate?.canPlayObjects?.objects ?? {}).length > 0;
     // (a prompt's own view is built with priority, so it is always taken as is)
-    const view = !fromPrompt && prompt && !awaitingServer && hasPlayables(previous) && !hasPlayables(incoming)
+    let view = !fromPrompt && prompt && !awaitingServer && hasPlayables(previous) && !hasPlayables(incoming)
       ? { ...incoming, canPlayObjects: previous!.canPlayObjects }
       : incoming;
+    view = this.freshEvents(view);
     const next = previous ? structuralShare(previous, view) : view;
     if (this.store.getState().resyncing) this.store.setState({ resyncing: false });
     if (next === previous) return;
     const playerId = this.store.getState().playerId ?? (this.store.getState().mode === 'play' ? view.myPlayerId ?? null : null);
     this.store.setState({ view: next, playerId });
     this.refreshInteraction();
+  }
+
+  /** The view with only the events no earlier view carried (none at all, rather than an empty list). */
+  private freshEvents(view: GameView): GameView {
+    if (!view.events && !this.store.getState().view?.events) return view;
+    const fresh = (view.events ?? []).filter((event) => (event.seq ?? 0) > this.lastEventSeq);
+    for (const event of fresh) this.lastEventSeq = Math.max(this.lastEventSeq, event.seq ?? 0);
+    return { ...view, events: fresh.length > 0 ? fresh : undefined };
   }
 
   private applyPrompt(method: PromptEventName, data: unknown): void {

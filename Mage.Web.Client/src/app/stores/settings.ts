@@ -1,8 +1,11 @@
 import { create } from 'zustand';
 import { api } from '../connection';
 import type { TurnCombatStops } from '../../core/game/autoPass';
+import type { BroadcastDelay } from '../../core/game/broadcastDelay';
 import { serverStops } from '../../core/game/stops';
 import type { UserData, UserSkipPrioritySteps } from '../../protocol/generated/views';
+import type { LocalePreference } from '../i18n/locales';
+import type { CardImageRef } from '../../core/images/imageLinks';
 import { readJson, writeJson } from './persist';
 import { useSession } from './session';
 
@@ -45,6 +48,20 @@ export interface PlaySettings {
   avatarId: number;
   /** profile: a country code ("de") or "world" */
   flag: string;
+  /** the interface language, or "auto" for the browser's (local only) */
+  locale: LocalePreference;
+  /** playmat: the cloth the match is dyed in (local only) */
+  matCloth: string;
+  /** playmat: the art printed into your half: your deck's cover, a card you chose, or none (local only) */
+  matArt: 'deck' | 'card' | 'none';
+  /** playmat: the chosen card when matArt is 'card' */
+  matCard: CardImageRef | null;
+  /** watching: the game is shown this many seconds behind, so a stream of it can't give the players away (local only) */
+  broadcastDelay: BroadcastDelay;
+  /** watching: hands show as card backs, even ones the watcher may see (local only) */
+  hideHands: boolean;
+  /** watching and replays: the hovered card shows large at the side of the table, for stream viewers (local only) */
+  largeZoom: boolean;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -77,6 +94,13 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   notifications: false,
   avatarId: 10,
   flag: 'world',
+  locale: 'auto',
+  matCloth: 'green',
+  matArt: 'deck',
+  matCard: null,
+  broadcastDelay: 0,
+  hideHands: true,
+  largeZoom: false,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },

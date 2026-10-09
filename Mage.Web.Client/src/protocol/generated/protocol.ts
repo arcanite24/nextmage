@@ -11,6 +11,7 @@ export type RpcAccess = 'public' | 'session' | 'login';
 /** Parameters and result of every RPC method. */
 export interface RpcMethods {
   ping: { params: [sessionId?: string | null, pingInfo?: string | null]; result: boolean };
+  setCapabilities: { params: [capabilities: string[]]; result: string[] };
   connectUser: { params: [userName: string, password: string, sessionId: string, restoreSessionId?: string | null, clientVersion?: string | null, userIdStr?: string | null]; result: boolean };
   connectAdmin: { params: [password: string, sessionId: string]; result: boolean };
   sessionGetRestoreToken: { params: [sessionId: string]; result: string };
@@ -62,6 +63,7 @@ export interface RpcMethods {
   chatFindByRoom: { params: [roomId: UUID]; result: UUID | null };
   gameJoin: { params: [gameId: UUID, sessionId: string]; result: boolean };
   gameResync: { params: [gameId: UUID, sessionId: string]; result: boolean };
+  gameStateResync: { params: [gameId: UUID, sessionId: string]; result: boolean };
   matchQuit: { params: [gameId: UUID, sessionId: string]; result: boolean };
   gameWatchStart: { params: [gameId: UUID, sessionId: string]; result: boolean };
   replayList: { params: []; result: ReplayInfo[] };
@@ -75,6 +77,7 @@ export interface RpcMethods {
   sendPlayerManaType: { params: [gameId: UUID, playerId: UUID, sessionId: string, manaType: ManaType]; result: boolean };
   sendPlayerAction: { params: [action: PlayerAction, gameId: UUID, sessionId: string, data?: unknown | null]; result: boolean };
   cheatShow: { params: [gameId: UUID, sessionId: string, playerId: UUID]; result: boolean };
+  gamePractice: { params: [gameId: UUID, sessionId: string, tool: string, cardName?: string | null, amount?: number | null]; result: boolean };
   replayInit: { params: [gameId: UUID, sessionId: string]; result: boolean };
   replayStart: { params: [gameId: UUID, sessionId: string]; result: boolean };
   replayStop: { params: [gameId: UUID, sessionId: string]; result: boolean };
@@ -122,6 +125,7 @@ export type RpcMethodName = keyof RpcMethods;
 /** Access rule and session parameter position of every RPC method. */
 export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: RpcAccess; readonly sessionParam: number } } = {
   ping: { access: 'public', sessionParam: 0 },
+  setCapabilities: { access: 'public', sessionParam: -1 },
   connectUser: { access: 'login', sessionParam: 2 },
   connectAdmin: { access: 'login', sessionParam: 1 },
   sessionGetRestoreToken: { access: 'session', sessionParam: 0 },
@@ -173,6 +177,7 @@ export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: Rp
   chatFindByRoom: { access: 'session', sessionParam: -1 },
   gameJoin: { access: 'session', sessionParam: 1 },
   gameResync: { access: 'session', sessionParam: 1 },
+  gameStateResync: { access: 'session', sessionParam: 1 },
   matchQuit: { access: 'session', sessionParam: 1 },
   gameWatchStart: { access: 'session', sessionParam: 1 },
   replayList: { access: 'session', sessionParam: -1 },
@@ -186,6 +191,7 @@ export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: Rp
   sendPlayerManaType: { access: 'session', sessionParam: 2 },
   sendPlayerAction: { access: 'session', sessionParam: 2 },
   cheatShow: { access: 'session', sessionParam: 1 },
+  gamePractice: { access: 'session', sessionParam: 1 },
   replayInit: { access: 'session', sessionParam: 1 },
   replayStart: { access: 'session', sessionParam: 1 },
   replayStop: { access: 'session', sessionParam: 1 },

@@ -107,6 +107,10 @@ npm run dev:all   # builds and starts the Mage server (HTTP 17171, WebSocket 171
 
 To debug errors in the browser, `window.__mageErrors()` lists the last 50 reported errors.
 
+### Installable app (PWA)
+
+Production builds are installable: `scripts/pwa-plugin.ts` writes `manifest.webmanifest` (named after `VITE_APP_NAME`) and `sw.js`, a hand-written service worker (`scripts/sw.template.js`) that precaches the shell (index.html, every JS and CSS chunk, the Barlow latin fonts, the icons). Navigations go to the network first and fall back to the cached shell, so the app opens offline on the sign-in screen, which then says it is offline. `/ws` and `/img` are never touched. A new release installs in the background; open pages get an "Update available" toast with Reload, otherwise the next load activates it. The dev server registers no service worker. To try it: `npm run build && npx vite preview`. In e2e, service workers are blocked except in `e2e/pwa.spec.ts`.
+
 ## Scripts and gates
 
 CI (`.github/workflows/web-client.yml`) runs the four gates on every change under `Mage.Web.Client/`:
@@ -142,6 +146,42 @@ End-to-end: CI runs every spec that needs no game server (sign-in and the axe ch
 PLAYWRIGHT_CHANNEL=chrome npm run test:e2e:app                                    # new app: AI match, decks, tables, full axe pass
 PLAYWRIGHT_CHANNEL=chrome MAGE_WEB_E2E_BASE_URL=http://localhost:5173 npm run test:e2e:app  # against a dev server you already run
 ```
+
+## Languages
+
+The interface speaks English (the source) and Spanish. The code is in `src/app/i18n`, with no library: a small
+translator (`translate.ts`) over plain message catalogs, Intl.PluralRules for plurals and Intl.NumberFormat /
+DateTimeFormat for numbers and dates. The language is a setting (Settings → Language, saved with the other
+settings); "auto" follows the browser. `<html lang>` follows the language. Card names, rules text and anything the
+server sends stay in English.
+
+- **English** lives in `i18n/en/*.ts`, one file per area: `core.ts` ships in the entry (shell, sign-in, Play, Decks,
+  the `ui` kit); `settings.ts`, `events.ts` and `about.ts` load with their lazy screen, which calls
+  `registerMessages(messages)` at module load.
+- **Other languages** are one lazy chunk each (`i18n/es.ts`), typed `Catalog`: a missing key is a type error, and
+  `catalogs.test.ts` checks every English key and placeholder is there.
+
+Using a string:
+
+```tsx
+const t = useT();                                   // in a component: re-renders when the language changes
+t('decks.updateFrom', { site: 'Moxfield' });        // "{site}" placeholders; numbers are written the language's way
+t('events.minutes', { count: 20 });                 // plural messages: { one: '{count} minute', other: '{count} minutes' }
+notify(translate('events.joined'), ...);            // outside React: `t` from '../i18n' (imported as translate in components)
+<RichText text={t('decks.empty')} parts={{ keys: <kbd>⌘V</kbd> }} />  // an element inside a sentence
+formatNumber(0.6, { style: 'percent' });            // and formatDate(date, options)
+```
+
+Adding a string: add the key and English text to the right `en/*.ts` file, then the translation to `es.ts`
+(typecheck fails until you do). Keys are `area.thing` (`login.title.signIn`). A key with no message anywhere shows
+as the key itself and warns in dev.
+
+Adding a language: add it to `LOCALES` in `i18n/locales.ts` (code and its own name for itself), copy `es.ts` to
+`<code>.ts` and translate it, and add its loader to `LOADERS` in `i18n/index.ts`. Plural messages may add the forms
+the language needs (`few`, `many`...); a missing form falls back to `other`.
+
+Not translated yet: the match screen, deck builder and importer, draft/build/event screens, admin, social, Tables,
+History and replays. They keep English text inline until they move to `t()`.
 
 ## Conventions
 

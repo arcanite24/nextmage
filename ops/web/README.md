@@ -67,6 +67,8 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_ALLOWED_ORIGINS` | `https://$DOMAIN` | Set by Compose. Browser origins allowed to open a game connection. |
 | `XMAGE_MAILGUN_API_KEY`, `XMAGE_MAILGUN_DOMAIN` | empty | Mailgun account for registration and password-reset mail. |
 | `XMAGE_MAIL_SMTP_HOST`, `XMAGE_MAIL_SMTP_PORT`, `XMAGE_MAIL_USER`, `XMAGE_MAIL_PASSWORD`, `XMAGE_MAIL_FROM` | empty | SMTP instead of Mailgun. The server uses SMTP when `XMAGE_MAIL_USER` is set. |
+| `XMAGE_DISCORD_WEBHOOK` | empty | Discord webhook address (`-Dxmage.discordWebhook`). Set: public tables, events starting and matches starting are posted to that channel (see [Discord notifications](#discord-notifications)). A secret: anyone with it can post to the channel. |
+| `XMAGE_PUBLIC_URL` | `https://$DOMAIN` | The web client's public address (`-Dxmage.publicUrl`), for join links in Discord posts. Include the port when `HTTPS_PORT` isn't 443. Empty: posts without links. |
 | `XMAGE_JAVA_OPTS` | empty | Extra JVM flags. |
 | `BACKUP_AT` | `03:30` | Time of the daily backup, as `HH:MM` in `TZ`. |
 | `BACKUP_KEEP` | `14` | Number of backups to keep. |
@@ -77,7 +79,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `IMGCACHE_API_MAX_SIZE` | `1g` | Disk cap of the lookup cache. |
 | `IMGCACHE_API_RATE` / `IMGCACHE_API_BURST` | `10r/s` / `20` | Requests per second the image cache sends to `api.scryfall.com` for the whole site (cache misses only), and how many more may queue before it answers `429`. |
 
-Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE` and `XMAGE_MAILGUN_API_KEY_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password doesn't show up in `ps`.
+Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE`, `XMAGE_MAILGUN_API_KEY_FILE` and `XMAGE_DISCORD_WEBHOOK_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password and the webhook address don't show up in `ps`.
 
 Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a message that names the variable.
 
@@ -91,6 +93,18 @@ Signed-in players' decks sync to their account (`web_decks.db`), so they follow 
 
 The admin console is at `https://DOMAIN/admin`. Sign in with `XMAGE_ADMIN_PASSWORD`. It shows players online, tables and games, CPU, memory and the size of messages sent to web clients, and lets you mute, lock out, deactivate or disconnect a player, remove a table and send a message to everyone. Players report each other from the lobby's player menu or a profile. Reports wait in the console's Reports tab until an admin closes them. Web client crashes appear under Client errors and in the server log (logger `mage.web.clientErrors`).
 
+## Discord notifications
+
+With `XMAGE_DISCORD_WEBHOOK` set (Discord: channel settings, Integrations, Webhooks, New Webhook, Copy Webhook URL), the server posts to that channel when:
+
+- a table opens in the lobby, with its name, game, format, host, seats and a join link (`https://DOMAIN/join/<table>`; events link to the Events screen),
+- an event (tournament) starts,
+- a standalone match starts: the players are seated and the first game is dealt. An event's own matches are not posted.
+
+Only tables with at least two human seats are posted: AI-only tables and one player against the AI are practice, not news. Password-protected tables are never posted. Posts never mention anyone (`allowed_mentions` is empty), and player-chosen names are shown as typed, without Discord formatting.
+
+Posting never holds up a game: posts wait in a small queue (20) for one background thread, with a 5-second timeout each. At most 30 go out per minute, Discord's limit for one webhook; anything over the limit or the queue is dropped with a warning in the server log (logger `mage.server.notify.DiscordNotifier`). The log never contains the webhook address.
+
 ## Health
 
 - `xmage` is healthy once its bridge port 17172 accepts connections. It opens only after the card database is loaded, and the first start gets 15 minutes for that.
@@ -98,6 +112,22 @@ The admin console is at `https://DOMAIN/admin`. Sign in with `XMAGE_ADMIN_PASSWO
 - `imgcache` answers `/healthz` on port 8080 inside the network.
 - `docker compose -f ops/web/docker-compose.yml ps` shows both states.
 - If `up` stops with "dependency failed to start: container ... is unhealthy" after a failed earlier start, the server usually becomes healthy a little later: run `up -d` again once `ps` shows `xmage` healthy.
+
+## Capacity
+
+Measured on 2026-10-09 on the LAN server (16 cores, Docker on Windows), using the web client's bot load test (`Mage.Web.Client/src/core/headless/loadTest.live.test.ts`).
+- Each table was a scripted web client playing the server's AI at skill 2. The client answers as soon as it's asked, so games run faster than with people.
+- 14 games running at once used about 11% of the CPU on average, with a peak of 19%.
+- On that hardware, CPU is not the limit for a casual server. Games against the AI cost the most, because the AI thinks on the server's cores, and Hard or Expert AIs think longer.
+
+To repeat the test against your own server:
+
+```
+cd Mage.Web.Client
+MAGE_LOAD_TEST=1 MAGE_SERVER_URL=wss://your.host/ws MAGE_ADMIN_PASSWORD=... MAGE_LOAD_GAMES=14 MAGE_LOAD_WAVES=1 npx vitest run src/core/headless/loadTest --silent=false
+```
+
+Caddy allows one address 30 new `/ws` connections a minute (`WS_RATE_LIMIT`). A load test from a single machine therefore needs waves smaller than that, or a raised limit while it runs. Each scripted game opens one connection.
 
 ## Logs
 

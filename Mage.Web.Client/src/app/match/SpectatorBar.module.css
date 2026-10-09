@@ -57,3 +57,83 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* broadcast delay: on screen for the stream's viewers too, so nobody mistakes the board for live */
+.delay {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgb(var(--mat-rgb) / 0.7);
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the menu lives in a portal: real pixels, not stage pixels */
+.menu {
+  z-index: var(--z-overlay);
+  min-width: 280px;
+  max-width: 340px;
+  padding: 6px;
+  border-radius: var(--radius-control);
+  background: var(--mat-600);
+  box-shadow: inset 0 0 0 1px var(--ink-ghost), var(--shadow-held);
+}
+
+.menuLabel {
+  padding: 8px 12px 4px;
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+
+.menuItem[data-highlighted] {
+  background: rgb(var(--ink-rgb) / 0.1);
+}
+
+.menuItem kbd {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--ink-dim);
+}
+
+.check {
+  color: var(--ink-strong);
+}
+
+.menuNote {
+  padding: 4px 12px 6px;
+  color: var(--ink-dim);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.menuRule {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--ink-ghost);
+}
+
+/* tall: in the band above the hand */
+:global([data-layout='tall']) .bar {
+  right: 24px;
+  bottom: calc(140px + var(--hand-raise, 0px));
+}

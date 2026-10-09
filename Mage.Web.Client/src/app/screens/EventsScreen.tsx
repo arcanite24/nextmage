@@ -7,6 +7,8 @@ import type { ExpansionSetInfo, PlayerType, TableView, TimingOption } from '../.
 import type { WebTournamentOptions } from '../../protocol/options';
 import { api } from '../connection';
 import { toWire } from '../decks/deckModel';
+import { registerMessages, t as translate, useT, type MessageKey } from '../i18n';
+import messages from '../i18n/en/events';
 import { useServerState, useTables } from '../queries';
 import { rosterOf, useDecks } from '../stores/decks';
 import { useEvents } from '../stores/events';
@@ -18,12 +20,40 @@ import { Field } from '../ui/Field';
 import { Zone } from '../ui/Zone';
 import styles from './EventsScreen.module.css';
 
-const KINDS: { value: EventKind; label: string; detail: string; icon: React.ReactNode }[] = [
-  { value: 'draft', label: 'Booster draft', detail: 'Open three packs, pick a card, pass the rest.', icon: <Layers size={22} /> },
-  { value: 'sealed', label: 'Sealed', detail: 'Open six packs and build from what you get.', icon: <Package size={22} /> },
-  { value: 'jumpstart', label: 'Jumpstart', detail: 'Shuffle two themed half-decks together and play.', icon: <Shuffle size={22} /> },
-  { value: 'constructed', label: 'Constructed', detail: 'Bring your own deck.', icon: <Swords size={22} /> },
+registerMessages(messages);
+
+const KINDS: { value: EventKind; icon: React.ReactNode }[] = [
+  { value: 'draft', icon: <Layers size={22} /> },
+  { value: 'sealed', icon: <Package size={22} /> },
+  { value: 'jumpstart', icon: <Shuffle size={22} /> },
+  { value: 'constructed', icon: <Swords size={22} /> },
 ];
+
+/** The pack choices' words, per format (the plan in core/events keeps English ones for logs and tests). */
+const SOURCE_TEXT: Record<Exclude<EventKind, 'constructed'>, Partial<Record<PackSource, [MessageKey, MessageKey]>>> = {
+  draft: {
+    set: ['events.source.set', 'events.source.set.draft'],
+    cube: ['events.source.cube', 'events.source.cube.draft'],
+    random: ['events.source.random', 'events.source.random.detail'],
+    reshuffled: ['events.source.reshuffled', 'events.source.reshuffled.detail'],
+    richMan: ['events.source.richMan', 'events.source.richMan.detail'],
+    richManCube: ['events.source.richManCube', 'events.source.richManCube.detail'],
+  },
+  sealed: {
+    set: ['events.source.set', 'events.source.set.sealed'],
+    cube: ['events.source.cube', 'events.source.cube.sealed'],
+  },
+  jumpstart: {
+    set: ['events.source.official', 'events.source.official.detail'],
+    custom: ['events.source.custom', 'events.source.custom.detail'],
+  },
+};
+
+const TIMING_TEXT: Partial<Record<TimingOption, MessageKey>> = {
+  BEGINNER: 'events.timing.BEGINNER',
+  REGULAR: 'events.timing.REGULAR',
+  PROFESSIONAL: 'events.timing.PROFESSIONAL',
+};
 
 const EMPTY_DECK = { cards: [], sideboard: [] };
 
@@ -35,6 +65,7 @@ export function EventsScreen() {
   const tournaments = useEvents((state) => state.tournaments);
   const mine = useMemo(() => Object.values(tournaments).filter((tournament) => !tournament.over), [tournaments]);
   const navigate = useNavigate();
+  const t = useT();
   const [hosting, setHosting] = useState<EventKind | null>(null);
   const events = tables.filter((table) => table.isTournament && table.tableState !== 'FINISHED');
   const open = events.filter((table) => table.tableState === 'WAITING');
@@ -47,34 +78,34 @@ export function EventsScreen() {
     if (!table.limited) {
       const selected = useDecks.getState().selectedId;
       if (!selected) {
-        notify('Pick a deck first', 'Constructed events need a deck. Choose one on the Decks page.', 'error');
+        notify(translate('events.pickDeckFirst'), translate('events.pickDeckFirst.detail'), 'error');
         return;
       }
       deck = toWire((await useDecks.getState().loadForPlay(selected)).deck);
     }
     const ok = await api.roomJoinTournament(roomId, table.tableId, userName, 'HUMAN', 1, deck).catch((error) => {
-      notify("Couldn't join", error instanceof Error ? error.message : String(error), 'error');
+      notify(translate('events.joinFailed'), error instanceof Error ? error.message : String(error), 'error');
       return null;
     });
-    if (ok === false) notify("Couldn't join", 'The event did not accept your seat.', 'error');
-    else if (ok) notify('Joined', `You're in ${table.tableName}. It starts when every seat is filled.`);
+    if (ok === false) notify(translate('events.joinFailed'), translate('events.seatRefused'), 'error');
+    else if (ok) notify(translate('events.joined'), translate('events.joined.detail', { name: table.tableName ?? '' }));
   }
 
   return (
     <div className={styles.page}>
       <header className={styles.head}>
-        <h1 className={styles.title}>Events</h1>
-        <Button variant="print" icon={<Trophy size={18} />} onClick={() => setHosting('draft')}>Host an event</Button>
+        <h1 className={styles.title}>{t('events.title')}</h1>
+        <Button variant="print" icon={<Trophy size={18} />} onClick={() => setHosting('draft')}>{t('events.host')}</Button>
       </header>
 
       {mine.length > 0 && (
-        <Zone label="Your events" tone="filled">
+        <Zone label={t('events.yours')} tone="filled">
           <div className={styles.list}>
             {mine.map((tournament) => (
               <button key={tournament.tournamentId} type="button" className={styles.mine} onClick={() => navigate(`/event/${tournament.tournamentId}`)}>
                 <Trophy size={18} aria-hidden="true" />
-                <span>{tournament.view?.tournamentName ?? 'Event'}</span>
-                <small>{tournament.view?.runningInfo || tournament.view?.tournamentState || 'Open'}</small>
+                <span>{tournament.view?.tournamentName ?? t('events.event')}</span>
+                <small>{tournament.view?.runningInfo || tournament.view?.tournamentState || t('events.open')}</small>
               </button>
             ))}
           </div>
@@ -82,14 +113,14 @@ export function EventsScreen() {
       )}
 
       {open.length === 0 && running.length === 0 ? (
-        <Zone label="Start one" className={styles.starter}>
-          <p className={styles.empty}>Nothing is running on the server. Empty seats can be filled with AI players.</p>
+        <Zone label={t('events.startOne')} className={styles.starter}>
+          <p className={styles.empty}>{t('events.nothing')}</p>
           <ul className={styles.starts}>
             {KINDS.map((option) => (
               <li key={option.value}>
                 <button type="button" className={styles.start} onClick={() => setHosting(option.value)}>
-                  <strong>{option.label}</strong>
-                  <span>{option.detail}</span>
+                  <strong>{t(`events.kind.${option.value}`)}</strong>
+                  <span>{t(`events.kind.${option.value}.detail`)}</span>
                   <ChevronRight size={20} aria-hidden="true" />
                 </button>
               </li>
@@ -98,27 +129,27 @@ export function EventsScreen() {
         </Zone>
       ) : (
       <div className={styles.columns}>
-        <Zone label="Open to join" className={styles.zone}>
+        <Zone label={t('events.openToJoin')} className={styles.zone}>
           {open.length === 0 ? (
-            <p className={styles.empty}>No events are waiting for players. Host one and the AI can fill the empty seats.</p>
+            <p className={styles.empty}>{t('events.noneWaiting')}</p>
           ) : (
             <div className={styles.list}>
               {open.map((table) => (
-                <EventRow key={table.tableId} table={table} action={<Button size="sm" variant="print" onClick={() => void join(table)}>Join</Button>} />
+                <EventRow key={table.tableId} table={table} action={<Button size="sm" variant="print" onClick={() => void join(table)}>{t('events.join')}</Button>} />
               ))}
             </div>
           )}
         </Zone>
-        <Zone label="Under way" className={styles.zone}>
+        <Zone label={t('events.underWay')} className={styles.zone}>
           {running.length === 0 ? (
-            <p className={styles.empty}>Nothing running right now.</p>
+            <p className={styles.empty}>{t('events.noneRunning')}</p>
           ) : (
             <div className={styles.list}>
               {running.map((table) => (
                 <EventRow
                   key={table.tableId}
                   table={table}
-                  action={<Button size="sm" variant="quiet" icon={<Eye size={15} />} onClick={() => table.tableId && api.roomWatchTournament(table.tableId).catch(() => undefined)}>View</Button>}
+                  action={<Button size="sm" variant="quiet" icon={<Eye size={15} />} onClick={() => table.tableId && api.roomWatchTournament(table.tableId).catch(() => undefined)}>{t('events.view')}</Button>}
                 />
               ))}
             </div>
@@ -150,6 +181,7 @@ function EventRow({ table, action }: { table: TableView; action: React.ReactNode
 function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initialKind: EventKind; onOpenChange(open: boolean): void }) {
   const roomId = useSession((state) => state.roomId);
   const userName = useSession((state) => state.userName);
+  const t = useT();
   const server = useServerState();
   const sets = useQuery({
     queryKey: ['expansionSets'],
@@ -222,7 +254,7 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
   async function readPacks(file: File | undefined) {
     if (!file) return;
     if (file.size > 300_000) {
-      notify('File too big', 'Jumpstart pack files can be at most 300 KB.', 'error');
+      notify(translate('events.fileTooBig'), translate('events.fileTooBig.detail'), 'error');
       return;
     }
     setJumpstartPacks({ name: file.name, text: await file.text() });
@@ -241,7 +273,7 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
       const aiType: PlayerType = 'COMPUTER_MAD';
       const playerTypes: PlayerType[] = ['HUMAN', ...Array.from({ length: seats - 1 }, () => (fillAi ? aiType : 'HUMAN' as PlayerType))];
       const options: WebTournamentOptions = {
-        name: name.trim() || `${userName}'s ${kind === 'constructed' ? 'event' : kind}`,
+        name: name.trim() || translate(`events.defaultName.${kind}`, { name: userName }),
         tournamentType: plan.tournamentType,
         numberRounds: choice.swiss ? rounds : 0,
         watchingAllowed: true,
@@ -258,25 +290,25 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
       };
       const table = await api.roomCreateTournament(roomId, options);
       const tableId = table?.tableId;
-      if (!tableId) throw new Error('The server did not create the event.');
+      if (!tableId) throw new Error(translate('events.notCreated'));
 
       let deck = EMPTY_DECK as Parameters<typeof api.roomJoinTournament>[5];
       if (!limited) {
-        if (!deckId) throw new Error('Pick a deck to play.');
+        if (!deckId) throw new Error(translate('events.pickDeckToPlay'));
         deck = toWire((await useDecks.getState().loadForPlay(deckId)).deck);
       }
-      if (!await api.roomJoinTournament(roomId, tableId, userName, 'HUMAN', 1, deck)) throw new Error('Your seat was not accepted.');
+      if (!await api.roomJoinTournament(roomId, tableId, userName, 'HUMAN', 1, deck)) throw new Error(translate('events.yourSeatRefused'));
       if (fillAi) {
         for (let seat = 1; seat < seats; seat++) {
           const joined = await api.roomJoinTournament(roomId, tableId, `Bot ${seat}`, playerTypes[seat], 4, deck);
-          if (!joined) throw new Error('An AI player could not take its seat.');
+          if (!joined) throw new Error(translate('events.aiSeatRefused'));
         }
-        if (!await api.tournamentStart(roomId, tableId)) throw new Error('The event could not start.');
+        if (!await api.tournamentStart(roomId, tableId)) throw new Error(translate('events.couldNotStart'));
       }
-      notify(fillAi ? 'Event starting' : 'Event open', fillAi ? 'Seats filled with AI players.' : 'It starts when every seat is taken.');
+      notify(translate(fillAi ? 'events.starting' : 'events.opened'), translate(fillAi ? 'events.starting.detail' : 'events.opened.detail'));
       onOpenChange(false);
     } catch (error) {
-      notify("Couldn't host the event", error instanceof Error ? error.message : String(error), 'error');
+      notify(translate('events.hostFailed'), error instanceof Error ? error.message : String(error), 'error');
     } finally {
       setBusy(false);
     }
@@ -286,20 +318,20 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Host an event"
+      title={t('events.host')}
       width="lg"
       footer={(
         <>
           {problem && problem !== 'Loading…' && <p className={styles.problem} role="status">{problem}</p>}
-          <Button variant="quiet" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="quiet" onClick={() => onOpenChange(false)}>{t('events.cancel')}</Button>
           <Button variant="decision" busy={busy} disabled={!!problem || (!limited && !deckId)} onClick={() => void create()}>
-            {fillAi ? 'Start event' : 'Open event'}
+            {fillAi ? t('events.start') : t('events.openEvent')}
           </Button>
         </>
       )}
     >
       <div className={styles.form}>
-        <div className={styles.kinds} role="radiogroup" aria-label="Event type">
+        <div className={styles.kinds} role="radiogroup" aria-label={t('events.type')}>
           {KINDS.map((option) => (
             <button
               key={option.value}
@@ -310,29 +342,32 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
               onClick={() => chooseKind(option.value)}
             >
               {option.icon}
-              <strong>{option.label}</strong>
-              <span>{option.detail}</span>
+              <strong>{t(`events.kind.${option.value}`)}</strong>
+              <span>{t(`events.kind.${option.value}.detail`)}</span>
             </button>
           ))}
         </div>
 
         {sources.length > 1 && (
-          <div className={styles.sources} role="radiogroup" aria-label="Packs">
-            {sources.map((option) => (
-              <label key={option.value} className={[styles.source, source === option.value ? styles.sourceOn : ''].join(' ')}>
-                <input type="radio" name="source" value={option.value} checked={source === option.value} onChange={() => setSource(option.value)} />
-                <strong>{option.label}</strong>
-                <span>{option.detail}</span>
-              </label>
-            ))}
+          <div className={styles.sources} role="radiogroup" aria-label={t('events.packs')}>
+            {sources.map((option) => {
+              const text = kind === 'constructed' ? undefined : SOURCE_TEXT[kind][option.value];
+              return (
+                <label key={option.value} className={[styles.source, source === option.value ? styles.sourceOn : ''].join(' ')}>
+                  <input type="radio" name="source" value={option.value} checked={source === option.value} onChange={() => setSource(option.value)} />
+                  <strong>{text ? t(text[0]) : option.label}</strong>
+                  <span>{text ? t(text[1]) : option.detail}</span>
+                </label>
+              );
+            })}
           </div>
         )}
 
         <div className={styles.grid}>
-          <Field label="Name" value={name} onChange={(event) => setName(event.target.value)} placeholder={`${userName}'s ${kind}`} maxLength={40} />
+          <Field label={t('events.name')} value={name} onChange={(event) => setName(event.target.value)} placeholder={t(`events.defaultName.${kind}`, { name: userName })} maxLength={40} />
           {limited && kind !== 'jumpstart' && source === 'set' && (
             <label className={styles.control}>
-              <span>Set</span>
+              <span>{t('events.set')}</span>
               <select value={chosenSet} onChange={(event) => setSetCode(event.target.value)} disabled={sets.isPending}>
                 {boosterSets.map((set) => <option key={set.setCode} value={set.setCode}>{set.name} ({set.setCode})</option>)}
               </select>
@@ -340,17 +375,17 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
           )}
           {usesCube && (
             <label className={styles.control}>
-              <span>Cube</span>
+              <span>{t('events.cube')}</span>
               <select value={chosenCube} onChange={(event) => setCubeName(event.target.value)}>
-                {cubes.map((cube) => <option key={cube} value={cube}>{isCubeFromDeck(cube) ? 'Your own cube (a saved deck)' : cube}</option>)}
+                {cubes.map((cube) => <option key={cube} value={cube}>{isCubeFromDeck(cube) ? t('events.ownCube') : cube}</option>)}
               </select>
             </label>
           )}
           {usesCube && isCubeFromDeck(chosenCube) && (
             <label className={styles.control}>
-              <span>Cube list</span>
+              <span>{t('events.cubeList')}</span>
               <select value={cubeDeckId} onChange={(event) => setCubeDeckId(event.target.value)}>
-                <option value="">Pick a deck…</option>
+                <option value="">{t('events.pickDeck')}</option>
                 {roster.map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
               </select>
             </label>
@@ -358,13 +393,13 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
           {!limited && (
             <>
               <label className={styles.control}>
-                <span>Format</span>
+                <span>{t('events.format')}</span>
                 <select value={format} onChange={(event) => setFormat(event.target.value)}>
                   {(formats.length ? formats : [format]).map((type) => <option key={type} value={type}>{type.replace(/^Constructed - /, '')}</option>)}
                 </select>
               </label>
               <label className={styles.control}>
-                <span>Your deck</span>
+                <span>{t('events.yourDeck')}</span>
                 <select value={deckId ?? ''} onChange={(event) => setDeckId(event.target.value || null)}>
                   {roster.map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
                 </select>
@@ -372,48 +407,48 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
             </>
           )}
           <label className={styles.control}>
-            <span>Players</span>
+            <span>{t('events.players')}</span>
             <select value={seats} onChange={(event) => setSeats(Number(event.target.value))}>
               {[2, 3, 4, 5, 6, 7, 8].map((count) => <option key={count} value={count}>{count}</option>)}
             </select>
           </label>
           {!structureFixed && (
             <label className={styles.control}>
-              <span>Structure</span>
+              <span>{t('events.structure')}</span>
               <select value={swiss ? 'swiss' : 'elimination'} onChange={(event) => setSwiss(event.target.value === 'swiss')}>
-                <option value="swiss">Swiss</option>
-                <option value="elimination">Single elimination</option>
+                <option value="swiss">{t('events.swiss')}</option>
+                <option value="elimination">{t('events.elimination')}</option>
               </select>
             </label>
           )}
           {choice.swiss && (
             <label className={styles.control}>
-              <span>Rounds</span>
+              <span>{t('events.rounds')}</span>
               <select value={rounds} onChange={(event) => setRounds(Number(event.target.value))}>
                 {[1, 2, 3, 4, 5].map((count) => <option key={count} value={count}>{count}</option>)}
               </select>
             </label>
           )}
           <label className={styles.control}>
-            <span>Matches</span>
+            <span>{t('events.matches')}</span>
             <select value={bestOf3 ? '3' : '1'} onChange={(event) => setBestOf3(event.target.value === '3')}>
-              <option value="1">Best of one</option>
-              <option value="3">Best of three</option>
+              <option value="1">{t('events.bestOf1')}</option>
+              <option value="3">{t('events.bestOf3')}</option>
             </select>
           </label>
           {kind === 'draft' && (
             <label className={styles.control}>
-              <span>Pick timer</span>
+              <span>{t('events.pickTimer')}</span>
               <select value={timing} onChange={(event) => setTiming(event.target.value as TimingOption)}>
-                {TIMINGS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                {TIMINGS.map((option) => <option key={option.value} value={option.value}>{TIMING_TEXT[option.value] ? t(TIMING_TEXT[option.value]!) : option.label}</option>)}
               </select>
             </label>
           )}
           {limited && (
             <label className={styles.control}>
-              <span>Deck building</span>
+              <span>{t('events.deckBuilding')}</span>
               <select value={constructionMinutes} onChange={(event) => setConstructionMinutes(Number(event.target.value))}>
-                {[10, 15, 20, 30, 45, 60].map((minutes) => <option key={minutes} value={minutes}>{minutes} minutes</option>)}
+                {[10, 15, 20, 30, 45, 60].map((minutes) => <option key={minutes} value={minutes}>{t('events.minutes', { count: minutes })}</option>)}
               </select>
             </label>
           )}
@@ -430,19 +465,19 @@ function HostDialog({ open, initialKind, onOpenChange }: { open: boolean; initia
 
         {kind === 'jumpstart' && source === 'custom' && (
           <label className={styles.upload}>
-            <span>Packs file</span>
+            <span>{t('events.packsFile')}</span>
             <input type="file" accept=".txt,.dck,text/plain" onChange={(event) => void readPacks(event.target.files?.[0])} />
-            <small>{jumpstartPacks ? `${jumpstartPacks.name} · ${jumpstartPacks.text.length.toLocaleString()} characters` : 'A text file of half-decks, in the desktop client\'s jumpstart format.'}</small>
+            <small>{jumpstartPacks ? t('events.packsFile.chosen', { name: jumpstartPacks.name, count: jumpstartPacks.text.length }) : t('events.packsFile.hint')}</small>
           </label>
         )}
 
         {usesCube && isCubeFromDeck(chosenCube) && (
-          <p className={styles.hint}>Import your cube list on the Decks page like any deck (for example from CubeCobra as text), then pick it here.</p>
+          <p className={styles.hint}>{t('events.cubeHint')}</p>
         )}
 
         <label className={styles.check}>
           <input type="checkbox" checked={fillAi} onChange={(event) => setFillAi(event.target.checked)} />
-          <span>Fill the other seats with AI players and start now</span>
+          <span>{t('events.fillAi')}</span>
         </label>
       </div>
     </Dialog>
@@ -456,6 +491,7 @@ function SetPool({ sets, pool, onChange, limit }: {
   onChange(pool: string[]): void;
   limit?: number;
 }) {
+  const t = useT();
   const [filter, setFilter] = useState('');
   const chosen = new Set(pool);
   const needle = filter.trim().toLowerCase();
@@ -465,10 +501,10 @@ function SetPool({ sets, pool, onChange, limit }: {
   }
   return (
     <fieldset className={styles.pool}>
-      <legend>Set pool · {pool.length} chosen{limit && pool.length > limit ? ` (${limit} are used, picked at random)` : ''}</legend>
+      <legend>{limit && pool.length > limit ? t('events.pool.limit', { count: pool.length, limit }) : t('events.pool', { count: pool.length })}</legend>
       <div className={styles.poolTools}>
-        <Field label="Find a set" value={filter} onChange={(event) => setFilter(event.target.value)} />
-        <Button size="sm" variant="quiet" onClick={() => onChange([])}>Clear</Button>
+        <Field label={t('events.findSet')} value={filter} onChange={(event) => setFilter(event.target.value)} />
+        <Button size="sm" variant="quiet" onClick={() => onChange([])}>{t('events.clear')}</Button>
       </div>
       <ul className={styles.poolList}>
         {shown.map((set) => (

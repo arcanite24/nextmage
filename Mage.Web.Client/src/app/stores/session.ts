@@ -62,7 +62,11 @@ async function rememberRestoreToken(serverUrl: string, userName: string): Promis
 }
 
 function describeError(error: unknown): string {
-  if (error instanceof ConnectionError) return `Can't reach the server. Check the address and that it is running.`;
+  if (error instanceof ConnectionError) {
+    return globalThis.navigator?.onLine !== false
+      ? `Can't reach the server. Check the address and that it is running.`
+      : `You're offline. Connect to the internet to sit down at the table.`;
+  }
   if (error instanceof RpcError) return error.message;
   return error instanceof Error ? error.message : String(error);
 }

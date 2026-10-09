@@ -10,6 +10,8 @@ import { useDegradedSites } from '../decks/import/useImportFlow';
 import { PASTE_KEYS } from '../decks/import/text';
 import { deckStorage } from '../../core/decks/DeckStorageService';
 import { applyUpdate } from '../../core/deckImport/diff';
+import { t as translate, useT } from '../i18n';
+import { RichText } from '../i18n/RichText';
 import { SLEEVE_COLORS, rosterOf, sleeveFor, useDecks, type RosterDeck } from '../stores/decks';
 import { useDeckSyncStatus } from '../stores/deckSyncStatus';
 import { openImport, useImportSheet } from '../stores/importSheet';
@@ -24,6 +26,7 @@ import styles from './DecksScreen.module.css';
 /** Your deck shelf: import, sleeve, update and remove decks. */
 export function DecksScreen() {
   const decks = useDecks();
+  const t = useT();
   const roster = useMemo(() => rosterOf(decks), [decks]);
   const [removing, setRemoving] = useState<RosterDeck | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -47,7 +50,7 @@ export function DecksScreen() {
     try {
       await useDecks.getState().duplicate(deck.id);
     } catch (error) {
-      notify("Couldn't duplicate the deck", error instanceof Error ? error.message : String(error), 'error');
+      notify(translate('decks.duplicateFailed'), error instanceof Error ? error.message : String(error), 'error');
     }
   }
 
@@ -71,27 +74,27 @@ export function DecksScreen() {
   return (
     <div className={styles.page}>
       <Zone
-        label="Your decks"
+        label={t('decks.yourDecks')}
         className={[styles.shelf, dragging ? styles.dropping : ''].join(' ')}
         {...dropProps}
         aside={
           <>
             <SyncNote />
-            <Button size="sm" icon={<Download size={16} />} onClick={() => openImport()}>Import</Button>
-            <Button size="sm" icon={<PencilRuler size={16} />} onClick={() => navigate('/decks/new')}>Build a deck</Button>
+            <Button size="sm" icon={<Download size={16} />} onClick={() => openImport()}>{t('decks.import')}</Button>
+            <Button size="sm" icon={<PencilRuler size={16} />} onClick={() => navigate('/decks/new')}>{t('decks.build')}</Button>
           </>
         }
       >
         {dragging && (
           <div className={styles.dropHint} aria-hidden="true">
             <ClipboardPaste size={22} />
-            <span>Drop a deck file, link or list</span>
+            <span>{t('decks.dropHint')}</span>
           </div>
         )}
         <div className={styles.grid} role="list">
           {decks.loaded && decks.saved.length === 0 && (
             <p role="listitem" className={styles.emptyShelf}>
-              Bring a deck you already have: press <kbd>{PASTE_KEYS}</kbd> anywhere here with a link from Archidekt, Moxfield or another deck site, or a list.
+              <RichText text={t('decks.empty')} parts={{ keys: <kbd>{PASTE_KEYS}</kbd> }} />
             </p>
           )}
           {roster.map((deck) => (
@@ -113,22 +116,22 @@ export function DecksScreen() {
               <div className={styles.source}>
                 <SourceLine source={source} />
                 {updatable ? (
-                  <Button icon={<RefreshCw size={16} />} onClick={() => setUpdating(selected.id)}>Update from {sourceSite.name}</Button>
+                  <Button icon={<RefreshCw size={16} />} onClick={() => setUpdating(selected.id)}>{t('decks.updateFrom', { site: sourceSite.name })}</Button>
                 ) : (
-                  <Button icon={<ClipboardPaste size={16} />} onClick={() => pasteNewList(selected)}>Paste a new list</Button>
+                  <Button icon={<ClipboardPaste size={16} />} onClick={() => pasteNewList(selected)}>{t('decks.pasteNewList')}</Button>
                 )}
               </div>
             )}
             <div>
-              <h3 className={styles.subLabel}>Sleeves</h3>
-              <div className={styles.sleeves} role="radiogroup" aria-label="Sleeve color">
+              <h3 className={styles.subLabel}>{t('decks.sleeves')}</h3>
+              <div className={styles.sleeves} role="radiogroup" aria-label={t('decks.sleeveColor')}>
                 {SLEEVE_COLORS.map((color) => (
                   <button
                     key={color}
                     type="button"
                     role="radio"
                     aria-checked={sleeveFor(decks.sleeves, selected) === color}
-                    aria-label={`Sleeve ${color}`}
+                    aria-label={t('decks.sleeve', { color })}
                     className={styles.swatch}
                     style={{ background: color }}
                     onClick={() => decks.setSleeve(selected.id, color)}
@@ -137,21 +140,21 @@ export function DecksScreen() {
               </div>
             </div>
             <Button variant="print" icon={<PencilRuler size={16} />} onClick={() => navigate(`/decks/${encodeURIComponent(selected.id)}`)}>
-              {selected.starter ? 'Copy and edit' : 'Edit deck'}
+              {selected.starter ? t('decks.copyAndEdit') : t('decks.edit')}
             </Button>
             <div className={styles.actions}>
               <ExportMenu getDeck={() => useDecks.getState().loadList(selected.id)} />
-              <Button variant="print" size="sm" icon={<Copy size={16} />} onClick={() => void duplicate(selected)}>Duplicate</Button>
+              <Button variant="print" size="sm" icon={<Copy size={16} />} onClick={() => void duplicate(selected)}>{t('decks.duplicate')}</Button>
               {!selected.starter && (
-                <Button variant="print" size="sm" icon={<PencilLine size={16} />} onClick={() => setRenaming(selected)}>Rename</Button>
+                <Button variant="print" size="sm" icon={<PencilLine size={16} />} onClick={() => setRenaming(selected)}>{t('decks.rename')}</Button>
               )}
             </div>
             {!selected.starter && (
-              <Button variant="danger" size="sm" className={styles.remove} icon={<Trash2 size={16} />} onClick={() => setRemoving(selected)}>Remove deck</Button>
+              <Button variant="danger" size="sm" className={styles.remove} icon={<Trash2 size={16} />} onClick={() => setRemoving(selected)}>{t('decks.remove')}</Button>
             )}
           </div>
         ) : (
-          <p className={styles.detailNote}>Pick a deck to see it here.</p>
+          <p className={styles.detailNote}>{t('decks.pick')}</p>
         )}
       </Zone>
 
@@ -162,12 +165,12 @@ export function DecksScreen() {
       <Dialog
         open={!!removing}
         onOpenChange={(open) => !open && setRemoving(null)}
-        title="Remove deck?"
+        title={t('decks.removeTitle')}
         width="sm"
-        description={removing ? `“${removing.name}” will be deleted from this browser.` : undefined}
+        description={removing ? t('decks.removeDescription', { name: removing.name }) : undefined}
         footer={
           <>
-            <Button variant="quiet" onClick={() => setRemoving(null)}>Keep it</Button>
+            <Button variant="quiet" onClick={() => setRemoving(null)}>{t('decks.keep')}</Button>
             <Button
               variant="danger"
               onClick={async () => {
@@ -175,7 +178,7 @@ export function DecksScreen() {
                 setRemoving(null);
               }}
             >
-              Remove
+              {t('decks.removeConfirm')}
             </Button>
           </>
         }
@@ -188,14 +191,16 @@ export function DecksScreen() {
 
 /** Rename a saved deck in place (same id, sleeve and history). */
 function RenameDialog({ deck, onClose }: { deck: RosterDeck | null; onClose(): void }) {
+  const t = useT();
   return (
-    <Dialog open={!!deck} onOpenChange={(open) => !open && onClose()} title="Rename deck" width="sm">
+    <Dialog open={!!deck} onOpenChange={(open) => !open && onClose()} title={t('decks.renameTitle')} width="sm">
       {deck && <RenameForm key={deck.id} deck={deck} onClose={onClose} />}
     </Dialog>
   );
 }
 
 function RenameForm({ deck, onClose }: { deck: RosterDeck; onClose(): void }) {
+  const t = useT();
   const [name, setName] = useState(deck.name);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -203,7 +208,7 @@ function RenameForm({ deck, onClose }: { deck: RosterDeck; onClose(): void }) {
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!name.trim()) {
-      setError('A deck needs a name.');
+      setError(t('decks.nameRequired'));
       return;
     }
     setBusy(true);
@@ -219,7 +224,7 @@ function RenameForm({ deck, onClose }: { deck: RosterDeck; onClose(): void }) {
   return (
     <form className={styles.renameForm} onSubmit={(event) => void submit(event)}>
       <Field
-        label="Deck name"
+        label={t('decks.name')}
         value={name}
         maxLength={60}
         autoFocus
@@ -231,8 +236,8 @@ function RenameForm({ deck, onClose }: { deck: RosterDeck; onClose(): void }) {
         error={error}
       />
       <div className={styles.renameButtons}>
-        <Button variant="quiet" onClick={onClose}>Cancel</Button>
-        <Button variant="decision" type="submit" busy={busy}>Rename</Button>
+        <Button variant="quiet" onClick={onClose}>{t('decks.cancel')}</Button>
+        <Button variant="decision" type="submit" busy={busy}>{t('decks.rename')}</Button>
       </div>
     </form>
   );
@@ -241,12 +246,13 @@ function RenameForm({ deck, onClose }: { deck: RosterDeck; onClose(): void }) {
 /** On servers with accounts: whether the decks are saved to the account. */
 function SyncNote() {
   const { status, error } = useDeckSyncStatus();
+  const t = useT();
   if (status === 'off') return null;
   const failed = status === 'error';
   return (
     <span className={[styles.sync, failed ? styles.syncFailed : ''].join(' ')} role="status" title={failed ? error ?? undefined : undefined}>
       {failed ? <CloudOff size={15} aria-hidden="true" /> : <Cloud size={15} aria-hidden="true" />}
-      {status === 'syncing' ? 'Saving to your account' : failed ? "Couldn't save to your account" : 'Saved to your account'}
+      {t(status === 'syncing' ? 'decks.sync.saving' : failed ? 'decks.sync.failed' : 'decks.sync.saved')}
     </span>
   );
 }

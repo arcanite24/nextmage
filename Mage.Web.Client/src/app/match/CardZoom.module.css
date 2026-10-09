@@ -34,3 +34,8 @@
     transform: translateY(8px) scale(0.97);
   }
 }
+
+.large .details {
+  max-width: 520px;
+  font-size: 24px;
+}
