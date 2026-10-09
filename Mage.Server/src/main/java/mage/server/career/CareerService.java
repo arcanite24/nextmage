@@ -112,7 +112,7 @@ public final class CareerService {
         public int price;
         /** a campaign chapter has to open it first */
         public boolean locked;
-        /** the chapter that opens it, while locked */
+        /** the campaign chapter that opens it (to beat while locked, beaten once open); null for the newest sets */
         public String unlockedBy;
     }
 
@@ -565,11 +565,12 @@ public final class CareerService {
         int newest = 0;
         for (CareerShopSet set : all) {
             if (openedBy.containsKey(set.setCode)) {
+                // which chapter opens it: still to beat when locked, the one beaten when open (the hub announces it)
+                set.unlockedBy = openedBy.get(set.setCode);
                 if (unlocked.contains(set.setCode)) {
                     open.add(set);
                 } else {
                     set.locked = true;
-                    set.unlockedBy = openedBy.get(set.setCode);
                     locked.add(set);
                 }
             } else if (newest < SHOP_NEWEST_SETS) {

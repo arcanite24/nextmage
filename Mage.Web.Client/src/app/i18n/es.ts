@@ -879,6 +879,9 @@ const es: Catalog = {
   'career.ceremony.tier': 'Nuevo nivel abierto',
   'career.ceremony.tierText': 'Nuevos rivales te esperan: {names}.',
   'career.ceremony.chapter': 'Nuevo capítulo abierto',
+  'career.ceremony.set': 'Nueva expansión en la tienda',
+  'career.ceremony.setText': 'Vencer {chapter} puso sus sobres en la estantería.',
+  'career.ceremony.achievement': 'Logro conseguido',
 
   'career.versus.with': 'con {deck}',
   'career.versus.title': 'Duelo contra {opponent}',

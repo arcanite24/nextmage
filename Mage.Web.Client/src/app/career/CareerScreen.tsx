@@ -1,7 +1,7 @@
 import { Check, Coins, Gift, RefreshCw, Swords, Trophy, Upload } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { CareerCampaign, CareerOpponent, CareerProfile, CareerQuest, CareerQuests, CareerStarter, CareerWeekly } from '../../protocol/generated/views';
+import type { CareerAchievement, CareerCampaign, CareerOpponent, CareerProfile, CareerShopSet, CareerQuest, CareerQuests, CareerStarter, CareerWeekly } from '../../protocol/generated/views';
 import { registerMessages, useT, type MessageKey } from '../i18n';
 import messages from '../i18n/en/career';
 import { usePlay } from '../stores/play';
@@ -11,17 +11,17 @@ import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
-import { useCeremonies, type CeremonyMoment } from './ceremonies';
+import { achievementMoment, useCeremonies, type CeremonyMoment } from './ceremonies';
 import {
   importCareer, rerollQuest, setCountAiGames, startCareer, useCareerAchievements, useCareerLevels, useCareerLook, useCareerOpponents,
   useCareerQuests, useCareerShop, useCareerStarters, useCareerState, useCareerUnlocks, useCareerWeekly,
 } from './careerData';
 import { useCampaigns, useChallenge, useGauntlet, useLimited, usePuzzles } from './careerModesData';
 import { focusNode } from './careerModesModel';
-import { useSceneArt } from './careerScene';
+import { useRotatingSceneArt } from './careerScene';
 import { playCareerCue } from './careerSound';
 import { beatenCount, freshUnlocks, nextOpponent, readSeen, unlockFacts, writeSeen } from './hubModel';
-import { dealStyle } from './motion';
+import { dealStyle, useStill } from './motion';
 import { CardArt, PortraitCard, type ArtCard } from './Portraits';
 import { CAREER_AVATARS, CAREER_SLEEVES, cosmeticName, describePay, fraction, titleLabel, unlockedIds, weeklyMarks } from './progressModel';
 import { RosterVersus } from './rosterPlay';
@@ -208,8 +208,8 @@ function CareerHub({ profile }: { profile: CareerProfile }) {
   const [versus, setVersus] = useState<CareerOpponent | null>(null);
   const roster = useMemo(() => opponents.data ?? [], [opponents.data]);
   const next = useMemo(() => nextOpponent(roster), [roster]);
-  useSceneArt(next?.cover ?? deck.cover);
-  useUnlockMoments(roster, campaigns.data, opponents.isSuccess && campaigns.isSuccess);
+  const still = useStill();
+  useUnlockMoments(roster, campaigns.data, achievements.data, shop.data, opponents.isSuccess && campaigns.isSuccess && achievements.isSuccess && shop.isSuccess);
 
   const chapter = useMemo(() => {
     const campaign = campaigns.data?.[0];
@@ -268,6 +268,8 @@ function CareerHub({ profile }: { profile: CareerProfile }) {
       status: t('career.hub.progress', { level: profile.level ?? 1, earned }),
     },
   ];
+  // the mat behind the hub turns through the next duel and the modes' art
+  useRotatingSceneArt([next?.cover ?? deck.cover, ...tiles.map((tile) => tile.art)], still);
 
   return (
     <div className={hub.hub}>
@@ -364,17 +366,24 @@ function ModeTile({ tile, index }: { tile: Tile; index: number }) {
   );
 }
 
-/** New tiers and chapters get their moment the first time the hub sees them open. */
-function useUnlockMoments(roster: readonly CareerOpponent[], campaigns: readonly CareerCampaign[] | undefined, ready: boolean) {
+/** New tiers, chapters, shop sets and achievements get their moment the first time the hub sees them. */
+function useUnlockMoments(
+  roster: readonly CareerOpponent[],
+  campaigns: readonly CareerCampaign[] | undefined,
+  achievements: readonly CareerAchievement[] | undefined,
+  shop: readonly CareerShopSet[] | undefined,
+  ready: boolean,
+) {
   const t = useT();
   const user = useSession((state) => state.userName);
   useEffect(() => {
     if (!ready) return;
-    const { fresh, seen } = freshUnlocks(readSeen(user), unlockFacts(roster, campaigns ?? []));
+    const { fresh, seen } = freshUnlocks(readSeen(user), unlockFacts(roster, campaigns ?? [], achievements ?? [], shop ?? []));
     writeSeen(user, seen);
     const moments: CeremonyMoment[] = fresh.flatMap((fact): CeremonyMoment[] => {
-      if (fact.startsWith('tier:')) {
-        const tier = Number(fact.slice(5));
+      const [kind, ...rest] = fact.split(':');
+      if (kind === 'tier') {
+        const tier = Number(rest[0]);
         const members = roster.filter((opponent) => opponent.tier === tier);
         const first = members[0];
         if (!first) return [];
@@ -386,13 +395,23 @@ function useUnlockMoments(roster: readonly CareerOpponent[], campaigns: readonly
           card: first.cover ?? undefined,
         }];
       }
-      const [, campaignId, chapterId] = fact.split(':');
-      const chapter = campaigns?.find((campaign) => campaign.id === campaignId)?.chapters?.find((item) => item.id === chapterId);
-      if (!chapter) return [];
-      return [{ id: fact, kicker: t('career.ceremony.chapter'), title: chapter.name ?? '', text: chapter.text, crest: { name: chapter.name ?? '', colors: chapter.color } }];
+      if (kind === 'chapter') {
+        const [campaignId, chapterId] = rest;
+        const chapter = campaigns?.find((campaign) => campaign.id === campaignId)?.chapters?.find((item) => item.id === chapterId);
+        if (!chapter) return [];
+        return [{ id: fact, kicker: t('career.ceremony.chapter'), title: chapter.name ?? '', text: chapter.text, crest: { name: chapter.name ?? '', colors: chapter.color } }];
+      }
+      if (kind === 'set') {
+        const set = shop?.find((item) => item.setCode === rest[0]);
+        if (!set) return [];
+        return [{ id: fact, kicker: t('career.ceremony.set'), title: set.name ?? set.setCode ?? '', text: t('career.ceremony.setText', { chapter: set.unlockedBy ?? '' }), crest: { name: set.setCode ?? '' }, cue: 'coins' }];
+      }
+      const achievement = achievements?.find((item) => item.id === rest.join(':'));
+      if (!achievement) return [];
+      return [achievementMoment(t, achievement)];
     });
     if (moments.length > 0) useCeremonies.getState().show(moments);
-  }, [ready, roster, campaigns, user, t]);
+  }, [ready, roster, campaigns, achievements, shop, user, t]);
 }
 
 // ---- Career outside its screens (loaded with this one): your profile's Career line, and unlocked sleeves in Decks

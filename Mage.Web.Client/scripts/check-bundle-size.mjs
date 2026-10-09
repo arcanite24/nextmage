@@ -32,10 +32,14 @@ import { gzipSync } from 'node:zlib';
 // 2026-10-09 (playtest fixes, budgets unchanged): the icons the entry uses load with it (vendor-lucide), and icons only
 // lazy screens use share one lazy chunk (vite.config.ts) instead of two dozen tiny ones; with both playtest branches
 // merged: entry 65.8 kB, initial 199.5 kB, app 402.7 kB
+// app raised 2026-10-09 from 405 kB for M10 (Career as a game: its own shell and HUD, the hub, opponent ladder, versus,
+// results scene, pack opening, binder, ceremonies, menu navigation, synthesized cues and music, opponent voices in the
+// match): about 18.6 kB of lazy Career chunks and their English and Spanish messages, measured 421.3 kB. The entry gained
+// the /career layout route (+0.3 kB, 66.1 kB)
 const BUDGET_KB = {
   entry: 69,
   initial: 212,
-  app: 405,
+  app: 425,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

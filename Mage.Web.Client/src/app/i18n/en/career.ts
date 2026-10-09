@@ -445,6 +445,9 @@ export default {
   'career.ceremony.tier': 'New tier open',
   'career.ceremony.tierText': 'New faces wait: {names}.',
   'career.ceremony.chapter': 'New chapter open',
+  'career.ceremony.set': 'New set in the shop',
+  'career.ceremony.setText': 'Beating {chapter} put its packs on the shelf.',
+  'career.ceremony.achievement': 'Achievement earned',
 
   'career.versus.with': 'with {deck}',
   'career.versus.title': 'Duel against {opponent}',
