@@ -1,0 +1,88 @@
+[
+ {
+  "id": "burn-vs-wall",
+  "name": "Burn through the wall",
+  "text": "A red deck against a fortress that starts with 30 life.",
+  "playerDeck": "red-path.dck",
+  "opponent": {
+   "name": "The Bastion",
+   "deck": "white-5.dck",
+   "skill": 4,
+   "twists": {
+    "startingLife": 30
+   }
+  }
+ },
+ {
+  "id": "flyers-vs-reach",
+  "name": "Grounded",
+  "text": "Your flyers against a green deck that starts with a Giant Spider.",
+  "playerDeck": "blue-path.dck",
+  "opponent": {
+   "name": "Webmother",
+   "deck": "green-5.dck",
+   "skill": 4,
+   "twists": {
+    "permanents": [
+     "Giant Spider"
+    ]
+   }
+  }
+ },
+ {
+  "id": "night-shift",
+  "name": "Night shift",
+  "text": "Black against black: the opponent draws two extra cards.",
+  "playerDeck": "black-path.dck",
+  "opponent": {
+   "name": "The Undertaker",
+   "deck": "black-5.dck",
+   "skill": 5,
+   "twists": {
+    "extraCards": 2
+   }
+  }
+ },
+ {
+  "id": "green-giants",
+  "name": "Giant country",
+  "text": "Green against green; the opponent starts with a Craw Wurm.",
+  "playerDeck": "green-path.dck",
+  "opponent": {
+   "name": "Old Thunderhoof",
+   "deck": "green-3.dck",
+   "skill": 4,
+   "twists": {
+    "permanents": [
+     "Craw Wurm"
+    ]
+   }
+  }
+ },
+ {
+  "id": "holy-war",
+  "name": "Holy war",
+  "text": "White against a red deck that starts with 25 life and an extra card.",
+  "playerDeck": "white-path.dck",
+  "opponent": {
+   "name": "Pyre Captain",
+   "deck": "red-5.dck",
+   "skill": 5,
+   "twists": {
+    "startingLife": 25,
+    "extraCards": 1
+   }
+  }
+ },
+ {
+  "id": "mind-games",
+  "name": "Mind games",
+  "text": "Blue against blue. Whoever runs out of cards first loses.",
+  "playerDeck": "blue-path.dck",
+  "opponent": {
+   "name": "The Librarian",
+   "deck": "blue-5.dck",
+   "skill": 5
+  }
+ }
+]

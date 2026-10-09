@@ -107,7 +107,7 @@ public class CareerProgressTest {
                 statement.execute("INSERT INTO profile (user, created, starter, coins, xp) VALUES ('bo', 1, 'x', 340, 600)");
             }
             try (CareerStore migrated = new CareerStore("jdbc:sqlite:" + old)) {
-                assertEquals(2, migrated.schemaVersion());
+                assertEquals(3, migrated.schemaVersion());
                 CareerProfile profile = migrated.profile("bo");
                 assertEquals(340, profile.coins);
                 assertEquals(600, profile.xp);

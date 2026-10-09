@@ -242,7 +242,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `careerCollection` | - | `CareerCard[]` | session | Every card the account owns in Career, by printing. Basic lands are free and not listed. |
 | `careerOpponents` | - | `CareerOpponent[]` | session | The AI opponents in tiers, with the account's wins against each and which are open. A tier opens after enough wins in the one before. |
 | `careerPlay` | `opponentId: string`, `deck: DeckCardLists` | `CareerMatch` | session | Start a Career match against an open opponent with a deck of owned cards (basic lands are free). The server sets up the table and starts the match; the game arrives like any other. |
-| `careerShop` | - | `CareerShopSet[]` | session | The sets the Career shop sells packs of, newest first, with the price in coins. |
+| `careerShop` | - | `CareerShopSet[]` | session | The sets the Career shop sells packs of, newest first, with the price in coins: the newest sets, and the ones campaign chapters opened. Sets a chapter still has to open come last, locked, saying which. |
 | `careerBuyPack` | `setCode: string` | `CareerPackResult` | session | Buy and open a pack. Copies past four of a card become coins (commons, uncommons) or a wildcard (rares, mythics); those cards say so in convertedTo. |
 | `careerCraft` | `setCode: string`, `cardNumber: string` | `CareerProfile` | session | Craft one copy of a card: commons and uncommons cost coins, rares and mythics a wildcard of their rarity. |
 | `careerExport` | - | `string` | session | The account's whole Career as a signed text file, to keep a copy. |
@@ -255,6 +255,24 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `careerGameResult` | `gameKey?: string` | `CareerGameResult \| null` | session | What a finished game paid: the match's coins and XP, quest progress, achievements, level rewards and the weekly goal. The key is the Career table id (or the game id of a regular AI game); without one, the latest game. Null when that game paid nothing. |
 | `careerSetProgress` | - | `CareerSetProgress[]` | session | How much of each set the collection has: different cards owned (any printing) out of the cards its packs hold, basic lands left out. Most complete first. |
 | `careerCountAiGames` | `count: boolean` | `CareerProfile` | session | Whether regular games against the AI also count for quests and achievements (off by default). They never pay coins for the match itself, and practice, goldfish and cheat games never count. |
+| `careerCampaigns` | - | `CareerCampaign[]` | session | Every campaign with its chapters and nodes, each locked, open or done for this account. |
+| `careerCampaignPlay` | `campaignId: string`, `nodeId: string` | `CareerMatch` | session | Play a campaign duel that's open (or done, to play it again), with the chapter's deck. A first win pays the node's reward. |
+| `careerCampaignChoose` | `campaignId: string`, `nodeId: string`, `optionId: string` | `CareerGameResult` | session | Take one option at an open choice node; it's paid at once and the path moves on. |
+| `careerPuzzles` | - | `CareerPuzzle[]` | session | The puzzle book in order: each puzzle's position, stars and attempts. A puzzle opens when the one before it is solved; the first three are always open. |
+| `careerPuzzlePlay` | `puzzleId: string` | `CareerMatch` | session | Try a puzzle: the game starts from its position on your turn, and you lose at the end of the turn. Stars go by attempts: three on the first try, two within three. |
+| `careerChallenge` | - | `CareerChallenge` | session | This week's challenge (the same fixed deck and opponent for everyone), your best result and the board. |
+| `careerChallengePlay` | - | `CareerMatch` | session | Play this week's challenge. A win counts on the board by fewest turns, then most life left. |
+| `careerGauntlet` | - | `CareerGauntletState` | session | The gauntlet: the entry price, rewards by wins, the run in progress (with its deck, bosses and any pick waiting) and recent runs. |
+| `careerGauntletStart` | - | `CareerRun` | session | Pay the entry and start a run: it offers starting packs to pick from. |
+| `careerGauntletPick` | `optionIds: unknown[]` | `CareerRun` | session | Take the waiting offer: as many starting packs as it asks for, or one bundle after a win. |
+| `careerGauntletPlay` | - | `CareerMatch` | session | Play the run's next boss with the run's deck. |
+| `careerGauntletAbandon` | - | `CareerRun` | session | Give up the run in progress. It pays nothing. |
+| `careerLimited` | - | `CareerLimitedState` | session | Solo sealed and draft: prices, rewards by wins, the run in progress and recent runs. |
+| `careerLimitedStart` | `kind: string`, `setCode: string` | `CareerLimitedRun` | session | Pay the entry and start a sealed or draft run of a set the shop sells. Sealed opens six packs at once; a draft opens three per seat with seven bots. Every card opened joins the collection. |
+| `careerLimitedPick` | `index: number` | `CareerLimitedRun` | session | Draft: take the card at this position of the pack in front of you. |
+| `careerLimitedDeck` | `deck: DeckCardLists` | `CareerLimitedRun` | session | Submit the run's deck: at least 40 cards from the pool, plus any basic lands. |
+| `careerLimitedPlay` | - | `CareerMatch` | session | Play the run's next game. The run ends at three wins or two losses. |
+| `careerLimitedAbandon` | - | `CareerLimitedRun` | session | Give up the run in progress. Cards already opened stay in the collection. |
 <!-- END GENERATED: methods -->
 
 ## Server events

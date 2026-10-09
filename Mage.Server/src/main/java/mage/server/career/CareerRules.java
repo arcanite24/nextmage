@@ -32,7 +32,7 @@ public final class CareerRules {
         public final int xp;
         public final String note;
 
-        Reward(int coins, int xp, String note) {
+        public Reward(int coins, int xp, String note) {
             this.coins = coins;
             this.xp = xp;
             this.note = note;

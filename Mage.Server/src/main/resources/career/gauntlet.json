@@ -1,0 +1,106 @@
+{
+ "entryCoins": 50,
+ "startPacks": 3,
+ "pickStart": 2,
+ "bundleSize": 4,
+ "bundles": 3,
+ "maxWins": 8,
+ "rewards": [
+  {
+   "wins": 0,
+   "coins": 10
+  },
+  {
+   "wins": 1,
+   "coins": 30
+  },
+  {
+   "wins": 2,
+   "coins": 50
+  },
+  {
+   "wins": 3,
+   "coins": 80
+  },
+  {
+   "wins": 4,
+   "coins": 100,
+   "packs": 1
+  },
+  {
+   "wins": 5,
+   "coins": 130,
+   "packs": 1
+  },
+  {
+   "wins": 6,
+   "coins": 160,
+   "packs": 1,
+   "wildcard": "rare"
+  },
+  {
+   "wins": 7,
+   "coins": 200,
+   "packs": 2,
+   "wildcard": "rare"
+  },
+  {
+   "wins": 8,
+   "coins": 300,
+   "packs": 3,
+   "wildcard": "mythic"
+  }
+ ],
+ "bosses": [
+  {
+   "name": "The Gatekeeper",
+   "deck": "white-1.dck",
+   "skill": 1
+  },
+  {
+   "name": "Rust and Ruin",
+   "deck": "blue-1.dck",
+   "skill": 2
+  },
+  {
+   "name": "The Howling Pack",
+   "deck": "black-3.dck",
+   "skill": 3
+  },
+  {
+   "name": "Iron Matron",
+   "deck": "red-3.dck",
+   "skill": 3,
+   "twists": {
+    "startingLife": 24
+   }
+  },
+  {
+   "name": "The Tidecaller",
+   "deck": "green-1.dck",
+   "skill": 4
+  },
+  {
+   "name": "Ember Twins",
+   "deck": "black-4.dck",
+   "skill": 5
+  },
+  {
+   "name": "The Pale Lord",
+   "deck": "white-5.dck",
+   "skill": 6,
+   "twists": {
+    "extraCards": 1
+   }
+  },
+  {
+   "name": "The Last Gate",
+   "deck": "blue-5.dck",
+   "skill": 7,
+   "twists": {
+    "startingLife": 30,
+    "extraCards": 1
+   }
+  }
+ ]
+}

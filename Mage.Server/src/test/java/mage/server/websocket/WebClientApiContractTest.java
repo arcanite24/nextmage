@@ -62,6 +62,10 @@ public class WebClientApiContractTest {
             "careerBuyPack", "careerCraft", "careerExport", "careerImport", // career store and service (career/CareerServiceTest)
             "careerQuests", "careerRerollQuest", "careerAchievements", "careerLevels", "careerWeekly", "careerGameResult",
             "careerSetProgress", "careerCountAiGames", // career progress (career/CareerProgressTest)
+            "careerCampaigns", "careerCampaignPlay", "careerCampaignChoose", "careerPuzzles", "careerPuzzlePlay",
+            "careerChallenge", "careerChallengePlay", "careerGauntlet", "careerGauntletStart", "careerGauntletPick",
+            "careerGauntletPlay", "careerGauntletAbandon", "careerLimited", "careerLimitedStart", "careerLimitedPick",
+            "careerLimitedDeck", "careerLimitedPlay", "careerLimitedAbandon", // career modes (career/CareerModesTest)
             "authRegister", "authSendTokenToEmail", "authResetPassword" // session and AccountService, with readable errors
     ));
 
