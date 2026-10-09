@@ -1,5 +1,5 @@
 import { ClipboardPaste, Cloud, CloudOff, Copy, Download, PencilLine, PencilRuler, RefreshCw, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { siteById } from '../../core/deckImport/sites';
 import { ExportMenu } from '../decks/ExportMenu';
@@ -14,6 +14,7 @@ import { t as translate, useT } from '../i18n';
 import { RichText } from '../i18n/RichText';
 import { SLEEVE_COLORS, rosterOf, sleeveFor, useDecks, type RosterDeck } from '../stores/decks';
 import { useDeckSyncStatus } from '../stores/deckSyncStatus';
+import { useSettings } from '../stores/settings';
 import { openImport, useImportSheet } from '../stores/importSheet';
 import { Button } from '../ui/Button';
 import { DeckBox } from '../ui/DeckBox';
@@ -22,6 +23,9 @@ import { Field } from '../ui/Field';
 import { notify } from '../stores/toasts';
 import { Zone } from '../ui/Zone';
 import styles from './DecksScreen.module.css';
+
+// sleeves unlocked in Career, for players who opted in
+const CareerSleeves = lazy(() => import('../career/CareerScreen').then((m) => ({ default: m.CareerSleeves })));
 
 /** Your deck shelf: import, sleeve, update and remove decks. */
 export function DecksScreen() {
@@ -33,6 +37,7 @@ export function DecksScreen() {
   const [renaming, setRenaming] = useState<RosterDeck | null>(null);
   const selected = roster.find((deck) => deck.id === decks.selectedId) ?? null;
   const arrivedId = useImportSheet((state) => state.arrivedId);
+  const career = useSettings((state) => state.settings.careerOptIn);
   const navigate = useNavigate();
   const degraded = useDegradedSites();
   const { dragging, dropProps } = useImportDrop();
@@ -137,6 +142,11 @@ export function DecksScreen() {
                     onClick={() => decks.setSleeve(selected.id, color)}
                   />
                 ))}
+                {career && (
+                  <Suspense fallback={null}>
+                    <CareerSleeves current={sleeveFor(decks.sleeves, selected)} swatchClass={styles.swatch} onPick={(color) => decks.setSleeve(selected.id, color)} />
+                  </Suspense>
+                )}
               </div>
             </div>
             <Button variant="print" icon={<PencilRuler size={16} />} onClick={() => navigate(`/decks/${encodeURIComponent(selected.id)}`)}>

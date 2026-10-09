@@ -1,8 +1,8 @@
-import { Download, Lock, Swords, Upload } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { Check, Download, Gift, ListOrdered, Lock, RefreshCw, Swords, Trophy, Upload } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { DeckCardLists } from '../../core/decks/types';
-import type { CareerOpponent, CareerPayout, CareerProfile, CareerStarter } from '../../protocol/generated/views';
+import type { CareerOpponent, CareerPayout, CareerProfile, CareerQuest, CareerQuests, CareerStarter, CareerWeekly } from '../../protocol/generated/views';
 import { registerMessages, useT } from '../i18n';
 import messages from '../i18n/en/career';
 import { usePlay } from '../stores/play';
@@ -15,8 +15,10 @@ import { downloadText } from '../ui/download';
 import { CareerBar } from './CareerBar';
 import { ensureCareerDeck } from './careerDeck';
 import {
-  exportCareer, importCareer, playCareer, startCareer, useCareerCollection, useCareerOpponents, useCareerStarters, useCareerState,
+  exportCareer, importCareer, playCareer, startCareer, useCareerCollection, useCareerOpponents, useCareerQuests, useCareerStarters, useCareerState,
+  rerollQuest, setCountAiGames, useCareerAchievements, useCareerLevels, useCareerLook, useCareerUnlocks, useCareerWeekly,
 } from './careerData';
+import { CAREER_AVATARS, CAREER_SLEEVES, cosmeticName, describePay, fraction, titleLabel, unlockedIds, weeklyMarks } from './progressModel';
 import { DECK_MIN, WINS_TO_UNLOCK, exportFileName, levelProgress, mainDeckSize, ownedByName, shortfalls, tiersOf } from './careerModel';
 import styles from './Career.module.css';
 
@@ -28,6 +30,11 @@ export function CareerScreen() {
   const navigate = useNavigate();
   const state = useCareerState();
   const optedIn = useSettings((settings) => settings.settings.careerOptIn);
+  // a Career opened elsewhere counts as opted in on this browser too (its cosmetics show in Decks and Settings)
+  const hasProfile = !!state.data?.profile;
+  useEffect(() => {
+    if (hasProfile && !optedIn) useSettings.getState().update({ careerOptIn: true });
+  }, [hasProfile, optedIn]);
 
   if (state.isPending) return <p className={styles.note}>{t('career.loading')}</p>;
   if (state.isError) {
@@ -173,6 +180,10 @@ function CareerHome({ profile, recent }: { profile: CareerProfile; recent: Caree
   const [starting, setStarting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const names = useMemo(() => new Map((opponents.data ?? []).map((opponent) => [opponent.id, opponent.name])), [opponents.data]);
+  const quests = useCareerQuests(true);
+  const weekly = useCareerWeekly(true);
+  const avatar = useCareerLook((look) => look.looks[user.toLowerCase()]?.avatar ?? null);
+  const title = useCareerLook((look) => look.looks[user.toLowerCase()]?.title ?? null);
 
   async function play(opponent: CareerOpponent) {
     if (!deck || deckProblem) return;
@@ -250,11 +261,29 @@ function CareerHome({ profile, recent }: { profile: CareerProfile; recent: Caree
 
         <aside className={styles.side}>
           <section className={styles.card}>
+            <div className={styles.identity}>
+              <CareerAvatar id={avatar} name={user} />
+              <span className={styles.identityText}>
+                <b>{user}</b>
+                {title && <small>{titleLabel(title)}</small>}
+              </span>
+            </div>
             <h2 className={styles.cardLabel}>{t('career.level', { level: profile.level ?? 1 })}</h2>
             <div className={styles.xpBar} role="progressbar" aria-valuemin={0} aria-valuemax={level.needed || 1} aria-valuenow={level.into} aria-label={t('career.level', { level: profile.level ?? 1 })}>
               <span style={{ width: `${Math.round(level.fraction * 100)}%` }} />
             </div>
             <p className={styles.small}>{level.max ? t('career.xpMax') : t('career.xp', { into: level.into, needed: level.needed })} · {t('career.record', { wins: profile.wins ?? 0, losses: profile.losses ?? 0 })}</p>
+            <Button variant="quiet" size="sm" icon={<ListOrdered size={16} />} onClick={() => navigate('/career/progress')}>{t('career.progress.levels')}</Button>
+          </section>
+
+          <section className={styles.card}>
+            <h2 className={styles.cardLabel}>{t('career.weekly')}</h2>
+            <WeeklyGoal weekly={weekly.data} />
+          </section>
+
+          <section className={styles.card}>
+            <h2 className={styles.cardLabel}>{t('career.quests')}</h2>
+            {quests.isPending ? <p className={styles.small}>{t('career.loading')}</p> : <QuestList quests={quests.data ?? undefined} />}
           </section>
 
           <section className={styles.card}>
@@ -282,9 +311,202 @@ function CareerHome({ profile, recent }: { profile: CareerProfile; recent: Caree
             </section>
           )}
 
+          <section className={styles.card}>
+            <h2 className={styles.cardLabel}>{t('career.settings')}</h2>
+            <CountAiGames profile={profile} />
+          </section>
+
           <Button variant="quiet" size="sm" icon={<Download size={16} />} onClick={() => void exportNow()}>{t('career.export')}</Button>
         </aside>
       </div>
     </div>
   );
+}
+
+// ---- Career outside its screens (loaded with this one): your profile's Career line, and unlocked sleeves in Decks
+
+/** Your Career in a line, for your profile: level, title and achievements, with the way to the full list. */
+export function CareerSummary({ user, onOpen }: { user: string; onOpen(): void }) {
+  const t = useT();
+  const navigate = useNavigate();
+  const levels = useCareerLevels(true);
+  const achievements = useCareerAchievements(true);
+  const avatar = useCareerLook((look) => look.looks[user.toLowerCase()]?.avatar ?? null);
+  const title = useCareerLook((look) => look.looks[user.toLowerCase()]?.title ?? null);
+  if (!levels.data || !achievements.data) return null;
+  const earned = achievements.data.filter((achievement) => achievement.achieved).length;
+  return (
+    <div className={styles.summary}>
+      <CareerAvatar id={avatar} name={user} size={32} />
+      <span className={styles.identityText}>
+        {title && <b>{titleLabel(title)}</b>}
+        <small>{t('career.profile.line', { level: levels.data.level ?? 1, earned, total: achievements.data.length })}</small>
+      </span>
+      <Button size="sm" variant="quiet" icon={<Trophy size={16} />} onClick={() => { onOpen(); navigate('/career/progress?tab=achievements'); }}>
+        {t('career.progress.achievements')}
+      </Button>
+    </div>
+  );
+}
+
+/** The sleeves a Career unlocked, beside the free ones wherever a deck's sleeves are chosen. */
+export function CareerSleeves({ current, swatchClass, onPick }: { current: string; swatchClass: string; onPick(color: string): void }) {
+  const t = useT();
+  const unlocks = useCareerUnlocks();
+  return unlockedIds(unlocks, 'sleeve').filter((id) => id in CAREER_SLEEVES).map((id) => {
+    const color = CAREER_SLEEVES[id];
+    const name = t('career.reward.sleeve', { name: cosmeticName(t, { kind: 'sleeve', id }) });
+    return (
+      <button
+        key={id}
+        type="button"
+        role="radio"
+        aria-checked={current === color}
+        aria-label={name}
+        title={name}
+        className={swatchClass}
+        style={{ background: color }}
+        onClick={() => onPick(color)}
+      />
+    );
+  });
+}
+
+// ---- progress pieces the Career screens share
+
+/** A Career avatar: a dyed crest with its line drawing, or the player's initial before one is chosen. */
+export function CareerAvatar({ id, name, size = 48 }: { id: string | null | undefined; name: string; size?: number }) {
+  const art = id ? CAREER_AVATARS[id] : undefined;
+  const style = { '--crest-size': `${size}px`, ...(art ? { '--crest-light': art.light, '--crest-dark': art.dark } : {}) } as CSSProperties;
+  return (
+    <span className={styles.crest} style={style} aria-hidden="true">
+      {art ? (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d={art.path} />
+        </svg>
+      ) : (
+        <b>{name.slice(0, 1).toUpperCase()}</b>
+      )}
+    </span>
+  );
+}
+
+/** A thin bar for progress toward a target. */
+export function ProgressBar({ value, label, done }: { value: number; label: string; done?: boolean }) {
+  return (
+    <div className={[styles.bar2, done ? styles.bar2Done : ''].join(' ')} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)} aria-label={label}>
+      <span style={{ width: `${Math.round(value * 100)}%` }} />
+    </div>
+  );
+}
+
+/** The weekly goal: Career wins this week on one bar, with each goal that gives a free pack marked along it. */
+export function WeeklyGoal({ weekly }: { weekly: CareerWeekly | undefined }) {
+  const t = useT();
+  const marks = weeklyMarks(weekly);
+  const wins = weekly?.wins ?? 0;
+  return (
+    <div className={styles.weekly}>
+      <p>
+        <b>{t('career.weekly.wins', { count: wins })}</b>
+        <small>{weekly?.nextGoal ? t('career.weekly.next', { goal: weekly.nextGoal }) : t('career.weekly.done')}</small>
+      </p>
+      <div className={styles.weeklyTrack} role="progressbar" aria-valuemin={0} aria-valuemax={marks.top} aria-valuenow={Math.min(wins, marks.top)} aria-label={t('career.weekly')}>
+        <span className={styles.weeklyFill} style={{ width: `${marks.fill * 100}%` }} />
+        {marks.goals.map((goal) => (
+          <span
+            key={goal.goal}
+            className={[styles.weeklyMark, goal.reached ? styles.weeklyMarkOn : ''].join(' ')}
+            style={{ left: `${goal.at * 100}%` }}
+            title={t('career.weekly.goal', { goal: goal.goal })}
+          >
+            <Gift size={12} aria-hidden="true" />
+            <small>{goal.goal}</small>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** The quests waiting, each with its bar and pay, and the day's swap. */
+export function QuestList({ quests }: { quests: CareerQuests | undefined }) {
+  const t = useT();
+  const [swapping, setSwapping] = useState<number | null>(null);
+  const list = quests?.quests ?? [];
+  const canReroll = !!quests?.canReroll;
+
+  async function swap(quest: CareerQuest) {
+    setSwapping(quest.slot ?? null);
+    try {
+      await rerollQuest(quest.slot ?? 0);
+    } catch (reason) {
+      notify(t('career.quests.swapFailed'), reason instanceof Error ? reason.message : String(reason), 'error');
+    } finally {
+      setSwapping(null);
+    }
+  }
+
+  return (
+    <>
+      {list.length === 0 && <p className={styles.small}>{t('career.quests.none')}</p>}
+      <ul className={styles.quests}>
+        {list.map((quest) => (
+          <li key={quest.slot} className={styles.quest}>
+            <span>
+              <b>{quest.text}</b>
+              <small>{describePay(t, quest.coins, quest.xp)}</small>
+            </span>
+            <Button
+              variant="quiet"
+              size="sm"
+              icon={<RefreshCw size={14} />}
+              busy={swapping === quest.slot}
+              disabled={!canReroll || swapping !== null}
+              aria-label={t('career.quests.swapLabel', { quest: quest.text ?? '' })}
+              title={canReroll ? t('career.quests.swapLabel', { quest: quest.text ?? '' }) : t('career.quests.swapUsed')}
+              onClick={() => void swap(quest)}
+            >
+              {t('career.quests.swap')}
+            </Button>
+            <ProgressBar value={fraction(quest.progress, quest.target)} label={quest.text ?? ''} />
+            <small>{quest.progress ?? 0} / {quest.target ?? 0}</small>
+          </li>
+        ))}
+      </ul>
+      <p className={styles.small}>{t('career.quests.note')}{canReroll ? '' : ` ${t('career.quests.swapUsed')}`}</p>
+    </>
+  );
+}
+
+/** Career's own setting: whether regular games against the AI count for quests and achievements. */
+export function CountAiGames({ profile }: { profile: CareerProfile }) {
+  const t = useT();
+  const [busy, setBusy] = useState(false);
+
+  async function change(count: boolean) {
+    setBusy(true);
+    try {
+      await setCountAiGames(count);
+    } catch (reason) {
+      notify(t('career.settings.failed'), reason instanceof Error ? reason.message : String(reason), 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <label className={styles.setting}>
+      <input type="checkbox" checked={!!profile.countAiGames} disabled={busy} onChange={(event) => void change(event.target.checked)} />
+      <span>
+        {t('career.settings.countAi')}
+        <small>{t('career.settings.countAiNote')}</small>
+      </span>
+    </label>
+  );
+}
+
+/** A done mark for finished quests and earned achievements. */
+export function DoneMark({ label }: { label: string }) {
+  return <span className={styles.doneMark} title={label}><Check size={14} aria-hidden="true" /><span className={styles.srOnly}>{label}</span></span>;
 }

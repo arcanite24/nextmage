@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Search } from 'lucide-react';
+import { Library, Search } from 'lucide-react';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import type { CareerProfile } from '../../protocol/generated/views';
@@ -11,7 +11,9 @@ import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { Dialog } from '../ui/Dialog';
 import { CareerBar } from './CareerBar';
-import { craftCard, useCareerCollection, useCareerState } from './careerData';
+import { craftCard, useCareerCollection, useCareerSetProgress, useCareerState } from './careerData';
+import { ProgressBar } from './CareerScreen';
+import { fraction } from './progressModel';
 import { PLAYSET, canAfford, careerRarity, craftCost, isBasic, ownedByName, type CareerRarity } from './careerModel';
 import styles from './Career.module.css';
 
@@ -51,6 +53,7 @@ export function CareerCollectionScreen() {
   const [rarity, setRarity] = useState<CareerRarity | ''>('');
   const [everything, setEverything] = useState(false);
   const [crafting, setCrafting] = useState<Printing | null>(null);
+  const [showSets, setShowSets] = useState(false);
   const owned = useMemo(() => ownedByName(collection.data ?? []), [collection.data]);
   const needle = text.trim().toLowerCase();
   const query = useDebounced(needle, 250);
@@ -93,6 +96,7 @@ export function CareerCollectionScreen() {
             <input type="checkbox" checked={everything} onChange={(event) => setEverything(event.target.checked)} />
             {t('career.collection.all')}
           </label>
+          <Button variant="quiet" size="sm" icon={<Library size={16} />} onClick={() => setShowSets(true)}>{t('career.sets')}</Button>
         </div>
       </header>
       <div className={styles.binder}>
@@ -110,6 +114,7 @@ export function CareerCollectionScreen() {
           </ul>
         )}
       </div>
+      <SetProgressDialog open={showSets} onClose={() => setShowSets(false)} />
       <CraftDialog card={crafting} profile={profile} owned={crafting ? owned.get(crafting.name.toLowerCase()) ?? 0 : 0} onClose={() => setCrafting(null)} />
     </div>
   );
@@ -172,6 +177,32 @@ function CraftDialog({ card, profile, owned, onClose }: { card: Printing | null;
           </div>
         </div>
       )}
+    </Dialog>
+  );
+}
+
+/** How much of each set the collection has. */
+function SetProgressDialog({ open, onClose }: { open: boolean; onClose(): void }) {
+  const t = useT();
+  const sets = useCareerSetProgress(open);
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()} title={t('career.sets')} description={t('career.sets.lead')} width="md">
+      {sets.isPending ? <p className={styles.note}>{t('career.loading')}</p>
+        : !sets.data?.length ? <p className={styles.note}>{t('career.sets.none')}</p>
+          : (
+            <ul className={styles.sets}>
+              {sets.data.map((set) => (
+                <li key={set.setCode} className={styles.setRow}>
+                  <span>
+                    <b>{set.name}</b>
+                    <small>{set.setCode}</small>
+                  </span>
+                  <ProgressBar value={fraction(set.owned, set.total)} label={set.name ?? set.setCode ?? ''} done={!!set.total && set.owned === set.total} />
+                  <small>{set.owned ?? 0} / {set.total ?? 0}</small>
+                </li>
+              ))}
+            </ul>
+          )}
     </Dialog>
   );
 }
