@@ -77,3 +77,8 @@
   cursor: grabbing;
   filter: drop-shadow(0 30px 40px rgb(var(--shade-rgb) / 0.55));
 }
+
+/* backs (a watched hand that stays hidden): nothing to read, so nothing rises */
+.faceDown:hover {
+  transform: translateY(var(--drop, 0)) rotate(var(--rotate, 0deg));
+}
