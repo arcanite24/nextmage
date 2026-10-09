@@ -67,6 +67,7 @@ public class ComputerPlayer6 extends ComputerPlayer {
     protected int maxDepth;
     protected int maxNodes;
     protected int maxThinkTimeSecs;
+    protected int rootScoreNoise; // see rootScoreNoiseForSkill
     protected LinkedList<Ability> actions = new LinkedList<>();
     protected Combat combat;
     protected int currentScore;
@@ -96,12 +97,32 @@ public class ComputerPlayer6 extends ComputerPlayer {
         }
         maxThinkTimeSecs = skill * 3;
         maxNodes = MAX_SIMULATED_NODES_PER_CALC;
+        rootScoreNoise = rootScoreNoiseForSkill(skill);
         this.actionCache = new HashSet<>();
+    }
+
+    /**
+     * Skills below 4 all search 4 actions deep, so think time alone barely separated them (measured: skill 1 played
+     * as well as skill 4). Instead the lower skills misjudge their own options: each first action they could take
+     * gets a random error of up to this many score points before the best one is picked (a creature on the
+     * battlefield is worth roughly 1000 points), so they often take a decent line instead of the best one. Skill 4
+     * and above search exactly as before. Calibrated for Career's Apprentice tier, see career/CALIBRATION.md.
+     */
+    static int rootScoreNoiseForSkill(int skill) {
+        if (skill <= 1) {
+            return 2500;
+        } else if (skill == 2) {
+            return 1500;
+        } else if (skill == 3) {
+            return 700;
+        }
+        return 0;
     }
 
     public ComputerPlayer6(final ComputerPlayer6 player) {
         super(player);
         this.maxDepth = player.maxDepth;
+        this.rootScoreNoise = player.rootScoreNoise;
         this.currentScore = player.currentScore;
         if (player.combat != null) {
             this.combat = player.combat.copy();
@@ -671,6 +692,13 @@ public class ComputerPlayer6 extends ComputerPlayer {
                     if (depth == maxDepth
                             && action instanceof PassAbility) {
                         finalScore = finalScore - PASSIVITY_PENALTY; // passivity penalty
+                    }
+                    if (depth == maxDepth
+                            && rootScoreNoise > 0
+                            && finalScore != GameStateEvaluator2.WIN_GAME_SCORE
+                            && finalScore != GameStateEvaluator2.LOSE_GAME_SCORE) {
+                        // weaker skills misjudge their options (never a won or lost game, those stay exact)
+                        finalScore += RandomUtil.nextInt(2 * rootScoreNoise + 1) - rootScoreNoise;
                     }
                     if (finalScore > alpha
                             || (depth == maxDepth
