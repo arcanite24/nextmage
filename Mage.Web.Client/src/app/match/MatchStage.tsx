@@ -28,6 +28,7 @@ import { BetweenGames } from './BetweenGames';
 import { Arrows } from './Arrows';
 import { buildBoard, fitCardWidth, type PermanentGroup, type PlayerBoard } from './boardModel';
 import { CardDetail } from './CardDetail';
+import { Coach } from './Coach';
 import { CardZoom } from './CardZoom';
 import { DamageAssigner } from './DamageAssigner';
 import { damageCorner, useDamageSplit } from './useDamageSplit';
@@ -402,6 +403,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
             <EmoteBubbles view={view} />
+            {mode === 'play' && <Coach view={view ?? null} mode={choosingStarter ? 'panel' : interaction.mode} awaiting={awaitingServer} gameOver={!!state.gameOver} />}
             <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} replayLog={replayLog} />
             {mode === 'play' && <WatcherCount watchers={watchers} className={styles.watchers} />}
             <GameMenu

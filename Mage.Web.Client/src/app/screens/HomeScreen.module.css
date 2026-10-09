@@ -227,3 +227,24 @@
   border-radius: var(--radius-zone);
   box-shadow: inset 0 0 0 2px var(--ink-strong);
 }
+
+/* until the first game: an offer to play a guided one */
+.firstGame {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-control);
+  box-shadow: inset 0 0 0 1.5px var(--decision);
+}
+
+.firstGameText {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+
+.firstGameActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
