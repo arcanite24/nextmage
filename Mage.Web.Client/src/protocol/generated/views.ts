@@ -27,6 +27,25 @@ export interface BracketInfo {
     valid?: boolean;
 }
 
+export interface BridgeSnapshot {
+    bucketLimits?: number[];
+    buckets?: number[];
+    chars?: number;
+    connections?: number;
+    heaviest?: CallbackStats[];
+    large?: LargeMessage[];
+    messages?: number;
+    requests?: number;
+    startedAt?: number;
+}
+
+export interface CallbackStats {
+    chars?: number;
+    count?: number;
+    maxChars?: number;
+    method?: string;
+}
+
 export interface CardCriteria {
     black?: boolean;
     blue?: boolean;
@@ -176,6 +195,19 @@ export interface ChoiceImpl extends Choice {
     subMessage?: string;
 }
 
+export interface ClientError {
+    appVersion?: string;
+    context?: string;
+    message?: string;
+    path?: string;
+    receivedAt?: number;
+    repeats?: number;
+    source?: string;
+    stack?: string;
+    userAgent?: string;
+    userName?: string;
+}
+
 export interface CombatGroupView extends Serializable {
     attackers?: { [index: string]: CardView };
     blockers?: { [index: string]: CardView };
@@ -222,9 +254,22 @@ export interface DeckCardLists extends Serializable, Copyable<DeckCardLists> {
     sideboardLayout?: DeckCardLayout;
 }
 
+export interface DeckPutResult {
+    stored?: boolean;
+    updatedAt?: number;
+}
+
 export interface DeckSourceStatus {
     site?: string;
     status?: string;
+}
+
+export interface DeckSyncEntry {
+    data?: string;
+    deleted?: boolean;
+    id?: string;
+    name?: string;
+    updatedAt?: number;
 }
 
 export interface DeckValidationResult {
@@ -393,6 +438,13 @@ export interface ImportedDeck {
     url?: string;
 }
 
+export interface LargeMessage {
+    at?: number;
+    chars?: number;
+    method?: string;
+    objectId?: string;
+}
+
 export interface LookedAtView extends Serializable {
     cards?: { [index: string]: SimpleCardView };
     name?: string;
@@ -502,6 +554,19 @@ export interface PlayableObjectsList extends Serializable, Copyable<PlayableObje
     objects?: { [index: string]: PlayableObjectStats };
 }
 
+export interface PlayerReport {
+    closedAt?: number;
+    createdAt?: number;
+    details?: string;
+    gameId?: string;
+    id?: number;
+    open?: boolean;
+    reason?: string;
+    reported?: string;
+    reporter?: string;
+    resolution?: string;
+}
+
 export interface PlayerView extends Serializable {
     attachments?: string[];
     battlefield?: { [index: string]: PermanentView };
@@ -596,6 +661,18 @@ export interface SelectableObjectView {
 export interface Serializable {
 }
 
+export interface ServerInfo {
+    accounts?: boolean;
+    deckSync?: boolean;
+    mail?: boolean;
+    maxPasswordLength?: number;
+    maxUserNameLength?: number;
+    minPasswordLength?: number;
+    minUserNameLength?: number;
+    serverName?: string;
+    testMode?: boolean;
+}
+
 export interface ServerState extends Serializable {
     cardsContentVersion?: number;
     deckTypes?: string[];
@@ -606,6 +683,21 @@ export interface ServerState extends Serializable {
     testMode?: boolean;
     tournamentTypes?: TournamentTypeView[];
     version?: MageVersion;
+}
+
+export interface ServerStats {
+    activeGames?: number;
+    bridge?: BridgeSnapshot;
+    heapMax?: number;
+    heapUsed?: number;
+    now?: number;
+    processCpu?: number;
+    processors?: number;
+    systemLoad?: number;
+    tables?: number;
+    threads?: number;
+    uptimeMillis?: number;
+    usersOnline?: number;
 }
 
 export interface SimpleCardView extends Serializable, SelectableObjectView {

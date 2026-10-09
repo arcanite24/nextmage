@@ -144,7 +144,7 @@
 
 .kinds {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
 }
 
@@ -240,3 +240,51 @@
   box-shadow: inset 0 0 0 2px var(--ink-soft);
   color: var(--ink);
 }
+
+.sources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.source {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  row-gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--ink-faint);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.source input { grid-row: span 2; margin: 3px 0 0; accent-color: var(--decision); }
+.source strong { color: var(--ink-strong); }
+.source span { color: var(--ink-dim); font-size: var(--text-sm); }
+.sourceOn { border-color: var(--decision); background: rgba(var(--decision-rgb), 0.08); }
+
+.pool { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; }
+.pool legend { margin-bottom: 6px; font-weight: 600; color: var(--ink-strong); }
+.poolTools { display: flex; align-items: flex-end; gap: 8px; }
+
+.poolList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2px 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  border: 1px solid var(--ink-faint);
+  border-radius: var(--radius-control);
+}
+
+.poolList label { display: flex; align-items: baseline; gap: 6px; cursor: pointer; font-size: var(--text-sm); }
+.poolList small { color: var(--ink-dim); }
+
+.upload { display: grid; gap: 4px; }
+.upload span { font-weight: 600; color: var(--ink-strong); }
+.upload small, .hint { margin: 0; color: var(--ink-dim); font-size: var(--text-sm); }
+
+.problem { flex: 1; margin: 0; color: var(--ink-soft); font-size: var(--text-sm); }

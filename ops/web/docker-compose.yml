@@ -58,8 +58,15 @@ services:
     build:
       context: ../..
       dockerfile: ops/web/Dockerfile.web
+      args:
+        VITE_APP_NAME: ${APP_NAME:-Playmat}
     environment:
       DOMAIN: ${DOMAIN:?set DOMAIN}
+      # per client address, at the proxy (the server adds its own cap of concurrent game connections per address)
+      WS_RATE_LIMIT: ${WS_RATE_LIMIT:-30}
+      WS_RATE_WINDOW: ${WS_RATE_WINDOW:-1m}
+      IMG_API_RATE_LIMIT: ${IMG_API_RATE_LIMIT:-300}
+      IMG_API_RATE_WINDOW: ${IMG_API_RATE_WINDOW:-1m}
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
@@ -81,7 +88,32 @@ services:
     depends_on:
       xmage:
         condition: service_healthy
+      imgcache:
+        condition: service_healthy
     restart: unless-stopped
+
+  # Caching proxy for Scryfall card pictures and lookups, served under /img by Caddy (imgcache.conf.template)
+  imgcache:
+    image: nginx:1.30.5-alpine
+    environment:
+      IMGCACHE_IMAGES_MAX_SIZE: ${IMGCACHE_IMAGES_MAX_SIZE:-20g}
+      IMGCACHE_API_MAX_SIZE: ${IMGCACHE_API_MAX_SIZE:-1g}
+      IMGCACHE_API_RATE: ${IMGCACHE_API_RATE:-10r/s}
+      IMGCACHE_API_BURST: ${IMGCACHE_API_BURST:-20}
+    volumes:
+      # rendered into /etc/nginx/conf.d/default.conf (replacing the stock site) on every start
+      - ./imgcache.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - xmage-imgcache:/var/cache/nginx/scryfall
+    networks:
+      - xmage
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    # no published ports: only the proxy reaches it
 
   backup:
     image: *server-image
@@ -115,5 +147,6 @@ volumes:
   xmage-logs:
   xmage-saved:
   xmage-backups:
+  xmage-imgcache:
   caddy-data:
   caddy-config:

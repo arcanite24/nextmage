@@ -5,6 +5,9 @@ import mage.game.Table;
 import mage.game.match.Match;
 import mage.server.Main;
 import mage.server.Session;
+import mage.server.moderation.ClientErrors;
+import mage.server.moderation.ReportStore;
+import mage.server.websocket.BridgeMetrics;
 import mage.server.websocket.rpc.RpcCall;
 import mage.server.websocket.rpc.RpcException;
 import mage.server.websocket.rpc.RpcMethod;
@@ -113,6 +116,43 @@ final class AdminApi {
                             return true;
                         }),
 
+                RpcMethod.named("adminServerStats")
+                        .returns("ServerStats")
+                        .doc("Admin: load and traffic: users, tables, games, memory, CPU, and the size of messages sent to web clients "
+                                + "(with the heaviest callbacks and every one over " + BridgeMetrics.LARGE_CHARS / 1024 + " KB).")
+                        .handler(call -> {
+                            requireAdmin(ctx, call);
+                            return ServerStats.collect(ctx.managers);
+                        }),
+
+                RpcMethod.named("adminGetReports")
+                        .params(optional("openOnly", BOOLEAN))
+                        .returns("PlayerReport[]")
+                        .doc("Admin: player reports, newest first; only the open ones unless openOnly is false.")
+                        .handler(call -> {
+                            requireAdmin(ctx, call);
+                            boolean openOnly = call.optBool(0, true);
+                            return AccountApi.decks(() -> ReportStore.get().list(openOnly, 200));
+                        }),
+
+                RpcMethod.named("adminCloseReport")
+                        .params(of("reportId", INT), of("resolution", STRING))
+                        .returns("boolean")
+                        .doc("Admin: close a report with a note about what was done. False when it was closed already.")
+                        .handler(call -> {
+                            requireAdmin(ctx, call);
+                            long id = AccountApi.longValue(call, 0);
+                            return AccountApi.decks(() -> ReportStore.get().close(id, call.string(1), System.currentTimeMillis()));
+                        }),
+
+                RpcMethod.named("adminClientErrors")
+                        .returns("ClientError[]")
+                        .doc("Admin: the latest crash reports from web clients, newest first.")
+                        .handler(call -> {
+                            requireAdmin(ctx, call);
+                            return ClientErrors.get().recent(200);
+                        }),
+
                 RpcMethod.named("testEndGame")
                         .session(0)
                         .params(of("sessionId", STRING), of("tableId", mage.server.websocket.rpc.RpcParam.Type.UUID))
@@ -130,6 +170,12 @@ final class AdminApi {
                         .handler(call -> testConcedeMatch(ctx, call))
         ));
         return methods;
+    }
+
+    private static void requireAdmin(ApiContext ctx, RpcCall call) throws RpcException {
+        if (ctx.managers == null || !ctx.managers.sessionManager().checkAdminAccess(call.sessionId())) {
+            throw RpcException.notAuthorized("Admin only");
+        }
     }
 
     private static UUID ownedTestTable(ApiContext ctx, RpcCall call) throws RpcException {

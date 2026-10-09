@@ -33,11 +33,39 @@ const LINKS = {
   },
 };
 
-function createResolver(fetchImpl: typeof fetch, store = memoryStore()) {
-  return new ImageResolver({ fetch: fetchImpl, store, batchDelayMs: 1, minRequestIntervalMs: 0 });
+function createResolver(fetchImpl: typeof fetch, store = memoryStore(), imageProxy?: string) {
+  return new ImageResolver({ fetch: fetchImpl, store, batchDelayMs: 1, minRequestIntervalMs: 0, imageProxy });
 }
 
 describe('ImageResolver', () => {
+  test('goes through the image proxy when one is set, and keeps the stored links raw', async () => {
+    const store = memoryStore({
+      'm10/146': { front: { normal: 'https://cards.scryfall.io/normal/front/a/b/bolt.jpg?1' }, fetchedAt: Date.now() },
+    });
+    const fetchImpl = vi.fn(async (url: RequestInfo | URL) => {
+      if (String(url).endsWith('scryfall-links.json')) return jsonResponse(LINKS);
+      expect(String(url)).toBe('/img/api/cards/collection');
+      return jsonResponse({
+        data: [{ set: 'isd', collector_number: '51', image_uris: { normal: 'https://cards.scryfall.io/normal/front/c/d/delver.jpg?2' } }],
+      });
+    }) as unknown as typeof fetch;
+    const resolver = createResolver(fetchImpl, store, '/img');
+
+    const bolt = { name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' };
+    const delver = { name: 'Delver of Secrets', expansionSetCode: 'ISD', cardNumber: '51' };
+    expect(resolver.resolve(bolt)).toBeNull();
+    expect(resolver.resolve(delver)).toBeNull();
+    await vi.waitFor(() => expect(resolver.resolve(delver)).not.toBeNull());
+
+    // a link cached before (IndexedDB) and a freshly fetched one both come back proxied
+    expect(resolver.resolve(bolt)).toBe('/img/cards/normal/front/a/b/bolt.jpg?1');
+    expect(resolver.resolve(delver)).toBe('/img/cards/normal/front/c/d/delver.jpg?2');
+    expect(store.data.get('isd/51')?.front?.normal).toBe('https://cards.scryfall.io/normal/front/c/d/delver.jpg?2');
+    // API image links (exported lists, name lookups) too
+    expect(resolver.resolve({ name: 'Golem', expansionSetCode: 'RIX', isToken: true }, 'front', 'large'))
+      .toBe('/img/api/cards/trix/4/en?format=image&version=large');
+  });
+
   test('looks printings up in one batch and serves faces and sizes', async () => {
     const fetchImpl = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
       if (String(url).endsWith('scryfall-links.json')) return jsonResponse(LINKS);

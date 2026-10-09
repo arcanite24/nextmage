@@ -2,7 +2,7 @@
 // Regenerate: mvn -pl Mage.Server test -Dtest=WebClientApiDocsTest -Dxmage.updateWebApiDocs=true
 
 import type { RpcMethodName, RpcMethods, UUID } from './protocol';
-import type { CardCriteria, DeckCardInfo, DeckCardLists, ManaType, PlayerAction, UserData } from './views';
+import type { CardCriteria, ClientError, DeckCardInfo, DeckCardLists, ManaType, PlayerAction, UserData } from './views';
 import type { WebCardFilters, WebMatchOptions, WebTournamentOptions } from '../options';
 
 export interface RpcCaller {
@@ -199,10 +199,32 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('adminTableRemove', SESSION, tableId),
     adminSendBroadcastMessage: (message: string) =>
       rpc.call('adminSendBroadcastMessage', SESSION, message),
+    adminServerStats: () =>
+      rpc.call('adminServerStats'),
+    adminGetReports: (openOnly?: boolean | null) =>
+      rpc.call('adminGetReports', openOnly),
+    adminCloseReport: (reportId: number, resolution: string) =>
+      rpc.call('adminCloseReport', reportId, resolution),
+    adminClientErrors: () =>
+      rpc.call('adminClientErrors'),
     testEndGame: (tableId: UUID) =>
       rpc.call('testEndGame', SESSION, tableId),
     testConcedeMatch: (tableId: UUID, losingPlayerIndex?: number | null) =>
       rpc.call('testConcedeMatch', SESSION, tableId, losingPlayerIndex),
+    serverInfo: () =>
+      rpc.call('serverInfo'),
+    deckSyncList: () =>
+      rpc.call('deckSyncList'),
+    deckSyncGet: (deckId: string) =>
+      rpc.call('deckSyncGet', deckId),
+    deckSyncPut: (deckId: string, name: string, updatedAt: number, data: string) =>
+      rpc.call('deckSyncPut', deckId, name, updatedAt, data),
+    deckSyncDelete: (deckId: string, deletedAt: number) =>
+      rpc.call('deckSyncDelete', deckId, deletedAt),
+    reportPlayer: (userName: string, reason: string, details: string, gameId?: string | null) =>
+      rpc.call('reportPlayer', userName, reason, details, gameId),
+    clientReportError: (report: ClientError) =>
+      rpc.call('clientReportError', report),
   };
 }
 

@@ -1,7 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { IdCard, LogOut, Settings, WifiOff } from 'lucide-react';
+import { IdCard, Info, LogOut, Settings, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { APP_NAME } from './brand';
 import { SettingsDialog } from './screens/SettingsDialog';
 import { Avatar } from './social/Avatar';
@@ -30,12 +30,13 @@ const ImportSheet = lazy(() => import('./decks/import/ImportSheet').then((module
 // the lobby drawer and profiles load the first time they open
 const LobbyDrawer = lazy(() => import('./social/LobbyDrawer').then((module) => ({ default: module.LobbyDrawer })));
 const ProfileDialog = lazy(() => import('./social/ProfileDialog').then((module) => ({ default: module.ProfileDialog })));
+const ReportDialog = lazy(() => import('./social/ReportDialog').then((module) => ({ default: module.ReportDialog })));
 
 function SocialHost() {
   const lobbyOpened = useLobby((state) => state.open || state.profile !== null);
   const [loaded, setLoaded] = useState(false);
   if (lobbyOpened && !loaded) setLoaded(true);
-  return loaded ? <Suspense fallback={null}><LobbyDrawer /><ProfileDialog /></Suspense> : null;
+  return loaded ? <Suspense fallback={null}><LobbyDrawer /><ProfileDialog /><ReportDialog /></Suspense> : null;
 }
 
 function ImportSheetHost() {
@@ -49,6 +50,7 @@ export function AppShell() {
   const connection = useSession((state) => state.connection);
   const signOut = useSession((state) => state.signOut);
   const avatarId = useSettings((state) => state.settings.avatarId);
+  const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -92,6 +94,9 @@ export function AppShell() {
                 </DropdownMenu.Item>
                 <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>
                   <Settings size={16} aria-hidden="true" /> Settings
+                </DropdownMenu.Item>
+                <DropdownMenu.Item className={styles.menuItem} onSelect={() => navigate('/about')}>
+                  <Info size={16} aria-hidden="true" /> About and credits
                 </DropdownMenu.Item>
                 <DropdownMenu.Separator className={styles.menuRule} />
                 <DropdownMenu.Item className={styles.menuItem} onSelect={() => void signOut(false)}>

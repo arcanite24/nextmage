@@ -4,12 +4,13 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation, useNavigate } from 'react-router-dom';
 import './styles/base.css';
-import { installGlobalErrorHandlers } from '../core/telemetry/reporter';
+import { installGlobalErrorHandlers, setReporter } from '../core/telemetry/reporter';
+import { serverReporter } from '../core/telemetry/serverReporter';
+import { api, rpc } from './connection';
 import { AppShell } from './AppShell';
 import { queryClient } from './queries';
 import { ImportRoute } from './decks/import/ImportRoute';
 import { DecksScreen } from './screens/DecksScreen';
-import { EventsScreen } from './screens/EventsScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { RequestDialog } from './RequestDialog';
@@ -54,11 +55,24 @@ function SignedIn() {
   );
 }
 
+// deck sync loads with the first sign-in: servers with accounts keep each account's decks
+useSession.subscribe((state) => {
+  if (state.phase === 'signedIn') void import('./stores/deckSync');
+});
+
 // uncaught errors and unhandled rejections are reported (to the console by default) and kept for debugging
 installGlobalErrorHandlers();
+// and sent to the game server too, while connected (the admin console lists them)
+setReporter(serverReporter(
+  (payload) => (rpc.getStatus() === 'open' ? api.clientReportError(payload) : Promise.resolve(false)),
+  { path: () => window.location.pathname, userAgent: navigator.userAgent, appVersion: import.meta.env.VITE_APP_VERSION },
+));
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginScreen /> },
+  // credits and legal notices, readable before signing in
+  { path: '/about', lazy: () => import('./screens/AboutScreen').then((m) => ({ Component: m.AboutScreen })) },
+  { path: '/admin', lazy: () => import('./admin/AdminScreen').then((m) => ({ Component: m.AdminScreen })) },
   {
     element: <SignedIn />,
     errorElement: <RouteError />,
@@ -76,7 +90,7 @@ const router = createBrowserRouter([
           { path: '/decks', element: <DecksScreen /> },
           { path: '/import', element: <ImportRoute /> },
           { path: '/decks/:deckId', lazy: () => import('./decks/DeckBuilderScreen').then((m) => ({ Component: m.DeckBuilderScreen })) },
-          { path: '/events', element: <EventsScreen /> },
+          { path: '/events', lazy: () => import('./screens/EventsScreen').then((m) => ({ Component: m.EventsScreen })) },
           { path: '/event/:tournamentId', lazy: () => import('./events/EventScreen').then((m) => ({ Component: m.EventScreen })) },
           { path: '/tables', lazy: () => import('./screens/TablesScreen').then((m) => ({ Component: m.TablesScreen })) },
           // an invite link; signing in first comes back here

@@ -15,10 +15,12 @@ import { gzipSync } from 'node:zlib';
 // reset 2026-10-09 when the legacy client was deleted, from entry 62.2 kB, initial 191.8 kB, app 278.1 kB:
 // modules the legacy client shared with the app (deck storage, protocol helpers) moved from shared chunks
 // into the entry, so the entry grew while the first load shrank
+// app raised 2026-10-09 from 306 kB for M5 (admin console, about page, event variants, report dialog, deck sync),
+// all lazy chunks; the Events screen became lazy to keep the entry under budget
 const BUDGET_KB = {
   entry: 68,
   initial: 212,
-  app: 306,
+  app: 322,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;
