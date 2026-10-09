@@ -4,8 +4,11 @@ import { COMMANDER_DAMAGE_LETHAL } from '../../core/game/commander';
 import { POOL_MANA, poolId } from '../../core/game/payment';
 import { ROPE_SECONDS, ropeSecondsLeft, ropeVisible } from '../../core/game/rope';
 import type { PlayerView } from '../../protocol/generated/views';
+import { useT } from '../i18n';
+import './matchMessages';
 import { ManaCost } from '../ui/ManaCost';
 import { sigilOf } from '../../core/social/identity';
+import { usePresence } from './presence';
 import styles from './PlayerPlate.module.css';
 
 export interface PlayerPlateProps {
@@ -32,6 +35,26 @@ export interface PlayerPlateProps {
 }
 
 const ROPE_TICK_MS = 250;
+/** a life change floats up and fades (see .delta); then it leaves the plate, so it doesn't linger as stale text */
+const DELTA_MS = 1600;
+
+/** "0:42": how long a player has been gone. */
+function elapsed(since: number, now: number): string {
+  const seconds = Math.max(0, Math.floor((now - since) / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+/** Since when the server said this player dropped off (null while connected), and the clock to count it with. */
+function useDisconnected(name: string | undefined): { since: number; now: number } | null {
+  const since = usePresence((state) => (name ? state.offline[name] : undefined));
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (since === undefined) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [since]);
+  return since === undefined ? null : { since, now: Math.max(now, since) };
+}
 
 /** The player's priority time left, counted down locally between the server's reports. */
 function useRopeSeconds(player: PlayerView): number {
@@ -52,15 +75,24 @@ function useRopeSeconds(player: PlayerView): number {
 
 /** A player's seat: who they are, their life, counters, floating mana and clock. */
 export function PlayerPlate({ player, isMe, targetable, selected, deciding, sleeve, onClick, toPay, payable, onPay, commanderDamage = [], outOfRange = false }: PlayerPlateProps) {
+  const t = useT();
   const life = player.life ?? 0;
+  // a player out of the game (lost, conceded or left: leaving loses) has no life worth showing, however low it went
+  const out = !!player.hasLeft;
   const previous = useRef(life);
   const [delta, setDelta] = useState<{ value: number; key: number } | null>(null);
+  const disconnected = useDisconnected(out ? undefined : player.name);
 
   useEffect(() => {
     const change = life - previous.current;
     previous.current = life;
     if (change !== 0) setDelta({ value: change, key: Date.now() });
   }, [life]);
+  useEffect(() => {
+    if (!delta) return;
+    const timer = setTimeout(() => setDelta(null), DELTA_MS);
+    return () => clearTimeout(timer);
+  }, [delta]);
 
   const counters = (player.counters ?? []).filter((counter) => (counter.count ?? 0) > 0);
   const pool = POOL_MANA.filter(({ key }) => (player.manaPool?.[key] ?? 0) > 0);
@@ -84,7 +116,9 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
       style={sleeve ? ({ '--sleeve': sleeve } as CSSProperties) : undefined}
       role={targetable ? 'button' : 'group'}
       tabIndex={targetable ? 0 : undefined}
-      aria-label={`${player.name}, ${life} life${outOfRange ? ', out of range' : ''}${targetable ? ', can be targeted' : ''}`}
+      aria-label={out
+        ? t('match.plate.aria.lost', { name: player.name ?? '' })
+        : `${player.name}, ${life} life${disconnected ? `, ${t('match.plate.aria.disconnected')}` : ''}${outOfRange ? ', out of range' : ''}${targetable ? ', can be targeted' : ''}`}
       onClick={() => targetable && onClick()}
       onKeyDown={(event) => {
         if (targetable && event.key === 'Enter') {
@@ -104,13 +138,25 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
       </div>
       <div className={styles.info}>
         <div className={styles.name}>
-          {player.name}{player.hasLeft ? ' (left)' : ''}
-          {outOfRange && !player.hasLeft && <span className={styles.range} title="Outside your range of influence">Out of range</span>}
+          {player.name}
+          {out && <span className={styles.range}>{t('match.plate.lost')}</span>}
+          {disconnected && (
+            <span className={[styles.range, styles.offline].join(' ')} title={t('match.plate.disconnectedTitle')}>
+              {t('match.plate.disconnected', { time: elapsed(disconnected.since, disconnected.now) })}
+            </span>
+          )}
+          {outOfRange && !out && <span className={styles.range} title="Outside your range of influence">Out of range</span>}
         </div>
         <div className={styles.lifeRow}>
-          <span key={delta?.key} className={[styles.life, delta ? (delta.value < 0 ? styles.hurt : styles.healed) : ''].join(' ')}>{life}</span>
-          <span className={styles.unit} aria-hidden="true">life</span>
-          {delta && (
+          {out ? (
+            <span className={[styles.life, styles.outLife].join(' ')}>{t('match.plate.out')}</span>
+          ) : (
+            <>
+              <span key={delta?.key} className={[styles.life, delta ? (delta.value < 0 ? styles.hurt : styles.healed) : ''].join(' ')}>{life}</span>
+              <span className={styles.unit} aria-hidden="true">life</span>
+            </>
+          )}
+          {delta && !out && (
             <span key={`d${delta.key}`} className={[styles.delta, delta.value < 0 ? styles.deltaDown : styles.deltaUp].join(' ')}>
               {delta.value > 0 ? `+${delta.value}` : delta.value}
             </span>

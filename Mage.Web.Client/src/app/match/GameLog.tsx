@@ -6,7 +6,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { DelayedRelay } from '../../core/game/broadcastDelay';
 import type { GameNotice } from '../../core/game/gameSession';
 import {
-  buildLogRows, cardInk, collectCards, EMOTES, findLogCard, isEmote, noticeEntry, parseChatMessage,
+  buildLogRows, cardInk, collectCards, EMOTES, findLogCard, isEmote, noticeEntry, parseChatMessage, presenceChange,
   type LogEntry, type LogIcon, type LogSegment,
 } from '../../core/game/gameLog';
 import type { CardView, ChatMessage, GameView } from '../../protocol/generated/views';
@@ -17,6 +17,7 @@ import { IconButton } from '../ui/Button';
 import { PromptText } from '../ui/PromptText';
 import { useEmotes } from './emotes';
 import { useMatchUi } from './matchUi';
+import { usePresence } from './presence';
 import styles from './GameLog.module.css';
 
 const MAX_LINES = 300;
@@ -75,6 +76,7 @@ function useGameChat(gameId: string, view: GameView | null, live: boolean, delay
     return () => {
       cancelled = true;
       useEmotes.getState().clear();
+      usePresence.getState().clear();
       if (joined) api.chatLeave(joined).catch(() => undefined);
     };
   }, [gameId, live]);
@@ -94,6 +96,8 @@ function useGameChat(gameId: string, view: GameView | null, live: boolean, delay
           ? { ...parsed, turnOwner: current.activePlayerName }
           : parsed;
         setEntries((current) => [...current, entry].slice(-MAX_LINES));
+        const presence = message.messageType === 'STATUS' ? presenceChange(entry.text) : null;
+        if (presence) usePresence.getState().set(presence.name, presence.online);
         if (entry.tone !== 'chat') return;
         const muted = !!useEmotes.getState().muted[gameId];
         if (fromOther && muted) return;

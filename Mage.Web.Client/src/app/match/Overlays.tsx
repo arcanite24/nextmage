@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Command, Interaction } from '../../core/game/interaction';
 import type { Prompt } from '../../core/game/prompt';
-import { stripMarkup } from '../../core/game/prompt';
+import { abilityChooserSource, stripMarkup } from '../../core/game/prompt';
 import { isStackAbility } from '../../core/game/cards';
+import { matchProgress } from '../../core/game/matchProgress';
+import { gameResult, matchResult } from '../../core/game/matchResult';
 import type { CardView, GameEndView } from '../../protocol/generated/views';
+import { useT, type MessageKey } from '../i18n';
 import { Button } from '../ui/Button';
 import { AbilityCard } from '../ui/AbilityCard';
 import { CardFace } from '../ui/CardFace';
 import { PromptText } from '../ui/PromptText';
 import { cleanText } from '../ui/text';
+import './matchMessages';
 import { useMatchUi } from './matchUi';
 import styles from './Overlays.module.css';
 
@@ -110,11 +114,19 @@ export function CardPicker({ title, cards, interaction, sleeve, footer, onComman
 }
 
 /** Choices that don't live on the board: modes, named choices, piles, numbers. */
-export function ChoicePanel({ prompt, onCommand }: { prompt: Prompt; onCommand(command: Command): void }) {
+export function ChoicePanel({ prompt, onCommand, xLimit = null }: {
+  prompt: Prompt;
+  onCommand(command: Command): void;
+  /** announcing X: the most the player could pay (see xLimit), when the server sets no real limit */
+  xLimit?: number | null;
+}) {
+  const t = useT();
   switch (prompt.kind) {
-    case 'chooseAbility':
+    case 'chooseAbility': {
+      // the server asks even with one ability, to confirm one that sacrifices its source: say so plainly
+      const source = prompt.choices.length === 1 ? abilityChooserSource(prompt.text) : null;
       return (
-        <PanelShell title={prompt.text || 'Choose one'}>
+        <PanelShell title={source ? t('match.ability.one', { name: source }) : prompt.text || 'Choose one'}>
           <div className={styles.options}>
             {prompt.choices.map((choice, index) => (
               <button key={choice.id} type="button" className={styles.option} onClick={() => onCommand({ type: 'uuid', id: choice.id })}>
@@ -128,10 +140,11 @@ export function ChoicePanel({ prompt, onCommand }: { prompt: Prompt; onCommand(c
           {/* backing out: nothing is cast or activated */}
           <EscapeKey onEscape={() => onCommand({ type: 'uuid', id: null })} />
           <footer className={styles.panelFoot}>
-            <Button variant="quiet" onClick={() => onCommand({ type: 'uuid', id: null })}>Cancel</Button>
+            <Button variant="quiet" onClick={() => onCommand({ type: 'uuid', id: null })}>{t('match.ability.cancel')}</Button>
           </footer>
         </PanelShell>
       );
+    }
     case 'chooseChoice':
       return <ChoiceList prompt={prompt} onCommand={onCommand} />;
     case 'choosePile':
@@ -150,7 +163,7 @@ export function ChoicePanel({ prompt, onCommand }: { prompt: Prompt; onCommand(c
         </PanelShell>
       );
     case 'amount':
-      return <AmountChooser prompt={prompt} onCommand={onCommand} />;
+      return <AmountChooser prompt={prompt} onCommand={onCommand} limit={xLimit} />;
     case 'multiAmount':
       return <MultiAmountChooser prompt={prompt} onCommand={onCommand} />;
     default:
@@ -162,7 +175,7 @@ function PanelShell({ title, children, wide }: { title: string; children: React.
   return (
     <div className={styles.scrim} role="dialog" aria-modal="true" aria-label={cleanText(title)}>
       <div className={[styles.panel, wide ? styles.panelWide : styles.panelNarrow].join(' ')}>
-        <h2 className={styles.panelTitle}>{title}</h2>
+        <h2 className={styles.panelTitle}><PromptText text={title} /></h2>
         {children}
       </div>
     </div>
@@ -240,8 +253,12 @@ function ChoiceList({ prompt, onCommand }: { prompt: Extract<Prompt, { kind: 'ch
   );
 }
 
-function AmountChooser({ prompt, onCommand }: { prompt: Extract<Prompt, { kind: 'amount' }>; onCommand(command: Command): void }) {
+function AmountChooser({ prompt, onCommand, limit }: { prompt: Extract<Prompt, { kind: 'amount' }>; onCommand(command: Command): void; limit: number | null }) {
+  const t = useT();
   const max = Math.min(prompt.max, 999);
+  // X: the range shown stops at what the player could pay; typing or stepping past it stays possible (mana the
+  // client can't count, cost reductions)
+  const shown = limit === null ? max : Math.max(prompt.min, Math.min(max, limit));
   const [value, setValue] = useState(prompt.min);
   const clamp = (next: number) => Math.max(prompt.min, Math.min(max, next));
   return (
@@ -261,11 +278,12 @@ function AmountChooser({ prompt, onCommand }: { prompt: Extract<Prompt, { kind: 
         />
         <Button variant="print" size="lg" onClick={() => setValue((current) => clamp(current + 1))} aria-label="More" disabled={value >= max}>+</Button>
       </div>
-      {max - prompt.min <= 20 && (
-        <input className={styles.slider} type="range" min={prompt.min} max={max} value={value} onChange={(event) => setValue(Number(event.target.value))} aria-label="Amount" />
+      {shown - prompt.min <= 20 && shown > prompt.min && (
+        <input className={styles.slider} type="range" min={prompt.min} max={shown} value={Math.min(value, shown)} onChange={(event) => setValue(Number(event.target.value))} aria-label="Amount" />
       )}
+      {limit !== null && <p className={styles.panelText}>{t('match.amount.mana', { count: limit })}</p>}
       <footer className={styles.panelFoot}>
-        <span className={styles.range}>{prompt.min} to {max}</span>
+        <span className={styles.range}>{prompt.min} to {shown}</span>
         <Button variant="decision" size="lg" onClick={() => onCommand({ type: 'integer', value })}>Choose {value}</Button>
       </footer>
     </PanelShell>
@@ -328,26 +346,38 @@ export function StartingPlayerOverlay({ me, opponents, onChoose }: {
   );
 }
 
+const END_TITLE: Record<string, MessageKey> = { won: 'match.end.victory', lost: 'match.end.defeat', draw: 'match.end.draw' };
+const END_GAME: Record<string, MessageKey> = { won: 'match.end.wonGame', lost: 'match.end.lostGame', draw: 'match.end.drawGame' };
+const END_MATCH: Record<string, MessageKey> = { won: 'match.end.wonMatch', lost: 'match.end.lostMatch', draw: 'match.end.drawMatch' };
+
 /** The end of a game: who won, the match score, and where to go next. */
-export function GameOverOverlay({ message, endInfo, onLeave, leaveLabel = 'Back to Play', onPlayAgain }: {
+export function GameOverOverlay({ message, endInfo, myName, onLeave, leaveLabel = 'Back to Play', onPlayAgain }: {
   message: string;
   endInfo: GameEndView | null;
+  /** the player's name, to tell from the server's message who won when there is no end-of-game info */
+  myName: string | null;
   onLeave(): void;
   leaveLabel?: string;
   onPlayAgain?(): void;
 }) {
-  const won = endInfo?.won ?? /you won|winner.*you/i.test(message);
-  const lost = endInfo ? !endInfo.won : /lost|you lose/i.test(message);
-  const title = won ? 'Victory' : lost ? 'Defeat' : 'Game over';
+  const t = useT();
+  // a match of several games ends on the match's result; a single game on the game's
+  const matchEnd = matchResult(endInfo);
+  const progress = matchEnd ? matchProgress(endInfo) : null;
+  const result = matchEnd ?? gameResult(message, endInfo, myName);
+  const line = matchEnd && progress
+    ? t(END_MATCH[matchEnd], { wins: progress.wins, losses: progress.losses })
+    : result ? t(END_GAME[result]) : stripMarkup(endInfo?.gameInfo) || message;
+  // why a match ended early ("Bob has quit the match.")
+  const extra = stripMarkup(endInfo?.additionalInfo);
   return (
     <div className={[styles.scrim, styles.endScrim].join(' ')} role="dialog" aria-modal="true" aria-labelledby="game-over-title">
       <div className={styles.center}>
-        <h2 id="game-over-title" className={[styles.endTitle, won ? styles.victory : lost ? styles.defeat : ''].join(' ')}>{title}</h2>
-        <p className={styles.subtitle}>{stripMarkup(endInfo?.gameInfo) || message}</p>
-        {endInfo && endInfo.winsNeeded !== undefined && (endInfo.winsNeeded ?? 0) > 1 && (
-          <p className={styles.score}>Match: {endInfo.wins ?? 0}–{endInfo.loses ?? 0} · first to {endInfo.winsNeeded}</p>
-        )}
-        {endInfo?.matchInfo && <p className={styles.subtitle}>{stripMarkup(endInfo.matchInfo)}</p>}
+        <h2 id="game-over-title" className={[styles.endTitle, result === 'won' ? styles.victory : result === 'lost' ? styles.defeat : ''].join(' ')}>
+          {t(result ? END_TITLE[result] : 'match.end.over')}
+        </h2>
+        <p className={styles.subtitle}>{line}</p>
+        {extra && <p className={styles.score}>{extra}</p>}
         <div className={styles.buttons}>
           <Button variant="print" size="lg" onClick={onLeave}>{leaveLabel}</Button>
           {onPlayAgain && <Button variant="decision" size="xl" onClick={onPlayAgain}>Play again</Button>}

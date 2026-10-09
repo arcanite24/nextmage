@@ -294,3 +294,12 @@ export function promptGameView(method: PromptEventName, data: unknown) {
   if (method === 'GAME_CHOOSE_ABILITY') return (data as AbilityPickerView).gameView;
   return (data as GameClientMessage | null)?.gameView;
 }
+
+/**
+ * What the server's ability chooser is for ("Choose spell or ability to play Evolving Wilds [a16]" -> "Evolving
+ * Wilds"), or null when the question is another one (modes, triggers).
+ */
+export function abilityChooserSource(text: string): string | null {
+  const name = /^choose (?:spell or ability|ability) to (?:play|activate|cast)(?: for free)? (.+)$/i.exec(text.trim())?.[1];
+  return name ? name.replace(/\s*\[[0-9a-f]{3,}\]/gi, '').trim() || null : null;
+}

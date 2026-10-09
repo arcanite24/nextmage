@@ -125,6 +125,30 @@ describe('ChoicePanel', () => {
     ]);
   });
 
+  test('chooseAbility: a lone ability (the server confirms a sacrifice) reads as a plain question', () => {
+    const { sent, onCommand } = answers();
+    const prompt = parsePrompt('GAME_CHOOSE_ABILITY', {
+      message: "Choose spell or ability to play<br><font color='#ccc'>Evolving Wilds [a16]</font>",
+      choices: { a: '{T}, Sacrifice Evolving Wilds: Search your library for a basic land card.' },
+    });
+    render(<ChoicePanel prompt={prompt} onCommand={onCommand} />);
+    expect(screen.getByRole('heading', { name: 'Use Evolving Wilds?' })).toBeTruthy();
+    fireEvent.click(button('Cancel'));
+    expect(sent).toEqual([{ type: 'uuid', id: null }]);
+  });
+
+  test('amount: announcing X shows the range up to the mana the player has', () => {
+    const { sent, onCommand } = answers();
+    const prompt = parsePrompt('GAME_GET_AMOUNT', { message: 'Announce the value for {X} (source: Fireball [2ec])', min: 0, max: 2147483647 });
+    render(<ChoicePanel prompt={prompt} onCommand={onCommand} xLimit={3} />);
+    expect(screen.getByRole('heading', { name: /Announce the value for X \(source: Fireball\)/ })).toBeTruthy();
+    expect(screen.getByText('0 to 3')).toBeTruthy();
+    expect(screen.getByText('You have 3 mana to pay with.')).toBeTruthy();
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '2' } });
+    fireEvent.click(button('Choose 2'));
+    expect(sent).toEqual([{ type: 'integer', value: 2 }]);
+  });
+
   test('chooseChoice: answers with the key of a keyed choice, and Skip when optional', () => {
     const { sent, onCommand } = answers();
     const prompt = parsePrompt('GAME_CHOOSE_CHOICE', {
@@ -223,12 +247,13 @@ describe('GameOverOverlay', () => {
       <GameOverOverlay
         message="You won the game"
         endInfo={{ won: true, wins: 1, loses: 0, winsNeeded: 2, gameInfo: 'Computer conceded.' }}
+        myName="me"
         onLeave={onLeave}
         onPlayAgain={onPlayAgain}
       />,
     );
     expect(screen.getByRole('heading', { name: 'Victory' })).toBeTruthy();
-    expect(screen.getByText('Match: 1–0 · first to 2')).toBeTruthy();
+    expect(screen.getByText('You won the game.')).toBeTruthy();
     fireEvent.click(button('Back to Play'));
     fireEvent.click(button('Play again'));
     expect(onLeave).toHaveBeenCalledTimes(1);
@@ -236,9 +261,32 @@ describe('GameOverOverlay', () => {
   });
 
   test('a loss without end info reads from the message', () => {
-    render(<GameOverOverlay message="You lost the game" endInfo={null} onLeave={vi.fn()} />);
+    render(<GameOverOverlay message="You lost the game" endInfo={null} myName="me" onLeave={vi.fn()} />);
     expect(screen.getByRole('heading', { name: 'Defeat' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Play again' })).toBeNull();
+  });
+
+  test("says the match result and score in plain words, not the server's line", () => {
+    const players = [{ playerId: 'me', wins: 2 }, { playerId: 'bob', wins: 0 }];
+    render(
+      <GameOverOverlay
+        message="Player bashalice is the winner"
+        endInfo={{ won: true, wins: 2, winsNeeded: 2, clientPlayer: { playerId: 'me' }, players, matchInfo: 'You won the match!' }}
+        myName="bashalice"
+        onLeave={vi.fn()}
+        leaveLabel="Back to Tables"
+      />,
+    );
+    expect(screen.getByRole('heading', { name: 'Victory' })).toBeTruthy();
+    expect(screen.getByText('You won the match 2–0.')).toBeTruthy();
+    expect(screen.queryByText(/is the winner/)).toBeNull();
+    expect(button('Back to Tables')).toBeTruthy();
+  });
+
+  test('tells who won from the server line when no end-of-game info came', () => {
+    render(<GameOverOverlay message="Player bashalice is the winner" endInfo={null} myName="bashbob" onLeave={vi.fn()} />);
+    expect(screen.getByRole('heading', { name: 'Defeat' })).toBeTruthy();
+    expect(screen.getByText('You lost the game.')).toBeTruthy();
   });
 });
 

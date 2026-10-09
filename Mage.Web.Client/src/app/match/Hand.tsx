@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import type { CardView } from '../../protocol/generated/views';
+import { useT } from '../i18n';
+import './matchMessages';
 import { CardFace } from '../ui/CardFace';
 import { zoneKeys } from './boardModel';
 import { useFlip } from './flip';
@@ -30,6 +32,7 @@ const DRAG_THRESHOLD = 12;
 
 /** The player's hand, fanned along the bottom edge. Hover lifts a card; drag it up (or click it) to play it. */
 export function Hand({ cards, choosing = false, clickable, selected, sleeve, onPlay, playLine, libraryOrigin, faceDown = false, label = 'Your hand' }: HandProps) {
+  const t = useT();
   const count = cards.length;
   const spread = Math.min(CARD_WIDTH * 0.78, 1000 / Math.max(1, count));
   const arc = Math.min(4, 26 / Math.max(1, count));
@@ -37,7 +40,7 @@ export function Hand({ cards, choosing = false, clickable, selected, sleeve, onP
   const keys = useMemo(() => zoneKeys(cards), [cards]);
 
   return (
-    <div className={styles.hand} style={{ width }} role="list" aria-label={`${label}, ${count} cards`}>
+    <div className={styles.hand} style={{ width }} role="list" aria-label={t('match.cards', { label, count })}>
       {cards.map((card, index) => {
         const offset = index - (count - 1) / 2;
         return (

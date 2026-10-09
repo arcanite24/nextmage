@@ -1,6 +1,8 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import type { CombatStops } from '../../core/game/autoPass';
 import type { PhaseStep, SkipPrioritySteps } from '../../protocol/generated/views';
+import { useT } from '../i18n';
+import './matchMessages';
 import { useSettings } from '../stores/settings';
 import { useStage } from './stageContext';
 import { useCoarsePointer } from './useLongPress';
@@ -34,7 +36,16 @@ const RUNGS: Rung[] = [
  * where the game stops for you on this player's turn; click a rung to toggle that stop. On a touch screen the rungs
  * are too small to aim at: the whole ladder is one button that opens the stops as a menu of full-size rows.
  */
-export function PhaseLadder({ step, myTurn, turn }: { step: PhaseStep | undefined; myTurn: boolean; turn: number }) {
+export function PhaseLadder({ step, myTurn, turn, started = true, activeName = null }: {
+  step: PhaseStep | undefined;
+  myTurn: boolean;
+  turn: number;
+  /** false before the first turn (no active player yet): the turn belongs to nobody */
+  started?: boolean;
+  /** watching: whose turn it is, by name (a spectator has no turn of their own) */
+  activeName?: string | null;
+}) {
+  const t = useT();
   const settings = useSettings((state) => state.settings);
   const update = useSettings((state) => state.update);
   const side = myTurn ? 'yourTurn' : 'opponentTurn';
@@ -51,10 +62,15 @@ export function PhaseLadder({ step, myTurn, turn }: { step: PhaseStep | undefine
   const whoseTurn = myTurn ? 'your' : "opponents'";
 
   return (
-    <nav className={[styles.ladder, myTurn ? styles.mine : styles.theirs].join(' ')} aria-label={`Turn ${turn}, ${myTurn ? 'your' : "opponent's"} turn`}>
+    <nav
+      className={[styles.ladder, started && myTurn ? styles.mine : styles.theirs].join(' ')}
+      aria-label={!started
+        ? t('match.turn.aria.starting')
+        : activeName ? t('match.turn.aria.player', { turn, name: activeName }) : t(myTurn ? 'match.turn.aria.yours' : 'match.turn.aria.theirs', { turn })}
+    >
       <div className={styles.turn}>
-        <span className={styles.turnNumber}>Turn {turn}</span>
-        <span className={styles.whose}>{myTurn ? 'Yours' : 'Theirs'}</span>
+        <span className={styles.turnNumber}>{started ? t('match.turn', { turn }) : t('match.turn.starting')}</span>
+        {started && <span className={[styles.whose, activeName ? styles.whoseName : ''].join(' ')}>{activeName ?? t(myTurn ? 'match.turn.yours' : 'match.turn.theirs')}</span>}
         {fullControl && <span className={styles.full}>Full control</span>}
       </div>
       <ol className={styles.rungs}>

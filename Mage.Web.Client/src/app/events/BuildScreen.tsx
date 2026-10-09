@@ -5,6 +5,7 @@ import type { CardView } from '../../protocol/generated/views';
 import { api } from '../connection';
 import { useCardInfo } from '../decks/cardInfo';
 import { groupOf } from '../decks/deckModel';
+import { MatchScore } from '../match/MatchScore';
 import { useEvents, type ConstructState } from '../stores/events';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
@@ -85,6 +86,7 @@ function Builder({ construct }: { construct: ConstructState }) {
       <header className={styles.top}>
         <div>
           <h1 className={styles.title}>{construct.kind === 'construct' ? 'Build your deck' : 'Adjust your deck'}</h1>
+          {construct.kind === 'sideboard' && <MatchScore tableId={construct.tableId} />}
         </div>
         <div className={styles.topRight}>
           {construct.deadline && !construct.submitted && <Countdown deadline={construct.deadline} />}

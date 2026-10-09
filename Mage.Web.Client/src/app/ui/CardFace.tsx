@@ -1,7 +1,9 @@
 import { useState, type CSSProperties } from 'react';
+import { printsPowerToughness } from '../../core/game/cards';
 import { useCardImage } from '../../core/images/useCardImage';
 import { isDecoded, markDecoded } from './imageCache';
 import type { CardFace as Face, CardImageRef, ImageSize } from '../../core/images/imageLinks';
+import type { CardType, SubType } from '../../protocol/generated/views';
 import { useT } from '../i18n';
 import { ManaCost } from './ManaCost';
 import styles from './CardFace.module.css';
@@ -14,6 +16,8 @@ export interface CardFaceProps {
     power?: string;
     toughness?: string;
     rules?: string[];
+    cardTypes?: CardType[];
+    subTypes?: SubType[];
   };
   face?: Face;
   size?: ImageSize;
@@ -58,7 +62,7 @@ export function CardFace({ card, face = 'front', size = 'normal', sleeve, hidden
                 </div>
                 <div className={styles.art} />
                 {card.typeText && <div className={styles.typeLine}>{card.typeText}</div>}
-                {card.power !== undefined && card.toughness !== undefined && card.power !== '' && (
+                {printsPowerToughness(card) && (
                   <div className={styles.pt}>{card.power}/{card.toughness}</div>
                 )}
               </div>

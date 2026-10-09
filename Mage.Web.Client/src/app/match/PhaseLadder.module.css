@@ -34,6 +34,15 @@
   color: var(--ink-strong);
 }
 
+/* watching: the active player's name, which can be long */
+.whoseName {
+  max-width: 180px;
+  overflow: hidden;
+  font-size: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .theirs .whose {
   color: var(--ink-soft);
 }

@@ -287,3 +287,17 @@
   background: color-mix(in srgb, var(--oxblood) 45%, transparent);
   color: var(--oxblood-ink);
 }
+
+/* the server said the player dropped off: they may come back within a few minutes */
+.offline {
+  background: rgb(var(--danger-rgb) / 0.16);
+  color: var(--danger-text);
+}
+
+/* a player out of the game: "Out" where the life was */
+.outLife {
+  font-size: 34px;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
