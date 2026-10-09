@@ -62,6 +62,10 @@ public final class CareerCampaigns {
         public List<String> requires;
         public CareerReward reward;
         public List<CareerOption> options;
+        /** what the opponent says before the duel */
+        public String before;
+        /** what the opponent says once beaten */
+        public String after;
     }
 
     public static class NodeOpponent {
@@ -129,6 +133,12 @@ public final class CareerCampaigns {
         public List<CareerOption> options;
         public int skill;
         public CareerSetup.CareerTwists twists;
+        /** the card whose art is the opponent's portrait */
+        public CareerContent.CareerCover cover;
+        /** what the opponent says before the duel */
+        public String before;
+        /** what the opponent says once beaten */
+        public String after;
     }
 
     /** What a played duel needs: who, with which decks, and how the game starts. */
@@ -271,6 +281,9 @@ public final class CareerCampaigns {
                     if (node.opponent != null) {
                         nodeView.skill = node.opponent.skill;
                         nodeView.twists = node.opponent.twists;
+                        nodeView.cover = CareerContent.coverOf("campaigns/decks/" + node.opponent.deck);
+                        nodeView.before = node.before;
+                        nodeView.after = node.after;
                     }
                     if (done.containsKey(node.id)) {
                         nodeView.state = "done";

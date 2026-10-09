@@ -42,6 +42,8 @@ public final class CareerChallenges {
         public String name;
         public String text;
         public String opponentName;
+        /** the card whose art is the opponent's portrait */
+        public CareerContent.CareerCover cover;
         public int skill;
         public CareerSetup.CareerTwists twists;
         public int attempts;
@@ -123,6 +125,7 @@ public final class CareerChallenges {
         view.name = challenge.name;
         view.text = challenge.text;
         view.opponentName = challenge.opponent.name;
+        view.cover = CareerContent.coverOf("campaigns/decks/" + challenge.opponent.deck);
         view.skill = challenge.opponent.skill;
         view.twists = challenge.opponent.twists;
         int rank = 0;

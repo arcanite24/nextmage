@@ -1,7 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { IdCard, Info, LogOut, Settings, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useMatch, useNavigate } from 'react-router-dom';
 import { APP_NAME } from './brand';
 import { useT, type MessageKey } from './i18n';
 import { Avatar } from './social/Avatar';
@@ -10,6 +10,7 @@ import { useImportSheet } from './stores/importSheet';
 import { useLobby } from './stores/lobby';
 import { useSettings } from './stores/settings';
 import { useSession } from './stores/session';
+import { useShellUi } from './stores/shellUi';
 import { Toaster } from './ui/Toaster';
 import { IconButton } from './ui/Button';
 import { Mark } from './ui/Mark';
@@ -60,12 +61,16 @@ export function AppShell() {
   const signOut = useSession((state) => state.signOut);
   const avatarId = useSettings((state) => state.settings.avatarId);
   const navigate = useNavigate();
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsOpen = useShellUi((state) => state.settingsOpen);
+  const setSettingsOpen = useShellUi((state) => state.setSettingsOpen);
+  // Career is a game mode: its screens fill the mat under their own header
+  const immersive = useMatch('/career/*') !== null;
   const t = useT();
 
   return (
-    <div className={styles.mat}>
+    <div className={[styles.mat, immersive ? styles.immersive : ''].join(' ')}>
       <Stitch />
+      {!immersive && (
       <header className={styles.rail}>
         <NavLink to="/" className={styles.brand} aria-label={t('shell.home', { app: APP_NAME })}>
           <Mark />
@@ -117,6 +122,7 @@ export function AppShell() {
           </DropdownMenu.Root>
         </div>
       </header>
+      )}
       <main className={styles.main}>
         <Outlet />
       </main>

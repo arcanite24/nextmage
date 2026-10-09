@@ -7,12 +7,11 @@ import { registerMessages, useT } from '../i18n';
 import messages from '../i18n/en/career';
 import { usePlay } from '../stores/play';
 import { Button } from '../ui/Button';
-import { CareerBar } from './CareerBar';
 import { useCareerState } from './careerData';
 import { playMode, useChallenge } from './careerModesData';
 import { twistLines } from './careerModesModel';
 import { Portrait } from './ModeArt';
-import { LineList, ModeResult, ModesNav } from './ModeParts';
+import { LineList, ModeResult } from './ModeParts';
 import styles from './CareerModes.module.css';
 
 registerMessages(messages);
@@ -28,8 +27,6 @@ export function CareerChallengeScreen() {
   if (!profile) return <Navigate to="/career" replace />;
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
-      <ModesNav />
       <div className={styles.scroll}>
         <ModeResult kind="challenge" />
         {challenge.isPending && <p className={styles.note}>{t('career.loading')}</p>}

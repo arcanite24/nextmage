@@ -9,14 +9,13 @@ import { useCoach } from '../stores/coach';
 import { usePlay } from '../stores/play';
 import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
-import { CareerBar } from './CareerBar';
 import { useCareerState } from './careerData';
 import { chooseOption, playMode, playPrologue, useCampaigns } from './careerModesData';
 import {
   chapterDone, chapterPath, focusChapter, focusNode, legCurve, nodeState, rewardLines, twistLines, type NodeState, type PathStop,
 } from './careerModesModel';
 import { Crest, Portrait } from './ModeArt';
-import { LineList, ModeResult, ModesNav } from './ModeParts';
+import { LineList, ModeResult } from './ModeParts';
 import styles from './CareerModes.module.css';
 
 registerMessages(messages);
@@ -32,8 +31,6 @@ export function CareerCampaignScreen() {
   if (!profile) return <Navigate to="/career" replace />;
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
-      <ModesNav />
       <div className={styles.scroll}>
         <ModeResult kind="campaign" />
         {campaigns.isPending && <p className={styles.note}>{t('career.loading')}</p>}

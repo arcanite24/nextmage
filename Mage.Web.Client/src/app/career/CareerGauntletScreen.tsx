@@ -8,12 +8,11 @@ import messages from '../i18n/en/career';
 import { usePlay } from '../stores/play';
 import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
-import { CareerBar } from './CareerBar';
 import { useCareerState } from './careerData';
 import { abandonGauntlet, pickGauntlet, playMode, startGauntlet, useGauntlet } from './careerModesData';
 import { mergeByName, rewardLines, runReward, toggleChoice, twistLines } from './careerModesModel';
 import { Crest, Portrait } from './ModeArt';
-import { ModeResult, ModesNav } from './ModeParts';
+import { ModeResult } from './ModeParts';
 import styles from './CareerModes.module.css';
 
 registerMessages(messages);
@@ -36,8 +35,6 @@ export function CareerGauntletScreen() {
 
   return (
     <div className={styles.page}>
-      <CareerBar profile={profile} />
-      <ModesNav />
       <div className={styles.scroll}>
         <ModeResult kind="gauntlet" />
         <header className={styles.modeHead}>

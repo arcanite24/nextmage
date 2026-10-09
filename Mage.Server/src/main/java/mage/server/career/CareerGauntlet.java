@@ -110,6 +110,8 @@ public final class CareerGauntlet {
     public static class CareerRunBoss {
         public int number;
         public String name;
+        /** the card whose art is the boss's portrait */
+        public CareerContent.CareerCover cover;
         public int skill;
         public CareerSetup.CareerTwists twists;
         public boolean beaten;
@@ -225,6 +227,7 @@ public final class CareerGauntlet {
             CareerRunBoss bossView = new CareerRunBoss();
             bossView.number = i + 1;
             bossView.name = boss.name;
+            bossView.cover = CareerContent.coverOf("campaigns/decks/" + boss.deck);
             bossView.skill = boss.skill;
             bossView.twists = boss.twists;
             bossView.beaten = i < row.wins;

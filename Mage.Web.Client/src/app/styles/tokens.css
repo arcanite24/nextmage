@@ -40,6 +40,14 @@
   /* positive outcomes (victory, legal) */
   --sage: #8fc19a;
 
+  /* Career's metals: coins and rare finds in brass, mythic finds in copper; rewards, never decisions */
+  --brass: #d6b36a;
+  --brass-ink: #e8cf8f;
+  --brass-rgb: 214 179 106;
+  --copper: #e0743f;
+  --copper-ink: #f1a37a;
+  --copper-rgb: 224 116 63;
+
   /* colour channels, for tints: rgb(var(--ink-rgb) / 0.1) */
   --ink-rgb: 233 228 214;
   --ink-strong-rgb: 246 242 232;

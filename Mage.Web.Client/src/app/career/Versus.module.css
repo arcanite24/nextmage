@@ -1,0 +1,254 @@
+/* The versus screen: two halves of art slid in from either side, cut on a slant, the stakes and the one decision in
+   the middle. */
+
+.versus {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dialog);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--mat-950);
+  overflow: hidden;
+}
+
+.you,
+.them {
+  position: relative;
+  display: grid;
+  align-items: end;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.you {
+  clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%);
+  animation: from-left 560ms var(--ease-place) both;
+}
+
+.them {
+  margin-left: -12%;
+  clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
+  animation: from-right 560ms var(--ease-place) both;
+}
+
+.sideArt {
+  position: absolute;
+  inset: 0;
+}
+
+.you .sideArt {
+  filter: saturate(0.85) brightness(0.75);
+}
+
+.them .sideArt {
+  filter: saturate(1.05) brightness(0.8);
+}
+
+/* the art fades to dark at the foot, where the names sit */
+.you::after,
+.them::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(var(--void-rgb) / 0.2), transparent 30%, rgb(var(--void-rgb) / 0.92) 88%);
+  pointer-events: none;
+}
+
+.sideText {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: var(--space-7) var(--space-7) calc(var(--space-8) + 120px);
+}
+
+.them .sideText {
+  justify-items: end;
+  padding-left: 22%;
+  text-align: right;
+}
+
+.you .sideText {
+  padding-right: 22%;
+}
+
+.sideName {
+  color: var(--ink-strong);
+  font-family: var(--font-print);
+  font-size: clamp(2rem, 4.2vw, var(--text-4xl));
+  font-weight: 700;
+  line-height: 0.95;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.6);
+}
+
+.sideNote {
+  color: var(--ink-soft);
+  font-size: var(--text-lg);
+}
+
+.line {
+  max-width: 32ch;
+  margin-top: var(--space-3);
+  padding: 10px 14px;
+  border-radius: var(--radius-zone) var(--radius-zone) 4px var(--radius-zone);
+  background: var(--paper);
+  color: var(--paper-ink);
+  font-size: var(--text-lg);
+  font-style: italic;
+  box-shadow: var(--shadow-placed);
+  animation: rise 420ms var(--ease-place) 640ms both;
+}
+
+.center {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-6);
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  width: min(92vw, 640px);
+  translate: -50% 0;
+  text-align: center;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+}
+
+.vs {
+  position: fixed;
+  top: 42%;
+  left: 50%;
+  translate: -50% -50%;
+  color: var(--ink-strong);
+  font-size: clamp(4rem, 11vw, 9rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-shadow: 0 4px 0 rgb(0 0 0 / 0.5), 0 0 40px rgb(0 0 0 / 0.6);
+  animation: stamp 520ms var(--ease-place) 360ms both;
+}
+
+.stakes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stakes li {
+  padding: 6px 14px;
+  border-radius: var(--radius-chip);
+  background: rgb(var(--mat-rgb) / 0.85);
+  box-shadow: inset 0 0 0 1.5px rgb(var(--brass-rgb) / 0.6);
+  color: var(--brass-ink);
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: rgb(var(--oxblood-rgb) / 0.6);
+  color: var(--oxblood-ink);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes from-left {
+  from {
+    transform: translateX(-30%);
+    opacity: 0;
+  }
+}
+
+@keyframes from-right {
+  from {
+    transform: translateX(30%);
+    opacity: 0;
+  }
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (max-width: 760px) {
+  .versus {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .you,
+  .them {
+    clip-path: none;
+    margin: 0;
+  }
+
+  .sideText,
+  .them .sideText,
+  .you .sideText {
+    padding: var(--space-5);
+  }
+
+  .vs {
+    top: 50%;
+  }
+
+  .center {
+    position: fixed;
+  }
+}
+
+.still .you,
+.still .them,
+.still .vs,
+.still .line {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .you,
+  .them,
+  .vs,
+  .line {
+    animation: none;
+  }
+}

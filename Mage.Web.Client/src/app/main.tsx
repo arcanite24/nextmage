@@ -102,14 +102,23 @@ const router = createBrowserRouter([
           // an invite link; signing in first comes back here
           { path: '/join/:tableId', lazy: () => import('./screens/JoinScreen').then((m) => ({ Component: m.JoinScreen })) },
           // Career: opt-in single player with its own collection, offered by servers with accounts
-          { path: '/career', lazy: () => import('./career/CareerScreen').then((m) => ({ Component: m.CareerScreen })) },
-          { path: '/career/deck', lazy: () => import('./career/CareerDeckScreen').then((m) => ({ Component: m.CareerDeckScreen })) },
-          { path: '/career/collection', lazy: () => import('./career/CareerCollectionScreen').then((m) => ({ Component: m.CareerCollectionScreen })) },
-          { path: '/career/shop', lazy: () => import('./career/CareerShopScreen').then((m) => ({ Component: m.CareerShopScreen })) },
-          { path: '/career/progress', lazy: () => import('./career/CareerProgressScreen').then((m) => ({ Component: m.CareerProgressScreen })) },
-          { path: '/career/rewards', lazy: () => import('./career/CareerProgressScreen').then((m) => ({ Component: m.CareerRewardsScreen })) },
-          // Career modes (M9): campaign, puzzles, gauntlet, sealed and draft, the weekly challenge; each screen lazy on its own
-          { path: '/career/:mode', lazy: () => import('./career/CareerModesRoute').then((m) => ({ Component: m.CareerModesRoute })) },
+          // Career: opt-in single player with its own collection, offered by servers with accounts. Its screens share one
+          // full-bleed shell (the scene, the HUD, menu navigation, the music), so the app's own header steps aside
+          {
+            path: '/career',
+            lazy: () => import('./career/CareerShell').then((m) => ({ Component: m.CareerShell })),
+            children: [
+              { index: true, lazy: () => import('./career/CareerScreen').then((m) => ({ Component: m.CareerScreen })) },
+              { path: 'opponents', lazy: () => import('./career/CareerOpponentsScreen').then((m) => ({ Component: m.CareerOpponentsScreen })) },
+              { path: 'deck', lazy: () => import('./career/CareerDeckScreen').then((m) => ({ Component: m.CareerDeckScreen })) },
+              { path: 'collection', lazy: () => import('./career/CareerCollectionScreen').then((m) => ({ Component: m.CareerCollectionScreen })) },
+              { path: 'shop', lazy: () => import('./career/CareerShopScreen').then((m) => ({ Component: m.CareerShopScreen })) },
+              { path: 'progress', lazy: () => import('./career/CareerProgressScreen').then((m) => ({ Component: m.CareerProgressScreen })) },
+              { path: 'rewards', lazy: () => import('./career/CareerProgressScreen').then((m) => ({ Component: m.CareerRewardsScreen })) },
+              // Career modes (M9): campaign, puzzles, gauntlet, sealed and draft, the weekly challenge; each screen lazy on its own
+              { path: ':mode', lazy: () => import('./career/CareerModesRoute').then((m) => ({ Component: m.CareerModesRoute })) },
+            ],
+          },
           { path: '/history', lazy: () => import('./history/HistoryScreen').then((m) => ({ Component: m.HistoryScreen })) },
         ],
       },
