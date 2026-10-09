@@ -1,5 +1,5 @@
 import { Lock } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import type { CareerOpponent } from '../../protocol/generated/views';
 import { registerMessages, useT } from '../i18n';
@@ -33,13 +33,19 @@ export function CareerOpponentsScreen() {
   const tiers = useMemo(() => tiersOf(roster), [roster]);
   const next = useMemo(() => nextOpponent(roster), [roster]);
   useSceneArt(next?.cover);
+  // the champions are on top; the climb starts at the next opponent's rung, so that's where the ladder opens
+  const ladder = useRef<HTMLDivElement>(null);
+  const nextId = next?.id;
+  useEffect(() => {
+    if (nextId) ladder.current?.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: 'center' });
+  }, [nextId]);
 
   if (state.isPending) return <p className={styles.note}>{t('career.loading')}</p>;
   if (!profile) return <Navigate to="/career" replace />;
 
   let dealt = 0;
   return (
-    <div className={styles.ladder}>
+    <div ref={ladder} className={styles.ladder}>
       {deck.problem && (
         <div className={styles.deckWarning} role="status">
           <span>{deck.problem}</span>

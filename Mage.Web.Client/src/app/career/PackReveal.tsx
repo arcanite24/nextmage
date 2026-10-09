@@ -1,6 +1,7 @@
 import { Coins, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { CareerCard } from '../../protocol/generated/views';
+import { createPortal } from 'react-dom';
 import { useT } from '../i18n';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
@@ -100,84 +101,86 @@ export function PackReveal({ setName, setCode, cards, canBuyAnother, onAnother, 
   }
 
   const hue = wrapperHue(setCode || setName);
-  return (
-    <div
-      className={[styles.overlay, still ? motion.still : '', jolt ? styles.jolt : ''].join(' ')}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="pack-title"
-    >
-      <h2 id="pack-title" className={styles.title}>{t('career.pack.title', { set: setName })}</h2>
+  // on the body: the Career scene around it is animated, and a transformed parent would trap a fixed overlay
+  return createPortal(
+      <div
+        className={[styles.overlay, still ? motion.still : '', jolt ? styles.jolt : ''].join(' ')}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pack-title"
+      >
+        <h2 id="pack-title" className={styles.title}>{t('career.pack.title', { set: setName })}</h2>
 
-      {stage !== 'open' ? (
-        <div className={styles.stage}>
-          <button
-            ref={tear}
-            type="button"
-            className={[styles.wrapper, stage === 'tearing' ? styles.tearing : ''].join(' ')}
-            style={{ '--wrapper-hue': hue } as CSSProperties}
-            onClick={open}
-            aria-label={t('career.pack.tear')}
-          >
-            <span className={styles.half} aria-hidden="true">
-              <span className={styles.crimp} />
-              <b className={styles.code}>{setCode}</b>
-            </span>
-            <span className={[styles.half, styles.lower].join(' ')} aria-hidden="true">
-              <span className={styles.setName}>{setName}</span>
-              <span className={styles.count}>{t('career.pack.cards', { count: order.length })}</span>
-              <span className={[styles.crimp, styles.crimpBottom].join(' ')} />
-            </span>
-          </button>
-          <p className={styles.hint}>{t('career.pack.tearHint')}</p>
-        </div>
-      ) : (
-        <ul className={styles.fan}>
-          {order.map((card, index) => {
-            const faceUp = shown.has(index);
-            const ref = { name: card.name, setCode: card.setCode, cardNumber: card.cardNumber };
-            const rarity = card.rarity === 'rare' || card.rarity === 'mythic' ? card.rarity : null;
-            return (
-              <li key={index} className={motion.deal} style={dealStyle(index)}>
-                <button
-                  type="button"
-                  className={[styles.flip, faceUp ? styles.flipUp : '', faceUp && rarity ? styles[rarity] : ''].join(' ')}
-                  onClick={() => show(index)}
-                  aria-label={faceUp ? card.name : t('ui.hiddenCard')}
-                  aria-pressed={faceUp}
-                  data-nav
-                >
-                  <span className={styles.flipInner}>
-                    <span className={styles.flipBack} aria-hidden={faceUp}><CardFace card={ref} hidden size="normal" /></span>
-                    <span className={styles.flipFront} aria-hidden={!faceUp}><CardFace card={ref} size="normal" /></span>
-                  </span>
-                  {faceUp && card.convertedTo === 'coins' && (
-                    <span className={styles.badge}><Coins size={13} aria-hidden="true" /> {t('career.pack.toCoins', { coins: spareCoins(card.rarity) })}</span>
-                  )}
-                  {faceUp && card.convertedTo === 'wildcard' && (
-                    <span className={styles.badge}><Sparkles size={13} aria-hidden="true" /> {t('career.pack.toWildcard')}</span>
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+        {stage !== 'open' ? (
+          <div className={styles.stage}>
+            <button
+              ref={tear}
+              type="button"
+              className={[styles.wrapper, stage === 'tearing' ? styles.tearing : ''].join(' ')}
+              style={{ '--wrapper-hue': hue } as CSSProperties}
+              onClick={open}
+              aria-label={t('career.pack.tear')}
+            >
+              <span className={styles.half} aria-hidden="true">
+                <span className={styles.crimp} />
+                <b className={styles.code}>{setCode}</b>
+              </span>
+              <span className={[styles.half, styles.lower].join(' ')} aria-hidden="true">
+                <span className={styles.setName}>{setName}</span>
+                <span className={styles.count}>{t('career.pack.cards', { count: order.length })}</span>
+                <span className={[styles.crimp, styles.crimpBottom].join(' ')} />
+              </span>
+            </button>
+            <p className={styles.hint}>{t('career.pack.tearHint')}</p>
+          </div>
+        ) : (
+          <ul className={styles.fan}>
+            {order.map((card, index) => {
+              const faceUp = shown.has(index);
+              const ref = { name: card.name, setCode: card.setCode, cardNumber: card.cardNumber };
+              const rarity = card.rarity === 'rare' || card.rarity === 'mythic' ? card.rarity : null;
+              return (
+                <li key={index} className={motion.deal} style={dealStyle(index)}>
+                  <button
+                    type="button"
+                    className={[styles.flip, faceUp ? styles.flipUp : '', faceUp && rarity ? styles[rarity] : ''].join(' ')}
+                    onClick={() => show(index)}
+                    aria-label={faceUp ? card.name : t('ui.hiddenCard')}
+                    aria-pressed={faceUp}
+                    data-nav
+                  >
+                    <span className={styles.flipInner}>
+                      <span className={styles.flipBack} aria-hidden={faceUp}><CardFace card={ref} hidden size="normal" /></span>
+                      <span className={styles.flipFront} aria-hidden={!faceUp}><CardFace card={ref} size="normal" /></span>
+                    </span>
+                    {faceUp && card.convertedTo === 'coins' && (
+                      <span className={styles.badge}><Coins size={13} aria-hidden="true" /> {t('career.pack.toCoins', { coins: spareCoins(card.rarity) })}</span>
+                    )}
+                    {faceUp && card.convertedTo === 'wildcard' && (
+                      <span className={styles.badge}><Sparkles size={13} aria-hidden="true" /> {t('career.pack.toWildcard')}</span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
-      <footer className={styles.foot}>
-        <p className={styles.summary} aria-live="polite">
-          {done ? [
-            t('career.pack.new', { count: summary.added }),
-            summary.coins > 0 ? t('career.pack.coins', { coins: summary.coins }) : null,
-            summary.wildcards > 0 ? t('career.pack.wildcards', { count: summary.wildcards }) : null,
-            summary.basics > 0 ? t('career.pack.basics', { count: summary.basics }) : null,
-          ].filter(Boolean).join(' · ') : stage === 'open' ? t('career.pack.tap') : ''}
-        </p>
-        {stage === 'open' && !done && <Button variant="decision" onClick={revealAll}>{t('career.pack.revealAll')}</Button>}
-        {done && canBuyAnother && <Button variant="print" onClick={onAnother} data-nav>{t('career.pack.another')}</Button>}
-        {done && <Button ref={finish} variant="decision" onClick={onClose} data-nav>{t('career.pack.done')}</Button>}
-        {!done && <Button variant="quiet" onClick={onClose}>{t('career.pack.later')}</Button>}
-      </footer>
-    </div>
+        <footer className={styles.foot}>
+          <p className={styles.summary} aria-live="polite">
+            {done ? [
+              t('career.pack.new', { count: summary.added }),
+              summary.coins > 0 ? t('career.pack.coins', { coins: summary.coins }) : null,
+              summary.wildcards > 0 ? t('career.pack.wildcards', { count: summary.wildcards }) : null,
+              summary.basics > 0 ? t('career.pack.basics', { count: summary.basics }) : null,
+            ].filter(Boolean).join(' · ') : stage === 'open' ? t('career.pack.tap') : ''}
+          </p>
+          {stage === 'open' && !done && <Button variant="decision" onClick={revealAll}>{t('career.pack.revealAll')}</Button>}
+          {done && canBuyAnother && <Button variant="print" onClick={onAnother} data-nav>{t('career.pack.another')}</Button>}
+          {done && <Button ref={finish} variant="decision" onClick={onClose} data-nav>{t('career.pack.done')}</Button>}
+          {!done && <Button variant="quiet" onClick={onClose}>{t('career.pack.later')}</Button>}
+        </footer>
+      </div>,
+    document.body,
   );
 }

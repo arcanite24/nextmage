@@ -12,6 +12,8 @@ export interface VoiceSnapshot {
   /** the opponent's seat name, as bubbles name it */
   foe: string | null;
   turn: number;
+  /** the step the game is on; it holds still through the opening hands */
+  step: string | null;
   foeLife: number | null;
   /** a costly spell the opponent has on the stack */
   foeBigSpell: boolean;
@@ -28,6 +30,7 @@ export function voiceSnapshot(state: GameSessionState, myId: string | null): Voi
   return {
     foe: foe?.name ?? null,
     turn: view?.turn ?? 0,
+    step: view?.step ?? null,
     foeLife: foe?.life ?? null,
     foeBigSpell: !!foe && stack.some((card) => card.controllerId === foe.playerId && (card.manaValue ?? 0) >= BIG_PLAY_MANA),
     over: !!state.gameOver,
@@ -43,8 +46,9 @@ export function pickVoice(before: VoiceSnapshot | null, now: VoiceSnapshot, said
     // their line for the result: they lost when you won
     return now.won ? 'lose' : 'win';
   }
-  if (!said.has('intro') && now.turn > 0) return 'intro';
   if (!before) return null;
+  // the greeting waits until play is under way: past the opening hands (the first step change), or turn two at the latest
+  if (!said.has('intro')) return now.turn >= 2 || (now.turn > 0 && before.turn > 0 && now.step !== before.step) ? 'intro' : null;
   if (!said.has('bigPlay') && now.foeBigSpell && !before.foeBigSpell) return 'bigPlay';
   if (!said.has('lowLife') && now.foeLife !== null && now.foeLife <= LOW_LIFE && (before.foeLife === null || before.foeLife > LOW_LIFE)) return 'lowLife';
   return null;

@@ -1,5 +1,6 @@
 import { ArrowLeft, Swords } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useT } from '../i18n';
 import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
@@ -72,47 +73,49 @@ export function Versus({ opponent, deck, stakes, kicker, onFight, onClose }: {
     }
   }
 
-  return (
-    <div className={[styles.versus, still ? styles.still : ''].join(' ')} role="dialog" aria-modal="true" aria-labelledby="versus-title">
-      <div className={styles.you}>
-        <CardArt card={deck.art} name={deck.name} colors={deck.colors} className={styles.sideArt} />
-        <div className={styles.sideText}>
-          <CareerAvatar id={avatar} name={user} size={72} />
-          <b className={styles.sideName}>{user}</b>
-          <small className={styles.sideNote}>{t('career.versus.with', { deck: deck.name })}</small>
-          <Pips colors={deck.colors} />
+  // on the body: the Career scene around it is animated, and a transformed parent would trap a fixed overlay
+  return createPortal(
+      <div className={[styles.versus, still ? styles.still : ''].join(' ')} role="dialog" aria-modal="true" aria-labelledby="versus-title">
+        <div className={styles.you}>
+          <CardArt card={deck.art} name={deck.name} colors={deck.colors} className={styles.sideArt} />
+          <div className={styles.sideText}>
+            <CareerAvatar id={avatar} name={user} size={72} />
+            <b className={styles.sideName}>{user}</b>
+            <small className={styles.sideNote}>{t('career.versus.with', { deck: deck.name })}</small>
+            <Pips colors={deck.colors} />
+          </div>
         </div>
-      </div>
 
-      <div className={styles.them}>
-        <CardArt card={opponent.cover} name={opponent.name} colors={opponent.colors} boss={opponent.boss} className={styles.sideArt} />
-        <div className={styles.sideText}>
-          <b className={styles.sideName}>{opponent.name}</b>
-          {opponent.tagline && <small className={styles.sideNote}>{opponent.tagline}</small>}
-          <Pips colors={opponent.colors} />
-          {opponent.line && <q className={styles.line}>{opponent.line}</q>}
+        <div className={styles.them}>
+          <CardArt card={opponent.cover} name={opponent.name} colors={opponent.colors} boss={opponent.boss} className={styles.sideArt} />
+          <div className={styles.sideText}>
+            <b className={styles.sideName}>{opponent.name}</b>
+            {opponent.tagline && <small className={styles.sideNote}>{opponent.tagline}</small>}
+            <Pips colors={opponent.colors} />
+            {opponent.line && <q className={styles.line}>{opponent.line}</q>}
+          </div>
         </div>
-      </div>
 
-      <div className={styles.center}>
-        {kicker && <p className={styles.kicker}>{kicker}</p>}
         <h2 id="versus-title" className={styles.vs}>
           <span className={styles.srOnly}>{t('career.versus.title', { opponent: opponent.name })}</span>
           <span aria-hidden="true">{t('career.versus.vs')}</span>
         </h2>
-        {stakes.length > 0 && (
-          <ul className={styles.stakes} aria-label={t('career.versus.stakes')}>
-            {stakes.map((stake) => <li key={stake}>{stake}</li>)}
-          </ul>
-        )}
-        {error && <p className={styles.error} role="alert">{t('career.playFailed')}: {error}</p>}
-        <div className={styles.actions}>
-          <Button variant="quiet" icon={<ArrowLeft size={16} />} disabled={busy} onClick={onClose}>{t('career.versus.back')}</Button>
-          <Button ref={fight} variant="decision" size="xl" icon={<Swords size={22} />} busy={busy} onClick={() => void start()}>
-            {busy ? t('career.versus.setting') : t('career.versus.fight')}
-          </Button>
+        <div className={styles.center}>
+          {kicker && <p className={styles.kicker}>{kicker}</p>}
+          {stakes.length > 0 && (
+            <ul className={styles.stakes} aria-label={t('career.versus.stakes')}>
+              {stakes.map((stake) => <li key={stake}>{stake}</li>)}
+            </ul>
+          )}
+          {error && <p className={styles.error} role="alert">{t('career.playFailed')}: {error}</p>}
+          <div className={styles.actions}>
+            <Button variant="quiet" icon={<ArrowLeft size={16} />} disabled={busy} onClick={onClose}>{t('career.versus.back')}</Button>
+            <Button ref={fight} variant="decision" size="xl" icon={<Swords size={22} />} busy={busy} onClick={() => void start()}>
+              {busy ? t('career.versus.setting') : t('career.versus.fight')}
+            </Button>
+          </div>
         </div>
-      </div>
-    </div>
+      </div>,
+    document.body,
   );
 }

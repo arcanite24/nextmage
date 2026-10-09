@@ -139,6 +139,11 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== ' ' && event.key !== 'Enter') return;
       event.preventDefault();
+      // Space presses a button on its release: keep this one from pressing Continue, which has the focus by then
+      const swallow = (up: KeyboardEvent) => {
+        if (up.key === event.key) up.preventDefault();
+      };
+      window.addEventListener('keyup', swallow, { capture: true, once: true });
       skipAll();
     };
     window.addEventListener('keydown', onKey);

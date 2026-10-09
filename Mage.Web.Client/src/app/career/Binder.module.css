@@ -128,8 +128,11 @@
 }
 
 .spread {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* the pages are sized from the room the spread has, so three rows of pockets always fit without scrolling */
+  container-type: size;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
   gap: var(--space-4);
   min-height: 0;
   overflow: auto;
@@ -138,6 +141,9 @@
 
 /* a binder page: nine pockets on a dark leaf */
 .page {
+  /* page width from the height: 3 cards (63:88) a row, 3 rows, plus the leaf's padding and gaps */
+  flex: none;
+  width: min(calc((100cqw - 8px - var(--space-4)) / 2), calc(44px + (100cqh - 70px) * 0.716));
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-content: start;
@@ -279,7 +285,13 @@
 
 @media (max-width: 1100px) {
   .spread {
-    grid-template-columns: 1fr;
+    container-type: normal;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page {
+    width: auto;
   }
 }
 

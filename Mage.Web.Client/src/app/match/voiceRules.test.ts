@@ -1,14 +1,16 @@
 import { describe, expect, test } from 'vitest';
 import { pickVoice, type VoiceMoment, type VoiceSnapshot } from './voiceRules';
 
-const at = (over: Partial<VoiceSnapshot> = {}): VoiceSnapshot => ({ foe: 'Wren', turn: 1, foeLife: 20, foeBigSpell: false, over: false, won: false, ...over });
+const at = (over: Partial<VoiceSnapshot> = {}): VoiceSnapshot => ({ foe: 'Wren', turn: 1, step: 'MAIN1', foeLife: 20, foeBigSpell: false, over: false, won: false, ...over });
 const said = (...moments: VoiceMoment[]) => new Set(moments);
 
 describe('pickVoice', () => {
-  test('greets once the game is under way, and only once', () => {
-    expect(pickVoice(null, at({ turn: 0 }), said())).toBeNull();
-    expect(pickVoice(null, at(), said())).toBe('intro');
-    expect(pickVoice(at(), at({ turn: 2 }), said('intro'))).toBeNull();
+  test('greets once play is under way (not over the opening hands), and only once', () => {
+    expect(pickVoice(null, at(), said())).toBeNull();
+    expect(pickVoice(at({ step: 'UPKEEP' }), at({ step: 'UPKEEP' }), said())).toBeNull();
+    expect(pickVoice(at({ step: 'UPKEEP' }), at({ step: 'DRAW' }), said())).toBe('intro');
+    expect(pickVoice(at({ turn: 2 }), at({ turn: 2 }), said())).toBe('intro');
+    expect(pickVoice(at(), at({ turn: 2, step: 'DRAW' }), said('intro'))).toBeNull();
   });
 
   test('speaks up when a costly spell of theirs hits the stack', () => {
