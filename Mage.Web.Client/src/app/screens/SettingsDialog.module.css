@@ -306,3 +306,38 @@
   color: var(--ink-strong);
   font-size: var(--text-md);
 }
+
+/* playmat cloths: one swatch of dyed neoprene each */
+.cloths {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cloth {
+  width: 40px;
+  height: 40px;
+  border: 2px solid;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.cloth[aria-checked='true'] {
+  box-shadow: 0 0 0 3px var(--mat-900), 0 0 0 5px var(--decision);
+}
+
+.matCard {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.matCardRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.matCardRow input {
+  flex: 1;
+}

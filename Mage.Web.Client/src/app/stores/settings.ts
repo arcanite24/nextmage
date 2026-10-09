@@ -4,6 +4,7 @@ import type { TurnCombatStops } from '../../core/game/autoPass';
 import { serverStops } from '../../core/game/stops';
 import type { UserData, UserSkipPrioritySteps } from '../../protocol/generated/views';
 import type { LocalePreference } from '../i18n/locales';
+import type { CardImageRef } from '../../core/images/imageLinks';
 import { readJson, writeJson } from './persist';
 import { useSession } from './session';
 
@@ -48,6 +49,12 @@ export interface PlaySettings {
   flag: string;
   /** the interface language, or "auto" for the browser's (local only) */
   locale: LocalePreference;
+  /** playmat: the cloth the match is dyed in (local only) */
+  matCloth: string;
+  /** playmat: the art printed into your half: your deck's cover, a card you chose, or none (local only) */
+  matArt: 'deck' | 'card' | 'none';
+  /** playmat: the chosen card when matArt is 'card' */
+  matCard: CardImageRef | null;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -81,6 +88,9 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   avatarId: 10,
   flag: 'world',
   locale: 'auto',
+  matCloth: 'green',
+  matArt: 'deck',
+  matCard: null,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },

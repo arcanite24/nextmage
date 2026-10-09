@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { MAX_STAGE_WIDTH, STAGE_HEIGHT, STAGE_WIDTH, StageContext, type StageContextValue } from './stageContext';
 import styles from './Stage.module.css';
 
@@ -8,7 +8,7 @@ import styles from './Stage.module.css';
  * reaches the edges of anything wider than 16:9, up to a 21:9 monitor; the side columns are anchored to the stage edges.
  * Narrower windows keep 1920 and the mat fills above and below.
  */
-export function Stage({ children, background }: { children: ReactNode | ((width: number) => ReactNode); background?: ReactNode }) {
+export function Stage({ children, background, style }: { children: ReactNode | ((width: number) => ReactNode); background?: ReactNode; style?: CSSProperties }) {
   const frame = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState<StageContextValue>({ scale: 1, element: null, width: STAGE_WIDTH });
   const stageRef = useRef<HTMLDivElement>(null);
@@ -31,7 +31,7 @@ export function Stage({ children, background }: { children: ReactNode | ((width:
   }, []);
 
   return (
-    <div ref={frame} className={styles.frame}>
+    <div ref={frame} className={styles.frame} style={style}>
       {background}
       <div
         ref={stageRef}
