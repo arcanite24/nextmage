@@ -1,5 +1,5 @@
 import type {
-  CareerChapter, CareerNode, CareerPoolCard, CareerPuzzleSide, CareerReward, CareerRunReward, CareerTwists, DeckCardLists as WireDeck,
+  CareerCampaign, CareerChapter, CareerNode, CareerPoolCard, CareerPuzzleSide, CareerReward, CareerRunReward, CareerTwists, DeckCardLists as WireDeck,
 } from '../../protocol/generated/views';
 import type { MessageKey } from '../i18n';
 import { isBasic } from './careerModel';
@@ -13,6 +13,41 @@ import { isBasic } from './careerModel';
 export interface Line {
   key: MessageKey;
   vars?: Record<string, string | number>;
+}
+
+// ---- the academy: the format schools
+
+/** The schools in the order the academy hangs them. */
+export function schoolsOf(campaigns: readonly CareerCampaign[] | undefined): CareerCampaign[] {
+  return (campaigns ?? []).filter((campaign) => campaign.school && (campaign.chapters?.length ?? 0) > 0).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
+/** The campaigns that aren't schools (the Five Paths). */
+export function storiesOf(campaigns: readonly CareerCampaign[] | undefined): CareerCampaign[] {
+  return (campaigns ?? []).filter((campaign) => !campaign.school);
+}
+
+export function graduated(campaign: Pick<CareerCampaign, 'done' | 'total'>): boolean {
+  return (campaign.total ?? 0) > 0 && campaign.done === campaign.total;
+}
+
+/**
+ * What a closed school still needs, one entry per requirement, each a list of alternatives: "five-paths@1" reads
+ * "Beat 1 boss of The Five Paths", "a|b" offers either.
+ */
+export function requirementLines(missing: readonly string[] | undefined, campaigns: readonly CareerCampaign[] | undefined): Line[][] {
+  const nameOf = (id: string) => campaigns?.find((campaign) => campaign.id === id)?.name ?? id;
+  return (missing ?? []).map((requirement) => requirement.split('|').map((alternative): Line => {
+    const at = alternative.indexOf('@');
+    if (at < 0) return { key: 'career.academy.needsAll', vars: { campaign: nameOf(alternative.trim()) } };
+    return { key: 'career.academy.needsBosses', vars: { campaign: nameOf(alternative.slice(0, at).trim()), count: Number(alternative.slice(at + 1)) } };
+  }));
+}
+
+/** The graduation reward's cosmetics, from the school's last node. */
+export function graduationOf(campaign: Pick<CareerCampaign, 'chapters'>): CareerNode | undefined {
+  const nodes = (campaign.chapters ?? []).flatMap((chapter) => chapter.nodes ?? []);
+  return nodes[nodes.length - 1];
 }
 
 // ---- campaign map
@@ -150,6 +185,7 @@ export function rewardLines(reward: CareerReward | CareerRunReward | undefined):
   if (reward.wildcard) lines.push({ key: WILDCARD_KEYS[reward.wildcard.toLowerCase()] ?? 'career.reward.wildcard.rare' });
   if ('deckCards' in reward && reward.deckCards) lines.push({ key: 'career.reward.deck' });
   if ('unlockSet' in reward && reward.unlockSet) lines.push({ key: 'career.reward.set', vars: { set: reward.unlockSet } });
+  if ('cosmetics' in reward && reward.cosmetics?.length) lines.push({ key: 'career.reward.cosmetics', vars: { count: reward.cosmetics.length } });
   return lines;
 }
 

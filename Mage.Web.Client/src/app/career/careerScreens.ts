@@ -2,6 +2,9 @@ import type { MessageKey } from '../i18n';
 
 /** Each Career screen's name in the header, and where its back button goes. */
 const SCREENS: { path: string; title: MessageKey; back: string }[] = [
+  // a school's page goes back to the academy's hall
+  { path: '/career/academy/', title: 'career.academy.title', back: '/career/academy' },
+  { path: '/career/academy', title: 'career.academy.title', back: '/career' },
   { path: '/career/opponents', title: 'career.nav.home', back: '/career' },
   { path: '/career/deck', title: 'career.nav.deck', back: '/career' },
   { path: '/career/collection', title: 'career.nav.collection', back: '/career' },
@@ -17,6 +20,8 @@ const SCREENS: { path: string; title: MessageKey; back: string }[] = [
 
 export function screenOf(pathname: string): { title: MessageKey | null; back: string } {
   const path = pathname.replace(/\/+$/, '');
-  const screen = SCREENS.find((candidate) => path === candidate.path || path.startsWith(`${candidate.path}/`));
+  const screen = SCREENS.find((candidate) => candidate.path.endsWith('/')
+    ? path.startsWith(candidate.path)
+    : path === candidate.path || path.startsWith(`${candidate.path}/`));
   return screen ? { title: screen.title, back: screen.back } : { title: null, back: '/' };
 }

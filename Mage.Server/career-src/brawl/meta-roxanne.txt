@@ -1,0 +1,49 @@
+# name: Roxanne Ramp
+# archetype: midrange (Gruul ramp)
+# season: 2026-10
+# source: https://draftsim.com/mtg-arena-brawl-guide/ (Standard Brawl commander lists, updated 2025-12-22)
+# Command Tower and Arcane Signet are Arena-only Brawl cards that XMage's Standard pool rejects: a basic land / Patchwork Banner instead
+CMDR: Roxanne, Starfall Savant
+1 Llanowar Elves
+1 Ruby, Daring Tracker
+1 Wandertale Mentor
+1 Badgermole Cub
+1 Druid of the Cowl
+1 Goobbue Gardener
+1 Hardbristle Bandit
+1 Tender Wildguide
+1 Twitching Doll
+1 Hotfoot Gnome
+1 Kavaron Turbodrone
+1 Jolene, Plundering Pugilist
+1 Mossborn Hydra
+1 Outcaster Trailblazer
+1 Springbloom Druid
+1 Roaming Throne
+1 Enduring Courage
+1 Halana and Alena, Partners
+1 The Earth King
+1 Overlord of the Hauntwoods
+1 Summon: Bahamut
+1 Glimpse the Core
+1 Burst Lightning
+1 Redirect Lightning
+1 Abrade
+1 Archdruid's Charm
+1 Up the Beanstalk
+1 Ferocification
+1 Earthbender Ascension
+1 Lavaspur Boots
+1 Patchwork Banner
+1 Buried Treasure
+1 The Irencrag
+1 Herd Heirloom
+1 Lumbering Worldwagon
+1 Ba Sing Se
+1 Cavern of Souls
+1 Commercial District
+10 Forest
+8 Mountain
+1 Restless Ridgeline
+1 Stomping Ground
+1 Thornspire Verge

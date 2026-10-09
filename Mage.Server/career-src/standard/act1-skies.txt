@@ -1,0 +1,17 @@
+# name: Open Skies
+# archetype: aggro
+# season: 2026-10
+4 Healer's Hawk
+4 Strix Lookout
+4 Kitesail Corsair
+4 Dawnwing Marshal
+4 Empyrean Eagle
+4 Inspiring Overseer
+3 Vanguard Seraph
+3 Skyship Buccaneer
+2 Cloudblazer
+3 Pacifism
+2 Banishing Light
+4 Tranquil Cove
+10 Plains
+9 Island

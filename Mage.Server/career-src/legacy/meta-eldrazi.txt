@@ -1,0 +1,28 @@
+# name: Eldrazi
+# archetype: aggro
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91855&d=897694&f=LE
+4 Chalice of the Void
+4 Lotus Petal
+3 Eye of Ugin
+4 Eldrazi Temple
+4 Ancient Tomb
+3 Reality Smasher
+4 Thought-Knot Seer
+4 Cavern of Souls
+4 Wastescape Battlemage
+4 Eldrazi Linebreaker
+1 Snow-Covered Wastes
+4 Kozilek's Command
+4 It That Heralds the End
+4 Glaring Fleshraker
+1 Sire of Seven Deaths
+4 Abundant Countryside
+4 Petrified Hamlet
+SB: 2 Faerie Macabre
+SB: 2 Null Rod
+SB: 1 Warping Wail
+SB: 2 Unlicensed Hearse
+SB: 4 Disruptor Flute
+SB: 2 Eldrazi Confluence
+SB: 2 Dismember

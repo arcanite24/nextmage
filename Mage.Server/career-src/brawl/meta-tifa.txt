@@ -1,0 +1,42 @@
+# name: Tifa Landfall
+# archetype: aggro (mono-green landfall)
+# season: 2026-10
+# source: https://draftsim.com/mtg-arena-brawl-guide/ (Standard Brawl commander lists, updated 2025-12-22)
+CMDR: Tifa Lockhart
+1 Insidious Fungus
+1 Sazh's Chocobo
+1 Aftermath Analyst
+1 Badgermole Cub
+1 Bristly Bill, Spine Sower
+1 Clifftop Lookout
+1 Loot, Exuberant Explorer
+1 Mossborn Hydra
+1 Summon: Fenrir
+1 Icetill Explorer
+1 Mightform Harmonizer
+1 Primal Might
+1 Bushwhack
+1 Chocobo Kick
+1 Grow from the Ashes
+1 Snakeskin Veil
+1 Tifa's Limit Break
+1 Trash the Town
+1 Bite Down
+1 Strength of Will
+1 Prishe's Wanderings
+1 Archdruid's Charm
+1 Ordeal of Nylea
+1 Ride the Shoopuf
+1 Earthbender Ascension
+1 Bioengineered Future
+1 Adventuring Gear
+1 Lavaspur Boots
+1 Larval Scoutlander
+1 Ba Sing Se
+1 Demolition Field
+1 Eden, Seat of the Sanctum
+1 Escape Tunnel
+1 Evolving Wilds
+23 Forest
+1 Promising Vein
+1 Terramorphic Expanse

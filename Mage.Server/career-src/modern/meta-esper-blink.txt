@@ -1,0 +1,35 @@
+# name: Esper Blink
+# archetype: midrange
+# season: 2026-10
+# source: https://www.mtggoldfish.com/archetype/modern-esper-blink ($5K RCQ - Modern - SCG CON Baltimore - Saturday - 9:30 am,2nd Place, 8-2)
+1 Swamp
+3 Flickerwisp
+4 Phelia, Exuberant Shepherd
+4 Flooded Strand
+4 Witch Enchanter
+4 Thoughtseize
+4 Fatal Push
+3 Ephemerate
+1 Hallowed Fountain
+2 Teferi, Time Raveler
+1 Polluted Delta
+1 Undercity Sewers
+1 Shadowy Backstreet
+1 Meticulous Archive
+1 Prismatic Ending
+1 Watery Grave
+3 Emperor of Bones
+4 Solitude
+2 Plains
+1 Boggart Trawler
+2 Godless Shrine
+4 Marsh Flats
+4 Overlord of the Balemurk
+4 Quantum Riddler
+SB: 2 High Noon
+SB: 1 Nihil Spellbomb
+SB: 2 Mystical Dispute
+SB: 4 Consign to Memory
+SB: 2 White Orchid Phantom
+SB: 2 Wrath of the Skies
+SB: 2 Clarion Conqueror

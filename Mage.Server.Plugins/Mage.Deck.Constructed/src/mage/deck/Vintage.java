@@ -46,7 +46,7 @@ public class Vintage extends Constructed {
         restricted.add("Mental Misstep");
         restricted.add("Merchant Scroll");
         restricted.add("Mind's Desire");
-        restricted.add("Monastery Mentory");
+        restricted.add("Monastery Mentor");
         restricted.add("Mox Emerald");
         restricted.add("Mox Jet");
         restricted.add("Mox Pearl");

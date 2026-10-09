@@ -1,0 +1,16 @@
+# name: White Humans
+# archetype: aggro
+# season: 2026-10
+4 Dauntless Bodyguard
+4 Champion of the Parish
+4 Thraben Inspector
+4 Thalia's Lieutenant
+4 Luminarch Aspirant
+3 Thalia, Guardian of Thraben
+4 Adeline, Resplendent Cathar
+4 Elite Spellbinder
+2 Intrepid Adversary
+4 Recruiter of the Guard
+3 Path to Exile
+18 Plains
+2 Cavern of Souls

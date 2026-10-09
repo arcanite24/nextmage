@@ -9,6 +9,8 @@ export interface VoiceLines {
   win?: string;
   /** when they lose */
   lose?: string;
+  /** at a pod, the seat that speaks (the others keep quiet) */
+  speaker?: string;
 }
 
 interface CareerVoiceState {

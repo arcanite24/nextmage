@@ -1,0 +1,918 @@
+{
+  "id": "vintage",
+  "name": "The Vintage School",
+  "format": "Vintage",
+  "school": true,
+  "order": 8,
+  "colors": "UB",
+  "summary": "Every card ever printed, the most broken restricted to one copy. Moxen, Black Lotus, Workshops and Force of Will.",
+  "text": "Vintage is the oldest format: every card ever printed is legal, and the most powerful ones, the Power Nine among them, are restricted to one copy per deck. Here you'll learn fast mana, Mishra's Workshop and its taxes, Bazaar of Baghdad, and how blue decks fight both with Force of Will and Mana Drain. You'll finish with the decks winning Vintage Challenges today.",
+  "deckType": "Constructed - Vintage",
+  "gameType": "Two Player Duel",
+  "requires": [
+    "legacy@2"
+  ],
+  "chapters": [
+    {
+      "id": "vintage-1",
+      "name": "First steps",
+      "text": "Vintage lets you play every card ever printed, and the strongest ones are restricted to one copy. Start with a colourless Workshop deck: fast mana, artifact creatures and taxes everyone has to pay.",
+      "deck": "vintage/starter.dck",
+      "deckName": "Workshop Aggro",
+      "nodes": [
+        {
+          "id": "vintage-1a",
+          "type": "duel",
+          "name": "Brannoc Ash",
+          "text": "A burn mage who thinks twenty life is a countdown.",
+          "requires": [],
+          "opponent": {
+            "name": "Brannoc Ash",
+            "deck": "vintage/act1-red.dck",
+            "skill": 1
+          },
+          "lesson": {
+            "title": "The restricted list",
+            "text": "Vintage bans almost nothing. Its most broken cards are restricted instead: one copy per deck, which is why you have one Black Lotus and one of each Mox. Mishra's Workshop makes three mana for artifacts, and every creature in your deck is an artifact. Get creatures out fast, then attack every turn; Sphere of Resistance makes his burn cost more.",
+            "cards": [
+              "Mishra's Workshop",
+              "Black Lotus",
+              "Sphere of Resistance",
+              "Lightning Bolt"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Mishra's Workshop",
+              "title": "Workshop mana",
+              "text": "Mishra's Workshop taps for three, but only to cast artifact spells. Everything you cast is an artifact, so spend it all."
+            },
+            {
+              "on": "cast:Sphere of Resistance",
+              "title": "A tax on everyone",
+              "text": "Sphere of Resistance makes every spell cost one more, yours too. Workshop pays your tax; his one-mana burn becomes two-mana burn."
+            },
+            {
+              "on": "attack",
+              "title": "You're the beatdown",
+              "text": "His deck can't block well. Swing with everything that isn't needed at home and make him spend burn on creatures instead of your face."
+            }
+          ],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          },
+          "before": "Twenty life? That's four Bolts and change.",
+          "after": "Huh. I paid a tax on my own fireballs."
+        },
+        {
+          "id": "vintage-1b",
+          "type": "duel",
+          "name": "Sister Halloway",
+          "text": "A chapel of small, stubborn soldiers.",
+          "requires": [
+            "vintage-1a"
+          ],
+          "opponent": {
+            "name": "Sister Halloway",
+            "deck": "vintage/act1-white.dck",
+            "skill": 2
+          },
+          "lesson": {
+            "title": "Taxes cut both ways",
+            "text": "Thalia, Guardian of Thraben makes every noncreature spell cost one more, and Moxen and Spheres are noncreature spells. Cast your creatures first while she's out. Walking Ballista for one kills her, and Mishra's Factory blocks her soldiers all day.",
+            "cards": [
+              "Thalia, Guardian of Thraben",
+              "Walking Ballista",
+              "Mishra's Factory",
+              "Swords to Plowshares"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Thalia, Guardian of Thraben",
+              "title": "Shoot the tax collector",
+              "text": "Thalia has one toughness. A Walking Ballista with one counter can remove it and kill her."
+            },
+            {
+              "on": "cast:Swords to Plowshares",
+              "title": "Spread your threats",
+              "text": "Swords to Plowshares exiles one creature. Play two medium threats rather than one big one, so a single Swords doesn't set you back a whole turn."
+            },
+            {
+              "on": "life:10",
+              "title": "Block with lands",
+              "text": "Mishra's Factory turns into a 2/2 blocker for one mana. Keep one untapped on her turn."
+            }
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          },
+          "before": "Every spell pays the toll in my chapel.",
+          "after": "The toll's paid. In full."
+        },
+        {
+          "id": "vintage-1t",
+          "type": "trial",
+          "name": "Ten mana on turn one",
+          "text": "Your opponent is at 5 life. Win this turn.",
+          "hint": "Walking Ballista grows with every mana you find. Sol Ring costs one and gives back two.",
+          "requires": [
+            "vintage-1b"
+          ],
+          "lesson": {
+            "title": "Fast mana",
+            "text": "Black Lotus, the Moxen and Sol Ring are why Vintage games end so early. Sol Ring costs one and makes two, so it pays for itself on the turn you cast it. Count every source before you choose X.",
+            "cards": [
+              "Black Lotus",
+              "Sol Ring",
+              "Mishra's Workshop",
+              "Walking Ballista"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Walking Ballista",
+                "Sol Ring",
+                "Black Lotus"
+              ],
+              "battlefield": [
+                "Mishra's Workshop",
+                "Ancient Tomb",
+                "Mox Ruby"
+              ],
+              "graveyard": [],
+              "library": [
+                "Stonecoil Serpent",
+                "Mishra's Factory",
+                "Sphere of Resistance"
+              ]
+            },
+            "opponent": {
+              "life": 5,
+              "hand": [],
+              "battlefield": [
+                "Mountain",
+                "Mountain"
+              ],
+              "graveyard": [],
+              "library": [
+                "Lightning Bolt",
+                "Mountain",
+                "Goblin Guide"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "vintage-1boss",
+          "type": "duel",
+          "name": "Old Teague",
+          "text": "A farmer who found a Mox in a shoebox and never looked back.",
+          "requires": [
+            "vintage-1t"
+          ],
+          "opponent": {
+            "name": "Old Teague",
+            "deck": "vintage/act1-green.dck",
+            "skill": 3,
+            "twists": {
+              "permanents": [
+                "Mox Emerald"
+              ],
+              "extraCards": 1
+            }
+          },
+          "lesson": {
+            "title": "A Mox on turn zero",
+            "text": "Old Teague starts with Mox Emerald in play and an extra card: that's what a Vintage opening looks like. Chalice of the Void with one counter stops his Elves and Pelt Collectors for good. Wurmcoil Engine outsizes his Tarmogoyf; trade early, then let the Wurm finish it.",
+            "cards": [
+              "Chalice of the Void",
+              "Wurmcoil Engine",
+              "Mox Emerald",
+              "Tarmogoyf"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Chalice of the Void",
+              "title": "Pick the number",
+              "text": "Chalice of the Void counters every spell with mana value equal to its counters. Against him, one is right: Llanowar Elves, Elvish Mystic, Pelt Collector and Rancor all cost one. So does your Sol Ring, so cast it first."
+            },
+            {
+              "on": "play:Tarmogoyf",
+              "title": "Goyf grows",
+              "text": "Tarmogoyf counts the card types in every graveyard. Artifacts and lands count too, so it gets bigger as your creatures die. Block it with a Factory or race it."
+            },
+            {
+              "on": "cast:Rancor",
+              "title": "Rancor comes back",
+              "text": "Rancor returns to his hand when it goes to the graveyard, so killing the creature wearing it only slows him. Chalice of the Void on one stops him casting it again."
+            }
+          ],
+          "reward": {
+            "coins": 80,
+            "xp": 250,
+            "deckCards": true
+          },
+          "boss": true,
+          "before": "Found this Mox in a shoebox. Reckon it still works.",
+          "after": "Keep the deck, kid. The Mox stories too."
+        }
+      ]
+    },
+    {
+      "id": "vintage-2",
+      "name": "Archetypes",
+      "text": "Four decks, four jobs. Each duel hands you a different Vintage archetype and an opponent it's built to beat. Learn who's the beatdown before the first land.",
+      "nodes": [
+        {
+          "id": "vintage-2a",
+          "type": "duel",
+          "name": "Ruck Mallory",
+          "text": "A Jund player with an answer for every threat.",
+          "requires": [
+            "vintage-1boss"
+          ],
+          "deck": "vintage/act2-bazaar.dck",
+          "deckName": "Bazaar Aggro",
+          "opponent": {
+            "name": "Ruck Mallory",
+            "deck": "vintage/act2-jund.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Bazaar of Baghdad: race",
+            "text": "Bazaar of Baghdad draws two cards, then discards three. In this deck the discard is the point: Rootwallas are cast for free with madness, Vengevine, Squee and Master of Death come back, and Hollow One gets cheaper. You're the aggro deck: count damage and ignore his board while you're ahead on the clock.",
+            "cards": [
+              "Bazaar of Baghdad",
+              "Vengevine",
+              "Basking Rootwalla",
+              "Hollow One"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Bazaar of Baghdad",
+              "title": "Discard on purpose",
+              "text": "Activate Bazaar early in your turn. Discard the Rootwallas (cast them for free when the madness trigger asks), Vengevine, Squee and Master of Death. Keep the Forces."
+            },
+            {
+              "on": "cast:Liliana of the Veil",
+              "title": "Discard is a gift",
+              "text": "Liliana makes each player discard a card. For your deck that's just more fuel."
+            },
+            {
+              "on": "attack",
+              "title": "Count the race",
+              "text": "Add up your attackers against his life before you block. If you kill him a turn before he kills you, attack and don't hold creatures back."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "I've got an answer for everything you play.",
+          "after": "You never played anything. You just threw it away and it came back."
+        },
+        {
+          "id": "vintage-2b",
+          "type": "duel",
+          "name": "Grizzle Fenn",
+          "text": "A goblin warlord with a cave full of cousins.",
+          "requires": [
+            "vintage-2a"
+          ],
+          "deck": "vintage/act2-bug.dck",
+          "deckName": "BUG Midrange",
+          "opponent": {
+            "name": "Grizzle Fenn",
+            "deck": "vintage/act2-goblins.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Midrange: trade, then turn the corner",
+            "text": "Goblins goes wide fast. Orcish Bowmasters shoots a one-toughness Goblin as it lands. Fatal Push kills anything costing two or less, and up to four if a permanent of yours left play this turn, so crack a fetchland first. Trade early; once his hand is empty, Tarmogoyf and Oko take over.",
+            "cards": [
+              "Orcish Bowmasters",
+              "Fatal Push",
+              "Toxic Deluge",
+              "Goblin Lackey"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Goblin Lackey",
+              "title": "Kill the Lackey",
+              "text": "If Goblin Lackey connects it puts a free Goblin into play. Push it or block it before it hits."
+            },
+            {
+              "on": "cast:Toxic Deluge",
+              "title": "Pay just enough",
+              "text": "Toxic Deluge gives every creature -X/-X for X life. Most Goblins have one or two toughness; pay only what you need."
+            },
+            {
+              "on": "life:10",
+              "title": "Turn the corner",
+              "text": "Once his board is under control, stop trading and start attacking. You're the bigger deck now."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "More goblins! There's always more goblins!",
+          "after": "We ran out of goblins. First time ever."
+        },
+        {
+          "id": "vintage-2c",
+          "type": "duel",
+          "name": "Marshal Ivo",
+          "text": "A careful general who never commits two threats at once.",
+          "requires": [
+            "vintage-2b"
+          ],
+          "deck": "vintage/act2-control.dck",
+          "deckName": "Mana Drain Control",
+          "opponent": {
+            "name": "Marshal Ivo",
+            "deck": "vintage/act2-abzan.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Control: one for one, then more",
+            "text": "Mana Drain counters a spell and gives you that much colourless mana next turn. Spend counters on Stoneforge Mystic and Siege Rhino, and Swords to Plowshares on the rest. Ancestral Recall and Fact or Fiction win the long game; Jace, the Mind Sculptor ends it.",
+            "cards": [
+              "Mana Drain",
+              "Force of Will",
+              "Jace, the Mind Sculptor",
+              "Stoneforge Mystic"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Stoneforge Mystic",
+              "title": "Stop the search",
+              "text": "Stoneforge Mystic finds Batterskull or Kaldra Compleat and can put it into play cheaply. Counter the Mystic or kill it before it untaps."
+            },
+            {
+              "on": "opponentSpell",
+              "title": "Worth a counter?",
+              "text": "Ask whether this spell would beat you if it resolved. If not, save the counter and answer it with Swords to Plowshares."
+            },
+            {
+              "on": "cast:Mana Drain",
+              "title": "Spend the Drain mana",
+              "text": "Next turn your Mana Drain gives you that much colourless mana in your first main phase. Plan something to spend it on: Jace, Teferi or Fact or Fiction."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Every threat I have deserves an answer. Do you have enough?",
+          "after": "You had one more answer than I had threats."
+        },
+        {
+          "id": "vintage-2d",
+          "type": "duel",
+          "name": "Kestrel Vane",
+          "text": "A zoo keeper with fast cats and faster burn.",
+          "requires": [
+            "vintage-2c"
+          ],
+          "deck": "vintage/act2-tinker.dck",
+          "deckName": "Blue Tinker",
+          "opponent": {
+            "name": "Kestrel Vane",
+            "deck": "vintage/act2-zoo.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Combo: goldfish and protect",
+            "text": "Tinker sacrifices an artifact, a spare Mox is fine, and puts Blightsteel Colossus into play. One hit from it is ten poison counters, a win. Find Tinker with your tutors and protect it with Force of Will; don't spend counters on her cats unless it buys you a turn. Time Vault and Voltaic Key are the backup: untap the Vault with the Key and every turn is followed by another.",
+            "cards": [
+              "Tinker",
+              "Blightsteel Colossus",
+              "Time Vault",
+              "Voltaic Key"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Tinker",
+              "title": "Sacrifice what you don't need",
+              "text": "Tinker needs an artifact to sacrifice. Use a Mox you've already tapped this turn, or Sol Ring if you have the mana."
+            },
+            {
+              "on": "play:Qasali Pridemage",
+              "title": "What Pridemage can eat",
+              "text": "Qasali Pridemage can destroy an artifact: a Mox or Time Vault. Blightsteel Colossus is indestructible, so it can't."
+            },
+            {
+              "on": "cast:Price of Progress",
+              "title": "Nonbasic lands hurt",
+              "text": "Price of Progress deals two damage for each nonbasic land you control. Your dual lands count. Force it if it would be lethal."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Two lands and a hand full of cats. Count to ten.",
+          "after": "Ten poison. I was counting the wrong thing."
+        },
+        {
+          "id": "vintage-2choice",
+          "type": "choice",
+          "name": "The vault door",
+          "text": "A collector offers you something for your trouble.",
+          "requires": [
+            "vintage-2d"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vintage-3",
+      "name": "Signature",
+      "text": "The Power Nine in one blue-black deck: Black Lotus, the Moxen, Ancestral Recall, Time Walk and Timetwister, with Mana Drain and Force of Will to protect them. Then take them to the Workshop.",
+      "deck": "vintage/signature.dck",
+      "deckName": "Mana Drain Power",
+      "nodes": [
+        {
+          "id": "vintage-3t1",
+          "type": "trial",
+          "name": "Power as fuel",
+          "text": "Your opponent is at 5 life behind a Wurmcoil Engine. Win this turn.",
+          "hint": "Psychic Frog turns cards into counters, and the cards it leaves in your graveyard into wings. Ancestral Recall costs one.",
+          "requires": [
+            "vintage-2choice"
+          ],
+          "lesson": {
+            "title": "Ancestral Recall",
+            "text": "Ancestral Recall draws three cards for one mana, the best rate ever printed. Psychic Frog turns each discarded card into a +1/+1 counter, and exiling three cards from your graveyard gives it flying. Even Black Lotus is just a card when it's the fourth discard.",
+            "cards": [
+              "Ancestral Recall",
+              "Psychic Frog",
+              "Black Lotus"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Ancestral Recall",
+                "Black Lotus"
+              ],
+              "battlefield": [
+                "Psychic Frog",
+                "Underground Sea"
+              ],
+              "graveyard": [],
+              "library": [
+                "Force of Will",
+                "Mana Drain",
+                "Mental Misstep",
+                "Island",
+                "Island"
+              ]
+            },
+            "opponent": {
+              "life": 5,
+              "hand": [],
+              "battlefield": [
+                "Wurmcoil Engine",
+                "Mishra's Workshop",
+                "Ancient Tomb"
+              ],
+              "graveyard": [],
+              "library": [
+                "Sphere of Resistance",
+                "Walking Ballista",
+                "Ancient Tomb"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "vintage-3a",
+          "type": "duel",
+          "name": "Captain Rusk",
+          "text": "A Boros officer who thinks your Moxen are bric-a-brac.",
+          "requires": [
+            "vintage-3t1"
+          ],
+          "opponent": {
+            "name": "Captain Rusk",
+            "deck": "vintage/act3-boros-rod.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Don't lean on artifacts",
+            "text": "Null Rod stops artifacts' activated abilities, so your Moxen, Lotus and Sol Ring stop making mana. Thalia makes your spells cost one more. Keep opening hands with real lands, counter Null Rod, and let Orcish Bowmasters and Fatal Push clean up his small creatures.",
+            "cards": [
+              "Null Rod",
+              "Thalia, Guardian of Thraben",
+              "Orcish Bowmasters",
+              "Mana Drain"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Null Rod",
+              "title": "Counter the Rod",
+              "text": "If Null Rod resolves, every Mox you hold is dead. Mana Drain it, or Force of Will it if your hand is full of artifacts."
+            },
+            {
+              "on": "play:Thalia, Guardian of Thraben",
+              "title": "Remove her first",
+              "text": "Thalia taxes every spell in your deck except your creatures. Fatal Push her, or flash in Orcish Bowmasters to ping her."
+            },
+            {
+              "on": "life:8",
+              "title": "Burn range",
+              "text": "He plays Lightning Bolt. Below eight life, stop paying life for Force of Will unless it saves the game."
+            }
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          },
+          "before": "Your Moxen are bric-a-brac in my house.",
+          "after": "Bric-a-brac, and still you found a way."
+        },
+        {
+          "id": "vintage-3t2",
+          "type": "trial",
+          "name": "Under the Sphere",
+          "text": "Your opponent is at 2 life behind Lodestone Golem, with Sphere of Resistance in play. Win this turn.",
+          "hint": "Count the taxes on each spell. A permanent leaving the battlefield turns on revolt.",
+          "requires": [
+            "vintage-3a"
+          ],
+          "lesson": {
+            "title": "Paying the Workshop tax",
+            "text": "Sphere of Resistance makes every spell cost one more, and Lodestone Golem adds one more to every nonartifact spell. Black Lotus is an artifact, so only the Sphere taxes it. Sacrificing it also turns on Fatal Push's revolt, which lets it kill a creature with mana value up to four.",
+            "cards": [
+              "Fatal Push",
+              "Black Lotus",
+              "Lodestone Golem",
+              "Sphere of Resistance"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Black Lotus",
+                "Fatal Push"
+              ],
+              "battlefield": [
+                "Snapcaster Mage",
+                "Underground Sea",
+                "Island"
+              ],
+              "graveyard": [],
+              "library": [
+                "Force of Will",
+                "Ponder",
+                "Island"
+              ]
+            },
+            "opponent": {
+              "life": 2,
+              "hand": [],
+              "battlefield": [
+                "Lodestone Golem",
+                "Sphere of Resistance",
+                "Mishra's Workshop",
+                "Ancient Tomb"
+              ],
+              "graveyard": [],
+              "library": [
+                "Walking Ballista",
+                "Steel Overseer",
+                "Mishra's Factory"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "vintage-3boss",
+          "type": "duel",
+          "name": "The Foundry Abbot",
+          "text": "The keeper of the old Workshop. Every spell pays a tithe.",
+          "requires": [
+            "vintage-3t2"
+          ],
+          "opponent": {
+            "name": "The Foundry Abbot",
+            "deck": "vintage/act3-ravager.dck",
+            "skill": 5,
+            "twists": {
+              "permanents": [
+                "Sphere of Resistance"
+              ],
+              "extraCards": 1
+            }
+          },
+          "lesson": {
+            "title": "Workshops against blue",
+            "text": "Shops decks tax your spells with Sphere, Thorn and Chalice, then race you with artifact creatures. Wasteland or Strip Mine his Mishra's Workshop early. Spend Force of Will on the lock piece, not on a creature, and use your Moxen to pay the tax.",
+            "cards": [
+              "Mishra's Workshop",
+              "Wasteland",
+              "Force of Will",
+              "Chalice of the Void"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Mishra's Workshop",
+              "title": "Waste the Workshop",
+              "text": "Without Mishra's Workshop his three-drops cost three real mana. Wasteland or Strip Mine it the first chance you get."
+            },
+            {
+              "on": "cast:Chalice of the Void",
+              "title": "Chalice on one",
+              "text": "With one counter, Chalice of the Void counters Fatal Push, Ponder, Brainstorm and Spell Pierce. Force of Will or Mana Drain it while it's on the stack."
+            },
+            {
+              "on": "play:Arcbound Ravager",
+              "title": "Kill Ravager in one go",
+              "text": "Arcbound Ravager eats his other artifacts to grow. Fatal Push it while it's small, and expect him to sacrifice in response."
+            }
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "packs": 1
+          },
+          "boss": true,
+          "before": "Every spell you cast pays a tithe to the Workshop.",
+          "after": "The furnace is cold. Go on through."
+        }
+      ]
+    },
+    {
+      "id": "vintage-4",
+      "name": "The meta",
+      "text": "The decks winning Vintage Challenges this autumn. You'll pilot the blue decks and the combo; across the table sit Mono-White Initiative and Raker Shops, the two most-played creature decks.",
+      "nodes": [
+        {
+          "id": "vintage-4a",
+          "type": "duel",
+          "name": "Gearwright Sabel",
+          "text": "Her Workshop builds faster than most can counter.",
+          "requires": [
+            "vintage-3boss"
+          ],
+          "deck": "vintage/meta-dimir.dck",
+          "deckName": "Dimir Lurrus Control",
+          "opponent": {
+            "name": "Gearwright Sabel",
+            "deck": "vintage/meta-raker-shops.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Blue against today's Workshop",
+            "text": "Raker Shops casts Grim Monolith, The One Ring and Tezzeret off Mishra's Workshop, and Glaring Fleshraker pings you whenever another colourless creature enters. Wasteland her Workshop, Force The One Ring, and Fatal Push the Fleshraker. Psychic Frog and Bilbo win once her mana is gone.",
+            "cards": [
+              "Wasteland",
+              "Force of Will",
+              "Glaring Fleshraker",
+              "The One Ring"
+            ]
+          },
+          "tips": [
+            {
+              "on": "start",
+              "title": "Your companion",
+              "text": "Lurrus of the Dream-Den is your companion. Every permanent in your deck costs two or less, so you may pay three to put Lurrus into your hand and cast it later to rebuy a Mox or a Frog."
+            },
+            {
+              "on": "cast:The One Ring",
+              "title": "Stop the Ring",
+              "text": "Once The One Ring resolves she gets a turn of protection and a growing stream of cards. This is the spell to Force."
+            },
+            {
+              "on": "play:Glaring Fleshraker",
+              "title": "Push the Raker",
+              "text": "Glaring Fleshraker makes Spawn tokens and pings you for every colourless creature. Kill it before the pings add up."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "My Workshop builds faster than you can say no.",
+          "after": "You counted my mana better than I did."
+        },
+        {
+          "id": "vintage-4b",
+          "type": "duel",
+          "name": "Herald Corwen",
+          "text": "A dungeon delver with an army of white knights.",
+          "requires": [
+            "vintage-4a"
+          ],
+          "deck": "vintage/meta-oath.dck",
+          "deckName": "Oath of Druids",
+          "opponent": {
+            "name": "Herald Corwen",
+            "deck": "vintage/meta-initiative.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Oath of Druids",
+            "text": "At each upkeep, Oath of Druids lets a player with fewer creatures than an opponent reveal cards until a creature and put it onto the battlefield. Your only creatures are Atraxa and Raph & Mikey, and his deck is full of creatures, so Oath means Atraxa next turn. Forbidden Orchard gives him a Spirit if his board is empty; Show and Tell is the backup.",
+            "cards": [
+              "Oath of Druids",
+              "Atraxa, Grand Unifier",
+              "Forbidden Orchard",
+              "Show and Tell"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Oath of Druids",
+              "title": "Now wait one turn",
+              "text": "Oath triggers in your upkeep if he has more creatures than you. He almost always will. Keep Force of Will up for his answers."
+            },
+            {
+              "on": "play:Witch Enchanter",
+              "title": "Protect the Oath",
+              "text": "Witch Enchanter can destroy an artifact or enchantment, Oath of Druids included. Counter it if you can, or keep a second Oath."
+            },
+            {
+              "on": "play:Archon of Emeria",
+              "title": "One spell a turn",
+              "text": "Archon of Emeria stops each player casting more than one spell a turn. Pick the one that matters, usually Oath or Show and Tell."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "The Undercity is mine. Follow if you dare.",
+          "after": "An angel out of nowhere. Take the dungeon, then."
+        },
+        {
+          "id": "vintage-4c",
+          "type": "duel",
+          "name": "Forgemaster Ott",
+          "text": "Two Workshops at one table. Only one of you gets to build.",
+          "requires": [
+            "vintage-4b"
+          ],
+          "deck": "vintage/meta-jewel-shops.dck",
+          "deckName": "Jewel Shops",
+          "opponent": {
+            "name": "Forgemaster Ott",
+            "deck": "vintage/meta-raker-shops.dck",
+            "skill": 6
+          },
+          "lesson": {
+            "title": "The Workshop mirror",
+            "text": "Jewel Shops turns Mishra's Workshop into The One Ring and Coveted Jewel, and Coveted Jewel taps for three mana of one colour. Transmute Artifact turns a spent Mox into Jewel or Paradox Engine, and Phyrexian Metamorph copies his best artifact. If his creatures attack you unblocked, he steals the Jewel, so block or kill them first.",
+            "cards": [
+              "Coveted Jewel",
+              "Mishra's Workshop",
+              "The One Ring",
+              "Phyrexian Metamorph"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Coveted Jewel",
+              "title": "Guard the Jewel",
+              "text": "When one or more of his creatures attack you and aren't blocked, he draws three and takes Coveted Jewel. Keep a blocker or the mana to stop the attack."
+            },
+            {
+              "on": "play:Glaring Fleshraker",
+              "title": "Copy his best card",
+              "text": "Phyrexian Metamorph can copy any artifact or creature, his included. Copy The One Ring or his Fleshraker rather than waiting."
+            },
+            {
+              "on": "cast:Chalice of the Void",
+              "title": "Chalice on zero",
+              "text": "Chalice of the Void counters every spell whose mana value equals its counters. On zero it shuts off your Moxen and Black Lotus; Force it if your hand leans on them."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Two Workshops at one table. Only one of us builds.",
+          "after": "Your Jewel shone brighter. Fair's fair."
+        },
+        {
+          "id": "vintage-final",
+          "type": "duel",
+          "boss": true,
+          "name": "Lady Verity Crane",
+          "text": "The best deck in the room, best of three.",
+          "requires": [
+            "vintage-4c"
+          ],
+          "deck": "vintage/meta-esper.dck",
+          "deckName": "Esper Lurrus Control",
+          "opponent": {
+            "name": "Lady Verity Crane",
+            "deck": "vintage/meta-initiative.dck",
+            "skill": 7
+          },
+          "lesson": {
+            "title": "Take the initiative back",
+            "text": "White Plume Adventurer and Seasoned Dungeoneer give her the initiative: a free room of the Undercity dungeon every upkeep. Deal combat damage to her to take it back. Swords to Plowshares the creature that would hold it, and Force Clarion Conqueror, which switches off your Moxen and Lotus.",
+            "cards": [
+              "Swords to Plowshares",
+              "White Plume Adventurer",
+              "Clarion Conqueror",
+              "Psychic Frog"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:White Plume Adventurer",
+              "title": "Hit her to take it",
+              "text": "Whoever deals combat damage to the player with the initiative takes it. A Psychic Frog or Bilbo that connects steals her dungeon."
+            },
+            {
+              "on": "play:Clarion Conqueror",
+              "title": "Moxen off",
+              "text": "Clarion Conqueror stops activated abilities of artifacts, creatures and planeswalkers, so your Moxen and Lotus stop making mana. Swords it."
+            },
+            {
+              "on": "play:Archon of Emeria",
+              "title": "One spell a turn",
+              "text": "With Archon of Emeria out you get one spell a turn. Make it Swords to Plowshares on the Archon."
+            }
+          ],
+          "reward": {
+            "coins": 200,
+            "xp": 500,
+            "packs": 2,
+            "wildcard": "rare",
+            "cosmetics": [
+              {
+                "kind": "title",
+                "id": "vintage-graduate"
+              },
+              {
+                "kind": "sleeve",
+                "id": "school-vintage"
+              }
+            ]
+          },
+          "winsNeeded": 2,
+          "sideboard": "Bring in four Containment Priest, a flash blocker that can take the initiative back, plus the fourth Swords to Plowshares, Prismatic Ending and Fatal Push. Take out Mental Misstep, Gitaxian Probe, Soul-Guide Lantern, both Spell Pierce and two Force of Negation: she casts almost nothing they can stop.",
+          "before": "Two games of three. Bring your sideboard.",
+          "after": "You've earned the title. Wear it well."
+        }
+      ]
+    }
+  ]
+}

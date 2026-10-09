@@ -1,0 +1,29 @@
+# name: Workshop Aggro
+# archetype: aggro
+# Act 1 starter: colourless artifact creatures cast fast off Mishra's Workshop, Ancient Tomb and the Power.
+4 Mishra's Workshop
+4 Ancient Tomb
+4 Mishra's Factory
+3 Wasteland
+1 Strip Mine
+1 Black Lotus
+1 Mana Crypt
+1 Sol Ring
+1 Mana Vault
+1 Mox Emerald
+1 Mox Jet
+1 Mox Pearl
+1 Mox Ruby
+1 Mox Sapphire
+4 Sphere of Resistance
+1 Chalice of the Void
+1 Trinisphere
+4 Stonecoil Serpent
+4 Walking Ballista
+4 Foundry Inspector
+3 Steel Overseer
+4 Kappa Cannoneer
+4 Patchwork Automaton
+1 Lodestone Golem
+2 Wurmcoil Engine
+3 Hangarback Walker

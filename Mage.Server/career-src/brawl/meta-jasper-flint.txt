@@ -1,0 +1,52 @@
+# name: Laughing Jasper Flint
+# archetype: midrange (Rakdos outlaws)
+# season: 2026-10
+# source: https://draftsim.com/mtg-arena-brawl-guide/ (Standard Brawl commander lists, updated 2025-12-22)
+# Command Tower and Arcane Signet are Arena-only Brawl cards that XMage's Standard pool rejects: a basic land / Patchwork Banner instead
+CMDR: Laughing Jasper Flint
+1 Ashiok, Wicked Manipulator
+1 Tinybones, the Pickpocket
+1 Kellan, Planar Trailblazer
+1 Deep-Cavern Bat
+1 Vadmir, New Blood
+1 Vial Smasher, Gleeful Grenadier
+1 Inti, Seneschal of the Sun
+1 Magda, the Hoardmaster
+1 Lord Skitter, Sewer King
+1 Kaervek, the Punisher
+1 Possibility Technician
+1 Tersa Lightshatter
+1 Decadent Dragon
+1 Hellspur Posse Boss
+1 Gisa, the Hellraiser
+1 Rakdos, the Muscle
+1 Bonehoard Dracosaur
+1 Dragonhawk, Fate's Tempest
+1 Binding Negotiation
+1 Epic Downfall
+1 Fell
+1 Bitter Triumph
+1 Heartless Act
+1 Long Goodbye
+1 Shoot the Sheriff
+1 Abrade
+1 Galvanize
+1 Lightning Strike
+1 Hero's Downfall
+1 Murder
+1 Tinybones Joins Up
+1 Rakish Crew
+1 At Knifepoint
+1 Patchwork Banner
+1 Chainsaw
+1 Blazemire Verge
+1 Bloodfell Caves
+1 Cavern of Souls
+1 Fabled Passage
+1 Jagged Barrens
+7 Mountain
+1 Multiversal Passage
+1 Raucous Theater
+1 Restless Vents
+1 Starting Town
+8 Swamp

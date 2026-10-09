@@ -1,0 +1,45 @@
+# name: Alesha's Raiders
+# archetype: aggro (Rakdos raid)
+# season: 2026-10
+CMDR: Alesha, Who Laughs at Fate
+1 Fanatical Firebrand
+1 Infestation Sage
+1 Diregraf Ghoul
+1 Searslicer Goblin
+1 Vampire Gourmand
+1 Hungry Ghoul
+1 Vengeful Bloodwitch
+1 Sanguine Syphoner
+1 Axgard Cavalry
+1 Courageous Goblin
+1 Goblin Boarders
+1 Gutless Plunderer
+1 Perforating Artist
+1 Brazen Scourge
+1 Infernal Vessel
+1 Burglar Rat
+1 Slumbering Cerberus
+1 Strongbox Raider
+1 Gorehorn Raider
+1 Sower of Chaos
+1 Crypt Feaster
+1 Reassembling Skeleton
+1 Nine-Lives Familiar
+1 Bloodthirsty Conqueror
+1 Burst Lightning
+1 Abrade
+1 Lightning Strike
+1 Stab
+1 Hero's Downfall
+1 Bake into a Pie
+1 Boltwave
+1 Goblin Surprise
+1 Fake Your Own Death
+1 Midnight Snack
+1 Quick-Draw Katana
+1 Exsanguinate
+1 Blazemire Verge
+1 Raucous Theater
+1 Bloodfell Caves
+10 Mountain
+10 Swamp

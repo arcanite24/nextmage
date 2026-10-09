@@ -1,0 +1,16 @@
+# name: Banner Humans
+# archetype: aggro
+# Mono-White Humans: a wide board of lords and cheap creatures.
+4 Thalia's Lieutenant
+4 Recruitment Officer
+4 Luminarch Aspirant
+4 Thalia, Guardian of Thraben
+4 Adeline, Resplendent Cathar
+4 Brutal Cathar
+4 Elite Spellbinder
+2 Dauntless Bodyguard
+2 Intrepid Adversary
+3 Portable Hole
+3 Ossification
+18 Plains
+4 Mutavault

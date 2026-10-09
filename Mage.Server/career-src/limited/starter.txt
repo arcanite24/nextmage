@@ -1,0 +1,24 @@
+# name: Leaf and Banner
+# archetype: midrange (Selesnya go-wide, Foundations)
+# season: 2026-10
+2 Wary Thespian
+2 Gnarlid Colony
+1 Helpful Hunter
+2 Prideful Parent
+2 Beast-Kin Ranger
+1 Good-Fortune Unicorn
+1 Dazzling Angel
+2 Felidar Savior
+1 Treetop Snarespinner
+1 Elfsworn Giant
+1 Armasaur Guide
+1 Apothecary Stomper
+1 Giant Growth
+1 Felling Blow
+1 Bushwhack
+1 Banishing Light
+1 Luminous Rebuke
+1 Anthem of Champions
+8 Forest
+7 Plains
+2 Blossoming Sands

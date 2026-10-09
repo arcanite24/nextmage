@@ -1,0 +1,15 @@
+# name: Red Deck Wins
+# archetype: aggro
+4 Goblin Guide
+4 Monastery Swiftspear
+4 Eidolon of the Great Revel
+4 Lightning Bolt
+4 Chain Lightning
+4 Rift Bolt
+4 Lava Spike
+4 Burst Lightning
+4 Fireblast
+4 Skewer the Critics
+2 Lightning Strike
+1 Mox Ruby
+17 Mountain

@@ -48,17 +48,33 @@ final class CareerModesApi {
                 RpcMethod.named("careerCampaignPlay")
                         .params(of("campaignId", STRING), of("nodeId", STRING))
                         .returns("CareerMatch")
-                        .doc("Play a campaign duel that's open (or done, to play it again), with the chapter's deck. A first win "
-                                + "pays the node's reward.")
+                        .doc("Play a campaign duel or trial that's open (or done, to play it again), with the node's deck or the "
+                                + "chapter's, under the school's format: a pod seats every AI, a final is a best of three. A first "
+                                + "win pays the node's reward.")
                         .handler(call -> {
                             String user = profiled(ctx, call);
                             String campaignId = call.string(0);
                             String nodeId = call.string(1);
                             CareerCampaigns.DuelPlan plan = plan(() -> CareerCampaigns.get().plan(user, campaignId, nodeId));
-                            String tableId = CareerApi.startMatch(ctx, call, user, plan.opponentName, "Constructed - Freeform",
-                                    plan.playerDeck, aiType(plan.aiType), plan.skill, plan.opponentDeck,
-                                    id -> CareerService.get().register(id, user, "campaign", plan.key, plan.setup));
-                            return match(tableId, "campaign:" + plan.key, plan.opponentDeck);
+                            String tableId = CareerApi.startMatch(ctx, call, user, plan.gameType, plan.deckType, plan.winsNeeded,
+                                    plan.playerDeck, plan.seats,
+                                    id -> CareerService.get().register(id, user, plan.kind, plan.key, plan.setup));
+                            DeckCardLists warm = new DeckCardLists();
+                            for (CareerCampaigns.DuelSeat seat : plan.seats) {
+                                warm.getCards().addAll(seat.deck.getCards());
+                                warm.getSideboard().addAll(seat.deck.getSideboard());
+                            }
+                            return match(tableId, "campaign:" + plan.key, "trial".equals(plan.kind) ? null : warm);
+                        }),
+                RpcMethod.named("careerCampaignDeck")
+                        .params(of("campaignId", STRING), of("nodeId", STRING))
+                        .returns("DeckCardLists")
+                        .doc("The list of the deck you play at a campaign duel, to read before it.")
+                        .handler(call -> {
+                            CareerApi.career(ctx, call);
+                            String campaignId = call.string(0);
+                            String nodeId = call.string(1);
+                            return plan(() -> CareerCampaigns.get().playerDeck(campaignId, nodeId));
                         }),
                 RpcMethod.named("careerCampaignChoose")
                         .params(of("campaignId", STRING), of("nodeId", STRING), of("optionId", STRING))
@@ -113,7 +129,7 @@ final class CareerModesApi {
                             String user = profiled(ctx, call);
                             CareerChallenges.Plan plan = plan(() -> CareerChallenges.get().attempt(user));
                             String tableId = CareerApi.startMatch(ctx, call, user, plan.challenge.opponent.name, "Constructed - Freeform",
-                                    plan.playerDeck, aiType(plan.challenge.opponent.aiType), plan.challenge.opponent.skill, plan.opponentDeck,
+                                    plan.playerDeck, CareerApi.aiType(plan.challenge.opponent.aiType), plan.challenge.opponent.skill, plan.opponentDeck,
                                     id -> CareerService.get().register(id, user, "challenge", plan.week, plan.setup));
                             return match(tableId, "challenge:" + plan.week, plan.opponentDeck);
                         }),
@@ -151,7 +167,7 @@ final class CareerModesApi {
                             String user = profiled(ctx, call);
                             CareerGauntlet.Plan plan = plan(() -> CareerGauntlet.get().plan(user));
                             String tableId = CareerApi.startMatch(ctx, call, user, plan.boss.name, "Limited", plan.playerDeck,
-                                    aiType(plan.boss.aiType), plan.boss.skill, plan.opponentDeck,
+                                    CareerApi.aiType(plan.boss.aiType), plan.boss.skill, plan.opponentDeck,
                                     id -> CareerService.get().register(id, user, "gauntlet", plan.runId, plan.setup));
                             return match(tableId, "gauntlet:" + plan.runId, plan.opponentDeck);
                         }),
@@ -245,17 +261,6 @@ final class CareerModesApi {
             throw e;
         } catch (Exception e) {
             throw new RpcException(RpcException.SERVER_ERROR, "Career progress can't be read right now", e);
-        }
-    }
-
-    private static PlayerType aiType(String name) {
-        if (name == null) {
-            return PlayerType.COMPUTER_MAD;
-        }
-        try {
-            return PlayerType.valueOf(name);
-        } catch (IllegalArgumentException e) {
-            return PlayerType.COMPUTER_MAD;
         }
     }
 

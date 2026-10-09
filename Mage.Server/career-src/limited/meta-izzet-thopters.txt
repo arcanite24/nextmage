@@ -1,0 +1,26 @@
+# name: Izzet Thopters
+# archetype: tempo (Izzet spells, Reality Fracture)
+# season: 2026-10
+# source: https://www.17lands.com/card_ratings?expansion=FRA&format=PremierDraft (card and colour-pair win rates, 2026-09-30 to 2026-10-09)
+2 Cryotheory Adept
+1 Tomik, Izzet Sparkmage
+2 Mindseeker Oculus
+1 Surveillance Phantasm
+1 Chandra's Emberling
+1 Divining Duelist
+1 Hallway Heckler
+1 Variable Chaser
+1 Saheeli, Jewel of Avishkar
+1 Traxos, Academy Guardian
+1 Heartstring Puller
+1 Undulating Witness
+2 Twinned Vision
+2 No Admittance
+1 Icy Reception
+1 Unsummon
+1 Clash of Elements
+1 Wrath of the Bloodmane
+1 Violent Echoes
+8 Island
+7 Mountain
+2 Innovative Commons

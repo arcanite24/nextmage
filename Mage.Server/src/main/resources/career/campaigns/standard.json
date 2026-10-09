@@ -1,0 +1,465 @@
+{
+  "id": "standard",
+  "name": "The Standard School",
+  "format": "Standard",
+  "school": true,
+  "order": 5,
+  "colors": "RG",
+  "summary": "Only the newest sets. The format that changes every few months, and the one most players start with.",
+  "text": "Standard is built from the sets Wizards of the Coast released in the last few years. When a new year's first set arrives, the oldest sets leave: that's rotation. It keeps the card pool small, keeps prices down, and makes every new set matter. This school follows the format as it is today, season 2026-10, and is refreshed whenever a new set comes out.",
+  "deckType": "Constructed - Standard",
+  "gameType": "Two Player Duel",
+  "requires": ["pioneer@1"],
+  "chapters": [
+    {
+      "id": "standard-1",
+      "name": "First steps",
+      "text": "A simple Boros deck, a few honest opponents, and the rules that make Standard what it is.",
+      "deck": "standard/starter.dck",
+      "deckName": "Fresh Start",
+      "nodes": [
+        {
+          "id": "standard-1a",
+          "type": "duel",
+          "name": "Moss Harlan",
+          "text": "A farmer with big green animals and no patience for small talk.",
+          "requires": [],
+          "opponent": { "name": "Moss Harlan", "deck": "standard/act1-stompy.dck", "skill": 1 },
+          "lesson": {
+            "title": "Only the newest sets",
+            "text": "Standard uses only the sets from roughly the last three years. When a new year's first set comes out, the oldest year's sets rotate out, so this school is refreshed at each set release. Your deck is mostly Foundations, a core set that stays legal until at least 2029. Today, attack early: your 2-power creatures hit before his big ones arrive, and Burst Lightning kills his Llanowar Elves.",
+            "cards": ["Savannah Lions", "Burst Lightning", "Llanowar Elves", "Magnigoth Sentry"]
+          },
+          "tips": [
+            { "on": "play:Llanowar Elves", "title": "Kill the mana", "text": "Llanowar Elves makes his big creatures arrive a turn early. Burst Lightning on it now buys you a whole turn of attacks." },
+            { "on": "play:Magnigoth Sentry", "title": "Go around it", "text": "A 4/4 blocks one attacker a turn. Keep attacking with the rest and let it block your smallest creature." },
+            { "on": "attack", "title": "Count the clock", "text": "Add up your power each turn. If he's dead in three attacks and you're dead in four, keep attacking and don't block." }
+          ],
+          "reward": { "coins": 25, "xp": 125 },
+          "before": "Fresh season, fresh grass. My beasts have been eating well.",
+          "after": "Fast little things. I'll need a fence."
+        },
+        {
+          "id": "standard-1b",
+          "type": "duel",
+          "name": "Captain Wyn Gale",
+          "text": "She fights from the air and expects you to look up too late.",
+          "requires": ["standard-1a"],
+          "opponent": { "name": "Captain Wyn Gale", "deck": "standard/act1-skies.dck", "skill": 2 },
+          "lesson": {
+            "title": "A banned list, even here",
+            "text": "Standard has its own banned list. Cards like Heartfire Hero and Up the Beanstalk were banned because one deck got too good, even with a small card pool. Your fliers are few, so race her on the ground. Save Burst Lightning and Scorching Dragonfire for Empyrean Eagle, which makes all her other fliers bigger.",
+            "cards": ["Empyrean Eagle", "Scorching Dragonfire", "Dazzling Angel", "Pacifism"]
+          },
+          "tips": [
+            { "on": "play:Empyrean Eagle", "title": "Kill the lord", "text": "Empyrean Eagle gives her other fliers +1/+1. Kill it first and every other flier shrinks back." },
+            { "on": "cast:Pacifism", "title": "One creature down", "text": "Pacifism stops one creature attacking or blocking. You have plenty more: keep the pressure on." },
+            { "on": "life:8", "title": "Race or block", "text": "Count her flying damage against your ground damage. If you lose the race, keep Dazzling Angel back to block." }
+          ],
+          "reward": { "coins": 30, "xp": 150 },
+          "before": "Wind's in my favour. It always is up here.",
+          "after": "You never looked up. You didn't need to."
+        },
+        {
+          "id": "standard-1t",
+          "type": "trial",
+          "name": "Count it out",
+          "text": "Your opponent is at 10 life behind one blocker. Win this turn.",
+          "hint": "Attack with all three creatures, then point both spells at your opponent. One attacker gets blocked; the rest is addition.",
+          "requires": ["standard-1b"],
+          "lesson": {
+            "title": "Every point counts",
+            "text": "Aggro decks win by adding small numbers. Three 2-power attackers, one of them blocked, is 4 damage. Boros Charm deals 4 to a player and Burst Lightning deals 2. Count before you click.",
+            "cards": ["Boros Charm", "Burst Lightning", "Heartfire Immolator"]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": ["Boros Charm", "Burst Lightning"],
+              "battlefield": ["Heartfire Immolator", "Searslicer Goblin", "Savannah Lions", "Mountain", "Mountain", "Plains", "Plains"],
+              "graveyard": [],
+              "library": ["Mountain", "Plains", "Savannah Lions"]
+            },
+            "opponent": {
+              "life": 10,
+              "hand": [],
+              "battlefield": ["Treetop Snarespinner"],
+              "graveyard": [],
+              "library": ["Forest", "Forest", "Forest"]
+            }
+          },
+          "reward": { "coins": 20, "xp": 100 }
+        },
+        {
+          "id": "standard-1boss",
+          "type": "duel",
+          "name": "Countess Veyra",
+          "text": "Her court drains you a little at a time, and she starts with life to spare.",
+          "requires": ["standard-1t"],
+          "boss": true,
+          "opponent": {
+            "name": "Countess Veyra",
+            "deck": "standard/act1-boss-vampires.dck",
+            "skill": 3,
+            "twists": { "startingLife": 24 }
+          },
+          "lesson": {
+            "title": "Speed against drain",
+            "text": "She starts at 24 life and gains more with every drain. Don't race her life total; race her creatures. Kill Vampire Nighthawk on sight, because its lifelink and deathtouch stop your whole attack. Release the Dogs gives you a wide board she can't block.",
+            "cards": ["Vampire Nighthawk", "Release the Dogs", "Scorching Dragonfire", "Kalastria Highborn"]
+          },
+          "tips": [
+            { "on": "play:Vampire Nighthawk", "title": "Nighthawk first", "text": "Flying, deathtouch and lifelink. Scorching Dragonfire, or Burst Lightning with kicker, deals with it." },
+            { "on": "cast:Release the Dogs", "title": "Go wide", "text": "Four Dogs and Crusader of Odric grows huge. She can only block one or two attackers a turn." },
+            { "on": "opponentLife:8", "title": "Finish it", "text": "Boros Charm deals 4 to a player. Keep it for the last points." }
+          ],
+          "reward": { "coins": 80, "xp": 250, "deckCards": true },
+          "before": "Sit. Bleed a little. It's polite.",
+          "after": "How rude, to be so quick. Take your deck, then."
+        }
+      ]
+    },
+    {
+      "id": "standard-2",
+      "name": "Archetypes",
+      "text": "Four loaner decks, four roles: aggro, midrange, control and combo. Each one is built to beat the deck across the table.",
+      "nodes": [
+        {
+          "id": "standard-2a",
+          "type": "duel",
+          "name": "Old Brannoch",
+          "text": "A patient gardener of rot. He trades, he waits, he wins late.",
+          "requires": ["standard-1boss"],
+          "deck": "standard/act2-aggro.dck",
+          "deckName": "Red Deck Wins",
+          "opponent": { "name": "Old Brannoch", "deck": "standard/act2-midrange.dck", "skill": 3 },
+          "lesson": {
+            "title": "Aggro: you're the beatdown",
+            "text": "Against midrange, you're the beatdown: the player who must win fast. His creatures are bigger, so don't fight them. Point your burn at his face once his blockers stop mattering, and count damage every turn: Boltwave, Shock and Lightning Strike finish games.",
+            "cards": ["Ball Lightning", "Lightning Strike", "Boltwave", "Vampire Nighthawk"]
+          },
+          "tips": [
+            { "on": "play:Vampire Nighthawk", "title": "Burn the blocker", "text": "Nighthawk gains him life and blocks anything. This is the one creature worth a burn spell." },
+            { "on": "cast:Ball Lightning", "title": "Six to the face", "text": "Ball Lightning has haste and trample. Even if it's blocked, most of it goes through." },
+            { "on": "opponentLife:9", "title": "Burn range", "text": "Three burn spells is 9 damage. Count what's in your hand before you attack into his blockers." }
+          ],
+          "reward": { "coins": 35, "xp": 175 },
+          "before": "Hurry, then. Everything you burn feeds my garden.",
+          "after": "Too fast for the compost. Well run."
+        },
+        {
+          "id": "standard-2b",
+          "type": "duel",
+          "name": "Sergeant Dorrit",
+          "text": "Twenty tiny soldiers, all in a line, all coming for you.",
+          "requires": ["standard-2a"],
+          "deck": "standard/act2-midrange.dck",
+          "deckName": "Golgari Midrange",
+          "opponent": { "name": "Sergeant Dorrit", "deck": "standard/act2-opp-weenie.dck", "skill": 3 },
+          "lesson": {
+            "title": "Midrange: trade, then turn",
+            "text": "Now you're Brannoch's deck, and the soldiers are the beatdown. Trade early: block, and kill her one- and two-drops with Stab and Moment of Craving. Once her hand runs dry, your bigger creatures take over. That's turning the corner: switching from defence to attack.",
+            "cards": ["Stab", "Moment of Craving", "Vampire Nighthawk", "Crusader of Odric"]
+          },
+          "tips": [
+            { "on": "play:Crusader of Odric", "title": "Kill the counter", "text": "Crusader of Odric grows with every creature she has. Kill it before it gets out of hand." },
+            { "on": "cast:Release the Dogs", "title": "Four at once", "text": "Four 1/1s. Midnight Reaper and Nighthawk block well; don't trade your best blockers for Dogs." },
+            { "on": "turn:6", "title": "Turn the corner", "text": "If her board is small and your creatures are bigger, start attacking now. Defence was only the first half." }
+          ],
+          "reward": { "coins": 35, "xp": 175 },
+          "before": "Company, form up! Nobody stops till the drum stops.",
+          "after": "Out of soldiers. You just waited us out."
+        },
+        {
+          "id": "standard-2choice",
+          "type": "choice",
+          "name": "A quartermaster's offer",
+          "text": "The school's quartermaster has spares on the shelf.",
+          "requires": ["standard-2b"],
+          "options": [
+            { "id": "coins", "text": "Take 60 coins", "reward": { "coins": 60 } },
+            { "id": "wildcard", "text": "Take an uncommon wildcard", "reward": { "wildcard": "uncommon" } },
+            { "id": "xp", "text": "Take 200 XP", "reward": { "xp": 200 } }
+          ]
+        },
+        {
+          "id": "standard-2c",
+          "type": "duel",
+          "name": "Kessa Thornhide",
+          "text": "Big green bodies, a red dragon, and no plan B.",
+          "requires": ["standard-2choice"],
+          "deck": "standard/act2-control.dck",
+          "deckName": "Azorius Control",
+          "opponent": { "name": "Kessa Thornhide", "deck": "standard/act2-opp-gruul.dck", "skill": 4 },
+          "lesson": {
+            "title": "Control: one for one",
+            "text": "Control answers every threat, then wins with cards left over. Counter her best creatures with Essence Scatter, exile the rest with Banishing Light, and wait for Day of Judgment when she has three creatures out. Win late with Sphinx of the Final Word.",
+            "cards": ["Essence Scatter", "Day of Judgment", "Sphinx of the Final Word", "Gnarlback Rhino"]
+          },
+          "tips": [
+            { "on": "opponentSpell", "title": "Is it worth a counter?", "text": "Save your counters for her four- and five-drops. Small creatures can die to Elspeth's Smite or Day of Judgment later." },
+            { "on": "cast:Day of Judgment", "title": "Two for one", "text": "A wrath is best when it kills more of her cards than it costs you. Wait for two or three creatures if your life allows." },
+            { "on": "life:7", "title": "Stabilise first", "text": "At low life, answer everything on the board before you draw cards or cast the Sphinx." }
+          ],
+          "reward": { "coins": 35, "xp": 175 },
+          "before": "Counter this, counter that. I've got more Rhinos than you've got answers.",
+          "after": "You had one more answer than I had Rhinos."
+        },
+        {
+          "id": "standard-2d",
+          "type": "duel",
+          "name": "Flint Marrow",
+          "text": "He burns everything, including his own bridges.",
+          "requires": ["standard-2c"],
+          "deck": "standard/act2-combo.dck",
+          "deckName": "Dimir Reanimator",
+          "opponent": { "name": "Flint Marrow", "deck": "standard/act2-aggro.dck", "skill": 4 },
+          "lesson": {
+            "title": "Combo: goldfish fast",
+            "text": "Your combo is two cards: get Sire of Seven Deaths into your graveyard, then Zombify it onto the battlefield on turn four or five. Vile Entomber puts any card from your library into the graveyard; Strix Lookout and Chart a Course discard it. Only use Stab when it buys you a turn.",
+            "cards": ["Vile Entomber", "Zombify", "Sire of Seven Deaths", "Massacre Wurm"]
+          },
+          "tips": [
+            { "on": "play:Vile Entomber", "title": "Bin the right card", "text": "Against red, Sire of Seven Deaths gains you life every attack. Massacre Wurm is the other pick: it wipes out his small creatures." },
+            { "on": "cast:Zombify", "title": "The combo turn", "text": "Seven mana of creature for four. Make sure the target is already in your graveyard before you cast it." },
+            { "on": "life:6", "title": "Buy one turn", "text": "Now Stab and Moment of Craving matter. Kill whatever attacker gives you one more turn to find Zombify." }
+          ],
+          "reward": { "coins": 35, "xp": 175 },
+          "before": "Hope your graveyard's fireproof.",
+          "after": "Dug up a seven-drop on turn four. Not fair, and I like it."
+        }
+      ]
+    },
+    {
+      "id": "standard-3",
+      "name": "The new set",
+      "text": "A new set has just landed. Reality Fracture brings Tarmogoyf, Chandra and Konstrari Charm into Standard. Learn how a new set changes the format, and what it changes for your opponents too.",
+      "deck": "standard/signature.dck",
+      "deckName": "Fracture Gruul",
+      "nodes": [
+        {
+          "id": "standard-3t1",
+          "type": "trial",
+          "name": "Goyf arithmetic",
+          "text": "Your opponent is at 7 life with a Bear Cub. Win this turn.",
+          "hint": "Tarmogoyf counts card types in every graveyard. Kill the Cub with the sorcery, send the instant at their face, then attack.",
+          "requires": ["standard-2d"],
+          "lesson": {
+            "title": "A reprint changes everything",
+            "text": "Tarmogoyf gets +1/+1 for each card type among cards in all graveyards: land, creature, instant, sorcery and more. It's a 1/2 now. Every spell you cast and every creature that dies makes it bigger, so cast your spells before you attack.",
+            "cards": ["Tarmogoyf", "Impractical Joke", "Lightning Strike"]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": ["Impractical Joke", "Lightning Strike"],
+              "battlefield": ["Tarmogoyf", "Mountain", "Mountain", "Forest"],
+              "graveyard": ["Forest"],
+              "library": ["Forest", "Mountain", "Tarmogoyf"]
+            },
+            "opponent": {
+              "life": 7,
+              "hand": [],
+              "battlefield": ["Bear Cub"],
+              "graveyard": [],
+              "library": ["Forest", "Forest", "Forest"]
+            }
+          },
+          "reward": { "coins": 20, "xp": 100 }
+        },
+        {
+          "id": "standard-3a",
+          "type": "duel",
+          "name": "Choir-Mother Ilse",
+          "text": "Her angels came out of the same new set as your Goyf.",
+          "requires": ["standard-3t1"],
+          "opponent": { "name": "Choir-Mother Ilse", "deck": "standard/act3-angels.dck", "skill": 4 },
+          "lesson": {
+            "title": "Read the modes",
+            "text": "A new set gives everyone new cards. Lyra, Archangel of Dawn makes her angels grow every time she gains life. Konstrari Charm has three modes; against her, the one that matters deals 6 damage to a flier. Hold it for Lyra or Serra Angel instead of spending it on counters for Tarmogoyf.",
+            "cards": ["Konstrari Charm", "Lyra, Archangel of Dawn", "Serra Angel", "Tarmogoyf"]
+          },
+          "tips": [
+            { "on": "play:Lyra, Archangel of Dawn", "title": "Answer Lyra", "text": "Each time she gains life, every angel she controls gets a +1/+1 counter. Konstrari Charm or Lightning Strike, now." },
+            { "on": "play:Giada, Font of Hope", "title": "Mana for angels", "text": "Giada makes her later angels enter with extra counters. It's a 2/2: Impractical Joke handles it." },
+            { "on": "attack", "title": "Ground beats air", "text": "Her angels fly over your blockers, but she has few ground blockers. Make her choose between attacking and defending." }
+          ],
+          "reward": { "coins": 40, "xp": 200 },
+          "before": "Every new season brings new wings. Sing with us.",
+          "after": "Six damage, aimed well. The choir will rest."
+        },
+        {
+          "id": "standard-3t2",
+          "type": "trial",
+          "name": "Pay the ward",
+          "text": "Your opponent attacks first with a 6/6 flier and two ground creatures. You're at 8. Survive until your turn.",
+          "hint": "Konstrari Charm can kill the flier, but Kwia Vigorbloom has ward {2}: keep two more mana untapped to pay it. Tarmogoyf blocks on the ground.",
+          "requires": ["standard-3a"],
+          "lesson": {
+            "title": "Ward costs extra",
+            "text": "Ward means a spell that targets the creature is countered unless you pay the ward cost. Kwia Vigorbloom has ward {2}, so Konstrari Charm costs four mana to stick. Wait for the attack, kill the flier, then block with Tarmogoyf.",
+            "cards": ["Konstrari Charm", "Kwia Vigorbloom", "Tarmogoyf"]
+          },
+          "trial": {
+            "objective": "survive",
+            "you": {
+              "life": 8,
+              "hand": ["Konstrari Charm"],
+              "battlefield": ["Tarmogoyf", "Stomping Ground", "Rockfall Vale", "Forest", "Mountain"],
+              "graveyard": ["Forest", "Lightning Strike", "Bear Cub"],
+              "library": ["Forest", "Mountain", "Lightning Strike"]
+            },
+            "opponent": {
+              "life": 20,
+              "hand": [],
+              "battlefield": ["Kwia Vigorbloom", "Highborn Vampire", "Bear Cub"],
+              "graveyard": [],
+              "library": ["Plains", "Plains", "Plains"]
+            }
+          },
+          "reward": { "coins": 20, "xp": 100 }
+        },
+        {
+          "id": "standard-3boss",
+          "type": "duel",
+          "name": "Headmistress Orla Vane",
+          "text": "She built her deck the week the new set came out, and she starts ahead.",
+          "requires": ["standard-3t2"],
+          "boss": true,
+          "opponent": {
+            "name": "Headmistress Orla Vane",
+            "deck": "standard/act3-boss-vigorbloom.dck",
+            "skill": 5,
+            "twists": { "startingLife": 26, "extraCards": 1 }
+          },
+          "lesson": {
+            "title": "The new set's best deck",
+            "text": "After a release, the first decks to win are the ones built around the new cards. Hers gains life every turn and grows with it. Kill her life-gain engines early, Enlightened Confidant and Lyra, Archangel of Dawn, and save Konstrari Charm plus two mana for Kwia Vigorbloom's ward.",
+            "cards": ["Kwia Vigorbloom", "Enlightened Confidant", "Konstrari Charm", "Chandra, Torch of Defiance"]
+          },
+          "tips": [
+            { "on": "play:Kwia Vigorbloom", "title": "Six damage, plus two", "text": "Konstrari Charm kills Kwia, but its ward costs {2} more. Leave four mana open on her turn if you can." },
+            { "on": "cast:Chandra, Torch of Defiance", "title": "Use the minus", "text": "Chandra's -3 deals 4 damage to a creature. Against a board of small life-gainers, that's often better than the +1." },
+            { "on": "opponentLife:10", "title": "Close the door", "text": "She gains life every turn. Once she's low, put every point of damage into her face." }
+          ],
+          "reward": { "coins": 100, "xp": 300, "packs": 1 },
+          "before": "New term, new syllabus. You're still reading last season's notes.",
+          "after": "You read the new set faster than I did. Class dismissed."
+        }
+      ]
+    },
+    {
+      "id": "standard-4",
+      "name": "The meta",
+      "text": "The decks people play in Standard this season (2026-10). Pilot four of them against the others, then win a best of three with the most played deck in the format.",
+      "nodes": [
+        {
+          "id": "standard-4a",
+          "type": "duel",
+          "name": "Tamsin Cinder",
+          "text": "Rakdos Lizards: cheap creatures and a little damage every single turn.",
+          "requires": ["standard-3boss"],
+          "deck": "standard/meta-mono-green-landfall.dck",
+          "deckName": "Mono-Green Landfall",
+          "opponent": { "name": "Tamsin Cinder", "deck": "standard/meta-rakdos-lizards.dck", "skill": 5 },
+          "lesson": {
+            "title": "Reading a fresh metagame",
+            "text": "A metagame is the mix of decks people actually play; sites like MTGGoldfish count them. Landfall is the second most played deck: every land you play grows Mossborn Hydra and Sazh's Chocobo. Against Lizards you're the bigger deck, so block early, then let your land drops win.",
+            "cards": ["Mossborn Hydra", "Icetill Explorer", "Mightform Harmonizer", "Master of Barbs"]
+          },
+          "tips": [
+            { "on": "play:Icetill Explorer", "title": "Two lands a turn", "text": "Icetill Explorer lets you play an extra land each turn, and lands from your graveyard. Every land is another landfall trigger." },
+            { "on": "play:Mightform Harmonizer", "title": "Double up", "text": "Each land doubles a creature's power this turn. Play the Harmonizer, then your land, then attack with the Hydra." },
+            { "on": "life:8", "title": "Mind the pings", "text": "Lizards deal damage outside combat. Keep blockers back and kill Ingris Stingerquill if you can." }
+          ],
+          "reward": { "coins": 45, "xp": 225 },
+          "before": "One point at a time. You'll be surprised how fast that adds up.",
+          "after": "Too many lands, too much Hydra. Noted."
+        },
+        {
+          "id": "standard-4b",
+          "type": "duel",
+          "name": "Marshal Kade Ember",
+          "text": "Boros Dragons: one flier after another, with haste.",
+          "requires": ["standard-4a"],
+          "deck": "standard/meta-azorius-control.dck",
+          "deckName": "Azorius Control",
+          "opponent": { "name": "Marshal Kade Ember", "deck": "standard/meta-boros-dragons.dck", "skill": 5 },
+          "lesson": {
+            "title": "Control against dragons",
+            "text": "Counter the dragons on his turn and keep The Theorist, Jace Beleren drawing you extra cards. Two of his creatures stop your plan: Voice of Victory stops you casting spells during his turn, and Clarion Conqueror stops Jace's abilities. Kill those two on your own turn first.",
+            "cards": ["The Theorist, Jace Beleren", "No More Lies", "Voice of Victory", "Clarion Conqueror"]
+          },
+          "tips": [
+            { "on": "play:Voice of Victory", "title": "No counters on his turn", "text": "While Voice of Victory lives, you can't cast spells during his turn. Erode or Get Lost it on your turn." },
+            { "on": "play:Magmatic Hellkite", "title": "Mind your lands", "text": "Magmatic Hellkite destroys a nonbasic land. Play your basic Island and Plains early so you have something left." },
+            { "on": "cast:Day of Judgment", "title": "Wrath the fliers", "text": "Day of Judgment kills every dragon at once. Wait until he has two or more out." }
+          ],
+          "reward": { "coins": 45, "xp": 225 },
+          "before": "Count my dragons. Then count your counterspells.",
+          "after": "More answers than dragons. I'll bring more dragons."
+        },
+        {
+          "id": "standard-4c",
+          "type": "duel",
+          "name": "Undertaker Mott",
+          "text": "Jund Sacrifice: he feeds his own creatures to bigger ones.",
+          "requires": ["standard-4b"],
+          "deck": "standard/meta-dimir-midrange.dck",
+          "deckName": "Dimir Midrange",
+          "opponent": { "name": "Undertaker Mott", "deck": "standard/meta-jund-sacrifice.dck", "skill": 6 },
+          "lesson": {
+            "title": "Cheap answers, flash threats",
+            "text": "Dimir plays at instant speed: Floodpits Drowner has flash, and Kaito, Bane of Nightmares can sneak in with ninjutsu. Jund sacrifices small creatures to feed Rottenmouth Viper. Requiting Hex kills anything with mana value 2 or less for one mana, so use it on his engines before the Viper arrives.",
+            "cards": ["Requiting Hex", "Floodpits Drowner", "Kaito, Bane of Nightmares", "Rottenmouth Viper"]
+          },
+          "tips": [
+            { "on": "play:Rottenmouth Viper", "title": "Stun the Viper", "text": "Each attack makes you lose 4 life per blight counter, or sacrifice something. Floodpits Drowner taps it with a stun counter; Kaito's -2 stuns it twice." },
+            { "on": "cast:Kaito, Bane of Nightmares", "title": "Kaito on your turn", "text": "On your turn Kaito is a 3/4 hexproof creature. On his turn he's only a planeswalker, so protect him." },
+            { "on": "play:Obsessive Pursuit", "title": "Count the sacrifices", "text": "Every sacrifice makes his attacker bigger. Kill the attacker before damage if you can." }
+          ],
+          "reward": { "coins": 45, "xp": 225 },
+          "before": "Everything goes in the ground eventually. Mine just go faster.",
+          "after": "You buried my engines before they started."
+        },
+        {
+          "id": "standard-final",
+          "type": "duel",
+          "name": "Ysolde Mossback",
+          "text": "The final: a best of three against Mono-Green Landfall, piloting the most played deck in Standard.",
+          "requires": ["standard-4c"],
+          "boss": true,
+          "winsNeeded": 2,
+          "deck": "standard/meta-izzet-spellementals.dck",
+          "deckName": "Izzet Spellementals",
+          "opponent": { "name": "Ysolde Mossback", "deck": "standard/meta-mono-green-landfall.dck", "skill": 7 },
+          "lesson": {
+            "title": "The best deck in the format",
+            "text": "Izzet Spellementals is about 14% of the field. Cast cheap spells to fill your graveyard, which makes Hearth Elemental and Eddymurk Crab cheap. Then Sunderflock costs only three mana and returns every non-Elemental creature to its owner's hand, wiping out her +1/+1 counters.",
+            "cards": ["Sunderflock", "Hearth Elemental", "Eddymurk Crab", "Prismari Charm"]
+          },
+          "sideboard": "Her threats are green creatures and big landfall turns. Bring in 2 Flashfreeze and 2 Disdainful Stroke (it counters Icetill Explorer, Mightform Harmonizer and Sapling Nursery). Take out 2 Spell Pierce and 2 Spell Snare: she has few noncreature spells and few two-drops worth countering.",
+          "tips": [
+            { "on": "cast:Sunderflock", "title": "Reset the board", "text": "Every non-Elemental creature goes back to hand, counters and all. Her Hydra comes back as a 1/1." },
+            { "on": "play:Mossborn Hydra", "title": "Kill it small", "text": "The Hydra doubles its counters with each land. Burst Lightning or Prismari Charm it before her next land drop." },
+            { "on": "graveyard:4", "title": "Elementals are cheap now", "text": "Four instants and sorceries in your graveyard: Hearth Elemental costs two, and Eddymurk Crab costs three." }
+          ],
+          "reward": {
+            "coins": 200,
+            "xp": 500,
+            "packs": 2,
+            "wildcard": "rare",
+            "cosmetics": [
+              { "kind": "title", "id": "standard-graduate" },
+              { "kind": "sleeve", "id": "school-standard" }
+            ]
+          },
+          "before": "Every land I play, the ground shakes. Let's see how long you stand.",
+          "after": "You read the season better than I did. Go on, graduate. Next set, we start again."
+        }
+      ]
+    }
+  ]
+}

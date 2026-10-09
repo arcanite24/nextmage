@@ -1,0 +1,30 @@
+# name: Boros Burn
+# archetype: burn
+# season: 2026-10
+# source: https://www.mtggoldfish.com/archetype/modern-boros-burn (Modern League 2026-10-04,5-0)
+4 Monastery Swiftspear
+3 Barbarian Ring
+4 Boltwave
+4 Lightning Bolt
+4 Lava Spike
+4 Goblin Guide
+1 Elegant Parlor
+4 Boros Charm
+3 Mountain
+4 Skullcrack
+2 Bloodstained Mire
+4 Skewer the Critics
+3 Arid Mesa
+4 Sunbaked Canyon
+1 Sacred Foundry
+4 Searing Blaze
+3 Inspiring Vantage
+4 Eidolon of the Great Revel
+SB: 3 Roiling Vortex
+SB: 2 Smash to Smithereens
+SB: 2 Deflecting Palm
+SB: 1 Wear // Tear
+SB: 2 Searing Blood
+SB: 1 Molten Rain
+SB: 2 Rest in Peace
+SB: 2 Lightning Helix

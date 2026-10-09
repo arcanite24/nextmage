@@ -1,0 +1,28 @@
+# name: Rakdos Stingerquill
+# archetype: aggro (Rakdos noncombat damage, Reality Fracture)
+# season: 2026-10
+# source: https://www.17lands.com/card_ratings?expansion=FRA&format=PremierDraft (card and colour-pair win rates, 2026-09-30 to 2026-10-09)
+2 Stingerquill Voxmancer
+1 Marwyn, the Clearcutter
+2 Skilled Battlecarver
+1 Eardrum Rattler
+1 Master of Barbs
+1 Rank Rat
+1 Void Extrapolator
+1 Gallia, Tragic Host
+1 Chandra's Emberling
+1 Theoretical Necromancer
+1 Tinybones, Pocket Nuisance
+1 Screeching Soulbreaker
+1 Heartstring Puller
+1 Massacre Girl, Most Wanted
+2 No Admittance
+1 Last Gasp
+1 Stingerquill Charm
+1 Wrath of the Bloodmane
+1 Extended Absence
+1 Blazing Crescendo
+1 Stinging Vitriol
+8 Mountain
+7 Swamp
+1 Stingerquill Annex

@@ -1,0 +1,97 @@
+# name: Cloud Equipment
+# archetype: aggro (voltron with equipment)
+# season: 2026-10
+# source: https://edhrec.com/average-decks/cloud-ex-soldier
+# AI pilot: Austere Command and Vanquish the Horde swapped for Bruenor Battlehammer and Reyav, Master Smith
+1 Aerith, Last Ancient
+1 Akiri, Fearless Voyager
+1 Barret, Avalanche Leader
+1 Bastion Protector
+1 Bugenhagen, Wise Elder
+1 Cid, Freeflier Pilot
+1 Cloud, Midgar Mercenary
+1 Cloud, Planet's Champion
+1 Danitha Capashen, Paragon
+1 Firion, Wild Rose Warrior
+1 Helitrooper
+1 Professional Face-Breaker
+1 Professor Hojo
+1 Puresteel Paladin
+1 Red XIII, Proud Warrior
+1 Sephiroth, Fallen Hero
+1 Sram, Senior Edificer
+1 Stoneforge Mystic
+1 Tifa, Martial Artist
+1 Vincent, Vengeful Atoner
+1 Yuffie, Materia Hunter
+1 Zack Fair
+1 Bruenor Battlehammer
+1 Reyav, Master Smith
+1 Chaos Warp
+1 Clever Concealment
+1 Cloud's Limit Break
+1 Dispatch
+1 Heroic Intervention
+1 Path to Exile
+1 Swords to Plowshares
+1 Ultimate Magic: Holy
+1 Cultivate
+1 Nature's Lore
+1 Rampant Growth
+1 Steelshaper's Gift
+1 Unfinished Business
+1 Vandalblast
+1 Arcane Signet
+1 Behemoth Sledge
+1 Blackblade Reforged
+1 Buster Sword
+1 Champion's Helm
+1 Colossus Hammer
+1 Conformer Shuriken
+1 Conqueror's Flail
+1 Darksteel Plate
+1 Genji Glove
+1 Hammer of Nazahn
+1 Hero's Blade
+1 Hero's Heirloom
+1 Inspiring Statuary
+1 Lightning Greaves
+1 Sol Ring
+1 Summoning Materia
+1 Swiftfoot Boots
+1 Sword of Feast and Famine
+1 Sword of the Animist
+1 The Reaver Cleaver
+1 Trailblazer's Boots
+1 Wrecking Ball Arm
+1 Fighter Class
+1 Forge Anew
+1 Sigarda's Aid
+1 Battlefield Forge
+1 Bonders' Enclave
+1 Brushland
+1 Canopy Vista
+1 Cinder Glade
+1 Clifftop Retreat
+1 Command Tower
+1 Evolving Wilds
+1 Exotic Orchard
+1 Fire-Lit Thicket
+1 Fortified Village
+1 Furycalm Snarl
+1 Game Trail
+1 Jungle Shrine
+1 Mossfire Valley
+1 Path of Ancestry
+1 Rootbound Crag
+1 Rugged Prairie
+1 Scavenger Grounds
+1 Slayers' Stronghold
+1 Spire of Industry
+1 Sungrass Prairie
+1 Sunpetal Grove
+1 Sunscorched Divide
+3 Forest
+3 Mountain
+5 Plains
+CMDR: Cloud, Ex-SOLDIER

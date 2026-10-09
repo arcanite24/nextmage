@@ -1,0 +1,14 @@
+# name: White Weenie
+# archetype: aggro
+4 Thraben Inspector
+4 Kor Skyfisher
+4 Squadron Hawk
+4 Attended Knight
+4 Porcelain Legionnaire
+4 Lone Missionary
+4 Journey to Nowhere
+4 Raise the Alarm
+4 Rally the Peasants
+2 Guardian of the Guildpact
+4 Daring Skyjek
+18 Plains

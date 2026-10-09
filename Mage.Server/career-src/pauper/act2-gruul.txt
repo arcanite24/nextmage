@@ -1,0 +1,17 @@
+# name: Gruul Smash
+# archetype: midrange
+4 Llanowar Elves
+4 Kird Ape
+4 Burning-Tree Emissary
+4 Gnarlid Colony
+4 Rhox Brute
+4 Wild Mongrel
+4 Tajuru Pathwarden
+4 Lightning Bolt
+4 Chain Lightning
+4 Savage Swipe
+3 Rancor
+4 Rugged Highlands
+1 Gruul Guildgate
+7 Forest
+5 Mountain

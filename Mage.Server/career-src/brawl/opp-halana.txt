@@ -1,0 +1,44 @@
+# name: Partners in the Wild
+# archetype: midrange (Gruul counters)
+# season: 2026-10
+CMDR: Halana and Alena, Partners
+1 Llanowar Elves
+1 Nessian Hornbeetle
+1 Beast-Kin Ranger
+1 Eager Trufflesnout
+1 Mossborn Hydra
+1 Ruby, Daring Tracker
+1 Brazen Scourge
+1 Ashroot Animist
+1 Battlesong Berserker
+1 Gorehorn Raider
+1 Elfsworn Giant
+1 Needletooth Pack
+1 Dragon Trainer
+1 Shivan Dragon
+1 Apothecary Stomper
+1 Affectionate Indrik
+1 Quakestrider Ceratops
+1 Trumpeting Carnosaur
+1 Sunspine Lynx
+1 Scytheclaw Raptor
+1 Treetop Snarespinner
+1 Ambush Wolf
+1 Twinflame Tyrant
+1 Etali, Primal Storm
+1 Burst Lightning
+1 Abrade
+1 Fiery Annihilation
+1 Bite Down
+1 Felling Blow
+1 Giant Growth
+1 Bushwhack
+1 Grow from the Ashes
+1 Garruk's Uprising
+1 Adventuring Gear
+1 Thornspire Verge
+1 Commercial District
+1 Rugged Highlands
+1 Evolving Wilds
+11 Forest
+10 Mountain

@@ -1,0 +1,19 @@
+# name: Orzhov Monarch
+# archetype: midrange
+4 Thraben Inspector
+4 Dusk Legion Zealot
+4 Kor Skyfisher
+4 Carrier Thrall
+4 Lone Missionary
+3 Thorn of the Black Rose
+2 Palace Sentinels
+2 Guardian of the Guildpact
+2 Gurmag Angler
+4 Journey to Nowhere
+4 Cast Down
+3 Chainer's Edict
+3 Arms of Hadar
+4 Scoured Barrens
+1 Orzhov Guildgate
+6 Plains
+6 Swamp

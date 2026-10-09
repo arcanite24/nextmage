@@ -1,0 +1,15 @@
+# name: Greenhorn Stompy
+# archetype: aggro
+# Mono-Green creatures on basic Forests: the honest first opponent.
+4 Llanowar Elves
+4 Elvish Mystic
+4 Experiment One
+4 Kraul Harpooner
+4 Jadelight Ranger
+4 Steel Leaf Champion
+4 Old-Growth Troll
+4 Thrashing Brontodon
+3 Ram Through
+2 Primal Might
+2 Questing Beast
+21 Forest

@@ -1,0 +1,95 @@
+# name: Y'shtola, Night's Blessed
+# archetype: control (Esper drain, card draw, removal)
+# season: 2026-10
+# source: https://edhrec.com/average-decks/yshtola-nights-blessed
+1 Alisaie Leveilleur
+1 Alphinaud Leveilleur
+1 Archmage Emeritus
+1 Baleful Strix
+1 Delney, Streetwise Lookout
+1 Emet-Selch of the Third Seat
+1 Fandaniel, Telophoroi Ascian
+1 G'raha Tia, Scion Reborn
+1 Kambal, Consul of Allocation
+1 Lotho, Corrupt Shirriff
+1 Lyse Hext
+1 Papalymo Totolymo
+1 Sheoldred, the Apocalypse
+1 Tataru Taru
+1 Vito, Thorn of the Dusk Rose
+1 Anguished Unmaking
+1 Counterspell
+1 Deadly Rollick
+1 Dig Through Time
+1 Dismember
+1 Fierce Guardianship
+1 Force of Negation
+1 Frantic Search
+1 Lethal Scheme
+1 Rewind
+1 Sink into Stupor
+1 Snuff Out
+1 Stroke of Midnight
+1 Swords to Plowshares
+1 Transpose
+1 Unwind
+1 Void Rend
+1 Circle of Power
+1 Cleansing Nova
+1 Exsanguinate
+1 Irenicus's Vile Duplication
+1 Risky Shortcut
+1 Syphon Mind
+1 Toxic Deluge
+1 Vindicate
+1 Arcane Signet
+1 Archaeomancer's Map
+1 Bolas's Citadel
+1 Dancer's Chakrams
+1 Decanter of Endless Water
+1 Fellwar Stone
+1 Relic of Legends
+1 Sol Ring
+1 Talisman of Dominance
+1 Talisman of Hierarchy
+1 Talisman of Progress
+1 Thought Vessel
+1 White Auracite
+1 Authority of the Consuls
+1 Black Market Connections
+1 Bloodchief Ascension
+1 Curiosity
+1 Ghostly Prison
+1 Helm of the Ghastlord
+1 Ophidian Eye
+1 Propaganda
+1 Rhystic Study
+1 Smothering Tithe
+1 Teferi, Time Raveler
+1 Arcane Sanctum
+1 Choked Estuary
+1 Command Tower
+1 Darkwater Catacombs
+1 Drowned Catacomb
+1 Exotic Orchard
+1 Fetid Heath
+1 Flooded Strand
+1 Glacial Fortress
+1 Godless Shrine
+1 Hallowed Fountain
+1 Isolated Chapel
+1 Marsh Flats
+1 Path of Ancestry
+1 Polluted Delta
+1 Port Town
+1 Prairie Stream
+1 Raffine's Tower
+1 Reliquary Tower
+1 Sunken Hollow
+1 Sunken Ruins
+1 Underground River
+1 Watery Grave
+5 Island
+3 Plains
+4 Swamp
+CMDR: Y'shtola, Night's Blessed

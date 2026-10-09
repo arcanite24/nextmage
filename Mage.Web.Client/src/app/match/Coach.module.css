@@ -46,3 +46,12 @@
     animation: none;
   }
 }
+
+/* a school tip says whose voice it is */
+.kicker {
+  margin: 0 0 2px;
+  color: var(--ink-soft);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

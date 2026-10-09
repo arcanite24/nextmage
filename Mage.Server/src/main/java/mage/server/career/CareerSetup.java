@@ -3,8 +3,10 @@ package mage.server.career;
 import mage.abilities.Ability;
 import mage.abilities.common.SimpleStaticAbility;
 import mage.abilities.common.delayed.AtTheBeginOfNextEndStepDelayedTriggeredAbility;
+import mage.abilities.common.delayed.AtTheBeginOfYourNextUpkeepDelayedTriggeredAbility;
 import mage.abilities.effects.common.InfoEffect;
 import mage.abilities.effects.common.LoseGameTargetPlayerEffect;
+import mage.abilities.effects.common.WinGameSourceControllerEffect;
 import mage.cards.Card;
 import mage.cards.repository.CardInfo;
 import mage.cards.repository.CardRepository;
@@ -57,7 +59,10 @@ public final class CareerSetup implements GameSetup {
         public List<String> library;
     }
 
-    /** A fixed position the player must win from this turn. */
+    /**
+     * A fixed position: the player must win from it this turn, or (a campaign trial's "survive") live through the
+     * opponent's turn.
+     */
     public static class Puzzle implements Serializable {
         private static final long serialVersionUID = 1L;
         public String id;
@@ -67,14 +72,37 @@ public final class CareerSetup implements GameSetup {
         public String hint;
         public CareerPuzzleSide you;
         public CareerPuzzleSide opponent;
+        /** "win" (the default) or "survive" */
+        public String objective;
+
+        boolean survive() {
+            return "survive".equals(objective);
+        }
     }
 
     private final CareerTwists twists;
     private final Puzzle puzzle;
+    /** a table of more than two: the game ends when the player is out */
+    private final boolean pod;
 
-    private CareerSetup(CareerTwists twists, Puzzle puzzle) {
+    private CareerSetup(CareerTwists twists, Puzzle puzzle, boolean pod) {
         this.twists = twists;
         this.puzzle = puzzle;
+        this.pod = pod;
+    }
+
+    private CareerSetup(CareerTwists twists, Puzzle puzzle) {
+        this(twists, puzzle, false);
+    }
+
+    /** a pod's setup: the given one (or none) that also ends the game once the player is out */
+    public static CareerSetup pod(CareerSetup setup) {
+        return setup == null ? new CareerSetup(null, null, true) : new CareerSetup(setup.twists, setup.puzzle, true);
+    }
+
+    @Override
+    public boolean endsWhenHumansAreOut() {
+        return pod;
     }
 
     /** null when the twists change nothing */
@@ -97,7 +125,19 @@ public final class CareerSetup implements GameSetup {
 
     @Override
     public UUID startingPlayer(Game game) {
-        return puzzle == null ? null : human(game);
+        if (puzzle == null) {
+            return null;
+        }
+        UUID humanId = human(game);
+        if (puzzle.survive()) {
+            // the opponent takes the turn the player has to live through
+            for (Player player : game.getPlayers().values()) {
+                if (!player.getId().equals(humanId)) {
+                    return player.getId();
+                }
+            }
+        }
+        return humanId;
     }
 
     private static UUID human(Game game) {
@@ -123,7 +163,13 @@ public final class CareerSetup implements GameSetup {
                 twist(game, player);
             }
         }
-        if (puzzle != null && humanId != null) {
+        if (puzzle != null && humanId != null && puzzle.survive()) {
+            // alive when your turn comes round: you win
+            Ability source = fakeSource(humanId);
+            game.addDelayedTriggeredAbility(new AtTheBeginOfYourNextUpkeepDelayedTriggeredAbility(new WinGameSourceControllerEffect()), source);
+            game.informPlayers("Trial: " + (puzzle.name == null ? "" : puzzle.name + ". ")
+                    + (puzzle.text == null ? "Survive their turn." : puzzle.text));
+        } else if (puzzle != null && humanId != null) {
             // win this turn, or lose at its end
             Ability source = fakeSource(humanId);
             game.addDelayedTriggeredAbility(new AtTheBeginOfNextEndStepDelayedTriggeredAbility(

@@ -1,0 +1,27 @@
+# name: Raid Party
+# archetype: aggro (Rakdos raid, Foundations)
+# season: 2026-10
+2 Fanatical Firebrand
+1 Infestation Sage
+1 Diregraf Ghoul
+1 Vampire Gourmand
+1 Searslicer Goblin
+1 Axgard Cavalry
+2 Goblin Boarders
+1 Gutless Plunderer
+1 Perforating Artist
+1 Brazen Scourge
+1 Strongbox Raider
+1 Sower of Chaos
+1 Crypt Feaster
+2 Gorehorn Raider
+1 Burst Lightning
+1 Abrade
+1 Stab
+1 Bake into a Pie
+1 Boltwave
+1 Goblin Surprise
+1 Sure Strike
+8 Mountain
+7 Swamp
+1 Bloodfell Caves

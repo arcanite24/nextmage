@@ -1,0 +1,90 @@
+# name: The Ascetic's Patience
+# archetype: control (counters, removal, card draw)
+# season: 2026-10
+1 Esper Sentinel
+1 Wall of Omens
+1 Baleful Strix
+1 Mulldrifter
+1 Venser, Shaper Savant
+1 Solemn Simulacrum
+1 Ravenous Chupacabra
+1 Archangel of Thune
+1 Sun Titan
+1 Grave Titan
+1 Consecrated Sphinx
+1 Counterspell
+1 Arcane Denial
+1 Negate
+1 Dovin's Veto
+1 Mana Drain
+1 Fierce Guardianship
+1 Absorb
+1 Swords to Plowshares
+1 Path to Exile
+1 Anguished Unmaking
+1 Vindicate
+1 Mortify
+1 Utter End
+1 Despark
+1 Detention Sphere
+1 Infernal Grasp
+1 Hero's Downfall
+1 Cyclonic Rift
+1 Kaya's Guile
+1 Esper Charm
+1 Wrath of God
+1 Damnation
+1 Supreme Verdict
+1 Toxic Deluge
+1 Austere Command
+1 Teferi's Protection
+1 Rhystic Study
+1 Phyrexian Arena
+1 Night's Whisper
+1 Read the Bones
+1 Fact or Fiction
+1 Painful Truths
+1 Sphinx's Revelation
+1 Brainstorm
+1 Ponder
+1 Aetherflux Reservoir
+1 Sanguine Bond
+1 Well of Lost Dreams
+1 Dawn of Hope
+1 Shark Typhoon
+1 Teferi, Hero of Dominaria
+1 Elspeth, Sun's Champion
+1 Smothering Tithe
+1 Sol Ring
+1 Arcane Signet
+1 Azorius Signet
+1 Dimir Signet
+1 Orzhov Signet
+1 Talisman of Dominance
+1 Mind Stone
+1 Fellwar Stone
+1 Command Tower
+1 Arcane Sanctum
+1 Glacial Fortress
+1 Drowned Catacomb
+1 Isolated Chapel
+1 Watery Grave
+1 Hallowed Fountain
+1 Godless Shrine
+1 Azorius Chancery
+1 Dimir Aqueduct
+1 Orzhov Basilica
+1 Prairie Stream
+1 Sunken Hollow
+1 Scoured Barrens
+1 Dismal Backwater
+1 Tranquil Cove
+1 Exotic Orchard
+1 Path of Ancestry
+1 Myriad Landscape
+1 Evolving Wilds
+1 Reliquary Tower
+6 Plains
+6 Island
+4 Swamp
+CMDR: Oloro, Ageless Ascetic

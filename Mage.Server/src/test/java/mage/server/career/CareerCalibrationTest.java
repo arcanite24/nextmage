@@ -51,6 +51,9 @@ import java.util.stream.Collectors;
  * <li>xmage.careerCalibration.tierSkills: try other tier skills without editing opponents.json, e.g. 1,4,7</li>
  * <li>xmage.careerCalibration.shard: i/n plays only every n-th game starting at i (0-based), to split one run over
  * several JVMs; each game prints a RESULT line, and {@link #main} with the shard logs as arguments merges them</li>
+ * <li>xmage.careerCalibration.schools: calibrate the format schools instead (backlog B159): "all" or comma separated
+ * school ids. Every one-on-one duel plays the node's loaner at the reference skill against the node's opponent at its
+ * skill; the summary's "tier" is the act. Commander and Brawl duels (command zone games) and pods are left out.</li>
  * </ul>
  */
 public class CareerCalibrationTest {
@@ -101,6 +104,10 @@ public class CareerCalibrationTest {
     }
 
     private static void run() throws Exception {
+        if (!System.getProperty(PREFIX + ".schools", "").isEmpty()) {
+            runSchools();
+            return;
+        }
         int gamesPerOpponent = Integer.getInteger(PREFIX + ".games", 12);
         int referenceSkill = Integer.getInteger(PREFIX + ".referenceSkill", 4);
         int maxTurns = Integer.getInteger(PREFIX + ".maxTurns", 30);
@@ -165,6 +172,68 @@ public class CareerCalibrationTest {
                 System.out.println(String.format("RESULT,%d,%s,%d,%s,%s,%d,%d,%s",
                         result.tier, result.opponent, result.skill, result.starter, result.outcome, result.turns,
                         (System.currentTimeMillis() - start) / 1000, starterFirst ? "first" : "second"));
+            }
+        }
+        System.out.println(summary(results));
+    }
+
+    /** the schools' one-on-one duels: each node's loaner (the "starter" side) against its opponent */
+    private static void runSchools() throws Exception {
+        int gamesPerNode = Integer.getInteger(PREFIX + ".games", 4);
+        int referenceSkill = Integer.getInteger(PREFIX + ".referenceSkill", 4);
+        int maxTurns = Integer.getInteger(PREFIX + ".maxTurns", 30);
+        String only = System.getProperty(PREFIX + ".schools", "all");
+        String onlyNodes = System.getProperty(PREFIX + ".nodes", "");
+        String shard = System.getProperty(PREFIX + ".shard", "0/1");
+        int shardIndex = Integer.parseInt(shard.split("/")[0]);
+        int shardCount = Integer.parseInt(shard.split("/")[1]);
+
+        CardScanner.scan();
+        DataCollectorServices.init(false, false);
+        CareerCampaigns campaigns = CareerCampaigns.get();
+        System.out.println(String.format("CALIBRATION schools %s, reference skill %d, %d games per duel, draw at turn %d, shard %s",
+                only, referenceSkill, gamesPerNode, maxTurns, shard));
+        List<Result> results = new ArrayList<>();
+        int gameIndex = 0;
+        for (CareerCampaigns.Campaign school : campaigns.campaigns().values()) {
+            if (!school.school || !("all".equals(only) || Arrays.asList(only.split(",")).contains(school.id))) {
+                continue;
+            }
+            for (int act = 0; act < school.chapters.size(); act++) {
+                CareerCampaigns.Chapter chapter = school.chapters.get(act);
+                for (CareerCampaigns.Node node : chapter.nodes) {
+                    String gameType = node.gameType != null ? node.gameType : school.gameType;
+                    boolean commandZone = gameType != null && (gameType.startsWith("Commander") || gameType.startsWith("Brawl"));
+                    if (!"duel".equals(node.type) || commandZone || (node.opponents != null && !node.opponents.isEmpty())
+                            || (!onlyNodes.isEmpty() && !Arrays.asList(onlyNodes.split(",")).contains(node.id))) {
+                        continue;
+                    }
+                    DeckCardLists you = campaigns.deck(node.deck != null ? node.deck : chapter.deck);
+                    DeckCardLists them = campaigns.deck(node.opponent.deck);
+                    for (int i = 0; i < gamesPerNode; i++, gameIndex++) {
+                        if (gameIndex % shardCount != shardIndex) {
+                            continue;
+                        }
+                        boolean youFirst = i % 2 == 0;
+                        long start = System.currentTimeMillis();
+                        Result result;
+                        try {
+                            result = playGame(you, referenceSkill, them, node.opponent.skill, youFirst, maxTurns);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            result = new Result();
+                            result.outcome = "error";
+                        }
+                        result.tier = act + 1;
+                        result.opponent = node.id;
+                        result.skill = node.opponent.skill;
+                        result.starter = school.id;
+                        results.add(result);
+                        System.out.println(String.format("RESULT,%d,%s,%d,%s,%s,%d,%d,%s",
+                                result.tier, result.opponent, result.skill, result.starter, result.outcome, result.turns,
+                                (System.currentTimeMillis() - start) / 1000, youFirst ? "first" : "second"));
+                    }
+                }
             }
         }
         System.out.println(summary(results));

@@ -1,0 +1,44 @@
+# name: Kutzil's Pride
+# archetype: midrange (Selesnya counters)
+# season: 2026-10
+CMDR: Kutzil, Malamet Exemplar
+1 Llanowar Elves
+1 Gnarlid Colony
+1 Skyknight Squire
+1 Good-Fortune Unicorn
+1 Ajani's Pridemate
+1 Nessian Hornbeetle
+1 Inspiring Paladin
+1 Felidar Savior
+1 Armasaur Guide
+1 Beast-Kin Ranger
+1 Wildwood Scourge
+1 Treetop Snarespinner
+1 Needletooth Pack
+1 Apothecary Stomper
+1 Prideful Parent
+1 Dazzling Angel
+1 Serra Angel
+1 Elfsworn Giant
+1 Exemplar of Light
+1 Mossborn Hydra
+1 Cat Collector
+1 Sun-Blessed Healer
+1 Guarded Heir
+1 Anthem of Champions
+1 Banishing Light
+1 Bite Down
+1 Felling Blow
+1 Make Your Move
+1 Stroke of Midnight
+1 Inspiring Call
+1 Snakeskin Veil
+1 Overrun
+1 Giant Growth
+1 Ajani, Caller of the Pride
+1 Hushwood Verge
+1 Lush Portico
+1 Blossoming Sands
+1 Evolving Wilds
+11 Forest
+10 Plains

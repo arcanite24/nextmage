@@ -21,7 +21,7 @@ export function useOpponentVoice(state: GameSessionState, myId: string | null, c
 
   useEffect(() => {
     if (!career || !lines || state.mode !== 'play') return;
-    const now = voiceSnapshot(state, myId);
+    const now = voiceSnapshot(state, myId, lines.speaker);
     const moment = pickVoice(previous.current, now, said.current);
     previous.current = now;
     if (!moment || !now.foe) return;

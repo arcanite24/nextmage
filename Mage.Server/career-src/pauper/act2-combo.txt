@@ -1,0 +1,33 @@
+# name: Balustrade Spy
+# archetype: combo
+# season: 2026-10
+# source: https://www.mtgtop8.com/archetype?a=2596&f=PAU (deck 898128, Spy Combo, 1st, LPA 2026-10-08)
+4 Balustrade Spy
+2 Dread Return
+2 Lotleth Giant
+2 Avenging Hunter
+2 Elves of Deep Shadow
+2 Gatecreeper Vine
+4 Generous Ent
+4 Land Grant
+4 Lead the Stampede
+1 Lotus Petal
+3 Masked Vandal
+4 Mesmeric Fiend
+4 Overgrown Battlement
+2 Quirion Ranger
+4 Sagu Wildling
+4 Saruli Caretaker
+4 Wall of Roots
+4 Winding Way
+3 Forest
+1 Swamp
+SB: 1 Avenging Hunter
+SB: 1 Masked Vandal
+SB: 1 Swamp
+SB: 1 Acorn Harvest
+SB: 3 Faerie Macabre
+SB: 1 Flaring Pain
+SB: 1 Jack-o'-Lantern
+SB: 3 Undergrowth Leopard
+SB: 3 Vitu-Ghazi Inspector

@@ -1,0 +1,40 @@
+# name: Inti's Vanguard
+# archetype: aggro (mono-red)
+# season: 2026-10
+CMDR: Inti, Seneschal of the Sun
+1 Fanatical Firebrand
+1 Kellan, Planar Trailblazer
+1 Searslicer Goblin
+1 Courageous Goblin
+1 Frenzied Goblin
+1 Heartfire Immolator
+1 Axgard Cavalry
+1 Emberheart Challenger
+1 Magda, the Hoardmaster
+1 Goblin Boarders
+1 Brazen Scourge
+1 Slumbering Cerberus
+1 Crackling Cyclops
+1 Firespitter Whelp
+1 Battlesong Berserker
+1 Sower of Chaos
+1 Strongbox Raider
+1 Gorehorn Raider
+1 Spitfire Lagac
+1 Sunspine Lynx
+1 Scytheclaw Raptor
+1 Bonehoard Dracosaur
+1 Burst Lightning
+1 Shock
+1 Lightning Strike
+1 Abrade
+1 Thrill of Possibility
+1 Sure Strike
+1 Bulk Up
+1 Goblin Surprise
+1 Boltwave
+1 Fiery Annihilation
+1 Quick-Draw Katana
+1 Lavaspur Boots
+1 Fireshrieker
+24 Mountain

@@ -1,0 +1,38 @@
+# name: Sneak and Show
+# archetype: combo
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91927&d=898097&f=LE
+4 Sneak Attack
+4 Show and Tell
+3 Stock Up
+4 Brainstorm
+4 Ponder
+1 Griselbrand
+3 Emrakul, the Aeons Torn
+4 Atraxa, Grand Unifier
+2 Daze
+2 Simian Spirit Guide
+4 Force of Will
+4 Lotus Petal
+3 Volcanic Island
+1 Misty Rainforest
+1 Polluted Delta
+1 Flooded Strand
+2 Island
+1 Thundering Falls
+3 Ancient Tomb
+2 Flusterstorm
+1 Mountain
+4 Scalding Tarn
+2 City of Traitors
+SB: 1 Hullbreacher
+SB: 3 Hexing Squelcher
+SB: 2 Pyroblast
+SB: 2 Consign to Memory
+SB: 1 Brotherhood's End
+SB: 1 Omniscience
+SB: 1 Grafdigger's Cage
+SB: 1 Abrade
+SB: 1 Faerie Macabre
+SB: 1 Mindbreak Trap
+SB: 1 Magus of the Moon

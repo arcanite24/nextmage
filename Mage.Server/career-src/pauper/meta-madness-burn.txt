@@ -1,0 +1,21 @@
+# name: Madness Burn
+# archetype: burn
+# season: 2026-10
+# source: https://www.mtgtop8.com/archetype?a=536&f=PAU (deck 897984, iamyep, 1st, MTGO Challenge 32, 2026-10-07)
+4 Kessig Flamebreather
+4 Voldaren Epicure
+4 Sneaky Snacker
+3 Guttersnipe
+4 Faithless Looting
+4 Fiery Temper
+4 Lava Dart
+4 Lightning Bolt
+4 Grab the Prize
+4 Highway Robbery
+3 Fireblast
+18 Mountain
+SB: 4 Pyroblast
+SB: 4 Smash to Smithereens
+SB: 3 Relic of Progenitus
+SB: 2 End the Festivities
+SB: 2 Searing Blaze

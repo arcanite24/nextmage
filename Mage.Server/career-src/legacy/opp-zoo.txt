@@ -1,0 +1,20 @@
+# name: Naya Zoo
+# archetype: aggro
+4 Wild Nacatl
+4 Ajani, Nacatl Pariah
+4 Tarmogoyf
+4 Knight of Autumn
+4 Territorial Kavu
+3 Scion of Draco
+4 Qasali Pridemage
+3 Bloodbraid Elf
+4 Lightning Bolt
+2 Chain Lightning
+4 Swords to Plowshares
+3 Taiga
+3 Plateau
+3 Savannah
+4 Wooded Foothills
+4 Windswept Heath
+2 Arid Mesa
+1 Forest

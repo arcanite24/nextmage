@@ -1,0 +1,24 @@
+# name: Deepwater Ledger
+# archetype: control
+# Dimir control written for the school: answer everything one for one, draw more, win late.
+4 Fatal Push
+3 Cut Down
+3 Hero's Downfall
+2 Go for the Throat
+2 Thoughtseize
+3 Make Disappear
+2 Saw It Coming
+2 Censor
+2 Consider
+4 Memory Deluge
+2 The Meathook Massacre
+2 Sheoldred, the Apocalypse
+2 The Scarab God
+2 Shark Typhoon
+4 Watery Grave
+4 Darkslick Shores
+4 Drowned Catacomb
+4 Clearwater Pathway
+4 Island
+3 Swamp
+2 Castle Locthwain

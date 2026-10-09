@@ -1,0 +1,15 @@
+# name: Night Court
+# archetype: aggro
+# season: 2026-10
+4 Vengeful Bloodwitch
+4 Kalastria Highborn
+4 Sanguine Syphoner
+4 Stromkirk Bloodthief
+4 Vampire Spawn
+4 Vampire Nighthawk
+4 Highborn Vampire
+2 Bloodtithe Collector
+3 Moment of Craving
+2 Feed the Swarm
+2 Bake into a Pie
+23 Swamp

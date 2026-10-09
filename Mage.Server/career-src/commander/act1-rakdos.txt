@@ -1,0 +1,81 @@
+# name: Diva's Encore
+# archetype: midrange (aristocrats and removal)
+# season: 2026-10
+1 Viscera Seer
+1 Carrion Feeder
+1 Bloodsoaked Champion
+1 Gravecrawler
+1 Bloodghast
+1 Reassembling Skeleton
+1 Mogg War Marshal
+1 Goblin Arsonist
+1 Dreadhorde Butcher
+1 Blood Artist
+1 Zulaport Cutthroat
+1 Falkenrath Aristocrat
+1 Pitiless Plunderer
+1 Mayhem Devil
+1 Woe Strider
+1 Vampire Nighthawk
+1 Fleshbag Marauder
+1 Plaguecrafter
+1 Merciless Executioner
+1 Grim Haruspex
+1 Morbid Opportunist
+1 Butcher of Malakir
+1 Ravenous Chupacabra
+1 Murderous Rider
+1 Noxious Gearhulk
+1 Gray Merchant of Asphodel
+1 Kokusho, the Evening Star
+1 Massacre Wurm
+1 Bloodline Keeper
+1 Hellrider
+1 Vein Ripper
+1 Indulgent Tormentor
+1 Syr Konrad, the Grim
+1 Mirkwood Bats
+1 Terminate
+1 Dreadbore
+1 Murder
+1 Doom Blade
+1 Go for the Throat
+1 Infernal Grasp
+1 Hero's Downfall
+1 Bloodchief's Thirst
+1 Diabolic Edict
+1 Bone Splinters
+1 Lightning Bolt
+1 Chaos Warp
+1 Feed the Swarm
+1 Rakdos Charm
+1 Dictate of Erebos
+1 Goblin Bombardment
+1 Skullclamp
+1 Bastion of Remembrance
+1 Phyrexian Arena
+1 Night's Whisper
+1 Read the Bones
+1 Sign in Blood
+1 Village Rites
+1 Sol Ring
+1 Arcane Signet
+1 Rakdos Signet
+1 Talisman of Indulgence
+1 Mind Stone
+1 Fellwar Stone
+1 Command Tower
+1 Rakdos Carnarium
+1 Rakdos Guildgate
+1 Bloodfell Caves
+1 Dragonskull Summit
+1 Foreboding Ruins
+1 Smoldering Marsh
+1 Canyon Slough
+1 Sulfurous Springs
+1 Evolving Wilds
+1 Terramorphic Expanse
+1 Myriad Landscape
+12 Swamp
+12 Mountain
+CMDR: Judith, the Scourge Diva

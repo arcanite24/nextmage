@@ -1,0 +1,90 @@
+# name: Sentinel's Brood
+# archetype: midrange (Temur dragons)
+# season: 2026-10
+1 Birds of Paradise
+1 Llanowar Elves
+1 Dragonspeaker Shaman
+1 Dragonlord's Servant
+1 Sarkhan's Whelp
+1 Thunderbreak Regent
+1 Goldspan Dragon
+1 Glorybringer
+1 Thundermaw Hellkite
+1 Stormbreath Dragon
+1 Dragon Broodmother
+1 Old Gnawbone
+1 Klauth, Unrivaled Ancient
+1 Lozhan, Dragons' Legacy
+1 Ancient Bronze Dragon
+1 Ancient Silver Dragon
+1 Ancient Copper Dragon
+1 Moonveil Dragon
+1 Niv-Mizzet, Parun
+1 Savage Ventmaw
+1 Atarka, World Render
+1 Dragonlord Atarka
+1 Terror of the Peaks
+1 Utvara Hellkite
+1 Hellkite Tyrant
+1 Steel Hellkite
+1 Leyline Tyrant
+1 Rakdos Pit Dragon
+1 Lathliss, Dragon Queen
+1 Dragon Tempest
+1 Sarkhan's Unsealing
+1 Crucible of Fire
+1 Kindred Discovery
+1 Frontier Siege
+1 Rhythm of the Wild
+1 Sarkhan Unbroken
+1 Beast Within
+1 Chaos Warp
+1 Pongify
+1 Rapid Hybridization
+1 Lightning Bolt
+1 Abrade
+1 Cyclonic Rift
+1 Harmonize
+1 Rishkar's Expertise
+1 Return of the Wildspeaker
+1 Guardian Project
+1 Elemental Bond
+1 Garruk's Uprising
+1 Swiftfoot Boots
+1 Lightning Greaves
+1 Heroic Intervention
+1 Sol Ring
+1 Arcane Signet
+1 Dragon's Hoard
+1 Herald's Horn
+1 Rampant Growth
+1 Farseek
+1 Nature's Lore
+1 Three Visits
+1 Cultivate
+1 Kodama's Reach
+1 Explosive Vegetation
+1 Command Tower
+1 Fire-Lit Thicket
+1 Ketria Triome
+1 Frontier Bivouac
+1 Exotic Orchard
+1 Path of Ancestry
+1 Steam Vents
+1 Stomping Ground
+1 Breeding Pool
+1 Sulfur Falls
+1 Rootbound Crag
+1 Hinterland Harbor
+1 Cinder Glade
+1 Spirebluff Canal
+1 Yavimaya Coast
+1 Shivan Reef
+1 Karplusan Forest
+1 Myriad Landscape
+1 Evolving Wilds
+1 Terramorphic Expanse
+6 Forest
+5 Island
+5 Mountain
+CMDR: Miirym, Sentinel Wyrm

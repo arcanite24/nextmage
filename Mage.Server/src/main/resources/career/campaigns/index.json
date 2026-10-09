@@ -1,1 +1,12 @@
-["five-paths"]
+[
+  "five-paths",
+  "pauper",
+  "commander",
+  "limited",
+  "pioneer",
+  "standard",
+  "modern",
+  "legacy",
+  "vintage",
+  "brawl"
+]
