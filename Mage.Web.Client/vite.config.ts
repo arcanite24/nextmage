@@ -10,6 +10,9 @@ const VENDOR_CHUNKS: [chunk: string, packages: RegExp][] = [
   ['vendor-radix', /\/node_modules\/@radix-ui\//],
   ['vendor-query', /\/node_modules\/@tanstack\//],
   ['vendor-zustand', /\/node_modules\/(zustand|use-sync-external-store)\//],
+  // every icon the app uses, in one chunk: split per screen they made ~30 chunks of a few hundred bytes each, most of
+  // it per-chunk overhead (about 8 kB of the app's total)
+  ['vendor-icons', /\/node_modules\/lucide-react\//],
 ]
 
 // the product name is a build setting (src/app/brand.ts); index.html's title reads it too

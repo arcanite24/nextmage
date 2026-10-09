@@ -31,6 +31,8 @@ export interface GameSessionState {
   stalled: boolean;
   /** the connection was lost or the page reloaded: the board is stale until the server sends the game again */
   resyncing: boolean;
+  /** the player conceded and the game goes on until the server applies it (when the player holding priority passes) */
+  conceding: boolean;
   /** latest status line from the server ("Waiting for Bob", "Bob casts ...") */
   status: string | null;
   notices: GameNotice[];
@@ -52,6 +54,12 @@ export const REPLY_TIMEOUT_MS = 10_000;
 
 export interface GameSessionOptions {
   replyTimeoutMs?: number;
+}
+
+/** Another player holds priority or is making a choice, so the game waits on them, not on us. */
+export function decidingElsewhere(view: GameView, playerId: string | null): boolean {
+  if (!playerId) return false;
+  return (view.players ?? []).some((player) => player.playerId !== playerId && !player.hasLeft && (player.hasPriority || player.timerActive));
 }
 
 /**
@@ -89,6 +97,7 @@ export class GameSession {
       awaitingServer: false,
       stalled: false,
       resyncing: false,
+      conceding: false,
       status: null,
       notices: [],
       gameOver: null,
@@ -124,7 +133,7 @@ export class GameSession {
       bus.on('GAME_OVER', forThisGame<GameClientMessage>((message) => {
         this.applyView(message?.gameView);
         this.clearReplyTimer();
-        this.store.setState({ gameOver: stripMarkup(message?.message) || 'Game over', prompt: null, awaitingServer: false, stalled: false });
+        this.store.setState({ gameOver: stripMarkup(message?.message) || 'Game over', prompt: null, awaitingServer: false, stalled: false, conceding: false });
         this.refreshInteraction();
       })),
       bus.on('END_GAME_INFO', forThisGame<GameEndView>((info) => this.store.setState({ endInfo: info }))),
@@ -284,6 +293,7 @@ export class GameSession {
           break;
         case 'action':
           await this.api.sendPlayerAction(command.action, gameId, command.data ?? null);
+          if (command.action === 'CONCEDE' && !this.store.getState().gameOver) this.store.setState({ conceding: true });
           break;
       }
     } catch (error) {
@@ -316,6 +326,14 @@ export class GameSession {
     view = this.freshEvents(view);
     const next = previous ? structuralShare(previous, view) : view;
     if (this.store.getState().resyncing) this.store.setState({ resyncing: false });
+    if (!fromPrompt && awaitingServer && decidingElsewhere(view, this.store.getState().playerId ?? view.myPlayerId ?? null)) {
+      // the server took the answer and another player is deciding now: nothing more comes until they act, and that
+      // can take a person far longer than the reply timeout
+      this.clearReplyTimer();
+      this.clearHold();
+      this.store.setState({ awaitingServer: false, stalled: false, prompt: null });
+      if (next === previous) this.refreshInteraction();
+    }
     if (next === previous) return;
     const playerId = this.store.getState().playerId ?? (this.store.getState().mode === 'play' ? view.myPlayerId ?? null : null);
     this.store.setState({ view: next, playerId });

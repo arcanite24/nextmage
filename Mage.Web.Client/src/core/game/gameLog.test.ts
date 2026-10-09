@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CardView, GameView } from '../../protocol/generated/views';
 import {
   buildLogRows,
+  presenceChange,
   cardInk,
   classifyLog,
   collectCards,
@@ -160,5 +161,20 @@ describe('cardInk', () => {
     expect(cardInk('#DAA520')).toBe('multi');
     expect(cardInk('White')).toBeNull();
     expect(cardInk(null)).toBeNull();
+  });
+});
+
+describe('presenceChange', () => {
+  it('reads players dropping off and coming back from the status lines', () => {
+    expect(presenceChange('bashbob has lost connection')).toEqual({ name: 'bashbob', online: false });
+    expect(presenceChange('bashbob catch connection problems for 35 secs (left before expire: 145 secs)')).toEqual({ name: 'bashbob', online: false });
+    expect(presenceChange('bashbob has left XMage')).toEqual({ name: 'bashbob', online: false });
+    expect(presenceChange('bashbob session expired')).toEqual({ name: 'bashbob', online: false });
+    expect(presenceChange('bashbob has joined')).toEqual({ name: 'bashbob', online: true });
+  });
+
+  it('ignores other lines', () => {
+    expect(presenceChange('bashbob casts Lightning Bolt')).toBeNull();
+    expect(presenceChange('Bob has joined the game as a watcher')).toBeNull();
   });
 });

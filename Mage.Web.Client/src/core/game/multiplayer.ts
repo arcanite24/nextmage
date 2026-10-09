@@ -73,3 +73,19 @@ export function defenderChoice(prompt: Prompt | null | undefined, view: GameView
   }
   return options;
 }
+
+/**
+ * The creature a "what does it attack?" question is about. The server doesn't say: while declaring attackers it is
+ * the creature just clicked; when that one is already attacking, the question is for a creature put onto the
+ * battlefield attacking (a token "tapped and attacking"): the one tapped creature of ours not yet in combat. Null
+ * when it can't be told.
+ */
+export function askedAttacker(view: GameView | null | undefined, myId: string | null, lastClicked: string | null): PermanentView | null {
+  const mine = (view?.players ?? []).find((player) => player.playerId === myId)?.battlefield ?? {};
+  const inCombat = new Set((view?.combat ?? []).flatMap((group) => Object.keys(group.attackers ?? {})));
+  if (lastClicked && mine[lastClicked] && !inCombat.has(lastClicked)) return mine[lastClicked];
+  const entering = Object.entries(mine)
+    .filter(([id, permanent]) => !inCombat.has(id) && permanent.tapped && (permanent.cardTypes ?? []).includes('CREATURE'))
+    .map(([, permanent]) => permanent);
+  return entering.length === 1 ? entering[0] : null;
+}

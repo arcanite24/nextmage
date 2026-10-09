@@ -29,6 +29,9 @@ import { gzipSync } from 'node:zlib';
 // route in the entry (+0.3 kB)
 // entry raised 2026-10-09 from 68 kB: the generated RPC client lives in the entry, and M9 added 18 Career mode
 // methods to it; with M8 and M9 merged the entry measured 68.2 kB
+// 2026-10-09 (playtest fixes, budgets unchanged): lucide icons moved into one vendor chunk (vite.config.ts), which
+// took the app from 407.9 to 400.1 kB and the entry from 68.5 to 65.1 kB; the first load grew 6.6 kB (205.7 kB) as
+// it now brings every icon
 const BUDGET_KB = {
   entry: 69,
   initial: 212,

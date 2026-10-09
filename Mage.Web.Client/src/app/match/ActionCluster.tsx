@@ -2,10 +2,13 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronUp } from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
 import type { Command, Interaction, PromptButton } from '../../core/game/interaction';
-import type { PlayerAction } from '../../protocol/generated/views';
+import type { CardView, PlayerAction } from '../../protocol/generated/views';
+import { useT } from '../i18n';
 import { isEditableEventTarget } from '../ui/keys';
 import { Button } from '../ui/Button';
+import { CardFace } from '../ui/CardFace';
 import { PromptText } from '../ui/PromptText';
+import './matchMessages';
 import { useMatchUi } from './matchUi';
 import styles from './ActionCluster.module.css';
 
@@ -28,6 +31,10 @@ export interface ActionClusterProps {
   stalled?: boolean;
   onResend?(): void;
   onResync?(): void;
+  /** the player conceded and the server hasn't ended the game yet; waitingOn: who holds priority meanwhile */
+  conceding?: { waitingOn: string | null } | null;
+  /** the cards the question is about (an effect looked at them just before asking), shown with it */
+  cards?: CardView[] | null;
   onCommand(command: Command): void;
 }
 
@@ -43,8 +50,10 @@ const UNDO: PromptButton = { label: 'Undo tap', command: { type: 'action', actio
 /** The decision corner: what the game is asking, and the one big button that answers it. */
 export function ActionCluster({
   interaction, awaiting, status, canAct, special, holdingPriority, autoPassing = false, fullControl = false, onFullControl, extra,
-  stalled = false, onResend, onResync, onCommand,
+  stalled = false, onResend, onResync, conceding = null, cards = null, onCommand,
 }: ActionClusterProps) {
+  const t = useT();
+  const openViewer = useMatchUi((state) => state.openViewer);
   const main = interaction.mainButton;
   const secondary = [...interaction.secondaryButtons];
   if (special && interaction.mode === 'priority') {
@@ -122,7 +131,24 @@ export function ActionCluster({
           Full control
         </button>
       )}
-      {stalled && canAct && (
+      {conceding && (
+        <p className={styles.conceding} role="status">
+          {conceding.waitingOn ? t('match.conceding.waiting', { name: conceding.waitingOn }) : t('match.conceding')}
+        </p>
+      )}
+      {cards && cards.length > 0 && deciding && (
+        <button
+          type="button"
+          className={styles.cards}
+          onClick={() => openViewer({ title: t('match.ask.cards', { count: cards.length }), cards })}
+          aria-label={`${t('match.ask.cards', { count: cards.length })}. ${t('match.ask.open')}`}
+        >
+          {cards.map((card, index) => (
+            <span key={card.id ?? index} className={styles.cardThumb}><CardFace card={card} size="small" /></span>
+          ))}
+        </button>
+      )}
+      {stalled && canAct && !conceding && (
         <div className={styles.stalled} role="alert">
           <p>The server hasn't answered.</p>
           <div className={styles.stalledButtons}>
@@ -190,7 +216,9 @@ export function ActionCluster({
           <Button
             variant="decision"
             size="xl"
-            className={styles.main}
+            className={[styles.main, awaiting ? styles.sending : ''].join(' ')}
+            // while the last answer is on its way a click can't be taken (one answer per question): show it
+            aria-disabled={awaiting || undefined}
             onClick={() => onCommand(main.command)}
           >
             {main.label}

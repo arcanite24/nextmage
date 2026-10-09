@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { AbilityPickerView, CardView, GameClientMessage, GameView } from '../../protocol/generated/views';
-import { isPromptEvent, parsePrompt, promptGameView, PROMPT_EVENTS, stripMarkup } from './prompt';
+import { abilityChooserSource, isPromptEvent, parsePrompt, promptGameView, PROMPT_EVENTS, stripMarkup } from './prompt';
 
 // Fixture payloads shaped like the server's dialog callbacks (GameClientMessage / AbilityPickerView)
 const GAME_VIEW = { turn: 3 } as unknown as GameView;
@@ -188,5 +188,13 @@ describe('prompt helpers', () => {
   test('stripMarkup removes tags and decodes entities', () => {
     expect(stripMarkup('Pay <b>2</b>&nbsp;life&mdash;or&hellip;<br/>not &amp; &#65;')).toBe('Pay 2 life—or… not & A');
     expect(stripMarkup(undefined)).toBe('');
+  });
+});
+
+describe('abilityChooserSource', () => {
+  test('names what the ability chooser is for', () => {
+    expect(abilityChooserSource(stripMarkup("Choose spell or ability to play<br><font color='#ccc'>Evolving Wilds [a16]</font>"))).toBe('Evolving Wilds');
+    expect(abilityChooserSource('Choose spell or ability to play for FREE Fire // Ice [0b1]')).toBe('Fire // Ice');
+    expect(abilityChooserSource('Choose mode')).toBeNull();
   });
 });
