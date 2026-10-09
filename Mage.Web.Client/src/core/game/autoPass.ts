@@ -42,6 +42,10 @@ export interface AutoPassSettings {
   fullControl?: boolean;
   /** combat steps where the player wants to stop */
   combatStops?: TurnCombatStops;
+  /** the player's own stop at the beginning of their combat (the server always stops there, see serverStops) */
+  beginCombatStop?: boolean;
+  /** a beginning-of-combat trigger went on the stack this turn */
+  combatTriggered?: boolean;
 }
 
 /**
@@ -70,6 +74,17 @@ function noCombat(view: GameView): boolean {
     && !(view.combat ?? []).some((group) => Object.keys(group.attackers ?? {}).length > 0);
 }
 
+/**
+ * The beginning of your combat with an empty stack, when the player has no stop there: passed, unless a trigger there
+ * just resolved and left something to do before attacks (crew the vehicle Greasefang returned).
+ */
+function skipBeginCombat(view: GameView, settings: AutoPassSettings): boolean {
+  if (settings.beginCombatStop !== false || view.step !== 'BEGIN_COMBAT') return false;
+  if (!view.myPlayerId || view.activePlayerId !== view.myPlayerId) return false;
+  if (Object.keys(view.stack ?? {}).length > 0) return false;
+  return !(settings.combatTriggered && meaningfulPlays(view).length > 0);
+}
+
 export type AutoAnswer = 'pass' | 'noAttacks' | 'noBlocks';
 
 /** What to answer for the player right now, or null when the decision is theirs. */
@@ -78,6 +93,7 @@ export function autoAnswer(view: GameView | null | undefined, prompt: Prompt | n
   switch (prompt.kind) {
     case 'priority':
     {
+      if (skipBeginCombat(view, settings)) return 'pass';
       if (!settings.autoPass) return null;
       if (combatStopHere(view, settings.combatStops)) return null;
       // like Arena: when no creature attacks, the rest of combat goes by even with instants in hand
