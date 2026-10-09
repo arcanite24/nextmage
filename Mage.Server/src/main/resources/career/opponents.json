@@ -9,13 +9,13 @@
     { "id": "odo", "name": "Brother Odo", "tier": 1, "colors": "WB", "deck": "orzhov-oppression.dck", "tagline": "Collects tithes, mostly in life points." },
     { "id": "pip", "name": "Pip Kettlewhistle", "tier": 1, "colors": "RG", "deck": "gruul-siege.dck", "tagline": "Small, loud, and fond of large animals." },
     { "id": "marisol", "name": "Marisol Tidecaller", "tier": 1, "colors": "UG", "deck": "wilds-and-the-deep.dck", "tagline": "Waits for the tide, then brings it in." },
+    { "id": "ilse", "name": "Ilse Vantorre", "tier": 2, "colors": "UR", "deck": "manipulative-monstrosities.dck", "tagline": "Turns your plans into her monsters." },
     { "id": "hask", "name": "Captain Hask", "tier": 2, "colors": "RW", "deck": "boros-battalion.dck", "tagline": "Drills the line until it charges as one." },
     { "id": "widow", "name": "The Lantern Widow", "tier": 2, "colors": "B", "deck": "devotion-to-darkness.dck", "tagline": "Every candle she lights, one of yours goes out." },
-    { "id": "ilse", "name": "Ilse Vantorre", "tier": 2, "colors": "UR", "deck": "manipulative-monstrosities.dck", "tagline": "Turns your plans into her monsters." },
     { "id": "grondel", "name": "Grondel Two-Axes", "tier": 2, "colors": "RG", "deck": "voracious-rage.dck", "tagline": "Has never once blocked." },
-    { "id": "sera", "name": "Seraphine Ashmark", "tier": 3, "colors": "RW", "deck": "boros-aggro.dck", "tagline": "Wins before the second cup of tea." },
     { "id": "korvath", "name": "Korvath the Patient", "tier": 3, "colors": "WBG", "deck": "abzan-midrange.dck", "tagline": "Answers everything, then waits." },
-    { "id": "mirela", "name": "Mirela Nightcourt", "tier": 3, "colors": "BR", "deck": "rakdos-aristocrats.dck", "tagline": "The court is always hungry." },
-    { "id": "aldous", "name": "Aldous Brightwing", "tier": 3, "colors": "WU", "deck": "azorius-heroic.dck", "tagline": "One hero, every blessing at once." }
+    { "id": "aldous", "name": "Aldous Brightwing", "tier": 3, "colors": "WU", "deck": "azorius-heroic.dck", "tagline": "One hero, every blessing at once." },
+    { "id": "sera", "name": "Seraphine Ashmark", "tier": 3, "colors": "RW", "deck": "boros-aggro.dck", "tagline": "Wins before the second cup of tea." },
+    { "id": "mirela", "name": "Mirela Nightcourt", "tier": 3, "colors": "BR", "deck": "rakdos-aristocrats.dck", "tagline": "The court is always hungry." }
   ]
 }
