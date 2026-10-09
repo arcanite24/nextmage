@@ -1,6 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ArrowLeftRight, BarChart3, Check, ChevronLeft, ClipboardPaste, Crown, Images, ListPlus, Minus, Mountain, Plus, Replace, TriangleAlert } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { CardView } from '../../protocol/generated/views';
 import { BASIC_FOR, MANA_LETTERS, suggestLands, type ManaLetter } from '../../core/decks/analysis';
@@ -31,6 +31,31 @@ import {
 import styles from './DeckBuilder.module.css';
 
 const DEFAULT_FORMAT = 'Constructed - Freeform';
+
+/** What the card pool on the left gets from the builder (the collection of every card, or a player's own binder). */
+export interface BinderProps {
+  format: string;
+  identity: string[] | null;
+  counts: ReadonlyMap<string, number>;
+  limitOf(card: CardView): number;
+  onAdd(card: CardView): void;
+  onRemove(card: CardView): void;
+  onPreview(card: CardView | null, anchor?: DOMRect): void;
+}
+
+/**
+ * A deck kept somewhere other than the deck library, built from a pool of owned cards (Career): its own binder, its own
+ * saving, its own way back, a fixed format, and a cap per card on top of the format's.
+ */
+export interface BuilderMode {
+  Binder: ComponentType<BinderProps>;
+  /** copies the player may put in, by card name */
+  allowance(name: string): number;
+  save(deck: DeckCardLists): void;
+  doneLabel: string;
+  onDone(): void;
+  onPlay(): void;
+}
 
 /** Opens the deck named in the URL: starter decks are copied into the library first, "new" makes an empty deck. */
 export function DeckBuilderScreen() {
@@ -82,7 +107,8 @@ function DeckLoader({ deckId }: { deckId: string }) {
   return <DeckBuilder key={deck.id} initial={deck} />;
 }
 
-function DeckBuilder({ initial }: { initial: DeckCardLists }) {
+/** The builder itself; `mode` builds a deck outside the library (Career). */
+export function DeckBuilder({ initial, mode }: { initial: DeckCardLists; mode?: BuilderMode }) {
   const navigate = useNavigate();
   const [deck, setDeck] = useState(initial);
   const [zone, setZone] = useState<DeckZone>('cards');
@@ -103,31 +129,42 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
   useEffect(() => {
     if (!saving) return;
     const timer = setTimeout(() => {
-      void deckStorage.saveDeck(finalizeDeck(deck, useCardInfoStore.getState().info))
+      const finished = finalizeDeck(deck, useCardInfoStore.getState().info);
+      if (mode) {
+        mode.save(finished);
+        setSavedDeck(deck);
+        return;
+      }
+      void deckStorage.saveDeck(finished)
         .then(() => setSavedDeck(deck))
         .catch((reason) => notify("Couldn't save the deck", String(reason), 'error'));
     }, 500);
     return () => clearTimeout(timer);
-  }, [deck, saving]);
+  }, [deck, saving, mode]);
   useEffect(() => () => {
-    void useDecks.getState().refresh();
-  }, []);
+    if (!mode) void useDecks.getState().refresh();
+  }, [mode]);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
     for (const entry of allEntries) map.set(entry.cardName.toLowerCase(), (map.get(entry.cardName.toLowerCase()) ?? 0) + entry.amount);
     return map;
   }, [allEntries]);
-  const limitOf = useCallback((card: CardView) => (format === 'Limited' ? Infinity : copyLimit(card, card.name ?? '', rules.singleton)), [format, rules.singleton]);
+  const limitFor = useCallback((card: CardView | undefined, name: string) => {
+    const limit = format === 'Limited' ? Infinity : copyLimit(card, name, rules.singleton);
+    return mode ? Math.min(limit, mode.allowance(name)) : limit;
+  }, [format, rules.singleton, mode]);
+  const limitOf = useCallback((card: CardView) => limitFor(card, card.name ?? ''), [limitFor]);
 
   const add = useCallback((card: CardView) => {
     const limit = limitOf(card);
     if (copiesByName(deck, card.name ?? '') >= limit) {
-      notify(`${limit} copies at most`, `${card.name} is already at its limit.`);
+      if (mode && limit < copyLimit(card, card.name ?? '', rules.singleton)) notify(limit === 1 ? 'You own 1 copy' : `You own ${limit} copies`, `Every copy of ${card.name} you own is in the deck.`);
+      else notify(`${limit} copies at most`, `${card.name} is already at its limit.`);
       return;
     }
     setDeck((current) => (copiesByName(current, card.name ?? '') >= limit ? current : addCard(current, zone, printingOf(card))));
-  }, [deck, zone, limitOf]);
+  }, [deck, zone, limitOf, mode, rules.singleton]);
   const removeOne = useCallback((card: CardView) => {
     setDeck((current) => {
       const name = (card.name ?? '').toLowerCase();
@@ -145,7 +182,11 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
 
   return (
     <div className={styles.page}>
-      <Collection format={format === 'Limited' ? '' : format} identity={identity} counts={counts} limitOf={limitOf} onAdd={add} onRemove={removeOne} onPreview={onPreview} />
+      {mode ? (
+        <mode.Binder format={format} identity={identity} counts={counts} limitOf={limitOf} onAdd={add} onRemove={removeOne} onPreview={onPreview} />
+      ) : (
+        <Collection format={format === 'Limited' ? '' : format} identity={identity} counts={counts} limitOf={limitOf} onAdd={add} onRemove={removeOne} onPreview={onPreview} />
+      )}
       <DeckPanel
         deck={deck}
         zone={zone}
@@ -154,11 +195,14 @@ function DeckBuilder({ initial }: { initial: DeckCardLists }) {
         rules={rules}
         identity={identity}
         saving={saving}
+        limitFor={limitFor}
+        fixedFormat={!!mode}
+        doneLabel={mode?.doneLabel ?? 'Decks'}
         onZone={setZone}
         onChange={setDeck}
         onPreview={onRowPreview}
-        onDone={() => navigate('/decks')}
-        onPlay={() => {
+        onDone={mode ? mode.onDone : () => navigate('/decks')}
+        onPlay={mode ? mode.onPlay : () => {
           useDecks.getState().select(deck.id!);
           navigate('/');
         }}
@@ -177,7 +221,7 @@ function useCommanderIdentity(deck: DeckCardLists, info: ReadonlyMap<string, Car
   }, [deck.sideboard, info, rules.commandZone]);
 }
 
-function DeckPanel({ deck, zone, info, formats, rules, identity, saving, onZone, onChange, onPreview, onDone, onPlay }: {
+function DeckPanel({ deck, zone, info, formats, rules, identity, saving, limitFor, fixedFormat, doneLabel, onZone, onChange, onPreview, onDone, onPlay }: {
   deck: DeckCardLists;
   zone: DeckZone;
   info: ReadonlyMap<string, CardView>;
@@ -185,6 +229,10 @@ function DeckPanel({ deck, zone, info, formats, rules, identity, saving, onZone,
   rules: FormatRules;
   identity: string[] | null;
   saving: boolean;
+  limitFor(card: CardView | undefined, name: string): number;
+  /** the format is the mode's (Career decks are Freeform), not the player's to pick */
+  fixedFormat: boolean;
+  doneLabel: string;
   onZone(zone: DeckZone): void;
   onChange(update: (deck: DeckCardLists) => DeckCardLists): void;
   onPreview(card: CardView | null, anchor?: DOMRect): void;
@@ -233,6 +281,7 @@ function DeckPanel({ deck, zone, info, formats, rules, identity, saving, onZone,
         />
         <select
           className={styles.select}
+          disabled={fixedFormat}
           value={format}
           onChange={(event) => {
             const value = event.target.value;
@@ -310,7 +359,7 @@ function DeckPanel({ deck, zone, info, formats, rules, identity, saving, onZone,
                       type="button"
                       aria-label={`One more ${row.entry.cardName}`}
                       onClick={() => onChange((current) => {
-                        const limit = format === 'Limited' ? Infinity : copyLimit(row.card, row.entry.cardName, rules.singleton);
+                        const limit = limitFor(row.card, row.entry.cardName);
                         return copiesByName(current, row.entry.cardName) >= limit ? current : addCard(current, zone, { cardName: row.entry.cardName, setCode: row.entry.setCode ?? '', cardNumber: row.entry.cardNumber ?? '' });
                       })}
                     >
@@ -350,8 +399,8 @@ function DeckPanel({ deck, zone, info, formats, rules, identity, saving, onZone,
       {deck.source && <SourceLine source={deck.source} className={styles.source} />}
 
       <footer className={styles.deckFoot}>
-        <Button variant="quiet" size="sm" icon={<ChevronLeft size={16} />} onClick={onDone}>Decks</Button>
-        <DropdownMenu.Root>
+        <Button variant="quiet" size="sm" icon={<ChevronLeft size={16} />} onClick={onDone}>{doneLabel}</Button>
+        {!fixedFormat && <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <Button variant="print" size="sm" icon={<ClipboardPaste size={16} />}>From a list…</Button>
           </DropdownMenu.Trigger>
@@ -365,7 +414,7 @@ function DeckPanel({ deck, zone, info, formats, rules, identity, saving, onZone,
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+        </DropdownMenu.Root>}
         <ExportMenu getDeck={() => deck} side="top" />
         <Button variant="print" size="sm" icon={<BarChart3 size={16} />} onClick={() => setInsightsOpen(true)} disabled={mainCount === 0}>Numbers</Button>
         <Button variant="decision" onClick={onPlay} disabled={mainCount === 0}>Play this deck</Button>

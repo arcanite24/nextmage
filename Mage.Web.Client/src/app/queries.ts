@@ -34,3 +34,14 @@ export function useTables() {
     refetchInterval: connected ? 4_000 : false,
   });
 }
+
+/** What this server offers (accounts, deck sync, Career); asked once. */
+export function useServerInfo() {
+  const signedIn = useSession((state) => state.phase === 'signedIn');
+  return useQuery({
+    queryKey: ['serverInfo'],
+    queryFn: () => api.serverInfo().catch(() => null),
+    enabled: signedIn,
+    staleTime: Infinity,
+  });
+}

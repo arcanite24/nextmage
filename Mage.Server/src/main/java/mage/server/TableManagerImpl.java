@@ -352,6 +352,7 @@ public class TableManagerImpl implements TableManager {
 
     @Override
     public void removeTable(UUID tableId) {
+        mage.server.career.CareerService.get().forget(tableId);
         TableController tableController = controllers.get(tableId);
         if (tableController != null) {
             Lock w = controllersLock.writeLock();
