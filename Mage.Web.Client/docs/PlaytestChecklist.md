@@ -48,7 +48,15 @@ Use decks with combat tricks, flash and triggers.
 - [ ] A third player watches scenario 3 from Tables, then leaves.
 - [ ] Record: what the watcher could see, and whether leaving left them stuck as a watcher.
 
-### 6. Draft (if time allows)
+### 6. Commander pod
+
+- [ ] Build or copy a commander deck: commander in the command zone strip, 100/100, "Commander's colors" filter on.
+- [ ] Play vs AI with the Commander pod set to 4 players (or host a Commander Free For All with AI seats).
+- [ ] Cast the commander from the command zone, let it die, recast it: the pile shows the +2 tax.
+- [ ] Attack with several opponents at the table: the picker names who each creature can hit; seats show commander damage taken.
+- [ ] Record: whether the four-seat layout stays readable, and how long AI turns feel.
+
+### 7. Draft (if time allows)
 
 - [ ] Host a booster draft with AI seats, draft, build, play one round.
 - [ ] Record: pick timer pressure, how the pool reads while building.
