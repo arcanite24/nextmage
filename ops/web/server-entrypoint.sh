@@ -22,7 +22,7 @@ from_file() {
     eval "$1=\$(cat \"\$file\")"
   fi
 }
-for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY; do
+for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY XMAGE_DISCORD_WEBHOOK; do
   from_file "$secret"
 done
 
@@ -121,6 +121,13 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
   if [ -n "${XMAGE_ADMIN_PASSWORD:-}" ]; then
     # quoted for the argfile format: backslashes and double quotes escaped
     printf '"-Dxmage.adminPassword=%s"\n' "$(printf '%s' "$XMAGE_ADMIN_PASSWORD" | sed 's/[\\"]/\\&/g')"
+  fi
+  # Discord channel news (public tables, events, matches); the webhook address is a secret like the password
+  if [ -n "${XMAGE_DISCORD_WEBHOOK:-}" ]; then
+    printf '"-Dxmage.discordWebhook=%s"\n' "$(printf '%s' "$XMAGE_DISCORD_WEBHOOK" | sed 's/[\\"]/\\&/g')"
+  fi
+  if [ -n "${XMAGE_PUBLIC_URL:-}" ]; then
+    printf '"-Dxmage.publicUrl=%s"\n' "$(printf '%s' "$XMAGE_PUBLIC_URL" | sed 's/[\\"]/\\&/g')"
   fi
   if [ -n "${XMAGE_TRUSTED_PROXIES:-}" ]; then
     echo "-Dxmage.web.trustedProxies=$XMAGE_TRUSTED_PROXIES"
