@@ -1,0 +1,700 @@
+[
+  {
+    "id": "first-win",
+    "name": "First blood",
+    "text": "Win your first Career game",
+    "scope": "total",
+    "counter": "wins",
+    "target": 1,
+    "secret": false,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "wins-10",
+    "name": "Regular",
+    "text": "Win 10 games",
+    "scope": "total",
+    "counter": "wins",
+    "target": 10,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "wins-50",
+    "name": "Veteran",
+    "text": "Win 50 games",
+    "scope": "total",
+    "counter": "wins",
+    "target": 50,
+    "secret": false,
+    "coins": 100,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "veteran"
+    }
+  },
+  {
+    "id": "wins-100",
+    "name": "Centurion",
+    "text": "Win 100 games",
+    "scope": "total",
+    "counter": "wins",
+    "target": 100,
+    "secret": false,
+    "coins": 150,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "centurion"
+    }
+  },
+  {
+    "id": "wins-250",
+    "name": "Legend of the table",
+    "text": "Win 250 games",
+    "scope": "total",
+    "counter": "wins",
+    "target": 250,
+    "secret": false,
+    "coins": 250,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "legend"
+    }
+  },
+  {
+    "id": "games-10",
+    "name": "Settling in",
+    "text": "Play 10 games",
+    "scope": "total",
+    "counter": "games",
+    "target": 10,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "games-100",
+    "name": "Hundred games",
+    "text": "Play 100 games",
+    "scope": "total",
+    "counter": "games",
+    "target": 100,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "spells-100",
+    "name": "Spellslinger",
+    "text": "Cast 100 spells",
+    "scope": "total",
+    "counter": "spells",
+    "target": 100,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "spells-1000",
+    "name": "Archmage",
+    "text": "Cast 1,000 spells",
+    "scope": "total",
+    "counter": "spells",
+    "target": 1000,
+    "secret": false,
+    "coins": 100,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "archmage"
+    }
+  },
+  {
+    "id": "white-100",
+    "name": "Lightbringer",
+    "text": "Cast 100 white spells",
+    "scope": "total",
+    "counter": "spells_W",
+    "target": 100,
+    "secret": false,
+    "coins": 50,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "lightbringer"
+    }
+  },
+  {
+    "id": "blue-100",
+    "name": "Tidecaller",
+    "text": "Cast 100 blue spells",
+    "scope": "total",
+    "counter": "spells_U",
+    "target": 100,
+    "secret": false,
+    "coins": 50,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "tidecaller"
+    }
+  },
+  {
+    "id": "black-100",
+    "name": "Gravecaller",
+    "text": "Cast 100 black spells",
+    "scope": "total",
+    "counter": "spells_B",
+    "target": 100,
+    "secret": false,
+    "coins": 50,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "gravecaller"
+    }
+  },
+  {
+    "id": "red-100",
+    "name": "Firebrand",
+    "text": "Cast 100 red spells",
+    "scope": "total",
+    "counter": "spells_R",
+    "target": 100,
+    "secret": false,
+    "coins": 50,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "firebrand"
+    }
+  },
+  {
+    "id": "green-100",
+    "name": "Wildspeaker",
+    "text": "Cast 100 green spells",
+    "scope": "total",
+    "counter": "spells_G",
+    "target": 100,
+    "secret": false,
+    "coins": 50,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "wildspeaker"
+    }
+  },
+  {
+    "id": "colorless-50",
+    "name": "Artificer",
+    "text": "Cast 50 colorless spells",
+    "scope": "total",
+    "counter": "spells_colorless",
+    "target": 50,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "multicolor-50",
+    "name": "Guildmage",
+    "text": "Cast 50 multicolored spells",
+    "scope": "total",
+    "counter": "spells_multicolor",
+    "target": 50,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "damage-1000",
+    "name": "Thousand cuts",
+    "text": "Deal 1,000 damage to opponents",
+    "scope": "total",
+    "counter": "damage_to_opponents",
+    "target": 1000,
+    "secret": false,
+    "coins": 100,
+    "xp": 100
+  },
+  {
+    "id": "burn-200",
+    "name": "Pyromancer",
+    "text": "Deal 200 noncombat damage to opponents",
+    "scope": "total",
+    "counter": "noncombat_damage_to_opponents",
+    "target": 200,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "life-500",
+    "name": "Lifeblood",
+    "text": "Gain 500 life",
+    "scope": "total",
+    "counter": "life_gained",
+    "target": 500,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "tokens-100",
+    "name": "Army in a box",
+    "text": "Create 100 tokens",
+    "scope": "total",
+    "counter": "tokens_created",
+    "target": 100,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "creatures-250",
+    "name": "Menagerie",
+    "text": "Have 250 creatures enter under your control",
+    "scope": "total",
+    "counter": "creatures_entered",
+    "target": 250,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "kills-250",
+    "name": "Exterminator",
+    "text": "Have 250 opposing creatures die",
+    "scope": "total",
+    "counter": "opponent_creatures_died",
+    "target": 250,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "draw-1000",
+    "name": "Bookworm",
+    "text": "Draw 1,000 cards",
+    "scope": "total",
+    "counter": "cards_drawn",
+    "target": 1000,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "lands-500",
+    "name": "Landlord",
+    "text": "Play 500 lands",
+    "scope": "total",
+    "counter": "lands_played",
+    "target": 500,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "attacks-500",
+    "name": "Relentless",
+    "text": "Attack with 500 creatures",
+    "scope": "total",
+    "counter": "attacks",
+    "target": 500,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "blocks-200",
+    "name": "Wall of the table",
+    "text": "Block 200 times",
+    "scope": "total",
+    "counter": "blocks",
+    "target": 200,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "counters-300",
+    "name": "Counting up",
+    "text": "Put 300 counters on your permanents",
+    "scope": "total",
+    "counter": "counters_added",
+    "target": 300,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "quests-10",
+    "name": "Errand runner",
+    "text": "Finish 10 quests",
+    "scope": "total",
+    "counter": "quests_completed",
+    "target": 10,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "quests-50",
+    "name": "Questing knight",
+    "text": "Finish 50 quests",
+    "scope": "total",
+    "counter": "quests_completed",
+    "target": 50,
+    "secret": false,
+    "coins": 100,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "questing knight"
+    }
+  },
+  {
+    "id": "packs-10",
+    "name": "Pack rat",
+    "text": "Open 10 packs",
+    "scope": "total",
+    "counter": "packs_opened",
+    "target": 10,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "packs-50",
+    "name": "Collector",
+    "text": "Open 50 packs",
+    "scope": "total",
+    "counter": "packs_opened",
+    "target": 50,
+    "secret": false,
+    "coins": 100,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "collector"
+    }
+  },
+  {
+    "id": "craft-10",
+    "name": "Crafter",
+    "text": "Craft 10 cards",
+    "scope": "total",
+    "counter": "cards_crafted",
+    "target": 10,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "level-10",
+    "name": "Rising",
+    "text": "Reach level 10",
+    "scope": "total",
+    "counter": "level",
+    "target": 10,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "level-25",
+    "name": "Seasoned",
+    "text": "Reach level 25",
+    "scope": "total",
+    "counter": "level",
+    "target": 25,
+    "secret": false,
+    "coins": 100,
+    "xp": 100
+  },
+  {
+    "id": "level-50",
+    "name": "At the summit",
+    "text": "Reach level 50",
+    "scope": "total",
+    "counter": "level",
+    "target": 50,
+    "secret": false,
+    "coins": 250,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "summit"
+    }
+  },
+  {
+    "id": "tier-2",
+    "name": "Climbing",
+    "text": "Open the second tier of opponents",
+    "scope": "total",
+    "counter": "tiers_open",
+    "target": 2,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "tier-3",
+    "name": "At the top table",
+    "text": "Open the third tier of opponents",
+    "scope": "total",
+    "counter": "tiers_open",
+    "target": 3,
+    "secret": false,
+    "coins": 100,
+    "xp": 100
+  },
+  {
+    "id": "beat-all",
+    "name": "Undefeated roster",
+    "text": "Beat every opponent in the roster at least once",
+    "scope": "total",
+    "counter": "opponents_beaten",
+    "target": 12,
+    "secret": false,
+    "coins": 200,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "champion"
+    }
+  },
+  {
+    "id": "weekly-15",
+    "name": "Full week",
+    "text": "Reach 15 wins in one week",
+    "scope": "total",
+    "counter": "weekly_best",
+    "target": 15,
+    "secret": false,
+    "coins": 100,
+    "xp": 100
+  },
+  {
+    "id": "one-life",
+    "name": "By a thread",
+    "text": "Win a game at exactly 1 life",
+    "scope": "game",
+    "counter": "won_at_one_life",
+    "target": 1,
+    "secret": true,
+    "coins": 50,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "by a thread"
+    }
+  },
+  {
+    "id": "comeback",
+    "name": "Comeback",
+    "text": "Win a game after falling to 5 life or less",
+    "scope": "game",
+    "counter": "won_from_five_life",
+    "target": 1,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "flawless",
+    "name": "Flawless",
+    "text": "Win a game without taking damage",
+    "scope": "game",
+    "counter": "won_flawless",
+    "target": 1,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "fast-win",
+    "name": "Blitz",
+    "text": "Win by your fourth turn",
+    "scope": "game",
+    "counter": "won_by_turn_four",
+    "target": 1,
+    "secret": true,
+    "coins": 50,
+    "xp": 100,
+    "cosmetic": {
+      "kind": "title",
+      "id": "blitz"
+    }
+  },
+  {
+    "id": "mill",
+    "name": "Out of pages",
+    "text": "Win a game by emptying the opponent's library",
+    "scope": "game",
+    "counter": "won_by_mill",
+    "target": 1,
+    "secret": true,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "poison",
+    "name": "Venomous",
+    "text": "Win a game with poison counters",
+    "scope": "game",
+    "counter": "won_by_poison",
+    "target": 1,
+    "secret": true,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "overkill",
+    "name": "Overkill",
+    "text": "Win with the opponent at -10 life or lower",
+    "scope": "game",
+    "counter": "won_overkill",
+    "target": 1,
+    "secret": true,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "no-creatures",
+    "name": "Pure spellcraft",
+    "text": "Win a game without casting a creature spell",
+    "scope": "game",
+    "counter": "won_without_creatures",
+    "target": 1,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "above-start",
+    "name": "Healthier than ever",
+    "text": "Win a game with more life than you started with",
+    "scope": "game",
+    "counter": "won_above_starting_life",
+    "target": 1,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "big-hit",
+    "name": "Haymaker",
+    "text": "Deal 10 or more damage to an opponent at once",
+    "scope": "game",
+    "counter": "biggest_hit",
+    "target": 10,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "giant",
+    "name": "Giant",
+    "text": "Hit an opponent with a creature of power 10 or more",
+    "scope": "game",
+    "counter": "max_attacker_power",
+    "target": 10,
+    "secret": true,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "storm",
+    "name": "Storm",
+    "text": "Cast 5 spells in one turn",
+    "scope": "game",
+    "counter": "most_spells_in_a_turn",
+    "target": 5,
+    "secret": false,
+    "coins": 50,
+    "xp": 100
+  },
+  {
+    "id": "token-flood",
+    "name": "Swarm",
+    "text": "Create 10 tokens in one game",
+    "scope": "game",
+    "counter": "tokens_created",
+    "target": 10,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "life-20",
+    "name": "Second wind",
+    "text": "Gain 20 life in one game",
+    "scope": "game",
+    "counter": "life_gained",
+    "target": 20,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "creatures-10",
+    "name": "Full board",
+    "text": "Have 10 creatures enter under your control in one game",
+    "scope": "game",
+    "counter": "creatures_entered",
+    "target": 10,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "counters-20",
+    "name": "Stacked",
+    "text": "Put 20 counters on your permanents in one game",
+    "scope": "game",
+    "counter": "counters_added",
+    "target": 20,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "draw-15",
+    "name": "Card advantage",
+    "text": "Draw 15 cards in one game",
+    "scope": "game",
+    "counter": "cards_drawn",
+    "target": 15,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "kills-8",
+    "name": "Board wipe",
+    "text": "Have 8 opposing creatures die in one game",
+    "scope": "game",
+    "counter": "opponent_creatures_died",
+    "target": 8,
+    "secret": false,
+    "coins": 0,
+    "xp": 100
+  },
+  {
+    "id": "long-game",
+    "name": "Marathon",
+    "text": "Play a game that lasts 30 turns",
+    "scope": "game",
+    "counter": "turns",
+    "target": 30,
+    "secret": true,
+    "coins": 0,
+    "xp": 100
+  }
+]

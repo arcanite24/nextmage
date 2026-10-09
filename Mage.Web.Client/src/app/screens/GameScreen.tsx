@@ -19,7 +19,7 @@ export function GameScreen() {
   const eventId = useEvents((events) => events.currentTournamentId);
   // Career matches lead back to Career
   const returnPath = usePlay((play) => play.returnPath) ?? '/';
-  const backLabel = eventId ? 'Back to the event' : returnPath === '/career' ? 'Back to Career' : 'Back to Play';
+  const backLabel = eventId ? 'Back to the event' : returnPath.startsWith('/career') ? 'Back to Career' : 'Back to Play';
 
   if (!session) {
     return (

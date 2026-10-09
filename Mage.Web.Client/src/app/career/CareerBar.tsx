@@ -9,6 +9,7 @@ const LINKS: { to: string; label: MessageKey; end?: boolean }[] = [
   { to: '/career/deck', label: 'career.nav.deck' },
   { to: '/career/collection', label: 'career.nav.collection' },
   { to: '/career/shop', label: 'career.nav.shop' },
+  { to: '/career/progress', label: 'career.nav.progress' },
 ];
 
 /** Career's own header on every Career screen: where you are, and what you have to spend. */

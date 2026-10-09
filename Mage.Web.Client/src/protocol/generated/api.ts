@@ -253,6 +253,22 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('careerExport'),
     careerImport: (data: string) =>
       rpc.call('careerImport', data),
+    careerQuests: () =>
+      rpc.call('careerQuests'),
+    careerRerollQuest: (slot: number) =>
+      rpc.call('careerRerollQuest', slot),
+    careerAchievements: () =>
+      rpc.call('careerAchievements'),
+    careerLevels: () =>
+      rpc.call('careerLevels'),
+    careerWeekly: () =>
+      rpc.call('careerWeekly'),
+    careerGameResult: (gameKey?: string | null) =>
+      rpc.call('careerGameResult', gameKey),
+    careerSetProgress: () =>
+      rpc.call('careerSetProgress'),
+    careerCountAiGames: (count: boolean) =>
+      rpc.call('careerCountAiGames', count),
   };
 }
 

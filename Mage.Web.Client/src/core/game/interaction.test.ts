@@ -119,6 +119,14 @@ describe('interaction model', () => {
     expect(interaction.clickable.has('c1')).toBe(true);
   });
 
+  test('an optional pick among cards can finish with no card, e.g. a search that finds nothing', () => {
+    const interaction = deriveInteraction(view(), parsePrompt('GAME_TARGET', {
+      message: 'Search your library for up to one basic land', cardsView1: { c1: { name: 'Shock' } }, flag: false,
+    }));
+    expect(interaction.mainButton).toMatchObject({ label: 'Done', command: { type: 'uuid', id: null } });
+    expect(interaction.secondaryButtons).toEqual([]);
+  });
+
   test('mana payment never offers a boolean that would cancel by accident', () => {
     const interaction = deriveInteraction(view(), parsePrompt('GAME_PLAY_MANA', { message: 'Pay {R}' }));
     expect(interaction.mode).toBe('payMana');
