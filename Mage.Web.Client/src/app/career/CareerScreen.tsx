@@ -13,6 +13,7 @@ import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { downloadText } from '../ui/download';
 import { CareerBar } from './CareerBar';
+import { CareerModesCard } from './CareerModesCard';
 import { ensureCareerDeck } from './careerDeck';
 import {
   exportCareer, importCareer, playCareer, startCareer, useCareerCollection, useCareerOpponents, useCareerQuests, useCareerStarters, useCareerState,
@@ -260,6 +261,8 @@ function CareerHome({ profile, recent }: { profile: CareerProfile; recent: Caree
         </section>
 
         <aside className={styles.side}>
+          <CareerModesCard />
+
           <section className={styles.card}>
             <div className={styles.identity}>
               <CareerAvatar id={avatar} name={user} />
