@@ -76,8 +76,8 @@ export async function playMode(kind: ModeKind, start: () => Promise<CareerMatch>
   usePlay.setState({ phase: 'waitingForGame', error: null, deckId: null, returnPath: MODE_PATHS[kind] });
   try {
     const match = await start();
-    lastPlayed = match.tableId ? { kind, gameKey: match.tableId } : null;
-    usePlay.setState({ tableId: match.tableId ?? null });
+    lastPlayed = match?.tableId ? { kind, gameKey: match.tableId } : null;
+    usePlay.setState({ tableId: match?.tableId ?? null });
   } catch (error) {
     usePlay.setState({ phase: 'idle', tableId: null });
     throw error;

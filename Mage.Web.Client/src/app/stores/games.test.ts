@@ -66,6 +66,16 @@ describe('games store', () => {
     expect(fake.api.gameJoin).toHaveBeenCalledWith('g1');
   });
 
+  test('a restarted server drops our games, so the next sign-in does not show them again', async () => {
+    const { useGames, useSession, fake } = await load();
+    startGame(fake, { gameId: 'g1', playerId: 'p1', currentTableId: 't1', parentTableId: null });
+    const before = session(useGames, 'g1');
+    useSession.setState({ expired: true });
+    expect(useGames.getState().sessions).toEqual({});
+    expect(useGames.getState().latestGameId).toBeNull();
+    expect(before.dispose).toHaveBeenCalled();
+  });
+
   test('WATCHGAME opens a watch session; opening twice reuses the session', async () => {
     const { useGames, fake } = await load();
     fake.rpc.emit({ method: 'WATCHGAME', messageId: 1, objectId: null, data: { gameId: 'g2' } } as never);

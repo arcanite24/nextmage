@@ -111,6 +111,34 @@ describe('GameSession reply timeout', () => {
     expect(session.getState().stalled).toBe(false);
   });
 
+  it('stops waiting once another player is deciding, however long they take', async () => {
+    const { session, emit } = started();
+    await session.respond({ type: 'boolean', value: false });
+    // an update still built while we held priority changes nothing
+    emit('GAME_UPDATE', { ...base, players: [{ playerId: 'me', hasPriority: true }, { playerId: 'bob' }] });
+    expect(session.getState().awaitingServer).toBe(true);
+    emit('GAME_UPDATE', { ...base, players: [{ playerId: 'me' }, { playerId: 'bob', hasPriority: true, timerActive: true }] });
+    expect(session.getState()).toMatchObject({ awaitingServer: false, stalled: false, prompt: null });
+    expect(session.getState().interaction.mode).toBe('waiting');
+    vi.advanceTimersByTime(60_000);
+    expect(session.getState().stalled).toBe(false);
+  });
+
+  it('a player who left the game is not deciding anything', async () => {
+    const { session, emit } = started();
+    await session.respond({ type: 'boolean', value: false });
+    emit('GAME_UPDATE', { ...base, players: [{ playerId: 'me' }, { playerId: 'bob', hasLeft: true, hasPriority: true }] });
+    expect(session.getState().awaitingServer).toBe(true);
+  });
+
+  it('a concession waits for the server to apply it, and ends with the game', async () => {
+    const { session, emit } = started();
+    await session.respond({ type: 'action', action: 'CONCEDE' });
+    expect(session.getState().conceding).toBe(true);
+    emit('GAME_OVER', { message: 'bob is the winner', gameView: base });
+    expect(session.getState().conceding).toBe(false);
+  });
+
   it('player actions never wait for a reply', async () => {
     const { session } = started();
     await session.respond({ type: 'action', action: 'HOLD_PRIORITY' });

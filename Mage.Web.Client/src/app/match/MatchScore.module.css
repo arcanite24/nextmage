@@ -1,0 +1,9 @@
+.score {
+  margin: 4px 0 0;
+  font-family: var(--font-print);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}

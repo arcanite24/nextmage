@@ -5,14 +5,17 @@ import { useNavigate } from 'react-router-dom';
 import type { GameSession, GameSessionState } from '../../core/game/gameSession';
 import type { Command } from '../../core/game/interaction';
 import { commanderDamageTo, commandersByPlayer, type CommanderStatus } from '../../core/game/commander';
-import { defenderChoice, inRange } from '../../core/game/multiplayer';
+import { askedAttacker, defenderChoice, inRange } from '../../core/game/multiplayer';
 import { parsePayment } from '../../core/game/payment';
+import { xLimit } from '../../core/game/announceX';
+import { askedAboutCards } from '../../core/game/reveals';
 import { delayLabel, isBroadcastDelay } from '../../core/game/broadcastDelay';
 import { spectatorHand } from '../../core/game/spectatorHand';
 import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
 import type { CardView, ChatMessage, GameView, PlayerView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
+import { useT } from '../i18n';
 import { useEvents } from '../stores/events';
 import { useGames } from '../stores/games';
 import { usePlay } from '../stores/play';
@@ -38,6 +41,7 @@ import { EmoteBubbles } from './EmoteBubbles';
 import { setCardMotion, useFlipOrigin } from './flip';
 import { GameLog } from './GameLog';
 import { Hand } from './Hand';
+import './matchMessages';
 import { useMatchUi } from './matchUi';
 import { useGameCues } from './useGameCues';
 import { useWarmImages } from './useWarmImages';
@@ -112,6 +116,7 @@ export interface MatchStageProps {
 
 export function MatchStage({ session, state, replayLog, onLeave }: MatchStageProps) {
   const { view, interaction, playerId, mode, awaitingServer } = state;
+  const t = useT();
   const navigate = useNavigate();
   const animations = useSettings((settings) => settings.settings.animations);
   const autoPay = useSettings((settings) => settings.settings.autoPayMana);
@@ -225,15 +230,17 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   const vsAi = board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false);
   const rewardsAfter = mode === 'play' && !!state.gameOver && !eventId && !career
     && vsAi && !usePlay.getState().lastOptions.practice && useSettings.getState().settings.careerOptIn;
+  // a match against people (not in an event or Career) was found on Tables, and leads back there
+  const vsPeople = mode === 'play' && !eventId && !career && board.opponents.length > 0 && !vsAi;
   const exit = useCallback((rewards: boolean) => {
     if (onLeave) {
       onLeave();
       return;
     }
     useGames.getState().close(state.gameId);
-    const back = eventId ? `/event/${eventId}` : returnPath ?? '/';
+    const back = eventId ? `/event/${eventId}` : vsPeople ? '/tables' : returnPath ?? '/';
     navigate(rewards ? `/career/rewards?game=${encodeURIComponent(state.gameId)}&back=${encodeURIComponent(back)}` : back);
-  }, [navigate, state.gameId, eventId, returnPath, onLeave]);
+  }, [navigate, state.gameId, eventId, returnPath, onLeave, vsPeople]);
   const leave = useCallback(() => exit(rewardsAfter), [exit, rewardsAfter]);
   const deckId = usePlay((play) => play.deckId);
   // players see who is watching them too
@@ -290,8 +297,15 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   const attackerName = useMemo(() => {
     const forced = /\(([^)]+)\)\s*$/.exec(prompt?.text ?? '')?.[1];
     if (forced) return forced;
-    return board.me?.front.flatMap((group) => group.members).find((card) => card.id === lastAttacker)?.name ?? null;
-  }, [prompt, board.me, lastAttacker]);
+    // the creature the question is about: the one just clicked, or one put onto the battlefield attacking
+    return defenders ? askedAttacker(view, myId, lastAttacker)?.name ?? null : null;
+  }, [prompt, defenders, view, myId, lastAttacker]);
+  // a yes/no question about cards an effect just looked at ("you may put a land from among them..."): show them
+  const askCards = useMemo(() => (canAct ? askedAboutCards(prompt, view)?.cards ?? null : null), [canAct, prompt, view]);
+  // announcing X: what the player could pay, when the server sets no limit
+  const announceLimit = useMemo(() => (prompt?.kind === 'amount' ? xLimit(prompt, view, myId) : null), [prompt, view, myId]);
+  // a concession takes effect when the player holding priority passes: name them while it is pending
+  const priorityName = (view?.players ?? []).find((player) => player.hasPriority && player.playerId !== myId)?.name ?? null;
   const choosingStarter = pregamePick === 'startingPlayer';
   // one decision, one set of controls: an overlay owns the choice while it's open
   const overlayOpen = (interaction.mode === 'mulligan' || choosingStarter || !!pickerCards || interaction.mode === 'panel') && !awaitingServer;
@@ -382,7 +396,13 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
 
             <Reveals view={view} myPlayerId={myId} opponentIds={opponentIds} />
             <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
-            <PhaseLadder step={view?.step} myTurn={!!myId && view?.activePlayerId === myId} turn={view?.turn ?? 0} />
+            <PhaseLadder
+              step={view?.step}
+              myTurn={!spectating && !!myId && view?.activePlayerId === myId}
+              turn={view?.turn ?? 0}
+              started={!!view?.activePlayerId && !!view?.step}
+              activeName={spectating ? view?.activePlayerName ?? null : null}
+            />
 
             {board.me && seatHand && (
               <Hand
@@ -423,6 +443,8 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 fullControl={fullControl}
                 onFullControl={setFullControl}
                 stalled={state.stalled}
+                conceding={state.conceding ? { waitingOn: priorityName } : null}
+                cards={askCards}
                 onResend={onResend}
                 onResync={onResync}
                 onCommand={onCommand}
@@ -475,7 +497,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 onCommand={onCommand}
               />
             )}
-            {interaction.mode === 'panel' && prompt && !awaitingServer && <ChoicePanel prompt={prompt} onCommand={onCommand} />}
+            {interaction.mode === 'panel' && prompt && !awaitingServer && <ChoicePanel prompt={prompt} onCommand={onCommand} xLimit={announceLimit} />}
             {viewer && <ZoneViewer title={viewer.title} cards={viewer.cards} onClose={() => openViewer(null)} />}
             {state.gameOver && betweenGames && (
               <BetweenGames
@@ -490,9 +512,11 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
               <GameOverOverlay
                 message={state.gameOver}
                 endInfo={state.endInfo}
+                myName={board.me?.player.name ?? null}
                 onLeave={leave}
-                leaveLabel={eventId ? 'Back to the event' : career ? 'Back to Career' : 'Back to Play'}
-                onPlayAgain={mode === 'play' && deckId && !eventId ? playAgain : undefined}
+                leaveLabel={eventId ? 'Back to the event' : career ? 'Back to Career' : vsPeople ? t('match.end.backToTables') : 'Back to Play'}
+                // a rematch is only dealt against the computer; people go back to Tables
+                onPlayAgain={mode === 'play' && deckId && !eventId && vsAi ? playAgain : undefined}
               />
             )}
             <CardZoom large={spectating && largeZoom} />

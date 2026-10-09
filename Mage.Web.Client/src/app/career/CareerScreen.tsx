@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEv
 import { useNavigate } from 'react-router-dom';
 import type { DeckCardLists } from '../../core/decks/types';
 import type { CareerOpponent, CareerPayout, CareerProfile, CareerQuest, CareerQuests, CareerStarter, CareerWeekly } from '../../protocol/generated/views';
-import { registerMessages, useT } from '../i18n';
+import { registerMessages, useT, type MessageKey } from '../i18n';
 import messages from '../i18n/en/career';
 import { usePlay } from '../stores/play';
 import { useSession } from '../stores/session';
@@ -11,6 +11,7 @@ import { useSettings } from '../stores/settings';
 import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
+import { Dialog } from '../ui/Dialog';
 import { downloadText } from '../ui/download';
 import { CareerBar } from './CareerBar';
 import { CareerModesCard } from './CareerModesCard';
@@ -81,11 +82,14 @@ function Intro() {
   );
 }
 
+
 function StarterPicker() {
   const t = useT();
   const starters = useCareerStarters(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // the pick is for good, so it's confirmed first
+  const [chosen, setChosen] = useState<CareerStarter | null>(null);
 
   async function pick(starter: CareerStarter) {
     setBusy(starter.id ?? null);
@@ -96,7 +100,11 @@ function StarterPicker() {
       setError(reason instanceof Error ? reason.message : String(reason));
       setBusy(null);
     }
+    setChosen(null);
   }
+  const colorsOf = (starter: CareerStarter) => (starter.colors ?? '').match(/[WUBRG]/g) ?? [];
+  // what the colors play like, from the deck's colors: "Kill and bring back. Big creatures, ramp."
+  const styleOf = (starter: CareerStarter) => colorsOf(starter).map((letter) => t(`career.starter.style.${letter}` as MessageKey)).join(' ');
 
   return (
     <div className={styles.page}>
@@ -113,16 +121,35 @@ function StarterPicker() {
       <ul className={styles.starters}>
         {starters.data?.map((starter) => (
           <li key={starter.id}>
-            <button type="button" className={styles.starter} onClick={() => void pick(starter)} disabled={busy !== null} aria-busy={busy === starter.id || undefined}>
+            <button type="button" className={styles.starter} onClick={() => setChosen(starter)} disabled={busy !== null} aria-busy={busy === starter.id || undefined}>
               <span className={styles.starterArt}>
                 <CardFace card={{ name: starter.cover?.name ?? starter.name, setCode: starter.cover?.setCode, cardNumber: starter.cover?.cardNumber }} size="normal" />
               </span>
               <b>{starter.name}</b>
+              <span className={styles.starterColors}>
+                {colorsOf(starter).map((letter) => <i key={letter} className={`ms ms-cost ms-${letter.toLowerCase()}`} role="img" aria-label={t(`career.color.${letter}` as MessageKey)} />)}
+                {styleOf(starter)}
+              </span>
               <small>{busy === starter.id ? t('career.loading') : t('career.starter.cards', { count: starter.cards ?? 60 })}</small>
             </button>
           </li>
         ))}
       </ul>
+      <Dialog
+        open={!!chosen}
+        onOpenChange={(open) => !open && busy === null && setChosen(null)}
+        title={t('career.starter.confirm', { name: chosen?.name ?? '' })}
+        description={t('career.starter.confirm.detail')}
+        width="sm"
+        footer={(
+          <>
+            <Button variant="quiet" disabled={busy !== null} onClick={() => setChosen(null)}>{t('career.starter.back')}</Button>
+            <Button variant="decision" busy={busy !== null} onClick={() => chosen && void pick(chosen)}>{t('career.starter.pick')}</Button>
+          </>
+        )}
+      >
+        {chosen && <p className={styles.note}>{styleOf(chosen)}</p>}
+      </Dialog>
     </div>
   );
 }

@@ -45,8 +45,9 @@ export function LoginScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
-  // game links go stale across sign-ins; anything else is worth returning to
-  const destination = from && !from.startsWith('/game/') && from !== '/login' ? from : '/';
+  // game links go stale across sign-ins; anything else is worth returning to, unless the server restarted under it
+  const [restarted] = useState(session.expired);
+  const destination = !restarted && from && !from.startsWith('/game/') && from !== '/login' ? from : '/';
   const [userName, setUserName] = useState(session.userName);
   const [password, setPassword] = useState('');
   const [needsPassword, setNeedsPassword] = useState(false);
@@ -243,6 +244,7 @@ export function LoginScreen() {
         )}
 
         {notice && <p className={styles.notice} role="status">{notice}</p>}
+        {session.expired && !session.error && <p className={styles.error} role="alert">{t('login.serverRestarted')}</p>}
         {session.error && <p className={styles.error} role="alert">{session.error}</p>}
 
         <Button type="submit" variant="decision" size="xl" busy={busy || working} disabled={!canSubmit} className={styles.submit}>

@@ -1,15 +1,23 @@
 import { Shield, Swords, UserRound } from 'lucide-react';
 import type { DefenderOption } from '../../core/game/multiplayer';
+import { useT } from '../i18n';
+import './matchMessages';
 import styles from './DefenderPicker.module.css';
 
 /**
  * "Attack whom?" with several opponents: one button per player, planeswalker or battle the creature can attack.
  * Their seats on the mat are clickable too; this names them in one place.
  */
-export function DefenderPicker({ attacker, options, onPick }: { attacker: string | null; options: readonly DefenderOption[]; onPick(id: string): void }) {
+export function DefenderPicker({ attacker, options, onPick }: {
+  /** the creature the server asks about (see askedAttacker), when it can be told */
+  attacker: string | null;
+  options: readonly DefenderOption[];
+  onPick(id: string): void;
+}) {
+  const t = useT();
   return (
     <section className={styles.picker} aria-label="Choose what to attack">
-      <h2 className={styles.title}><Swords size={20} aria-hidden="true" /> {attacker ? `${attacker} attacks…` : 'Attack…'}</h2>
+      <h2 className={styles.title}><Swords size={20} aria-hidden="true" /> {attacker ? t('match.attack.named', { name: attacker }) : t('match.attack')}</h2>
       <ul className={styles.options}>
         {options.map((option) => (
           <li key={option.id}>

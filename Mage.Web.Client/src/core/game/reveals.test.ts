@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { GameView } from '../../protocol/generated/views';
-import { cleanRevealTitle, revealGroups, revealLabel, revealSeat } from './reveals';
+import { askedAboutCards, cleanRevealTitle, revealGroups, revealLabel, revealSeat } from './reveals';
 
 const view: GameView = {
   myPlayerId: 'me',
@@ -47,5 +47,26 @@ describe('revealed and looked-at cards', () => {
     expect(revealSeat(revealed, seats, 'me')).toBe('them');
     expect(revealSeat(looked, seats, 'me')).toBe('me');
     expect(revealGroups(null)).toEqual([]);
+  });
+});
+
+describe('askedAboutCards', () => {
+  const view = {
+    lookedAt: [
+      { name: 'Opt [9f0] [2]', cards: { o: { id: 'o', expansionSetCode: 'XLN', cardNumber: '65' } } },
+      { name: 'Elvish Rejuvenator [1a2] [3]', cards: { f: { id: 'f', expansionSetCode: 'M19', cardNumber: '180' }, c: { id: 'c', expansionSetCode: 'M19', cardNumber: '1' } } },
+    ],
+  } as unknown as GameView;
+  const ask = (secondMessage?: string) => ({ kind: 'ask', options: secondMessage ? { secondMessage } : {} });
+
+  test('finds the cards the source of the question looked at', () => {
+    const group = askedAboutCards(ask("<font color='#ff0'>Elvish Rejuvenator [1a2]</font>"), view);
+    expect(group?.cards.map((card) => card.id)).toEqual(['f', 'c']);
+  });
+
+  test('nothing for other questions, or a source that looked at nothing', () => {
+    expect(askedAboutCards(ask('Llanowar Elves [777]'), view)).toBeNull();
+    expect(askedAboutCards(ask(), view)).toBeNull();
+    expect(askedAboutCards({ kind: 'target', options: { secondMessage: 'Elvish Rejuvenator [1a2]' } }, view)).toBeNull();
   });
 });

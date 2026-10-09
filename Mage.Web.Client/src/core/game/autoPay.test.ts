@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { manaOf, nextSource, parseCost, type ManaSource } from './autoPay';
+import { handNeeds, manaOf, nextSource, parseCost, type ManaCostParts, type ManaSource } from './autoPay';
 
 const land = (id: string, produces: ManaSource['produces']): ManaSource => ({ id, produces, isLand: true });
 const dork = (id: string, produces: ManaSource['produces']): ManaSource => ({ id, produces, isLand: false });
@@ -45,5 +45,46 @@ describe('nextSource', () => {
     expect(nextSource({ generic: 0, colored: { U: 1 } }, [land('forest', 'G')])).toBeNull();
     expect(nextSource({ generic: 1, colored: {} }, [land('dual', null)])).toBeNull();
     expect(nextSource({ generic: 2, colored: {} }, [land('a', 'G')])).toBeNull();
+  });
+});
+
+describe('generic mana and the rest of the hand', () => {
+  // Hill Giant {3}{R} with Forest x2, Island x3 and a Mountain untapped, Giant Growth {G} in hand
+  const board = [land('forest1', 'G'), land('forest2', 'G'), land('island1', 'U'), land('island2', 'U'), land('island3', 'U'), land('mountain', 'R')];
+
+  /** Taps sources one at a time, as the server asks for them, until the cost is paid; returns what's left untapped. */
+  function pay(cost: ManaCostParts, sources: ManaSource[], hand: string[]): ManaSource[] {
+    let untapped = [...sources];
+    let owed: ManaCostParts = { generic: cost.generic, colored: { ...cost.colored } };
+    const total = (parts: ManaCostParts) => parts.generic + Object.values(parts.colored).reduce((sum, value) => sum + (value ?? 0), 0);
+    while (total(owed) > 0) {
+      const id = nextSource(owed, untapped, handNeeds(hand, untapped.length - total(owed)));
+      const source = untapped.find((candidate) => candidate.id === id);
+      if (!source) throw new Error('no source');
+      untapped = untapped.filter((candidate) => candidate !== source);
+      const color = source.produces!;
+      if (owed.colored[color]) owed = { ...owed, colored: { ...owed.colored, [color]: owed.colored[color]! - 1 } };
+      else owed = { ...owed, generic: owed.generic - 1 };
+    }
+    return untapped;
+  }
+
+  it('keeps a Forest up for Giant Growth', () => {
+    const left = pay({ generic: 3, colored: { R: 1 } }, board, ['{G}']);
+    expect(left.map((source) => source.produces)).toContain('G');
+    expect(left).toHaveLength(2);
+  });
+
+  it('spends the most plentiful color when the hand needs nothing, so both colors stay open', () => {
+    const left = pay({ generic: 3, colored: { R: 1 } }, board, []);
+    expect(left.map((source) => source.produces).sort()).toEqual(['G', 'U']);
+  });
+
+  it('ignores hand cards the leftover mana could not cast anyway', () => {
+    expect(handNeeds(['{G}', '{2}{U}{U}', '{4}'], 2)).toEqual({ G: 1 });
+  });
+
+  it('still pays when the hand wants more than is left', () => {
+    expect(pay({ generic: 2, colored: {} }, [land('forest', 'G'), land('island', 'U')], ['{G}', '{U}'])).toEqual([]);
   });
 });

@@ -142,3 +142,18 @@ describe('import drafts', () => {
     expect(toDeck(draft).deck.source).toMatchObject({ site: 'archidekt', remoteId: '1', remoteUpdatedAt: 5, importedAt: expect.any(Number) });
   });
 });
+
+describe('a name for a list without one', () => {
+  it('takes the nonland card played most, skipping lands', async () => {
+    const draft = await startDraft(readList('2 Delver of Secrets\n24 Mountain\n4 Lightning Bolt (M11) 149'), fakeLookup());
+    expect(draft.name).toBe('Lightning Bolt');
+  });
+  it('takes the commander when there is one', async () => {
+    const draft = await startDraft(readList("Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring"), fakeLookup());
+    expect(draft.name).toBe("Atraxa, Praetors' Voice");
+  });
+  it('keeps the name the list carries', async () => {
+    const draft = await startDraft(readList('Name: Izzet Tempo\n4 Delver of Secrets'), fakeLookup());
+    expect(draft.name).toBe('Izzet Tempo');
+  });
+});

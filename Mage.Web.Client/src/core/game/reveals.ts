@@ -9,6 +9,8 @@ export interface RevealGroup {
   key: string;
   kind: 'revealed' | 'lookedAt';
   title: string;
+  /** the server's name for the group, ids included */
+  source: string;
   /** whose cards they are (the owner of the first card), when known */
   ownerId: string | null;
   cards: CardView[];
@@ -47,6 +49,7 @@ export function revealGroups(view: GameView | null | undefined): RevealGroup[] {
       key: `revealed|${revealed.name ?? ''}|${cards.map((card) => card.id).join(',')}`,
       kind: 'revealed',
       title: cleanRevealTitle(revealed.name),
+      source: revealed.name ?? '',
       ownerId: cards[0].ownerId ?? null,
       cards,
     });
@@ -61,6 +64,7 @@ export function revealGroups(view: GameView | null | undefined): RevealGroup[] {
       key: `lookedAt|${looked.name ?? ''}|${cards.map((card) => card.id).join(',')}`,
       kind: 'lookedAt',
       title: cleanRevealTitle(looked.name),
+      source: looked.name ?? '',
       ownerId: cards[0].ownerId ?? null,
       cards,
     });
@@ -81,4 +85,19 @@ export function revealLabel(group: RevealGroup): string {
 export function revealSeat(group: RevealGroup, seats: ReadonlySet<string>, myPlayerId: string | null): string | null {
   if (group.ownerId && seats.has(group.ownerId)) return group.ownerId;
   return myPlayerId;
+}
+
+/**
+ * The cards a yes/no question is about, when an effect looked at or revealed them just before asking ("look at the
+ * top five cards; you may put a land..."): the server names the source in the question (options.secondMessage,
+ * "Elvish Rejuvenator [1a2]") and in the looked-at window ("Elvish Rejuvenator [1a2] [3]"). The newest such group,
+ * or null.
+ */
+export function askedAboutCards(prompt: { kind: string; options: Record<string, unknown> } | null | undefined, view: GameView | null | undefined): RevealGroup | null {
+  if (prompt?.kind !== 'ask' || !view) return null;
+  const source = typeof prompt.options.secondMessage === 'string' ? prompt.options.secondMessage.replace(/<[^>]*>/g, '') : '';
+  const objectId = /\[([0-9a-f]{3})\]/i.exec(source)?.[1]?.toLowerCase();
+  if (!objectId) return null;
+  const matching = revealGroups(view).filter((group) => group.source.toLowerCase().includes(`[${objectId}]`));
+  return matching[matching.length - 1] ?? null;
 }
