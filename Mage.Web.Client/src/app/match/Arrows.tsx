@@ -85,6 +85,7 @@ export function Arrows({ sourceId, targetIds, live, links, attacks }: {
   const blockFrom = blockDrag ? center(blockDrag.blockerId) : null;
   const blockTo = blockDrag?.attackerId ? center(blockDrag.attackerId) : pointer;
   const blockLine = blockFrom && blockTo ? [blockFrom, blockTo] as const : null;
+  const attackPaths = assault.map(([attacker, defender], index) => attackPath(attacker, defender, index, assault.length));
   if (dragging || (!blockLine && combat.length === 0 && assault.length === 0 && (!from || (targets.length === 0 && !(live && pointer))))) return null;
 
   return (
@@ -100,22 +101,32 @@ export function Arrows({ sourceId, targetIds, live, links, attacks }: {
           <path d="M0 0 L10 5 L0 10 L2.5 5 z" fill="var(--oxblood-lit)" />
         </marker>
       </defs>
-      {assault.map(([attacker, defender], index) => {
-        const d = attackPath(attacker, defender, index, assault.length);
-        return (
-          <g key={`a${index}`} className={styles.attack}>
-            <path className={styles.attackGlow} d={d} />
-            <path className={styles.attackBody} d={d} markerEnd="url(#arrow-attack)" />
-            <path className={styles.attackFlow} d={d} />
+      {/* each layer is filtered once as a whole: a filter per arrow, repainted under the marching dashes, stalls the frame when a horde attacks */}
+      {assault.length > 0 && (
+        <>
+          <g className={styles.attackGlow}>
+            {attackPaths.map((d, index) => <path key={index} className={styles.attack} d={d} />)}
           </g>
-        );
-      })}
-      {combat.map(([blocker, attacker], index) => (
-        <line key={`c${index}`} className={styles.block} x1={blocker.x} y1={blocker.y} x2={attacker.x} y2={attacker.y} />
-      ))}
-      {from && targets.map((to, index) => (
-        <path key={index} className={styles.ink} d={curve(from, to)} markerEnd="url(#arrow-ink)" />
-      ))}
+          <g className={styles.attackBody}>
+            {attackPaths.map((d, index) => <path key={index} className={styles.attack} d={d} markerEnd="url(#arrow-attack)" />)}
+          </g>
+          <g className={styles.attackFlow}>
+            {attackPaths.map((d, index) => <path key={index} className={styles.attack} d={d} />)}
+          </g>
+        </>
+      )}
+      {combat.length > 0 && (
+        <g className={styles.block}>
+          {combat.map(([blocker, attacker], index) => (
+            <line key={index} x1={blocker.x} y1={blocker.y} x2={attacker.x} y2={attacker.y} />
+          ))}
+        </g>
+      )}
+      {from && targets.length > 0 && (
+        <g className={styles.ink}>
+          {targets.map((to, index) => <path key={index} d={curve(from, to)} markerEnd="url(#arrow-ink)" />)}
+        </g>
+      )}
       {blockLine && (
         <line
           className={blockDrag?.attackerId ? styles.blockLive : styles.live}
