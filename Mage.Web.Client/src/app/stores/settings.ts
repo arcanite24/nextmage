@@ -55,6 +55,8 @@ export interface PlaySettings {
   matArt: 'deck' | 'card' | 'none';
   /** playmat: the chosen card when matArt is 'card' */
   matCard: CardImageRef | null;
+  /** Career: the player chose to try it (local only; a server Career profile counts too) */
+  careerOptIn: boolean;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -91,6 +93,7 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   matCloth: 'green',
   matArt: 'deck',
   matCard: null,
+  careerOptIn: false,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },

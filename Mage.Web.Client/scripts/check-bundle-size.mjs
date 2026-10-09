@@ -19,10 +19,13 @@ import { gzipSync } from 'node:zlib';
 // all lazy chunks; the Events screen became lazy to keep the entry under budget
 // app raised 2026-10-09 from 322 kB for B082 (internationalization): the Spanish catalog is a lazy chunk of its own
 // (6.4 kB), downloaded only by players who use Spanish; the Settings dialog went lazy, so the entry shrank 3.7 kB
+// app raised 2026-10-09 from 336 kB (already at 338.3 kB) for M7 Career: about 14.5 kB of lazy Career screens (home,
+// deck, collection, shop and pack reveal, their English messages) and 2.7 kB more Spanish catalog; the entry only
+// gained the Home entry point and its two messages
 const BUDGET_KB = {
   entry: 68,
   initial: 212,
-  app: 336,
+  app: 360,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

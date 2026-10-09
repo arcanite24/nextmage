@@ -248,3 +248,40 @@
   justify-content: flex-end;
   gap: var(--space-2);
 }
+
+/* the way into Career, under the play button: offered only by servers that run it */
+.career {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 12px;
+  border: 0;
+  border-top: 1px solid var(--ink-ghost);
+  border-radius: 0;
+  background: none;
+  color: var(--ink-soft);
+  text-align: left;
+  cursor: pointer;
+}
+
+.career:hover:not(:disabled) {
+  color: var(--ink-strong);
+}
+
+.careerText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.careerText b {
+  font-family: var(--font-print);
+  font-size: var(--text-lg);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.careerText small {
+  font-size: var(--text-sm);
+}

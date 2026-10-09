@@ -101,6 +101,11 @@ const router = createBrowserRouter([
           { path: '/tables', lazy: () => import('./screens/TablesScreen').then((m) => ({ Component: m.TablesScreen })) },
           // an invite link; signing in first comes back here
           { path: '/join/:tableId', lazy: () => import('./screens/JoinScreen').then((m) => ({ Component: m.JoinScreen })) },
+          // Career: opt-in single player with its own collection, offered by servers with accounts
+          { path: '/career', lazy: () => import('./career/CareerScreen').then((m) => ({ Component: m.CareerScreen })) },
+          { path: '/career/deck', lazy: () => import('./career/CareerDeckScreen').then((m) => ({ Component: m.CareerDeckScreen })) },
+          { path: '/career/collection', lazy: () => import('./career/CareerCollectionScreen').then((m) => ({ Component: m.CareerCollectionScreen })) },
+          { path: '/career/shop', lazy: () => import('./career/CareerShopScreen').then((m) => ({ Component: m.CareerShopScreen })) },
           { path: '/history', lazy: () => import('./history/HistoryScreen').then((m) => ({ Component: m.HistoryScreen })) },
         ],
       },

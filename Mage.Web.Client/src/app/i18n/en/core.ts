@@ -80,6 +80,8 @@ export default {
   'home.shuffling': 'Shuffling',
   'home.settingUp': 'Setting up',
   'home.continue': 'Continue',
+  'home.career': 'Career',
+  'home.career.note': 'Your own collection, AI opponents in tiers, packs to earn.',
 
   // the AI opponent (Play)
   'ai.title': 'Playing the AI',
