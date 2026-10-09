@@ -9,6 +9,7 @@ import { describeFailure, readingFromServer, type ImportFailure } from '../../..
 import { browserFixStore, importKey, resolveCards, type CardLookup, type PrintingPolicy } from '../../../core/deckImport/resolve';
 import { nameFromLink, siteById, type DeckSiteId } from '../../../core/deckImport/sites';
 import type { CardView } from '../../../protocol/generated/views';
+import { APP_NAME } from '../../brand';
 import { api } from '../../connection';
 import type { ImportSeed } from '../../stores/importSheet';
 
@@ -69,7 +70,7 @@ export function useImportFlow() {
       return;
     }
     if (found.kind === 'unknownUrl') {
-      setStep({ kind: 'input', failure: 'Playmat can’t read decks from that site yet. Export the deck there and paste its list here.' });
+      setStep({ kind: 'input', failure: `${APP_NAME} can’t read decks from that site yet. Export the deck there and paste its list here.` });
       return;
     }
     if (found.kind === 'list') {

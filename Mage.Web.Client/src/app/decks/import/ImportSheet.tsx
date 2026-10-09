@@ -23,6 +23,7 @@ import { deckColors, entryKey, finalizeDeck, groupDeck, manaCurve, printingOf } 
 import { ManaCost } from '../../ui/ManaCost';
 import { ManaCurve } from '../ManaCurve';
 import { useValidation } from '../useValidation';
+import { APP_NAME } from '../../brand';
 import { SiteMark } from './SiteMark';
 import { PASTE_KEYS } from './text';
 import { cardLookup, useImportFlow, type ImportStep } from './useImportFlow';
@@ -178,7 +179,7 @@ function InputStep({ flow, failure }: { flow: Flow; failure?: string }) {
       </p>
 
       <p className={styles.sitesLegend}>Sites marked <Link2 size={12} aria-hidden="true" className={styles.siteTier} /> read in one step. The others take a copy and a paste.</p>
-      <div className={styles.sites} aria-label="Deck sites Playmat reads">
+      <div className={styles.sites} aria-label={`Deck sites ${APP_NAME} reads`}>
         {DECK_SITES.map((entry) => {
           const lit = site?.id === entry.id;
           const oneStep = entry.tier === 'direct' && !degraded.has(entry.id);
@@ -297,7 +298,7 @@ function AssistedStep({ flow, step }: { flow: Flow; step: Extract<ImportStep, { 
         <span>{back ? `Press ${PASTE_KEYS} to finish` : 'The list lands here'}</span>
       </div>
       {hint && <p className={styles.failure} role="alert">{hint}</p>}
-      <p className={styles.hint}>Tip: the “Send to Playmat” bookmark in Settings brings decks over in one click.</p>
+      <p className={styles.hint}>Tip: the “Send to {APP_NAME}” bookmark in Settings brings decks over in one click.</p>
     </div>
   );
 }

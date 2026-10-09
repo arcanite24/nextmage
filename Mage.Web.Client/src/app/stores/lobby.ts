@@ -34,6 +34,9 @@ interface LobbyState {
   /** the player whose profile is open */
   profile: string | null;
   openProfile(name: string | null): void;
+  /** the player being reported */
+  reporting: string | null;
+  openReport(name: string | null): void;
   /** client-side lines (help, ignore list): shown in the lobby chat only */
   addLocal(text: string): void;
   setOpen(open: boolean, tab?: LobbyState['tab']): void;
@@ -54,9 +57,13 @@ export const useLobby = create<LobbyState>((set, get) => ({
   tab: 'chat',
   draft: null,
   profile: null,
+  reporting: null,
 
   openProfile(name) {
     set({ profile: name });
+  },
+  openReport(name) {
+    set({ reporting: name });
   },
   addLocal(text) {
     const local: LobbyMessage = { key: `l${seq++}`, message: { message: text, messageType: 'USER_INFO', time: Date.now() } };

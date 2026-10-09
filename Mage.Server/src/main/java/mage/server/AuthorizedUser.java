@@ -61,6 +61,13 @@ public class AuthorizedUser {
         this.lockedUntil = null;
     }
 
+    void setPasswordHash(Hash hash) {
+        this.password = hash.toBase64();
+        this.salt = hash.getSalt().toBase64();
+        this.hashAlgorithm = hash.getAlgorithmName();
+        this.hashIterations = hash.getIterations();
+    }
+
     public boolean doCredentialsMatch(String name, String password) {
         HashedCredentialsMatcher matcher = new HashedCredentialsMatcher(this.hashAlgorithm);
         matcher.setHashIterations(this.hashIterations);

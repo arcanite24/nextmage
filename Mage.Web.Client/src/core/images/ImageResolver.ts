@@ -11,6 +11,7 @@ import {
   type ImageSize,
   type ScryfallLinks,
 } from './imageLinks';
+import { configuredImageProxy, proxiedScryfallUrl } from './imageProxy';
 
 type ImageUris = Partial<Record<ImageSize, string>>;
 
@@ -38,6 +39,11 @@ export interface ImageResolverOptions {
   /** cached links older than this are refreshed */
   maxAgeMs?: number;
   now?: () => number;
+  /**
+   * Prefix of the caching proxy for Scryfall (e.g. "/img"); defaults to the build's VITE_IMAGE_PROXY. Empty or
+   * undefined talks to Scryfall directly. Applied when a link is used, never to the stored links.
+   */
+  imageProxy?: string;
 }
 
 interface ScryfallCard {
@@ -48,17 +54,21 @@ interface ScryfallCard {
 }
 
 const MAX_BATCH = 75; // Scryfall /cards/collection limit
+const COLLECTION_URL = 'https://api.scryfall.com/cards/collection';
 const DAY = 24 * 60 * 60 * 1000;
 
 /**
- * Resolves card pictures to Scryfall CDN links.
+ * Resolves card pictures to Scryfall CDN links (through the deployment's caching proxy when the build has one).
  *
  * Printings are looked up in batches of up to 75 with POST /cards/collection, rate limited, and the links are
  * cached persistently. The browser's HTTP cache then keeps the image files themselves, so nothing is
  * downloaded twice and a full board costs one or two API requests instead of one per card.
  */
 export class ImageResolver {
-  private readonly options: Required<Omit<ImageResolverOptions, 'store'>> & { store: ImageLinkStore | null };
+  private readonly options: Required<Omit<ImageResolverOptions, 'store' | 'imageProxy'>> & {
+    store: ImageLinkStore | null;
+    imageProxy: string | undefined;
+  };
   private readonly memory = new Map<string, PrintingImages>();
   private readonly inFlight = new Set<string>();
   private readonly queue: { key: string; set: string; number: string }[] = [];
@@ -81,6 +91,7 @@ export class ImageResolver {
       batchDelayMs: options.batchDelayMs ?? 40,
       maxAgeMs: options.maxAgeMs ?? 30 * DAY,
       now: options.now ?? (() => Date.now()),
+      imageProxy: 'imageProxy' in options ? options.imageProxy : configuredImageProxy(),
     };
   }
 
@@ -129,6 +140,12 @@ export class ImageResolver {
    * Returns undefined when the card has no known picture at all, so the UI can draw a text frame instead.
    */
   resolve(card: CardImageRef, face: CardFace = 'front', size: ImageSize = 'normal'): string | null | undefined {
+    const link = this.resolveDirect(card, face, size);
+    return typeof link === 'string' ? proxiedScryfallUrl(link, this.options.imageProxy) : link;
+  }
+
+  /** {@link resolve} before the proxy rewrite: Scryfall's own links. */
+  private resolveDirect(card: CardImageRef, face: CardFace, size: ImageSize): string | null | undefined {
     this.ensureLinks();
     const exception = exceptionLink(card, face, this.links);
     if (exception) return toImageLink(exception, size);
@@ -234,7 +251,7 @@ export class ImageResolver {
   private async fetchBatch(batch: { key: string; set: string; number: string }[], attempt = 0): Promise<void> {
     let response: Response;
     try {
-      response = await this.options.fetch('https://api.scryfall.com/cards/collection', {
+      response = await this.options.fetch(proxiedScryfallUrl(COLLECTION_URL, this.options.imageProxy), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({

@@ -144,6 +144,7 @@ public class WebSocketServerImpl extends WebSocketServer {
         String clientIp = clientIp(conn, handshake);
         ConnectionState state = new ConnectionState(conn, workers, clientIp, limits.maxOutgoingBytes);
         conn.setAttachment(state);
+        BridgeMetrics.get().opened(); // every connection with a state is closed through onClose
         if (limits.limitLoopback || !isLoopback(clientIp)) {
             if (!connectionLimiter.tryAcquire(clientIp)) {
                 logger.warn("Closing WebSocket connection over the per-IP limit (" + limits.maxConnectionsPerIp + "): " + clientIp);
@@ -179,6 +180,7 @@ public class WebSocketServerImpl extends WebSocketServer {
         if (state == null) {
             return;
         }
+        BridgeMetrics.get().closed();
         if (state.releaseConnectionSlot()) {
             connectionLimiter.release(state.getRemoteHost());
         }
@@ -198,6 +200,7 @@ public class WebSocketServerImpl extends WebSocketServer {
         if (state == null) {
             return;
         }
+        BridgeMetrics.get().request();
 
         JsonObject request;
         try {
@@ -290,6 +293,7 @@ public class WebSocketServerImpl extends WebSocketServer {
     static void sendText(WebSocket conn, String text) {
         synchronized (conn) {
             conn.send(text);
+            BridgeMetrics.get().sent(text.length());
             ConnectionState state = conn.getAttachment();
             long limit = state == null ? WebSocketLimits.DEFAULT_MAX_OUTGOING_BYTES : state.getMaxOutgoingBytes();
             if (limit > 0 && conn instanceof WebSocketImpl && queuedBytesExceed(((WebSocketImpl) conn).outQueue, limit)) {

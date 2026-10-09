@@ -39,6 +39,11 @@ export interface SaveDeckOptions {
 
 const STORAGE_PREFIX = "mage_deck_";
 const META_KEY = "mage_decks_meta";
+/** decks deleted in this browser that the server may not know about yet (deck sync) */
+const TOMBSTONES_KEY = "playmat.deckTombstones";
+
+/** A change made by the player, for deck sync to pass on. */
+export type DeckChange = { type: "saved"; id: string } | { type: "deleted"; id: string; at: number };
 
 interface DeckMeta {
     id: string;
@@ -65,6 +70,18 @@ interface DeckMeta {
 }
 
 export class LocalDeckStorage implements IDeckStorage {
+    private listeners = new Set<(change: DeckChange) => void>();
+
+    /** Changes made through saveDeck and deleteDeck (not the sync's own writes). */
+    onChange(listener: (change: DeckChange) => void): () => void {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    }
+
+    private emit(change: DeckChange) {
+        for (const listener of this.listeners) listener(change);
+    }
+
     async saveDeck(deck: DeckCardLists, options: SaveDeckOptions = {}): Promise<string> {
         const meta = this.getMeta();
 
@@ -80,32 +97,86 @@ export class LocalDeckStorage implements IDeckStorage {
         }
 
         // Store extended deck data as JSON (preserving metadata)
+        const now = Date.now();
         const deckData = {
             ...deck,
             id,
-            updatedAt: Date.now(),
-            createdAt: deck.createdAt || Date.now(),
+            updatedAt: now,
+            createdAt: deck.createdAt || now,
         };
-        localStorage.setItem(STORAGE_PREFIX + id, JSON.stringify(deckData));
+        this.store(deckData, meta);
+        this.forgetTombstone(id);
+        this.emit({ type: "saved", id });
+        return id;
+    }
 
+    private store(deck: DeckCardLists & { id: string; updatedAt: number }, meta: DeckMeta[]) {
+        localStorage.setItem(STORAGE_PREFIX + deck.id, JSON.stringify(deck));
         const newMetaItem: DeckMeta = {
-            id,
+            id: deck.id,
             name: deck.name || "Untitled Deck",
             description: deck.description,
             format: deck.format,
-            updatedAt: Date.now(),
+            updatedAt: deck.updatedAt,
             cardCount: deck.cards.reduce((sum, c) => sum + c.amount, 0),
             sideboardCount: deck.sideboard.reduce((sum, c) => sum + c.amount, 0),
             coverCard: deck.coverCard,
             colors: deck.colors,
             source: deck.source,
         };
-
-        const newMeta = meta.filter(m => m.id !== id);
+        const newMeta = meta.filter(m => m.id !== deck.id);
         newMeta.push(newMetaItem);
         this.saveMeta(newMeta);
+    }
 
-        return id;
+    /** Every saved deck's id and last change, for deck sync. */
+    stamps(): { id: string; updatedAt: number }[] {
+        return this.getMeta().map(m => ({ id: m.id, updatedAt: m.updatedAt }));
+    }
+
+    /** The deck as JSON for the server, with its own change time. */
+    async exportForSync(id: string): Promise<{ name: string; updatedAt: number; data: string } | null> {
+        const deck = await this.loadDeck(id);
+        const meta = this.getMeta().find(m => m.id === id);
+        if (!deck || !meta) return null;
+        const data = { ...deck, id, updatedAt: meta.updatedAt };
+        return { name: meta.name, updatedAt: meta.updatedAt, data: JSON.stringify(data) };
+    }
+
+    /** A deck from the server, kept as it is (its change time too); not reported as a change. */
+    importFromSync(id: string, data: string): boolean {
+        let deck: DeckCardLists;
+        try {
+            deck = JSON.parse(data);
+        } catch {
+            return false;
+        }
+        if (!deck || !Array.isArray(deck.cards)) return false;
+        const updatedAt = typeof deck.updatedAt === "number" ? deck.updatedAt : Date.now();
+        this.store({ ...deck, sideboard: deck.sideboard ?? [], id, updatedAt }, this.getMeta());
+        this.forgetTombstone(id);
+        return true;
+    }
+
+    /** Deleted on another device: gone here too, without a tombstone. */
+    removeFromSync(id: string) {
+        localStorage.removeItem(STORAGE_PREFIX + id);
+        this.saveMeta(this.getMeta().filter(m => m.id !== id));
+    }
+
+    tombstones(): Record<string, number> {
+        try {
+            return JSON.parse(localStorage.getItem(TOMBSTONES_KEY) ?? "{}") ?? {};
+        } catch {
+            return {};
+        }
+    }
+
+    forgetTombstone(id: string) {
+        const tombstones = this.tombstones();
+        if (!(id in tombstones)) return;
+        delete tombstones[id];
+        localStorage.setItem(TOMBSTONES_KEY, JSON.stringify(tombstones));
     }
 
     async loadDeck(id: string): Promise<DeckCardLists | null> {
@@ -157,6 +228,9 @@ export class LocalDeckStorage implements IDeckStorage {
         localStorage.removeItem(STORAGE_PREFIX + id);
         const meta = this.getMeta();
         this.saveMeta(meta.filter(m => m.id !== id));
+        const at = Date.now();
+        localStorage.setItem(TOMBSTONES_KEY, JSON.stringify({ ...this.tombstones(), [id]: at }));
+        this.emit({ type: "deleted", id, at });
     }
 
     private getMeta(): DeckMeta[] {

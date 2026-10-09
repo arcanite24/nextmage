@@ -1,4 +1,4 @@
-import { ClipboardPaste, Copy, Download, PencilLine, PencilRuler, RefreshCw, Trash2 } from 'lucide-react';
+import { ClipboardPaste, Cloud, CloudOff, Copy, Download, PencilLine, PencilRuler, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { siteById } from '../../core/deckImport/sites';
@@ -11,6 +11,7 @@ import { PASTE_KEYS } from '../decks/import/text';
 import { deckStorage } from '../../core/decks/DeckStorageService';
 import { applyUpdate } from '../../core/deckImport/diff';
 import { SLEEVE_COLORS, rosterOf, sleeveFor, useDecks, type RosterDeck } from '../stores/decks';
+import { useDeckSyncStatus } from '../stores/deckSyncStatus';
 import { openImport, useImportSheet } from '../stores/importSheet';
 import { Button } from '../ui/Button';
 import { DeckBox } from '../ui/DeckBox';
@@ -75,6 +76,7 @@ export function DecksScreen() {
         {...dropProps}
         aside={
           <>
+            <SyncNote />
             <Button size="sm" icon={<Download size={16} />} onClick={() => openImport()}>Import</Button>
             <Button size="sm" icon={<PencilRuler size={16} />} onClick={() => navigate('/decks/new')}>Build a deck</Button>
           </>
@@ -233,5 +235,18 @@ function RenameForm({ deck, onClose }: { deck: RosterDeck; onClose(): void }) {
         <Button variant="decision" type="submit" busy={busy}>Rename</Button>
       </div>
     </form>
+  );
+}
+
+/** On servers with accounts: whether the decks are saved to the account. */
+function SyncNote() {
+  const { status, error } = useDeckSyncStatus();
+  if (status === 'off') return null;
+  const failed = status === 'error';
+  return (
+    <span className={[styles.sync, failed ? styles.syncFailed : ''].join(' ')} role="status" title={failed ? error ?? undefined : undefined}>
+      {failed ? <CloudOff size={15} aria-hidden="true" /> : <Cloud size={15} aria-hidden="true" />}
+      {status === 'syncing' ? 'Saving to your account' : failed ? "Couldn't save to your account" : 'Saved to your account'}
+    </span>
   );
 }

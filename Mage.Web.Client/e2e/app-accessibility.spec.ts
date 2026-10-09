@@ -31,6 +31,15 @@ test.describe('app accessibility', () => {
     expect(await serious(page), 'with the server field and a name error').toEqual([]);
   });
 
+  test('the about page and the admin sign-in have no serious violations (no server needed)', async ({ page }) => {
+    await page.goto('/about');
+    await page.getByRole('heading', { level: 1 }).waitFor();
+    expect(await serious(page), 'About').toEqual([]);
+    await page.goto('/admin');
+    await page.getByLabel('Admin password').waitFor();
+    expect(await serious(page), 'Admin sign-in').toEqual([]);
+  });
+
   test('screens have no serious violations', async ({ page }) => {
     test.skip(!requireServer, 'needs the local server (MAGE_E2E_REQUIRE_SERVER=1)');
     test.setTimeout(180_000);
@@ -77,6 +86,9 @@ test.describe('app accessibility', () => {
     await page.getByRole('button', { name: 'Host an event' }).click();
     await page.getByRole('dialog').waitFor();
     expect(await serious(page, '[role="dialog"]'), 'Host dialog').toEqual([]);
+    await page.getByText('Random sets', { exact: true }).click();
+    await page.getByRole('group', { name: /Set pool/ }).waitFor();
+    expect(await serious(page, '[role="dialog"]'), 'Host dialog: set pool').toEqual([]);
     await page.keyboard.press('Escape');
 
     // a game against the AI: the match stage and the opening-hand overlay

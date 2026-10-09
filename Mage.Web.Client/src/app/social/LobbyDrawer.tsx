@@ -1,5 +1,5 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Ban, MessageCircle, MoreHorizontal, Send, Star, StarOff, UserRound, X } from 'lucide-react';
+import { Ban, Flag as FlagIcon, MessageCircle, MoreHorizontal, Send, Star, StarOff, UserRound, X } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { inviteLink, toChatLines, type ChatLine } from '../../core/social/chatLine';
 import type { TableView, UsersView } from '../../protocol/generated/views';
@@ -203,6 +203,9 @@ function PlayerRow({ user, me, myTables }: { user: UsersView; me: string; myTabl
                 onSelect={() => (ignoredUser ? useSocial.getState().unignore(name) : useSocial.getState().ignore(name))}
               >
                 <Ban size={16} aria-hidden="true" /> {ignoredUser ? 'Stop ignoring' : 'Ignore'}
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className={shell.menuItem} onSelect={() => useLobby.getState().openReport(name)}>
+                <FlagIcon size={16} aria-hidden="true" /> Report
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>

@@ -1,5 +1,7 @@
 package mage.server.websocket.api;
 
+import mage.server.AccountService;
+import mage.server.Session;
 import mage.players.net.UserData;
 import mage.server.DisconnectReason;
 import mage.server.Main;
@@ -83,20 +85,42 @@ final class SessionApi {
                 RpcMethod.named("authRegister")
                         .establishes(0)
                         .params(of("sessionId", STRING), of("userName", STRING), of("password", STRING), of("email", STRING))
-                        .doc("Register a new account (servers with authentication enabled).")
-                        .handler(call -> ctx.server.authRegister(call.string(0), call.string(1), call.string(2), call.string(3))),
+                        .doc("Register a new account (servers with authentication enabled). With a password it becomes the "
+                                + "account's password; without one the server emails a generated password. Fails with the reason.")
+                        .handler(call -> {
+                            Session session = ctx.managers.sessionManager().getSession(call.string(0))
+                                    .orElseThrow(() -> RpcException.notAuthorized("No session"));
+                            String problem = session.registerUser(call.string(1), call.string(2), call.string(3));
+                            if (problem != null) {
+                                throw RpcException.invalidParams(problem);
+                            }
+                            return true;
+                        }),
 
                 RpcMethod.named("authSendTokenToEmail")
                         .establishes(0)
                         .params(of("sessionId", STRING), of("email", STRING))
-                        .doc("Send a password reset token by email.")
-                        .handler(call -> ctx.server.authSendTokenToEmail(call.string(0), call.string(1))),
+                        .doc("Email a password reset code to an account's address. Succeeds whether or not an account has the "
+                                + "address, so addresses can't be probed; fails only when the server can't send mail.")
+                        .handler(call -> {
+                            String problem = new AccountService(ctx.managers).sendResetCode(call.string(1));
+                            if (problem != null && !AccountService.NO_SUCH_EMAIL.equals(problem)) {
+                                throw RpcException.invalidParams(problem);
+                            }
+                            return true;
+                        }),
 
                 RpcMethod.named("authResetPassword")
                         .establishes(0)
                         .params(of("sessionId", STRING), of("email", STRING), of("authToken", STRING), of("password", STRING))
-                        .doc("Set a new password with an emailed token.")
-                        .handler(call -> ctx.server.authResetPassword(call.string(0), call.string(1), call.string(2), call.string(3))),
+                        .doc("Set a new password with an emailed code (valid 30 minutes, 5 tries). Fails with the reason.")
+                        .handler(call -> {
+                            String problem = new AccountService(ctx.managers).resetPassword(call.string(1), call.string(2), call.string(3));
+                            if (problem != null) {
+                                throw RpcException.invalidParams(problem);
+                            }
+                            return true;
+                        }),
 
                 disconnect,
                 disconnect.alias("playerLogout"),
