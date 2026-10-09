@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { isCommanderFormat } from '../../core/decks/formats';
 import { deckStorage, type DeckSummary } from '../../core/decks/DeckStorageService';
 import { DeckSerializer } from '../../core/decks/DeckSerializer';
 import { copyName } from '../../core/decks/exportFormats';
@@ -10,6 +11,8 @@ export interface StarterDeck {
   name: string;
   cards: number;
   cover: { name: string; setCode: string; cardNumber: string };
+  /** the deck type it is built for; Freeform when absent */
+  format?: string;
 }
 
 /** A deck in the roster: one the player saved, or a starter deck not saved yet. */
@@ -54,7 +57,7 @@ function starterToRoster(starter: StarterDeck): RosterDeck {
   return {
     id: STARTER_PREFIX + starter.file,
     name: starter.name,
-    note: `Starter deck · ${starter.cards} cards`,
+    note: `${isCommanderFormat(starter.format) ? 'Commander starter' : 'Starter deck'} · ${starter.cards} cards`,
     cardCount: starter.cards,
     cover: starter.cover,
     colors: [],
@@ -94,6 +97,11 @@ async function fetchStarters(): Promise<StarterDeck[]> {
   }
 }
 
+/** The deck type a starter deck is built for. */
+function starterFormat(starters: StarterDeck[], id: string): string {
+  return starters.find((starter) => STARTER_PREFIX + starter.file === id)?.format ?? 'Constructed - Freeform';
+}
+
 export const useDecks = create<DeckLibraryState>((set, get) => ({
   saved: [],
   starters: [],
@@ -126,7 +134,7 @@ export const useDecks = create<DeckLibraryState>((set, get) => ({
   async loadForPlay(id) {
     if (id.startsWith(STARTER_PREFIX)) {
       const deck = await get().loadList(id);
-      deck.format = 'Constructed - Freeform';
+      deck.format = starterFormat(get().starters, id);
       const savedId = await deckStorage.saveDeck(deck, { forceNew: true });
       const sleeve = get().sleeves[id];
       await get().refresh();
@@ -166,7 +174,7 @@ export const useDecks = create<DeckLibraryState>((set, get) => ({
     const name = copyName(deck.name, taken);
     // a copy is the player's own deck: it no longer follows the site it was imported from
     const copy: DeckCardLists = { ...deck, id: undefined, name, source: undefined, createdAt: undefined };
-    if (starter) copy.format = 'Constructed - Freeform';
+    if (starter) copy.format = starterFormat(get().starters, id);
     const newId = await deckStorage.saveDeck(copy, { forceNew: true });
     await get().refresh();
     get().setSleeve(newId, sleeve);
@@ -191,7 +199,7 @@ export const useDecks = create<DeckLibraryState>((set, get) => ({
       const text = response.ok ? await response.text() : '';
       if (!text || /^\s*</.test(text)) throw new Error(`Couldn't load ${starter.name}.`);
       const deck = DeckSerializer.importDeck(text);
-      return { ...deck, name: starter.name, coverCard: starter.cover };
+      return { ...deck, name: starter.name, coverCard: starter.cover, format: starter.format ?? 'Constructed - Freeform' };
     }
     const deck = await deckStorage.loadDeck(id);
     if (!deck) throw new Error('That deck is no longer saved.');

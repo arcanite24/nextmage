@@ -169,3 +169,9 @@
     grid-template-columns: 1fr;
   }
 }
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}

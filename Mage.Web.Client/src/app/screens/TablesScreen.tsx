@@ -12,7 +12,13 @@ import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Field } from '../ui/Field';
 import { Zone } from '../ui/Zone';
+import { formatMenu, formatRules, gameTypesFor, isCommanderFormat } from '../../core/decks/formats';
+import { DEFAULT_ADVANCED, matchOptions, type TableAdvanced } from '../../core/game/tableSetup';
+import { aiDecks } from '../stores/play';
+import { TableAdvancedFields } from './TableAdvancedFields';
 import styles from './TablesScreen.module.css';
+
+const FREEFORM = 'Constructed - Freeform';
 
 const STATE_LABEL: Record<string, string> = {
   WAITING: 'Waiting for players',
@@ -213,18 +219,40 @@ function HostDialog({ open, onOpenChange, deckId }: { open: boolean; onOpenChang
   const roomId = useSession((state) => state.roomId);
   const userName = useSession((state) => state.userName);
   const loadForPlay = useDecks((state) => state.loadForPlay);
+  const loadList = useDecks((state) => state.loadList);
   const [name, setName] = useState('');
+  const [deckType, setDeckType] = useState(FREEFORM);
   const [gameType, setGameType] = useState('Two Player Duel');
-  const [deckType, setDeckType] = useState('Constructed - Freeform');
+  const [seats, setSeats] = useState(2);
   const [wins, setWins] = useState(2);
   const [aiSeats, setAiSeats] = useState(0);
   const [password, setPassword] = useState('');
+  const [advanced, setAdvanced] = useState<TableAdvanced>(DEFAULT_ADVANCED);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const gameTypes = serverState?.gameTypes ?? [];
-  const type = gameTypes.find((item) => item.name === gameType);
-  const seats = type?.minPlayers ?? 2;
+  // the table takes the format of the deck you join with
+  useEffect(() => {
+    if (!open || !deckId) return;
+    let cancelled = false;
+    void loadList(deckId).then((deck) => {
+      if (!cancelled && deck.format) setDeckType(deck.format);
+    }).catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, deckId, loadList]);
+
+  const allTypes = useMemo(() => serverState?.gameTypes ?? [], [serverState]);
+  const gameTypes = useMemo(() => gameTypesFor(deckType, allTypes.map((item) => item.name!).filter(Boolean)), [deckType, allTypes]);
+  const chosenGame = gameTypes.includes(gameType) ? gameType : gameTypes[0] ?? gameType;
+  const type = allTypes.find((item) => item.name === chosenGame);
+  const minSeats = type?.minPlayers ?? 2;
+  const maxSeats = Math.min(type?.maxPlayers ?? 2, 6);
+  const seatCount = Math.min(maxSeats, Math.max(minSeats, seats));
+  const commander = isCommanderFormat(deckType);
+  const menu = formatMenu(serverState?.deckTypes ?? []);
+  const listed = menu.some((group) => group.types.includes(deckType));
 
   async function host() {
     if (!roomId || !deckId) return;
@@ -232,24 +260,30 @@ function HostDialog({ open, onOpenChange, deckId }: { open: boolean; onOpenChang
     setError(null);
     try {
       const { deck } = await loadForPlay(deckId);
-      const playerTypes = Array.from({ length: seats }, (_, index) => (index > 0 && index <= aiSeats ? 'COMPUTER_MAD' : 'HUMAN'));
-      const table = await api.roomCreateTable(roomId, {
+      const playerTypes = Array.from({ length: seatCount }, (_, index) => (index > 0 && index <= aiSeats ? 'COMPUTER_MAD' : 'HUMAN'));
+      const table = await api.roomCreateTable(roomId, matchOptions({
         name: name.trim() || `${userName}'s table`,
-        gameType,
+        gameType: chosenGame,
         deckType,
-        winsNeeded: wins,
-        password: password || undefined,
-        spectatorsAllowed: true,
-        rollbackTurnsAllowed: true,
+        // a free-for-all is one game
+        winsNeeded: seatCount > 2 ? 1 : wins,
+        password,
         playerTypes,
-      });
+        advanced,
+      }));
       if (!table.tableId) throw new Error('The server did not create the table.');
       const wire = toWire(deck);
       if (!await api.roomJoinTable(roomId, table.tableId, userName, 'HUMAN', 1, wire, password)) {
-        throw new Error('Your deck is not legal for this format.');
+        throw new Error(`Your deck is not legal in ${formatRules(deckType).label}.`);
       }
-      for (let seat = 1; seat <= aiSeats; seat++) {
-        await api.roomJoinTable(roomId, table.tableId, `AI ${seat}`, 'COMPUTER_MAD', 4, wire, password);
+      if (aiSeats > 0) {
+        // the AI brings starter decks of the right kind; a format they don't fit gets a copy of yours
+        const rivals = await aiDecks(null, aiSeats, commander).catch(() => []);
+        for (let seat = 1; seat <= aiSeats; seat++) {
+          const rival = rivals[seat - 1] ? toWire(rivals[seat - 1]) : wire;
+          const joined = await api.roomJoinTable(roomId, table.tableId, `AI ${seat}`, 'COMPUTER_MAD', 4, rival, password);
+          if (!joined && rival !== wire) await api.roomJoinTable(roomId, table.tableId, `AI ${seat}`, 'COMPUTER_MAD', 4, wire, password);
+        }
       }
       await queryClient.invalidateQueries({ queryKey: ['tables'] });
       onOpenChange(false);
@@ -266,6 +300,7 @@ function HostDialog({ open, onOpenChange, deckId }: { open: boolean; onOpenChang
       onOpenChange={onOpenChange}
       title="Host a table"
       description="Friends on this server will see it under Open tables."
+      width="lg"
       footer={
         <>
           <Button variant="quiet" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -275,35 +310,57 @@ function HostDialog({ open, onOpenChange, deckId }: { open: boolean; onOpenChang
     >
       <div className={styles.form}>
         <Field label="Table name" value={name} placeholder={`${userName}'s table`} onChange={(event) => setName(event.target.value)} />
-        <label className={styles.selectField}>
-          <span>Game</span>
-          <select value={gameType} onChange={(event) => setGameType(event.target.value)}>
-            {gameTypes.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
-          </select>
-        </label>
-        <label className={styles.selectField}>
-          <span>Format</span>
-          <select value={deckType} onChange={(event) => setDeckType(event.target.value)}>
-            {(serverState?.deckTypes ?? []).map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-        <label className={styles.selectField}>
-          <span>Games to win</span>
-          <select value={wins} onChange={(event) => setWins(Number(event.target.value))}>
-            <option value={1}>1 (single game)</option>
-            <option value={2}>2 (best of three)</option>
-            <option value={3}>3 (best of five)</option>
-          </select>
-        </label>
-        {seats > 2 && (
+        <div className={styles.pair}>
           <label className={styles.selectField}>
-            <span>AI players</span>
-            <select value={aiSeats} onChange={(event) => setAiSeats(Number(event.target.value))}>
-              {Array.from({ length: seats }, (_, index) => <option key={index} value={index}>{index}</option>)}
+            <span>Format</span>
+            <select value={deckType} onChange={(event) => setDeckType(event.target.value)}>
+              {!listed && <option value={deckType}>{formatRules(deckType).label}</option>}
+              {menu.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.types.map((item) => <option key={item} value={item}>{formatRules(item).label}</option>)}
+                </optgroup>
+              ))}
             </select>
           </label>
-        )}
+          <label className={styles.selectField}>
+            <span>Game</span>
+            <select value={chosenGame} onChange={(event) => setGameType(event.target.value)}>
+              {gameTypes.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className={styles.pair}>
+          {maxSeats > 2 ? (
+            <label className={styles.selectField}>
+              <span>Players</span>
+              <select value={seatCount} onChange={(event) => setSeats(Number(event.target.value))}>
+                {Array.from({ length: maxSeats - minSeats + 1 }, (_, index) => minSeats + index).map((count) => <option key={count} value={count}>{count}</option>)}
+              </select>
+            </label>
+          ) : (
+            <label className={styles.selectField}>
+              <span>Games to win</span>
+              <select value={wins} onChange={(event) => setWins(Number(event.target.value))}>
+                <option value={1}>1 (single game)</option>
+                <option value={2}>2 (best of three)</option>
+                <option value={3}>3 (best of five)</option>
+              </select>
+            </label>
+          )}
+          <label className={styles.selectField}>
+            <span>AI players</span>
+            <select value={Math.min(aiSeats, seatCount - 1)} onChange={(event) => setAiSeats(Number(event.target.value))}>
+              {Array.from({ length: seatCount }, (_, index) => <option key={index} value={index}>{index === 0 ? 'None' : index}</option>)}
+            </select>
+          </label>
+        </div>
         <Field label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} hint="Leave empty for an open table." />
+        <TableAdvancedFields
+          value={advanced}
+          onChange={(patch) => setAdvanced((current) => ({ ...current, ...patch }))}
+          multiplayer={seatCount > 2}
+          commander={commander}
+        />
         {error && <p className={styles.error} role="alert">{error}</p>}
       </div>
     </Dialog>
