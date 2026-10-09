@@ -27,8 +27,10 @@ import { gzipSync } from 'node:zlib';
 // weekly challenge): about 29.3 kB of lazy chunks, most of it their English and Spanish messages; on top of M8's
 // Career progress screens (371.8 kB on their branch) with about 4 kB of headroom for the merge. The modes share one
 // route in the entry (+0.3 kB)
+// entry raised 2026-10-09 from 68 kB: the generated RPC client lives in the entry, and M9 added 18 Career mode
+// methods to it; with M8 and M9 merged the entry measured 68.2 kB
 const BUDGET_KB = {
-  entry: 68,
+  entry: 69,
   initial: 212,
   app: 405,
 };
