@@ -49,6 +49,17 @@
   container-type: inline-size;
 }
 
+/* the frame of a card whose picture is on its way: hidden for a moment, then printed */
+.late {
+  animation: frame-late 180ms linear 700ms both;
+}
+
+@keyframes frame-late {
+  from {
+    opacity: 0;
+  }
+}
+
 .titleBar {
   display: flex;
   align-items: center;

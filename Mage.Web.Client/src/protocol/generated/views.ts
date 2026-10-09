@@ -331,6 +331,7 @@ export interface CareerLines {
 export interface CareerMatch {
     opponentId?: string;
     tableId?: string;
+    warm?: CareerCover[];
 }
 
 export interface CareerModeResult {
@@ -541,6 +542,7 @@ export interface CareerSetProgress {
 }
 
 export interface CareerShopSet {
+    cover?: CareerCover;
     locked?: boolean;
     name?: string;
     price?: number;

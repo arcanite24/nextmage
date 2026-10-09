@@ -9,6 +9,7 @@ import { useEvents } from '../stores/events';
 import { useCareerVoice, type VoiceLines } from '../stores/careerVoice';
 import { usePlay } from '../stores/play';
 import { useSession } from '../stores/session';
+import { warmMatch } from './careerData';
 import { rewardsPath } from './progressModel';
 
 /**
@@ -79,6 +80,7 @@ export async function playMode(kind: ModeKind, start: () => Promise<CareerMatch>
   usePlay.setState({ phase: 'waitingForGame', error: null, deckId: null, returnPath: MODE_PATHS[kind] });
   try {
     const match = await start();
+    warmMatch(match);
     lastPlayed = match?.tableId ? { kind, gameKey: match.tableId } : null;
     // leaving the game tells its result as a scene, then comes back to the mode's screen
     usePlay.setState({ tableId: match?.tableId ?? null, returnPath: rewardsPath(match?.tableId ?? null, true, MODE_PATHS[kind]) });
