@@ -145,6 +145,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('sendPlayerAction', action, gameId, SESSION, data),
     cheatShow: (gameId: UUID, playerId: UUID) =>
       rpc.call('cheatShow', gameId, SESSION, playerId),
+    gamePractice: (gameId: UUID, tool: string, cardName?: string | null, amount?: number | null) =>
+      rpc.call('gamePractice', gameId, SESSION, tool, cardName, amount),
     replayInit: (gameId: UUID) =>
       rpc.call('replayInit', gameId, SESSION),
     replayStart: (gameId: UUID) =>

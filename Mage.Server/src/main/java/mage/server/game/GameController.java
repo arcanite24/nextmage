@@ -787,6 +787,34 @@ public class GameController implements GameCallback {
         }
     }
 
+    /**
+     * Queue a practice tool for the user's player. Only allowed when that user is the game's one human player, so
+     * practice can never change a game against another person.
+     *
+     * @return null when queued, else why not
+     */
+    public String practice(UUID userId, PracticeTools.Tool tool, String cardName, int amount) {
+        UUID playerId = getPlayerId(userId);
+        Player player = playerId == null ? null : game.getPlayer(playerId);
+        if (player == null) {
+            return "You aren't playing in this game.";
+        }
+        long humans = game.getPlayers().values().stream().filter(Player::isHuman).count();
+        if (humans != 1 || !player.isHuman()) {
+            return "Practice tools only work in a game against the computer.";
+        }
+        if (game.hasEnded() || !player.isInGame()) {
+            return "The game is over.";
+        }
+        StringBuilder problem = new StringBuilder();
+        java.util.function.Consumer<Game> action = PracticeTools.action(tool, playerId, cardName, amount, problem);
+        if (action == null) {
+            return problem.toString();
+        }
+        player.queueGameThreadAction(action);
+        return null;
+    }
+
     public void cheatShow(UUID playerId) {
         Player player = game.getPlayer(playerId);
         if (player != null) {

@@ -99,6 +99,8 @@ public class HumanPlayer extends PlayerImpl {
     private transient Boolean responseOpenedForAnswer = false; // GAME thread waiting new answer
     private transient long responseLastWaitingThreadId = 0;
     private final transient PlayerResponse response; // data receiver from a client side (must be shared for one player between multiple clients)
+    // practice tools waiting for the game thread (shared between copies, like the response)
+    private final transient Queue<java.util.function.Consumer<Game>> gameThreadActions;
     private final int RESPONSE_WAITING_TIME_SECS = 30; // waiting time before cancel current response
     private final int RESPONSE_WAITING_CHECK_MS = 100; // timeout for open status check
 
@@ -134,6 +136,7 @@ public class HumanPlayer extends PlayerImpl {
         super(name, range);
         this.human = true;
         this.response = new PlayerResponse();
+        this.gameThreadActions = new java.util.concurrent.ConcurrentLinkedQueue<>();
         initReplacementDialog();
     }
 
@@ -155,12 +158,14 @@ public class HumanPlayer extends PlayerImpl {
         super(sourcePlayer);
         this.human = true;
         this.response = sourceResponse; // need for sync and wait user's response from a network
+        this.gameThreadActions = new java.util.concurrent.ConcurrentLinkedQueue<>();
         initReplacementDialog();
     }
 
     public HumanPlayer(final HumanPlayer player) {
         super(player);
         this.response = player.response;
+        this.gameThreadActions = player.gameThreadActions;
 
         this.replacementEffectChoice = player.replacementEffectChoice;
         this.autoSelectReplacementEffects.addAll(player.autoSelectReplacementEffects);
@@ -388,7 +393,15 @@ public class HumanPlayer extends PlayerImpl {
                 // run cheats of any player
                 // it's safe to reset all cheat marks cause only one cheat at the same time allow
                 resetAllWantCheatCommands(game);
-                SystemUtil.executeCheatCommands(game, null, this);
+                if (gameThreadActions != null && !gameThreadActions.isEmpty()) {
+                    // practice tools rather than the test mode's init.txt
+                    java.util.function.Consumer<Game> action;
+                    while ((action = gameThreadActions.poll()) != null) {
+                        action.accept(game);
+                    }
+                } else {
+                    SystemUtil.executeCheatCommands(game, null, this);
+                }
                 // force to game update for new possible data
                 game.fireUpdatePlayersEvent();
                 // must stop current dialog on changed control, so game can give priority to actual player
@@ -2801,6 +2814,12 @@ public class HumanPlayer extends PlayerImpl {
                 response.notifyAll(); // will force to stop a current waiting dialog (so game can continue)
             }
         }
+    }
+
+    @Override
+    public void queueGameThreadAction(java.util.function.Consumer<Game> action) {
+        gameThreadActions.add(action);
+        signalPlayerCheat();
     }
 
     @Override

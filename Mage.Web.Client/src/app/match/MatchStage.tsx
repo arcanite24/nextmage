@@ -45,6 +45,7 @@ import { useAutoOrder } from './useAutoOrder';
 import { Vfx } from './Vfx';
 import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
+import { PracticeTools } from './PracticeTools';
 import { PhaseLadder } from './PhaseLadder';
 import { DefenderPicker } from './DefenderPicker';
 import { MiniPiles, Piles } from './Piles';
@@ -398,6 +399,8 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             <GameLog gameId={state.gameId} notices={state.notices} canChat={mode !== 'replay'} view={view} replayLog={replayLog} />
             {mode === 'play' && <WatcherCount watchers={watchers} className={styles.watchers} />}
             <GameMenu
+              gameId={state.gameId}
+              practice={mode === 'play' && !state.gameOver && board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false)}
               canConcede={canAct}
               onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })}
               onLeave={leave}
@@ -601,7 +604,10 @@ const CONFIRM = {
   },
 } as const;
 
-function GameMenu({ canConcede, onConcede, onLeave, rollback }: {
+function GameMenu({ gameId, practice, canConcede, onConcede, onLeave, rollback }: {
+  gameId: string;
+  /** a game against the computer only: the practice tools are on offer */
+  practice: boolean;
   canConcede: boolean;
   onConcede(): void;
   onLeave(): void;
@@ -610,6 +616,7 @@ function GameMenu({ canConcede, onConcede, onLeave, rollback }: {
   // conceding gives up this game; leaving a game in progress gives up the whole match
   const [confirming, setConfirming] = useState<keyof typeof CONFIRM | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [practiceOpen, setPracticeOpen] = useState(false);
   const copy = confirming ? CONFIRM[confirming] : null;
   return (
     <div className={styles.menu}>
@@ -620,6 +627,9 @@ function GameMenu({ canConcede, onConcede, onLeave, rollback }: {
         <DropdownMenu.Portal>
           <DropdownMenu.Content className={styles.menuContent} align="end" sideOffset={8}>
             <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>Settings</DropdownMenu.Item>
+            {practice && (
+              <DropdownMenu.Item className={styles.menuItem} onSelect={() => setPracticeOpen(true)}>Practice tools</DropdownMenu.Item>
+            )}
             {rollback && (
               <DropdownMenu.Item
                 className={styles.menuItem}
@@ -640,6 +650,7 @@ function GameMenu({ canConcede, onConcede, onLeave, rollback }: {
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      {practice && <PracticeTools gameId={gameId} open={practiceOpen} onOpenChange={setPracticeOpen} />}
       <Dialog
         open={confirming !== null}
         onOpenChange={(open) => !open && setConfirming(null)}

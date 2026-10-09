@@ -75,6 +75,7 @@ export interface RpcMethods {
   sendPlayerManaType: { params: [gameId: UUID, playerId: UUID, sessionId: string, manaType: ManaType]; result: boolean };
   sendPlayerAction: { params: [action: PlayerAction, gameId: UUID, sessionId: string, data?: unknown | null]; result: boolean };
   cheatShow: { params: [gameId: UUID, sessionId: string, playerId: UUID]; result: boolean };
+  gamePractice: { params: [gameId: UUID, sessionId: string, tool: string, cardName?: string | null, amount?: number | null]; result: boolean };
   replayInit: { params: [gameId: UUID, sessionId: string]; result: boolean };
   replayStart: { params: [gameId: UUID, sessionId: string]; result: boolean };
   replayStop: { params: [gameId: UUID, sessionId: string]; result: boolean };
@@ -186,6 +187,7 @@ export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: Rp
   sendPlayerManaType: { access: 'session', sessionParam: 2 },
   sendPlayerAction: { access: 'session', sessionParam: 2 },
   cheatShow: { access: 'session', sessionParam: 1 },
+  gamePractice: { access: 'session', sessionParam: 1 },
   replayInit: { access: 'session', sessionParam: 1 },
   replayStart: { access: 'session', sessionParam: 1 },
   replayStop: { access: 'session', sessionParam: 1 },
