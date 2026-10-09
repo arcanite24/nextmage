@@ -637,8 +637,8 @@ const es: Catalog = {
   'career.keep': 'Mejor no',
 
   'career.reward.coins': { one: '{count} moneda', other: '{count} monedas' },
-  'career.reward.xp': '{count} XP',
-  'career.reward.packs': { one: '{count} sobre', other: '{count} sobres' },
+  'career.modeReward.xp': '{count} XP',
+  'career.modeReward.packs': { one: '{count} sobre', other: '{count} sobres' },
   'career.reward.wildcard.common': 'Un comodín común',
   'career.reward.wildcard.uncommon': 'Un comodín infrecuente',
   'career.reward.wildcard.rare': 'Un comodín raro',

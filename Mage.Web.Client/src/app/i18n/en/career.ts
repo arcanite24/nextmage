@@ -210,8 +210,8 @@ export default {
   'career.keep': 'Never mind',
 
   'career.reward.coins': { one: '{count} coin', other: '{count} coins' },
-  'career.reward.xp': '{count} XP',
-  'career.reward.packs': { one: '{count} pack', other: '{count} packs' },
+  'career.modeReward.xp': '{count} XP',
+  'career.modeReward.packs': { one: '{count} pack', other: '{count} packs' },
   'career.reward.wildcard.common': 'A common wildcard',
   'career.reward.wildcard.uncommon': 'An uncommon wildcard',
   'career.reward.wildcard.rare': 'A rare wildcard',

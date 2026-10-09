@@ -145,8 +145,8 @@ export function rewardLines(reward: CareerReward | CareerRunReward | undefined):
   if (!reward) return [];
   const lines: Line[] = [];
   if (reward.coins) lines.push({ key: 'career.reward.coins', vars: { count: reward.coins } });
-  if ('xp' in reward && reward.xp) lines.push({ key: 'career.reward.xp', vars: { count: reward.xp } });
-  if (reward.packs) lines.push({ key: 'career.reward.packs', vars: { count: reward.packs } });
+  if ('xp' in reward && reward.xp) lines.push({ key: 'career.modeReward.xp', vars: { count: reward.xp } });
+  if (reward.packs) lines.push({ key: 'career.modeReward.packs', vars: { count: reward.packs } });
   if (reward.wildcard) lines.push({ key: WILDCARD_KEYS[reward.wildcard.toLowerCase()] ?? 'career.reward.wildcard.rare' });
   if ('deckCards' in reward && reward.deckCards) lines.push({ key: 'career.reward.deck' });
   if ('unlockSet' in reward && reward.unlockSet) lines.push({ key: 'career.reward.set', vars: { set: reward.unlockSet } });

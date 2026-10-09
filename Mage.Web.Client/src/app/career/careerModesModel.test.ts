@@ -54,11 +54,11 @@ describe('campaign path', () => {
 describe('rewards and twists', () => {
   test('a reward reads as lines, in a fixed order', () => {
     expect(rewardLines({ coins: 100, xp: 300, deckCards: true, unlockSet: 'M21' }).map((line) => line.key)).toEqual([
-      'career.reward.coins', 'career.reward.xp', 'career.reward.deck', 'career.reward.set',
+      'career.reward.coins', 'career.modeReward.xp', 'career.reward.deck', 'career.reward.set',
     ]);
     expect(rewardLines({ wildcard: 'uncommon' })).toEqual([{ key: 'career.reward.wildcard.uncommon' }]);
     expect(rewardLines({ wins: 6, coins: 160, packs: 1, wildcard: 'rare' }).map((line) => line.key)).toEqual([
-      'career.reward.coins', 'career.reward.packs', 'career.reward.wildcard.rare',
+      'career.reward.coins', 'career.modeReward.packs', 'career.reward.wildcard.rare',
     ]);
     expect(rewardLines(undefined)).toEqual([]);
   });
