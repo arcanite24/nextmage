@@ -2,6 +2,7 @@ import type core from './en/core';
 import type settings from './en/settings';
 import type events from './en/events';
 import type about from './en/about';
+import type career from './en/career';
 import type { Message } from './translate';
 
 /** Languages the app is translated into; English is the source and the fallback. */
@@ -15,7 +16,7 @@ export type Locale = (typeof LOCALES)[number]['code'];
 export type LocalePreference = Locale | 'auto';
 
 /** Every message key, across the English catalogs (core in the entry, the others with their screens). */
-export type MessageKey = keyof typeof core | keyof typeof settings | keyof typeof events | keyof typeof about;
+export type MessageKey = keyof typeof core | keyof typeof settings | keyof typeof events | keyof typeof about | keyof typeof career;
 
 /** A translation: every key, so a missing one is a type error (and a failing test). */
 export type Catalog = Record<MessageKey, Message>;
