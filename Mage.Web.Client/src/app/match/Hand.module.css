@@ -20,10 +20,24 @@
 }
 
 /* rises out of the hand: straighten, lift clear of the edge, grow */
-.card:hover,
 .card:focus-visible {
   transform: translateY(-120px) rotate(0deg) scale(1.22);
   z-index: var(--z-held) !important;
+}
+
+/* a mouse lifts the card it rests on; a finger has no hover (a tapped card would stay up), so it lifts the card it holds */
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-120px) rotate(0deg) scale(1.22);
+    z-index: var(--z-held) !important;
+  }
+}
+
+@media (hover: none) {
+  .card:active {
+    transform: translateY(-120px) rotate(0deg) scale(1.22);
+    z-index: var(--z-held) !important;
+  }
 }
 
 .playable {
@@ -76,4 +90,9 @@
 .dragging {
   cursor: grabbing;
   filter: drop-shadow(0 30px 40px rgb(var(--shade-rgb) / 0.55));
+}
+
+/* tall: on a taller tablet the hand stands higher, so more of each card shows */
+:global([data-layout='tall']) .hand {
+  bottom: calc(-118px + var(--hand-raise, 0px));
 }

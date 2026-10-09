@@ -109,3 +109,95 @@
   text-transform: uppercase;
   color: var(--ink-strong);
 }
+
+/* touch: the whole ladder is one button over the rungs, opening the stops as a menu */
+.touchTrigger {
+  position: absolute;
+  inset: -8px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.touchTrigger:focus-visible {
+  outline: 2.5px solid var(--ink-strong);
+}
+
+.touchTrigger:disabled {
+  cursor: default;
+}
+
+/* the menu opens outside the stage, at window size */
+.menu {
+  z-index: var(--z-overlay);
+  min-width: 260px;
+  padding: 6px;
+  border-radius: var(--radius-control);
+  background: var(--mat-600);
+  box-shadow: inset 0 0 0 1px var(--ink-ghost), var(--shadow-held);
+}
+
+.menuLabel {
+  padding: 8px 12px 4px;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-print-wide);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+
+.menuItem[data-highlighted] {
+  background: rgb(var(--ink-rgb) / 0.1);
+}
+
+/* tall: printed across the middle of the table, between the two battlefields */
+:global([data-layout='tall']) .ladder {
+  left: 50%;
+  right: auto;
+  top: var(--seam);
+  translate: -50% -50%;
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgb(var(--mat-rgb) / 0.7);
+}
+
+:global([data-layout='tall']) .turn {
+  align-items: flex-start;
+}
+
+:global([data-layout='tall']) .whose {
+  font-size: 32px;
+}
+
+:global([data-layout='tall']) .turnNumber {
+  font-size: 18px;
+}
+
+:global([data-layout='tall']) .rungs {
+  flex-direction: row;
+}
+
+:global([data-layout='tall']) .rung {
+  width: auto;
+  padding: 6px 8px;
+  font-size: 19px;
+  flex-direction: row;
+  gap: 6px;
+}

@@ -7,6 +7,8 @@
   justify-content: center;
   gap: 8px;
   height: var(--btn-h);
+  /* on the match stage under a finger: tall enough to tap at the stage's scale (see Stage.tsx) */
+  min-height: var(--touch-target, 0px);
   padding: 0 var(--btn-px);
   border: 0;
   border-radius: var(--radius-control);
@@ -131,6 +133,8 @@
   place-items: center;
   width: 36px;
   height: 36px;
+  min-width: var(--touch-target, 0px);
+  min-height: var(--touch-target, 0px);
   border: 0;
   border-radius: var(--radius-control);
   background: transparent;
