@@ -1,6 +1,7 @@
 package mage.server;
 
 import mage.server.career.CareerPayout;
+import mage.server.career.CareerTally;
 import mage.server.career.CareerService;
 import mage.MageException;
 import mage.cards.decks.Deck;
@@ -880,22 +881,48 @@ public class TableController {
         return match.hasEnded();
     }
 
-    /** a Career match that just ended pays its player, once (the service keys the payout by table) */
+    /**
+     * A game ended: a Career match that's over pays its player, once (the service keys the payout by table), and a
+     * regular game against the AI counts for the player's Career quests when they chose that. Practice against a
+     * goldfish (an AI with only basic lands) never counts.
+     */
     private void payCareer(Game game) {
+        CareerTally tally = CareerTally.take(game.getId());
         CareerService career = CareerService.get();
-        if (!career.isCareerTable(table.getId()) || !match.hasEnded()) {
+        boolean careerTable = career.isCareerTable(table.getId());
+        if (!careerTable && tally == null) {
             return;
         }
+        MatchPlayer human = null;
         for (MatchPlayer matchPlayer : match.getPlayers()) {
             if (matchPlayer.getPlayer().isHuman()) {
-                CareerPayout payout = career.matchEnded(table.getId(), matchPlayer.isMatchWinner(), game.getTurnNum());
-                if (payout != null) {
-                    logger.info("Career: " + matchPlayer.getName() + (payout.won ? " won" : " lost") + " against " + payout.opponent
-                            + ", paid " + payout.coins + " coins and " + payout.xp + " XP");
-                }
-                return;
+                human = matchPlayer;
+            } else if (isGoldfish(matchPlayer) && tally != null) {
+                tally = null;
             }
         }
+        if (human == null) {
+            return;
+        }
+        if (careerTable) {
+            if (!match.hasEnded()) {
+                return;
+            }
+            CareerPayout payout = career.matchEnded(table.getId(), game, human.isMatchWinner(), game.getTurnNum(), tally);
+            if (payout != null) {
+                logger.info("Career: " + human.getName() + (payout.won ? " won" : " lost") + " against " + payout.opponent
+                        + ", paid " + payout.coins + " coins and " + payout.xp + " XP");
+            }
+        } else if (tally != null && tally.taint() == null) {
+            career.aiGameEnded(game.getId(), human.getName(), game, human.getPlayer().hasWon(), game.getTurnNum(), tally);
+        }
+    }
+
+    private static boolean isGoldfish(MatchPlayer player) {
+        if (player.getDeck() == null || player.getDeck().getCards().isEmpty()) {
+            return false;
+        }
+        return player.getDeck().getCards().stream().allMatch(card -> card.isBasic());
     }
 
     private void sideboard() {

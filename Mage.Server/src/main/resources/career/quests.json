@@ -1,0 +1,242 @@
+[
+  {
+    "id": "cast-white",
+    "text": "Cast 20 white spells",
+    "counter": "spells_W",
+    "target": 20,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "cast-blue",
+    "text": "Cast 20 blue spells",
+    "counter": "spells_U",
+    "target": 20,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "cast-black",
+    "text": "Cast 20 black spells",
+    "counter": "spells_B",
+    "target": 20,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "cast-red",
+    "text": "Cast 20 red spells",
+    "counter": "spells_R",
+    "target": 20,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "cast-green",
+    "text": "Cast 20 green spells",
+    "counter": "spells_G",
+    "target": 20,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "cast-spells",
+    "text": "Cast 30 spells",
+    "counter": "spells",
+    "target": 30,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "cast-creatures",
+    "text": "Cast 15 creature spells",
+    "counter": "creature_spells",
+    "target": 15,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "cast-instants-sorceries",
+    "text": "Cast 10 instants or sorceries",
+    "counter": "instant_sorcery_spells",
+    "target": 10,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "cast-enchantments",
+    "text": "Cast 5 enchantments",
+    "counter": "enchantment_spells",
+    "target": 5,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "cast-artifacts",
+    "text": "Cast 5 artifacts",
+    "counter": "artifact_spells",
+    "target": 5,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "cast-multicolor",
+    "text": "Cast 8 multicolored spells",
+    "counter": "spells_multicolor",
+    "target": 8,
+    "coins": 50,
+    "xp": 200
+  },
+  {
+    "id": "cast-big",
+    "text": "Cast 6 spells with mana value 5 or more",
+    "counter": "spells_mv5",
+    "target": 6,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "cast-cheap",
+    "text": "Cast 20 spells with mana value 2 or less",
+    "counter": "spells_cheap",
+    "target": 20,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "deal-damage",
+    "text": "Deal 40 damage to opponents",
+    "counter": "damage_to_opponents",
+    "target": 40,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "combat-damage",
+    "text": "Deal 25 combat damage to opponents",
+    "counter": "combat_damage_to_opponents",
+    "target": 25,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "burn",
+    "text": "Deal 15 noncombat damage to opponents",
+    "counter": "noncombat_damage_to_opponents",
+    "target": 15,
+    "coins": 50,
+    "xp": 200
+  },
+  {
+    "id": "gain-life",
+    "text": "Gain 15 life",
+    "counter": "life_gained",
+    "target": 15,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "creatures-enter",
+    "text": "Have 15 creatures enter the battlefield under your control",
+    "counter": "creatures_entered",
+    "target": 15,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "destroy-creatures",
+    "text": "Have 10 opposing creatures die",
+    "counter": "opponent_creatures_died",
+    "target": 10,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "make-tokens",
+    "text": "Create 8 tokens",
+    "counter": "tokens_created",
+    "target": 8,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "play-lands",
+    "text": "Play 20 lands",
+    "counter": "lands_played",
+    "target": 20,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "draw-cards",
+    "text": "Draw 25 cards",
+    "counter": "cards_drawn",
+    "target": 25,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "attack",
+    "text": "Attack with 30 creatures",
+    "counter": "attacks",
+    "target": 30,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "block",
+    "text": "Block 10 times",
+    "counter": "blocks",
+    "target": 10,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "counters",
+    "text": "Put 10 counters on your permanents",
+    "counter": "counters_added",
+    "target": 10,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "win-three",
+    "text": "Win 3 games",
+    "counter": "wins",
+    "target": 3,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "win-five",
+    "text": "Win 5 games",
+    "counter": "wins",
+    "target": 5,
+    "coins": 50,
+    "xp": 200
+  },
+  {
+    "id": "play-five",
+    "text": "Play 5 games",
+    "counter": "games",
+    "target": 5,
+    "coins": 25,
+    "xp": 100
+  },
+  {
+    "id": "win-big",
+    "text": "Win a game after a creature with power 5 or more hits an opponent",
+    "counter": "wins_power5",
+    "target": 1,
+    "coins": 40,
+    "xp": 150
+  },
+  {
+    "id": "win-healthy",
+    "text": "Win 2 games without dropping below 10 life",
+    "counter": "wins_healthy",
+    "target": 2,
+    "coins": 50,
+    "xp": 200
+  }
+]

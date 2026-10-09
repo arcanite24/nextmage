@@ -30,4 +30,8 @@ public class CareerProfile {
     public Wildcards wildcards;
     /** cards in the collection, every copy counted */
     public int cards;
+    /** free packs earned (levels, the weekly goal); the shop spends these before coins */
+    public int packTokens;
+    /** regular games against the AI count for quests and achievements too (off by default) */
+    public boolean countAiGames;
 }

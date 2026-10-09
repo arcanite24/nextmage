@@ -50,11 +50,11 @@ public class CareerServiceTest {
 
     @Test
     public void migrationsRunOnceAndRecordTheVersion() throws Exception {
-        assertEquals(1, store.schemaVersion());
+        assertEquals(2, store.schemaVersion());
         store.close();
         store = new CareerStore("jdbc:sqlite:" + file);
         CareerStore.use(store);
-        assertEquals(1, store.schemaVersion());
+        assertEquals(2, store.schemaVersion());
         assertNotNull(store.profile("ana"), "reopening keeps the data");
     }
 
@@ -72,7 +72,7 @@ public class CareerServiceTest {
         assertNull(service.matchEnded(table, true, 7));
 
         CareerProfile profile = store.profile("Ana");
-        assertEquals(CareerRules.START_COINS + CareerRules.winCoins(1), profile.coins);
+        assertEquals(CareerRules.START_COINS + CareerRules.winCoins(1) + firstWinCoins(), profile.coins);
         assertEquals(1, profile.wins);
         assertEquals(1, store.payouts("Ana", 10).size());
     }
@@ -171,10 +171,15 @@ public class CareerServiceTest {
         assertThrows(CareerService.CareerException.class, () -> service.importFile("Bea", exported), "another account's file");
 
         CareerProfile restored = service.importFile("Ana", exported);
-        assertEquals(CareerRules.START_COINS + CareerRules.winCoins(1), restored.coins);
+        assertEquals(CareerRules.START_COINS + CareerRules.winCoins(1) + firstWinCoins(), restored.coins);
         assertEquals(3, store.owned("Ana", "Shock"));
         service.register(table, "Ana", "wren", 1);
         assertNull(service.matchEnded(table, true, 5), "a restored payout is not paid again");
+    }
+
+    /** the first win also earns its achievement */
+    private static int firstWinCoins() {
+        return CareerProgress.get().achievementTemplates().get("first-win").coins;
     }
 
     private static byte[] readAll(java.io.InputStream in) throws java.io.IOException {
