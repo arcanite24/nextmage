@@ -1,0 +1,45 @@
+# name: Ruby's Stampede
+# archetype: aggro (Gruul stompy)
+# season: 2026-10
+CMDR: Ruby, Daring Tracker
+1 Llanowar Elves
+1 Nessian Hornbeetle
+1 Courageous Goblin
+1 Eager Trufflesnout
+1 Beast-Kin Ranger
+1 Mossborn Hydra
+1 Gnarlid Colony
+1 Ambush Wolf
+1 Elvish Regrower
+1 Needletooth Pack
+1 Elfsworn Giant
+1 Affectionate Indrik
+1 Apothecary Stomper
+1 Quakestrider Ceratops
+1 Battlesong Berserker
+1 Brazen Scourge
+1 Gorehorn Raider
+1 Shivan Dragon
+1 Ashroot Animist
+1 Treetop Snarespinner
+1 Trumpeting Carnosaur
+1 Giant Growth
+1 Bite Down
+1 Bushwhack
+1 Felling Blow
+1 Burst Lightning
+1 Abrade
+1 Fiery Annihilation
+1 Garruk's Uprising
+1 Overrun
+1 Grow from the Ashes
+1 Snakeskin Veil
+1 Sylvan Scavenging
+1 Adventuring Gear
+1 Thornspire Verge
+1 Commercial District
+1 Rugged Highlands
+1 Evolving Wilds
+1 Fabled Passage
+11 Forest
+9 Mountain

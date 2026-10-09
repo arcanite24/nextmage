@@ -1,0 +1,17 @@
+# name: Black Tithe
+# archetype: midrange
+# Mono-Black devotion: cheap black permanents, removal, and Gray Merchant to drain.
+4 Evolved Sleeper
+4 Tenacious Underdog
+4 Kitesail Freebooter
+2 Bloodghast
+3 Ayara, First of Locthwain
+3 Murderous Rider
+4 Gray Merchant of Asphodel
+2 Phyrexian Arena
+4 Fatal Push
+3 Cut Down
+3 Sheoldred's Edict
+20 Swamp
+2 Castle Locthwain
+2 Hive of the Eye Tyrant

@@ -1,0 +1,30 @@
+# name: Mana Drain Control
+# archetype: control
+4 Mana Drain
+4 Force of Will
+2 Counterspell
+4 Swords to Plowshares
+2 Supreme Verdict
+2 Fact or Fiction
+3 Lorien Revealed
+4 Ponder
+1 Brainstorm
+1 Ancestral Recall
+1 Time Walk
+1 Timetwister
+1 Mystical Tutor
+1 Treasure Cruise
+3 Snapcaster Mage
+2 Jace, the Mind Sculptor
+2 Teferi, Hero of Dominaria
+1 Black Lotus
+1 Sol Ring
+1 Mox Sapphire
+1 Mox Pearl
+4 Tundra
+4 Flooded Strand
+2 Scalding Tarn
+4 Island
+2 Plains
+1 Strip Mine
+1 Mishra's Factory

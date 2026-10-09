@@ -1,0 +1,18 @@
+# name: Boros Aggro
+# archetype: aggro
+4 Goblin Guide
+4 Monastery Swiftspear
+4 Thalia, Guardian of Thraben
+4 Ajani, Nacatl Pariah
+4 Adeline, Resplendent Cathar
+4 Bonecrusher Giant
+4 Skyclave Apparition
+4 Swords to Plowshares
+4 Lightning Bolt
+4 Chain Lightning
+4 Plateau
+4 Arid Mesa
+3 Wooded Foothills
+2 Sunbaked Canyon
+4 Plains
+3 Mountain

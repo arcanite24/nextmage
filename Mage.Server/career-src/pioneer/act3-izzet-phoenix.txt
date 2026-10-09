@@ -1,0 +1,20 @@
+# name: Ashwing
+# archetype: tempo
+# Izzet Phoenix written for the school: cheap spells fill the graveyard, three in a turn bring the Phoenixes back.
+4 Arclight Phoenix
+4 Ledger Shredder
+4 Opt
+4 Consider
+4 Sleight of Hand
+4 Chart a Course
+4 Fiery Impulse
+3 Lightning Axe
+3 Play with Fire
+2 Into the Flood Maw
+4 Treasure Cruise
+4 Steam Vents
+4 Spirebluff Canal
+4 Riverglide Pathway
+3 Shivan Reef
+3 Island
+2 Mountain

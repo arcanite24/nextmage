@@ -1,0 +1,38 @@
+# name: Azorius Control
+# archetype: control
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91890&d=897887&f=ST (2026-10); https://www.mtggoldfish.com/archetype/standard-azorius-control-woe
+# Substitution: 3 Jace's Machinations -> +2 Stock Up, +1 No More Lies (Machinations isn't in XMage yet)
+4 The Theorist, Jace Beleren
+4 Consult the Star Charts
+4 Countersculpt
+4 No More Lies
+2 Erode
+2 Get Lost
+2 Fatehold Charm
+2 Three Steps Ahead
+1 Spell Snare
+3 Stock Up
+2 Day of Judgment
+2 Seam Rip
+2 Pinnacle Starcage
+4 Floodfarm Verge
+4 Hallowed Fountain
+4 Deserted Beach
+2 Meticulous Archive
+2 Petrified Hamlet
+2 Restless Anchorage
+2 Theorist's Sanctum
+1 Demolition Field
+3 Island
+2 Plains
+SB: 1 Pinnacle Starcage
+SB: 1 Day of Judgment
+SB: 2 Beza, the Bounding Spring
+SB: 2 Rest in Peace
+SB: 1 Captain Marvel, Earth's Protector
+SB: 2 Flashfreeze
+SB: 2 Disdainful Stroke
+SB: 1 Elspeth, Storm Slayer
+SB: 2 Emeritus of Ideation
+SB: 1 Captain America, Super-Soldier

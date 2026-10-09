@@ -1,0 +1,14 @@
+# name: Merfolk
+# archetype: aggro
+4 Cursecatcher
+4 Kumena's Speaker
+4 Silvergill Adept
+4 Lord of Atlantis
+4 Coral Merfolk
+4 Merfolk Looter
+4 Harbinger of the Tides
+2 Merfolk Trickster
+4 Aether Vial
+4 Spreading Seas
+4 Mutavault
+18 Island

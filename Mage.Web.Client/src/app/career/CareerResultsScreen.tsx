@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Coins, Gift, Package, Sparkles, Trophy, Unlock } from 'lucide-react';
+import { Coins, Gift, GraduationCap, Package, Sparkles, Trophy, Unlock } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import type { CareerGameResult } from '../../protocol/generated/views';
@@ -80,9 +80,14 @@ function useFoe(result: CareerGameResult): { name: string; colors?: string; cove
   return useMemo(() => {
     if (campaign && result.mode?.ref) {
       const [campaignId, nodeId] = result.mode.ref.split('/');
-      const chapter = campaigns.data?.find((item) => item.id === campaignId)?.chapters?.find((item) => item.nodes?.some((node) => node.id === nodeId));
+      const owner = campaigns.data?.find((item) => item.id === campaignId);
+      const chapter = owner?.chapters?.find((item) => item.nodes?.some((node) => node.id === nodeId));
       const node = chapter?.nodes?.find((item) => item.id === nodeId);
-      if (node) return { name: node.name ?? '', colors: chapter?.color, cover: node.cover, line: result.won ? node.after : undefined };
+      if (node) {
+        // a Five Paths chapter is its opponents' colour; a school's act colour says nothing about the deck across the table
+        const colors = owner?.school ? undefined : chapter?.color ?? owner?.colors;
+        return { name: node.opponentName ?? node.name ?? '', colors, cover: node.cover, line: result.won ? node.after : undefined };
+      }
     }
     const opponent = roster.data?.find((candidate) => candidate.id === result.opponent);
     if (opponent) return { name: opponent.name ?? '', colors: opponent.colors, cover: opponent.cover, line: result.won ? opponent.lines?.lose : opponent.lines?.win };
@@ -107,6 +112,8 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
   const achievements = useMemo(() => result.achievements ?? [], [result.achievements]);
   const levelRewards = result.levelRewards ?? [];
   const opened = useMemo(() => result.opened ?? [], [result.opened]);
+  // a school's graduation: its title and sleeve
+  const cosmetics = useMemo(() => result.mode?.cosmetics ?? [], [result.mode]);
   const packs = result.packs ?? 0;
   const coins = useCountUp(result.coins ?? 0, { run: step >= 1, still });
 
@@ -120,7 +127,7 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
     if (step === 0) playCareerCue(won ? 'win' : 'loss');
     if (step === 1 && (result.coins ?? 0) > 0) playCareerCue('coins');
     if (step === 2 && (result.xp ?? 0) > 0) playCareerCue('xp');
-    if (step === 4 && (achievements.length > 0 || levelRewards.length > 0 || opened.length > 0)) playCareerCue('unlock');
+    if (step === 4 && (achievements.length > 0 || levelRewards.length > 0 || opened.length > 0 || cosmetics.length > 0)) playCareerCue('unlock');
     // only on a step change: the rest is read once per result
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
@@ -150,7 +157,9 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [done, skipAll]);
 
-  const headline = result.career
+  const headline = result.mode?.trial
+    ? t(won ? 'career.rewards.trialWon' : 'career.rewards.trialLost', { trial: foe?.name ?? '' })
+    : result.career
     ? t(won ? 'career.rewards.won' : 'career.rewards.lost', { opponent: foe?.name ?? result.opponent ?? '' })
     : t(won ? 'career.rewards.wonAi' : 'career.rewards.lostAi');
 
@@ -202,7 +211,7 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
         </section>
       )}
 
-      {step >= 4 && (achievements.length > 0 || levelRewards.length > 0 || opened.length > 0) && (
+      {step >= 4 && (achievements.length > 0 || levelRewards.length > 0 || opened.length > 0 || cosmetics.length > 0) && (
         <section className={styles.block} aria-label={t('career.rewards.achievements')}>
           <h2 className={styles.label}>{t('career.results.earned')}</h2>
           <ul className={styles.prizes}>
@@ -221,6 +230,13 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
                 <Gift size={28} aria-hidden="true" />
                 <b>{t('career.level', { level: reward.level ?? 0 })}</b>
                 <small className={styles.prizePay}>{describeReward(t, rewardParts(reward))}</small>
+              </li>
+            ))}
+            {cosmetics.map((cosmetic, index) => (
+              <li key={`cosmetic-${cosmetic.kind}-${cosmetic.id}`} className={[styles.prize, motion.deal].join(' ')} style={dealStyle(index)}>
+                <GraduationCap size={28} aria-hidden="true" />
+                <b>{t('career.results.graduated')}</b>
+                <small className={styles.prizePay}>{describeReward(t, [{ kind: 'cosmetic', cosmetic }])}</small>
               </li>
             ))}
             {/* a tier the win opened; the hub gives it its full moment on the way back */}

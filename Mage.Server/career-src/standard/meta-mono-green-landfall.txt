@@ -1,0 +1,26 @@
+# name: Mono-Green Landfall
+# archetype: aggro
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91922&d=898062&f=ST (MTGO Challenge 16 Special, 2026-10-08); https://www.mtggoldfish.com/archetype/standard-mono-green-landfall-woe
+4 Llanowar Elves
+4 Sazh's Chocobo
+4 Mossborn Hydra
+4 Icetill Explorer
+4 Mightform Harmonizer
+1 Lumbering Worldwagon
+4 Esper Origins
+2 Shared Roots
+4 Earthbender Ascension
+3 Sapling Nursery
+3 Ba Sing Se
+4 Fabled Passage
+4 Escape Tunnel
+1 Demolition Field
+14 Forest
+SB: 1 Sapling Nursery
+SB: 1 Keen-Eyed Curator
+SB: 4 Meltstrider's Resolve
+SB: 2 Soul-Guide Lantern
+SB: 2 Surrak, Elusive Hunter
+SB: 3 Warg Tactics
+SB: 2 Torpor Orb

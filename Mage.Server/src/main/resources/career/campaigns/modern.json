@@ -1,0 +1,462 @@
+{
+  "id": "modern",
+  "name": "The Modern School",
+  "format": "Modern",
+  "school": true,
+  "order": 6,
+  "colors": "GW",
+  "summary": "Twenty years of cards, fetchlands and shocklands, free spells and a dozen ways to win by turn four.",
+  "text": "Modern is every card printed from Eighth Edition onward, plus the Modern Horizons sets, minus a banlist. Decks are 60 cards with up to four copies of each, and a 15-card sideboard. The card pool is deep, so games are fast and the decks are wildly different: creature decks, burn, artifact swarms, storm, graveyard combo. Here you learn to pay life for perfect mana, cast spells for free, fight the graveyard, and race decks that can win on turn three.",
+  "deckType": "Constructed - Modern",
+  "gameType": "Two Player Duel",
+  "requires": ["pioneer@2"],
+  "chapters": [
+    {
+      "id": "modern-1",
+      "name": "First steps",
+      "text": "A Zoo deck: cheap creatures, burn and the classic Modern mana base. Learn what a fetchland and a shockland cost you, and when to pay.",
+      "deck": "modern/starter.dck",
+      "deckName": "Naya Zoo",
+      "nodes": [
+        {
+          "id": "modern-1a",
+          "type": "duel",
+          "name": "Brin Saltmarrow",
+          "text": "A school of Merfolk, each lord making the rest bigger.",
+          "requires": [],
+          "opponent": { "name": "Brin Saltmarrow", "deck": "modern/act1-merfolk.dck", "skill": 1 },
+          "lesson": {
+            "title": "Fetch, then shock",
+            "text": "A fetchland is a land that pays 1 life and sacrifices itself to find another land. A shockland is a dual land that asks for 2 life to enter untapped. Your Wild Nacatl and Kird Ape grow with land types, so fetch the shockland that grows them. Kill their lords first; every lord makes every other Merfolk bigger.",
+            "cards": ["Wooded Foothills", "Stomping Ground", "Wild Nacatl", "Lord of Atlantis"]
+          },
+          "tips": [
+            { "on": "play:Wooded Foothills", "title": "Crack it with a plan", "text": "Sacrifice the fetchland when you know which land you want. Stomping Ground is a Mountain and a Forest, so it pumps both Wild Nacatl and Kird Ape." },
+            { "on": "play:Lord of Atlantis", "title": "Kill the lord", "text": "Lord of Atlantis gives other Merfolk +1/+1. A Lightning Bolt on it shrinks their whole team." },
+            { "on": "cast:Spreading Seas", "title": "Your land is an Island now", "text": "Spreading Seas turns your land into an Island, and Merfolk with islandwalk can't be blocked while you control one. Race harder, or Path the lord that grants it." }
+          ],
+          "reward": { "coins": 25, "xp": 125 },
+          "before": "The tide comes in whether you're ready or not.",
+          "after": "Huh. The tide went out."
+        },
+        {
+          "id": "modern-1b",
+          "type": "duel",
+          "name": "Kindle Vasko",
+          "text": "Twenty burn spells and nothing else in mind.",
+          "requires": ["modern-1a"],
+          "opponent": { "name": "Kindle Vasko", "deck": "modern/act1-burn.dck", "skill": 2 },
+          "lesson": {
+            "title": "Your life is their target",
+            "text": "Burn wins by pointing every spell at your face, so each life you pay to your own lands helps them. Fetch a basic land when it does the job, and let a shockland enter tapped when you don't need the mana this turn. Lightning Helix gains back what you spent. Block Goblin Guide and Monastery Swiftspear early; every point counts.",
+            "cards": ["Lightning Helix", "Sacred Foundry", "Eidolon of the Great Revel", "Goblin Guide"]
+          },
+          "tips": [
+            { "on": "cast:Eidolon of the Great Revel", "title": "Eidolon cuts both ways", "text": "Eidolon of the Great Revel deals 2 to whoever casts a spell with mana value 3 or less. Kill it with a Bolt or Path before you cast your cheap spells." },
+            { "on": "play:Sacred Foundry", "title": "Tapped is fine", "text": "If you don't need the mana right now, don't pay 2 life. Against burn that's a whole Lightning Bolt saved." },
+            { "on": "life:8", "title": "Stop paying", "text": "At this life, fetch basic lands only and race with what's on the table." }
+          ],
+          "reward": { "coins": 30, "xp": 150 },
+          "before": "Every point of life you pay is one I don't have to burn.",
+          "after": "You kept your life. Smart."
+        },
+        {
+          "id": "modern-1t",
+          "type": "trial",
+          "name": "Five types, three life",
+          "text": "Your opponent is at 5 life. You're at 3. Win this turn.",
+          "hint": "Tribal Flames counts basic land types, even on tapped lands. Each fetch costs 1 life, and a shockland doesn't have to enter untapped.",
+          "requires": ["modern-1b"],
+          "lesson": {
+            "title": "Domain, and the price of it",
+            "text": "Tribal Flames deals damage equal to the basic land types among your lands. Shocklands carry two types each, so two fetches can find four new ones. Pick the two shocks that cover all five types, and let them enter tapped: your Mountains already pay for the spell.",
+            "cards": ["Tribal Flames", "Arid Mesa", "Polluted Delta", "Godless Shrine"]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 3,
+              "hand": ["Tribal Flames"],
+              "battlefield": ["Mountain", "Mountain", "Arid Mesa", "Polluted Delta"],
+              "graveyard": [],
+              "library": ["Sacred Foundry", "Watery Grave", "Godless Shrine", "Breeding Pool", "Plains", "Island"]
+            },
+            "opponent": {
+              "life": 5,
+              "hand": [],
+              "battlefield": ["Island", "Island"],
+              "graveyard": [],
+              "library": ["Island", "Island", "Island"]
+            }
+          },
+          "reward": { "coins": 20, "xp": 100 }
+        },
+        {
+          "id": "modern-1boss",
+          "type": "duel",
+          "name": "Warden Ruddock",
+          "text": "He keeps a red moon over the valley. Under it, every fancy land is just a Mountain.",
+          "requires": ["modern-1t"],
+          "boss": true,
+          "opponent": {
+            "name": "Warden Ruddock",
+            "deck": "modern/act1-moon.dck",
+            "skill": 3,
+            "twists": { "startingLife": 24, "extraCards": 1 }
+          },
+          "lesson": {
+            "title": "Fetch your basics first",
+            "text": "Blood Moon turns every nonbasic land into a Mountain, so your shocklands stop making green and white. Against a red deck, use your first fetches to get a basic Forest and Plains, and keep shocks for later. Path to Exile on Magus of the Moon frees your lands again.",
+            "cards": ["Blood Moon", "Magus of the Moon", "Forest", "Path to Exile"]
+          },
+          "tips": [
+            { "on": "turn:1", "title": "Basics now, duals later", "text": "Your first fetch should find a basic Forest or Plains. Under a Blood Moon, basics are the only lands that still make their colour." },
+            { "on": "play:Blood Moon", "title": "Under the moon", "text": "Your nonbasic lands are Mountains now. Cast your red spells, and fetch basics with any fetchland you still hold. Fetches under Blood Moon are Mountains too, so crack them before it lands." },
+            { "on": "play:Magus of the Moon", "title": "The moon has a body", "text": "Magus of the Moon is a Blood Moon you can kill. Bolt it or Path it as soon as you can." }
+          ],
+          "reward": { "coins": 80, "xp": 250, "deckCards": true },
+          "before": "Under my moon, your fancy lands are just Mountains.",
+          "after": "Fetched the Forest first. Somebody taught you right."
+        }
+      ]
+    },
+    {
+      "id": "modern-2",
+      "name": "Archetypes",
+      "text": "Four decks, four jobs. Aggro races, midrange trades, control answers, combo goldfishes. Each duel hands you one and puts the deck it beats across the table.",
+      "nodes": [
+        {
+          "id": "modern-2a",
+          "type": "duel",
+          "name": "Hollis Thorne",
+          "text": "A careful midrange player with an answer for every creature.",
+          "requires": ["modern-1boss"],
+          "deck": "modern/act2-infect.dck",
+          "deckName": "Simic Infect",
+          "opponent": { "name": "Hollis Thorne", "deck": "modern/act2-abzan.dck", "skill": 3 },
+          "lesson": {
+            "title": "You're the beatdown",
+            "text": "Infect creatures deal damage as poison counters, and ten poison wins. Your pump spells turn a 1/1 into a lethal threat, so race and ignore their board. Save Vines of Vastwood or Blossoming Defense for when they point Path to Exile or Fatal Push at your attacker.",
+            "cards": ["Glistener Elf", "Blighted Agent", "Vines of Vastwood", "Might of Old Krosa"]
+          },
+          "tips": [
+            { "on": "cast:Path to Exile", "title": "Protect the threat", "text": "Respond with Vines of Vastwood or Blossoming Defense. Your creature gets hexproof and their spell fizzles, and the pump still lands." },
+            { "on": "attack", "title": "Pump after blocks", "text": "Wait until blockers are declared, then pump the creature that wasn't blocked. Blighted Agent can't be blocked at all." },
+            { "on": "play:Siege Rhino", "title": "Ignore the Rhino", "text": "Siege Rhino drains you for 3, but life doesn't matter to you. Count poison, not life." }
+          ],
+          "reward": { "coins": 35, "xp": 175 },
+          "before": "I trade one for one, all day long.",
+          "after": "Poison. I didn't plan for poison."
+        },
+        {
+          "id": "modern-2b",
+          "type": "duel",
+          "name": "Captain Ilse Varro",
+          "text": "A company of Humans that grows with every recruit.",
+          "requires": ["modern-2a"],
+          "deck": "modern/act2-jund.dck",
+          "deckName": "Jund Midrange",
+          "opponent": { "name": "Captain Ilse Varro", "deck": "modern/act2-humans.dck", "skill": 3 },
+          "lesson": {
+            "title": "Trade, then turn the corner",
+            "text": "Against aggro you're the control deck. Spend your early turns killing creatures one for one with Lightning Bolt and Fatal Push. Once their hand is empty, a Tarmogoyf or Bloodbraid Elf takes over and you start attacking.",
+            "cards": ["Lightning Bolt", "Fatal Push", "Tarmogoyf", "Champion of the Parish"]
+          },
+          "tips": [
+            { "on": "play:Champion of the Parish", "title": "Kill it now", "text": "Champion of the Parish grows with every Human they cast. Bolt it before it's bigger than your answers." },
+            { "on": "cast:Thoughtseize", "title": "Mind the life", "text": "Thoughtseize costs 2 life. Against a fast deck, take their best creature, and skip it later in the game." },
+            { "on": "life:8", "title": "Block, don't race", "text": "You're not the beatdown yet. Keep blockers back until their board is gone." }
+          ],
+          "reward": { "coins": 35, "xp": 175 },
+          "before": "Thraben's finest, form ranks!",
+          "after": "Ranks broken. Well fought."
+        },
+        {
+          "id": "modern-2c",
+          "type": "duel",
+          "name": "Morrow Vask",
+          "text": "A grinder who makes every card you draw cost something.",
+          "requires": ["modern-2b"],
+          "deck": "modern/act2-uw-control.dck",
+          "deckName": "Azorius Control",
+          "opponent": { "name": "Morrow Vask", "deck": "modern/act2-rakdos.dck", "skill": 4 },
+          "lesson": {
+            "title": "One answer per threat",
+            "text": "Control wins by trading one for one and drawing more cards than the opponent. Counter or exile each real threat, and hold Supreme Verdict until it kills two or more creatures. Once they're out of gas, a Teferi or Shark Typhoon finishes the game.",
+            "cards": ["Counterspell", "Solitude", "Supreme Verdict", "Orcish Bowmasters"]
+          },
+          "tips": [
+            { "on": "play:Orcish Bowmasters", "title": "Draws hurt now", "text": "Orcish Bowmasters pings you each time you draw an extra card. Remove it before you cast Consider or Archmage's Charm for cards." },
+            { "on": "cast:Kroxa, Titan of Death's Hunger", "title": "It comes back", "text": "Kroxa returns from the graveyard by escape. Counter it, or exile it with Solitude, rather than letting it die." },
+            { "on": "opponentSpell", "title": "Pick your fights", "text": "You can't counter everything. Save Counterspell for cards that win the game, and answer small creatures with removal." }
+          ],
+          "reward": { "coins": 35, "xp": 175 },
+          "before": "Draw all you like. Every card costs you.",
+          "after": "One answer per threat. Cold, but it worked."
+        },
+        {
+          "id": "modern-2d",
+          "type": "duel",
+          "name": "Brakka Mosshide",
+          "text": "Big green creatures, one more every turn.",
+          "requires": ["modern-2c"],
+          "deck": "modern/act2-living-end.dck",
+          "deckName": "Temur Living End",
+          "opponent": { "name": "Brakka Mosshide", "deck": "modern/act2-stompy.dck", "skill": 4 },
+          "lesson": {
+            "title": "Goldfish fast",
+            "text": "Cycle your big creatures into the graveyard, then cast Shardless Agent or Violent Outburst. Cascade finds Living End, the only cheap spell in the deck, and it swaps every creature on the battlefield for the ones in graveyards. Don't block or trade unless it buys you a turn.",
+            "cards": ["Living End", "Violent Outburst", "Street Wraith", "Striped Riverwinder"]
+          },
+          "tips": [
+            { "on": "turn:2", "title": "Fill the graveyard", "text": "Cycle creatures on your first turns. Each one in your graveyard is a creature you get back when Living End resolves." },
+            { "on": "cast:Living End", "title": "The swap", "text": "Every creature on the battlefield goes to the graveyard, and every creature card in a graveyard comes back. Your cycled monsters return; their army is gone." },
+            { "on": "cast:Violent Outburst", "title": "Instant speed", "text": "Violent Outburst is an instant. Cascading at the end of their turn means your creatures can attack as soon as your turn starts." }
+          ],
+          "reward": { "coins": 35, "xp": 175 },
+          "before": "Big and green, every turn. You can't stop all of them.",
+          "after": "Where did my whole army go?"
+        },
+        {
+          "id": "modern-2choice",
+          "type": "choice",
+          "name": "A study break",
+          "text": "The school's quartermaster has a little set aside for good students.",
+          "requires": ["modern-2d"],
+          "options": [
+            { "id": "coins", "text": "Take 60 coins", "reward": { "coins": 60 } },
+            { "id": "wildcard", "text": "Take an uncommon wildcard", "reward": { "wildcard": "uncommon" } },
+            { "id": "xp", "text": "Take 200 XP", "reward": { "xp": 200 } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modern-3",
+      "name": "Free spells",
+      "text": "Modern's signature: spells that cost no mana. The evoke elementals come in for a card instead of mana, Ephemerate brings them back for good, and Dismember costs life instead of mana. You also learn to fight the graveyard.",
+      "deck": "modern/signature.dck",
+      "deckName": "Bant Elementals",
+      "nodes": [
+        {
+          "id": "modern-3t1",
+          "type": "trial",
+          "name": "Tapped out, not helpless",
+          "text": "You're at 4 life with every land tapped. Survive their turn.",
+          "hint": "Evoke means casting a creature by exiling another card of its colour from your hand instead of paying mana. Check which elemental you can pay for.",
+          "requires": ["modern-2choice"],
+          "lesson": {
+            "title": "Evoke at instant speed",
+            "text": "Solitude has flash, so you can evoke it on their turn by exiling another white card from your hand. It exiles one creature before it's sacrificed. Endurance needs a green card to evoke, and you have none. Exile the attacker that would kill you.",
+            "cards": ["Solitude", "Ephemerate", "Endurance", "Gurmag Angler"]
+          },
+          "trial": {
+            "objective": "survive",
+            "you": {
+              "life": 4,
+              "hand": ["Solitude", "Ephemerate", "Endurance"],
+              "battlefield": ["Plains|tapped", "Hallowed Fountain|tapped", "Temple Garden|tapped"],
+              "graveyard": [],
+              "library": ["Tarmogoyf", "Plains", "Noble Hierarch", "Island"]
+            },
+            "opponent": {
+              "life": 20,
+              "hand": [],
+              "battlefield": ["Gurmag Angler", "Goblin Guide", "Monastery Swiftspear", "Swamp", "Mountain"],
+              "graveyard": [],
+              "library": ["Swamp", "Mountain", "Swamp"]
+            }
+          },
+          "reward": { "coins": 20, "xp": 100 }
+        },
+        {
+          "id": "modern-3a",
+          "type": "duel",
+          "name": "Sister Ninefold",
+          "text": "Her creatures crawl back out of the graveyard every turn.",
+          "requires": ["modern-3t1"],
+          "opponent": { "name": "Sister Ninefold", "deck": "modern/act3-gravedancers.dck", "skill": 4 },
+          "lesson": {
+            "title": "Hate the graveyard",
+            "text": "This deck discards its own creatures on purpose, then brings them back. Endurance has flash: evoke it by exiling a green card, and their whole graveyard goes to the bottom of their library. Wait until they've loaded it up, then cast it before a Bloodghast or Kroxa comes back.",
+            "cards": ["Endurance", "Bloodghast", "Prized Amalgam", "Kroxa, Titan of Death's Hunger"]
+          },
+          "tips": [
+            { "on": "cast:Cathartic Reunion", "title": "They're loading up", "text": "Cathartic Reunion puts two cards in their graveyard on purpose. That's the moment to think about Endurance." },
+            { "on": "play:Bloodghast", "title": "It won't stay dead", "text": "Bloodghast returns whenever they play a land. Exile it with Solitude, or clear their graveyard with Endurance; Dismember only sends it back for later." },
+            { "on": "cast:Endurance", "title": "Timing", "text": "Endurance resets their graveyard to zero. Cast it in response to Unearth and the spell has nothing left to return." }
+          ],
+          "reward": { "coins": 40, "xp": 200 },
+          "before": "They come back. They always come back.",
+          "after": "They stayed down this time."
+        },
+        {
+          "id": "modern-3t2",
+          "type": "trial",
+          "name": "Twice the solitude",
+          "text": "Your opponent is at 6 life behind two walls. Win this turn.",
+          "hint": "Evoke one Solitude, then blink it with Ephemerate before its sacrifice trigger resolves. It comes back as a new creature and exiles again.",
+          "requires": ["modern-3a"],
+          "lesson": {
+            "title": "Evoke, then blink",
+            "text": "An evoked creature is sacrificed by a trigger right after it enters. Ephemerate exiles it and returns it in response, so its enters ability fires twice and it stays. Solitude gives the exiled creature's owner life equal to its power, but walls have none.",
+            "cards": ["Solitude", "Ephemerate", "Wall of Omens", "Kitchen Finks"]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": ["Solitude", "Solitude", "Ephemerate"],
+              "battlefield": ["Plains", "Temple Garden|tapped", "Breeding Pool|tapped", "Kitchen Finks", "Watchwolf"],
+              "graveyard": [],
+              "library": ["Forest", "Tarmogoyf", "Plains"]
+            },
+            "opponent": {
+              "life": 6,
+              "hand": [],
+              "battlefield": ["Wall of Omens", "Wall of Omens", "Island", "Plains"],
+              "graveyard": [],
+              "library": ["Island", "Plains", "Island"]
+            }
+          },
+          "reward": { "coins": 20, "xp": 100 }
+        },
+        {
+          "id": "modern-3boss",
+          "type": "duel",
+          "name": "Old Horn Ostrava",
+          "text": "He casts his spells for free too: cascade into a pair of Rhinos.",
+          "requires": ["modern-3t2"],
+          "boss": true,
+          "opponent": {
+            "name": "Old Horn Ostrava",
+            "deck": "modern/act3-rhinos.dck",
+            "skill": 5,
+            "twists": { "startingLife": 25, "extraCards": 1 }
+          },
+          "lesson": {
+            "title": "Free spells on both sides",
+            "text": "Cascade casts a cheaper card from the library for free, and this deck's only cheap card is Crashing Footfalls: two 4/4 Rhinos. Solitude exiles one and Dismember kills the other, both without mana. Subtlety can put a Bloodbraid Elf back on top of their library before it cascades.",
+            "cards": ["Crashing Footfalls", "Shardless Agent", "Solitude", "Dismember"]
+          },
+          "tips": [
+            { "on": "cast:Crashing Footfalls", "title": "Two Rhinos incoming", "text": "Two 4/4 trample Rhinos. Solitude handles one; Dismember's -5/-5 handles the other." },
+            { "on": "cast:Bloodbraid Elf", "title": "Answer the spell", "text": "Cascade has already happened, but the Elf is still a creature spell. Evoke Subtlety to put it on top of their library and cost them a draw." },
+            { "on": "life:10", "title": "Count before you pay", "text": "Fetches, shocks and Dismember all cost life. At this point, fetch basics and keep what you have." }
+          ],
+          "reward": { "coins": 100, "xp": 300, "packs": 1 },
+          "before": "Free spells? I cast mine for free too.",
+          "after": "Two Rhinos, and you answered both. Well played."
+        }
+      ]
+    },
+    {
+      "id": "modern-4",
+      "name": "The meta",
+      "text": "The decks people play in Modern this season, as of autumn 2026. Each duel lends you a tier deck and puts another across the table.",
+      "nodes": [
+        {
+          "id": "modern-4a",
+          "type": "duel",
+          "name": "Tinker Halvard",
+          "text": "A pile of cheap artifacts that turns into one enormous cannon.",
+          "requires": ["modern-3boss"],
+          "deck": "modern/meta-izzet-prowess.dck",
+          "deckName": "Izzet Prowess",
+          "opponent": { "name": "Tinker Halvard", "deck": "modern/meta-affinity.dck", "skill": 5 },
+          "lesson": {
+            "title": "Race the artifacts",
+            "text": "Izzet Prowess casts cheap spells to pump its creatures: prowess gives +1/+1 for each noncreature spell you cast. Affinity builds Construct tokens with Urza's Saga and turns them into Kappa Cannoneer, which has ward 4 and is hard to kill. Bolt their early creatures, then race; you're faster if you keep casting spells.",
+            "cards": ["Cori-Steel Cutter", "Slickshot Show-Off", "Kappa Cannoneer", "Urza's Saga"]
+          },
+          "tips": [
+            { "on": "play:Urza's Saga", "title": "A land that makes armies", "text": "Urza's Saga makes Construct tokens that grow with their artifacts, then sacrifices itself. Kill the tokens with Lightning Bolt while they're small." },
+            { "on": "play:Kappa Cannoneer", "title": "Ward 4", "text": "Targeting Kappa Cannoneer costs 4 more mana. Don't try; race it, or chump block with a token." },
+            { "on": "cast:Cori-Steel Cutter", "title": "Two spells, one Monk", "text": "Cori-Steel Cutter makes a 1/1 Monk with prowess when you cast your second spell in a turn, and can move onto it to give it haste. Chain cheap spells on the same turn." }
+          ],
+          "reward": { "coins": 45, "xp": 225 },
+          "before": "Every artifact makes my cannon bigger.",
+          "after": "Outraced by lightning. Fair enough."
+        },
+        {
+          "id": "modern-4b",
+          "type": "duel",
+          "name": "Vela Quinn",
+          "text": "Five land types, one Leyline and a lot of cats.",
+          "requires": ["modern-4a"],
+          "deck": "modern/meta-ruby-storm.dck",
+          "deckName": "Ruby Storm",
+          "opponent": { "name": "Vela Quinn", "deck": "modern/meta-domain-zoo.dck", "skill": 5 },
+          "lesson": {
+            "title": "Count the storm",
+            "text": "Storm copies a spell once for every spell cast before it this turn. Ruby Medallion makes your red spells cheaper, rituals make more mana than they cost, and Past in Flames lets you cast them all again from the graveyard. Ignore their creatures, build a big turn by turn four, and finish with Grapeshot.",
+            "cards": ["Ruby Medallion", "Desperate Ritual", "Past in Flames", "Grapeshot"]
+          },
+          "tips": [
+            { "on": "mulligan", "title": "Keep a fast hand", "text": "You want lands, a Ruby Medallion or Ral, and spells that draw. A slow hand loses to Zoo." },
+            { "on": "cast:Past in Flames", "title": "Do it all again", "text": "Past in Flames gives every instant and sorcery in your graveyard flashback this turn. Cast the rituals first so you have mana for the rest." },
+            { "on": "play:Leyline of the Guildpact", "title": "Their lands are every type", "text": "Leyline of the Guildpact makes their Scion of Draco and Tribal Flames as strong as they get. Don't fight it. Go faster." }
+          ],
+          "reward": { "coins": 45, "xp": 225 },
+          "before": "Five types, one Leyline, and a lot of cats.",
+          "after": "Twenty spells in one turn. I counted."
+        },
+        {
+          "id": "modern-4c",
+          "type": "duel",
+          "name": "Cinder Maddox",
+          "text": "The fastest burn deck in the league, and he knows it.",
+          "requires": ["modern-4b"],
+          "deck": "modern/meta-goryos.dck",
+          "deckName": "Goryo's Vengeance",
+          "opponent": { "name": "Cinder Maddox", "deck": "modern/meta-boros-burn.dck", "skill": 6 },
+          "lesson": {
+            "title": "Cheat a giant in",
+            "text": "Discard Atraxa or Griselbrand with Faithful Mending, then cast Goryo's Vengeance to bring it back with haste for one turn. Ephemerate on it keeps it for good. Against burn, your life is your clock: skip Thoughtseize, fetch basics when you can, and only pay Griselbrand's 7 life if it wins the game.",
+            "cards": ["Goryo's Vengeance", "Atraxa, Grand Unifier", "Griselbrand", "Ephemerate"]
+          },
+          "tips": [
+            { "on": "cast:Goryo's Vengeance", "title": "Keep it", "text": "The creature is exiled at the end of turn. Ephemerate it before then and it stays for good." },
+            { "on": "play:Griselbrand", "title": "Seven life is a lot", "text": "Griselbrand draws 7 cards for 7 life. Against Burn, do it once and only if you'll still be out of Bolt range." },
+            { "on": "cast:Skullcrack", "title": "No lifegain", "text": "Skullcrack stops life gain this turn. Griselbrand's lifelink won't save you until next turn." }
+          ],
+          "reward": { "coins": 45, "xp": 225 },
+          "before": "I hope you brought a lot of life.",
+          "after": "You paid seven and still had enough."
+        },
+        {
+          "id": "modern-final",
+          "type": "duel",
+          "boss": true,
+          "name": "Marshal Kestrel Vane",
+          "text": "The best aggro deck in the format, in the hands of the school's examiner. Best of three.",
+          "requires": ["modern-4c"],
+          "deck": "modern/meta-esper-blink.dck",
+          "deckName": "Esper Blink",
+          "winsNeeded": 2,
+          "opponent": { "name": "Marshal Kestrel Vane", "deck": "modern/meta-boros-energy.dck", "skill": 7 },
+          "lesson": {
+            "title": "Blink for value",
+            "text": "Esper Blink plays creatures with strong enters abilities and flickers them for more. Solitude and Ephemerate are the core: exile an attacker, then blink Solitude to exile another. Boros Energy goes wide fast with Ocelot Pride and Guide of Souls, then sacrifices them to Goblin Bombardment. Kill the engines first, then grind.",
+            "cards": ["Solitude", "Ephemerate", "Phelia, Exuberant Shepherd", "Goblin Bombardment"]
+          },
+          "sideboard": "Against Boros Energy, bring in both Wrath of the Skies and both Clarion Conqueror. Take out Thoughtseize, which costs 2 life against a deck of cheap threats, and the Teferis. Keep every Solitude and Ephemerate.",
+          "tips": [
+            { "on": "play:Goblin Bombardment", "title": "The engine", "text": "Goblin Bombardment sacrifices creatures for 1 damage each, so your blockers don't stop it. Count its damage before you go low." },
+            { "on": "cast:Ephemerate", "title": "Blink in response", "text": "Ephemerate a creature you just evoked, or blink Solitude to exile a second attacker. Rebound casts it again next turn for free." },
+            { "on": "play:Blood Moon", "title": "Moon again", "text": "Blood Moon turns your shocks and fetches into Mountains. Fetch basic Plains and Swamp early whenever you see red mana." }
+          ],
+          "reward": {
+            "coins": 200,
+            "xp": 500,
+            "packs": 2,
+            "wildcard": "rare",
+            "cosmetics": [{ "kind": "title", "id": "modern-graduate" }, { "kind": "sleeve", "id": "school-modern" }]
+          },
+          "before": "Energy, cats and a bombardment. Show me what the school taught you.",
+          "after": "The school's yours. Go play the real thing."
+        }
+      ]
+    }
+  ]
+}

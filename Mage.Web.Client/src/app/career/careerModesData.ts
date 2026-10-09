@@ -6,6 +6,7 @@ import { api } from '../connection';
 import { queryClient } from '../queries';
 import { useDecks } from '../stores/decks';
 import { useEvents } from '../stores/events';
+import { useCareerLessons, type CareerLessonPlan } from '../stores/careerLessons';
 import { useCareerVoice, type VoiceLines } from '../stores/careerVoice';
 import { usePlay } from '../stores/play';
 import { useSession } from '../stores/session';
@@ -72,18 +73,25 @@ let lastPlayed: { kind: ModeKind; gameKey: string } | null = null;
 
 /**
  * Start a mode's game: the server sets the table up and starts it; the game opens like any other, and leaving it comes
- * back to the mode's screen.
+ * back to the mode's screen (or {@code back}). A school duel brings its tips along.
  */
-export async function playMode(kind: ModeKind, start: () => Promise<CareerMatch>, voice: VoiceLines | null = null): Promise<void> {
+export async function playMode(
+  kind: ModeKind,
+  start: () => Promise<CareerMatch>,
+  voice: VoiceLines | null = null,
+  { back = MODE_PATHS[kind], lessons = null }: { back?: string; lessons?: Omit<CareerLessonPlan, 'tableId'> | null } = {},
+): Promise<void> {
   useEvents.setState({ currentTournamentId: null });
   useCareerVoice.getState().speak(voice);
-  usePlay.setState({ phase: 'waitingForGame', error: null, deckId: null, returnPath: MODE_PATHS[kind] });
+  useCareerLessons.getState().teach(lessons ? { ...lessons, tableId: null } : null);
+  usePlay.setState({ phase: 'waitingForGame', error: null, deckId: null, returnPath: back });
   try {
     const match = await start();
     warmMatch(match);
     lastPlayed = match?.tableId ? { kind, gameKey: match.tableId } : null;
+    useCareerLessons.getState().seat(match?.tableId ?? null);
     // leaving the game tells its result as a scene, then comes back to the mode's screen
-    usePlay.setState({ tableId: match?.tableId ?? null, returnPath: rewardsPath(match?.tableId ?? null, true, MODE_PATHS[kind]) });
+    usePlay.setState({ tableId: match?.tableId ?? null, returnPath: rewardsPath(match?.tableId ?? null, true, back) });
   } catch (error) {
     usePlay.setState({ phase: 'idle', tableId: null });
     throw error;

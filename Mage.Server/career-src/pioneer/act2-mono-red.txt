@@ -1,0 +1,15 @@
+# name: Red Line
+# archetype: aggro
+# Mono-Red aggro written for the school: cheap hasty threats and burn that goes face.
+4 Monastery Swiftspear
+4 Fervent Champion
+4 Kumano Faces Kakkazan
+4 Bloodthirsty Adversary
+4 Phoenix of Ash
+4 Bonecrusher Giant
+4 Play with Fire
+4 Lightning Strike
+4 Skewer the Critics
+3 Light Up the Stage
+18 Mountain
+3 Den of the Bugbear

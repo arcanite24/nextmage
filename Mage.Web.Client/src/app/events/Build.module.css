@@ -264,3 +264,30 @@
 .note {
   color: var(--ink-dim);
 }
+
+/* a school's word on sideboarding, under the header */
+.screenLesson {
+  grid-template-rows: auto auto minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.lesson {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  max-width: 72ch;
+  padding: 12px 16px;
+  border-radius: var(--radius-zone, 12px);
+  box-shadow: inset 0 0 0 2px var(--decision);
+  font-size: var(--text-md, 16px);
+}
+
+.lesson b {
+  color: var(--decision-strong);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lesson p {
+  margin: 0;
+  line-height: 1.45;
+}

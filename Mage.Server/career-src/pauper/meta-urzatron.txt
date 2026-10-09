@@ -1,0 +1,30 @@
+# name: Flicker Tron
+# archetype: control
+# season: 2026-10
+# source: https://www.mtgtop8.com/archetype?a=515&f=PAU (deck 897063, tel0, MTGO League 2026-10-06)
+4 Expedition Map
+2 Crop Rotation
+4 Mysidian Elder
+3 Mulldrifter
+4 Bramble Wurm
+4 Ghostly Flicker
+3 Candy Trail
+3 Lembas
+3 Cryogen Relic
+2 Bonder's Ornament
+3 Barrels of Blasting Jelly
+2 Conduit Pylons
+4 Giant's Boulder
+3 Cast Down
+1 Kaervek's Torch
+4 Urza's Mine
+4 Urza's Power Plant
+4 Urza's Tower
+1 Bojuka Bog
+1 Forest
+1 Island
+SB: 3 Moment's Peace
+SB: 2 Vandalblast
+SB: 4 Blue Elemental Blast
+SB: 3 Breath Weapon
+SB: 3 Soul-Guide Lantern

@@ -696,5 +696,46 @@
     "secret": true,
     "coins": 0,
     "xp": 100
+  },
+  {
+    "id": "graduate-1",
+    "name": "First diploma",
+    "text": "Graduate from a format school",
+    "scope": "total",
+    "counter": "schools_graduated",
+    "target": 1,
+    "secret": false,
+    "coins": 100,
+    "xp": 200
+  },
+  {
+    "id": "graduate-3",
+    "name": "Well read",
+    "text": "Graduate from three format schools",
+    "scope": "total",
+    "counter": "schools_graduated",
+    "target": 3,
+    "secret": false,
+    "coins": 150,
+    "xp": 300,
+    "cosmetic": {
+      "kind": "title",
+      "id": "scholar"
+    }
+  },
+  {
+    "id": "graduate-9",
+    "name": "Every format",
+    "text": "Graduate from all nine format schools",
+    "scope": "total",
+    "counter": "schools_graduated",
+    "target": 9,
+    "secret": false,
+    "coins": 300,
+    "xp": 500,
+    "cosmetic": {
+      "kind": "title",
+      "id": "headmaster"
+    }
   }
 ]

@@ -1,0 +1,28 @@
+# name: Dragon's Roost
+# archetype: midrange (Izzet dragons, Foundations)
+# season: 2026-10
+1 Strix Lookout
+2 Firespitter Whelp
+1 Goblin Boarders
+1 Mocking Sprite
+1 Brazen Scourge
+1 Bigfin Bouncer
+1 Sower of Chaos
+1 Spitfire Lagac
+1 Icewind Elemental
+1 Gorehorn Raider
+1 Dragon Trainer
+1 Skyship Buccaneer
+1 Twinflame Tyrant
+1 Shivan Dragon
+1 Drakuseth, Maw of Flames
+1 Burst Lightning
+1 Abrade
+1 Fiery Annihilation
+1 Incinerating Blast
+1 Run Away Together
+1 Fleeting Distraction
+1 Uncharted Voyage
+9 Mountain
+7 Island
+1 Swiftwater Cliffs

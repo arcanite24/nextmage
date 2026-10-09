@@ -1,0 +1,22 @@
+# name: Blood and Ash
+# archetype: midrange
+# Rakdos midrange written for the school: cheap removal, two-for-one creatures, a sweeper for wide boards.
+2 Thoughtseize
+4 Fatal Push
+4 Cut Down
+2 Go for the Throat
+2 Kolaghan's Command
+4 Bloodtithe Harvester
+4 Fable of the Mirror-Breaker
+4 Bonecrusher Giant
+3 Graveyard Trespasser
+2 Sheoldred, the Apocalypse
+2 The Meathook Massacre
+3 Hero's Downfall
+4 Blood Crypt
+4 Blackcleave Cliffs
+4 Sulfurous Springs
+4 Dragonskull Summit
+4 Swamp
+2 Mountain
+2 Hive of the Eye Tyrant

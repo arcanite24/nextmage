@@ -1,0 +1,36 @@
+# name: Golgari Midrange
+# archetype: midrange
+# season: 2026-10
+# source: https://www.mtgo.com/decklist/pioneer-league-2026-10-0911137 (5-0 league, 2026-10-09) (player SinkholeCAM)
+3 Sheoldred, the Apocalypse
+4 Badgermole Cub
+2 Bitter Triumph
+4 Blooming Marsh
+1 Boseiju, Who Endures
+1 Castle Locthwain
+1 Duress
+1 Urborg, Tomb of Yawgmoth
+4 Thoughtseize
+3 Graveyard Trespasser
+4 Llanowar Wastes
+2 Swamp
+4 Overgrown Tomb
+2 Culling Ritual
+2 Restless Cottage
+3 Professor Dellian Fel
+4 Mutavault
+1 Takenuma, Abandoned Mire
+2 Tear Asunder
+1 Forest
+4 Unholy Annex // Ritual Chamber
+4 Fatal Push
+3 Abrupt Decay
+SB: 2 Cruelclaw's Heist
+SB: 1 Culling Ritual
+SB: 2 Duress
+SB: 2 Extinction Event
+SB: 2 Go Blank
+SB: 2 Invoke Despair
+SB: 2 Nowhere to Run
+SB: 1 Professor Dellian Fel
+SB: 1 Unlicensed Hearse

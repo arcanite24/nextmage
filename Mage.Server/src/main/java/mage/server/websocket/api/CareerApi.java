@@ -1,8 +1,11 @@
 package mage.server.websocket.api;
 
 import mage.cards.decks.DeckCardLists;
+import mage.constants.MultiplayerAttackOption;
+import mage.constants.RangeOfInfluence;
 import mage.game.match.MatchOptions;
 import mage.players.PlayerType;
+import mage.server.career.CareerCampaigns;
 import mage.server.career.CareerContent;
 import mage.server.career.CareerPayout;
 import mage.server.career.CareerProfile;
@@ -17,6 +20,7 @@ import org.apache.log4j.Logger;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -267,19 +271,46 @@ final class CareerApi {
      */
     static String startMatch(ApiContext ctx, RpcCall call, String user, String opponentName, String deckType, DeckCardLists deck,
                              PlayerType aiType, int skill, DeckCardLists opponentDeck, java.util.function.Consumer<UUID> register) throws RpcException {
+        CareerCampaigns.DuelSeat seat = new CareerCampaigns.DuelSeat();
+        seat.name = opponentName;
+        seat.skill = skill;
+        seat.aiType = aiType == null ? null : aiType.name();
+        seat.deck = opponentDeck;
+        return startMatch(ctx, call, user, "Two Player Duel", deckType, 1, deck, Collections.singletonList(seat), register);
+    }
+
+    /**
+     * Sets up and starts a Career table of any game type: the player against one AI or more (a pod), best of
+     * {@code winsNeeded * 2 - 1}. Every deck is checked against {@code deckType} as it sits down.
+     *
+     * @return the table id
+     */
+    static String startMatch(ApiContext ctx, RpcCall call, String user, String gameType, String deckType, int winsNeeded,
+                             DeckCardLists deck, List<CareerCampaigns.DuelSeat> seats, java.util.function.Consumer<UUID> register) throws RpcException {
         String sessionId = call.sessionId();
         UUID roomId = ctx.managers.gamesRoomManager().getMainRoomId();
-        MatchOptions options = new MatchOptions(user + " vs " + opponentName, "Two Player Duel", false);
+        boolean pod = seats.size() > 1;
+        MatchOptions options = new MatchOptions(user + " vs " + seats.get(0).name + (pod ? " and " + (seats.size() - 1) + " more" : ""),
+                gameType, pod);
         options.setDeckType(deckType);
-        options.setWinsNeeded(1);
+        options.setWinsNeeded(Math.max(1, winsNeeded));
         options.setRollbackTurnsAllowed(false);
         options.setSpectatorsAllowed(true);
+        if (pod) {
+            // a free-for-all: anyone may attack anyone
+            options.setAttackOption(MultiplayerAttackOption.MULTIPLE);
+            options.setRange(RangeOfInfluence.ALL);
+        }
         // a solo game against the AI: the player's quit ratio from other matches doesn't bar it (the default 0 refused anyone who ever left one)
         options.setQuitRatio(100);
-        PlayerType ai = aiType == null ? PlayerType.COMPUTER_MAD : aiType;
         // the table's seats: without them nobody can join
         options.getPlayerTypes().add(PlayerType.HUMAN);
-        options.getPlayerTypes().add(ai);
+        List<PlayerType> types = new ArrayList<>();
+        for (CareerCampaigns.DuelSeat seat : seats) {
+            PlayerType ai = aiType(seat.aiType);
+            types.add(ai);
+            options.getPlayerTypes().add(ai);
+        }
         UUID tableId = null;
         try {
             TableView table = ctx.server.roomCreateTable(sessionId, roomId, options);
@@ -288,8 +319,18 @@ final class CareerApi {
             if (!ctx.server.roomJoinTable(sessionId, roomId, tableId, user, PlayerType.HUMAN, 1, deck, "")) {
                 throw RpcException.invalidParams("Your deck wasn't accepted for the table.");
             }
-            if (!ctx.server.roomJoinTable(sessionId, roomId, tableId, CareerContent.aiSeatName(opponentName), ai, Math.max(1, skill), opponentDeck, "")) {
-                throw new RpcException(RpcException.SERVER_ERROR, opponentName + " couldn't take a seat.");
+            Set<String> names = new HashSet<>();
+            names.add(user);
+            for (int i = 0; i < seats.size(); i++) {
+                CareerCampaigns.DuelSeat seat = seats.get(i);
+                String name = CareerContent.aiSeatName(seat.name);
+                // two seats can't share a name
+                for (int n = 2; !names.add(name); n++) {
+                    name = CareerContent.aiSeatName(seat.name + " " + n);
+                }
+                if (!ctx.server.roomJoinTable(sessionId, roomId, tableId, name, types.get(i), Math.max(1, seat.skill), seat.deck, "")) {
+                    throw new RpcException(RpcException.SERVER_ERROR, seat.name + " couldn't take a seat.");
+                }
             }
             if (!ctx.server.matchStart(sessionId, roomId, tableId)) {
                 throw new RpcException(RpcException.SERVER_ERROR, "The match couldn't start.");
@@ -302,6 +343,17 @@ final class CareerApi {
             throw new RpcException(RpcException.SERVER_ERROR, "The Career match couldn't be set up: " + e.getMessage(), e);
         }
         return tableId.toString();
+    }
+
+    static PlayerType aiType(String name) {
+        if (name == null) {
+            return PlayerType.COMPUTER_MAD;
+        }
+        try {
+            return PlayerType.valueOf(name);
+        } catch (IllegalArgumentException e) {
+            return PlayerType.COMPUTER_MAD;
+        }
     }
 
     private static void abandon(ApiContext ctx, String sessionId, UUID roomId, UUID tableId) {

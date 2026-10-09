@@ -1,0 +1,28 @@
+# name: Fight Club
+# archetype: midrange (Gruul combat tricks, Foundations)
+# season: 2026-10
+1 Courageous Goblin
+1 Nessian Hornbeetle
+1 Ruby, Daring Tracker
+1 Wary Thespian
+2 Beast-Kin Ranger
+1 Eager Trufflesnout
+1 Brazen Scourge
+1 Battlesong Berserker
+1 Ashroot Animist
+1 Treetop Snarespinner
+1 Elfsworn Giant
+1 Gorehorn Raider
+1 Quilled Greatwurm
+1 Quakestrider Ceratops
+1 Giant Growth
+1 Bulk Up
+1 Sure Strike
+1 Felling Blow
+1 Bite Down
+1 Burst Lightning
+1 Abrade
+1 Fiery Annihilation
+8 Forest
+8 Mountain
+1 Rugged Highlands

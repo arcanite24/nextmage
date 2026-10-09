@@ -1,0 +1,15 @@
+# name: Red Moon
+# archetype: midrange
+# season: 2026-10
+4 Goblin Guide
+4 Goblin Rabblemaster
+4 Magus of the Moon
+4 Bonecrusher Giant
+2 Embereth Shieldbreaker
+3 Glorybringer
+2 Chandra, Torch of Defiance
+4 Blood Moon
+4 Lightning Bolt
+3 Flame Slash
+3 Molten Rain
+23 Mountain

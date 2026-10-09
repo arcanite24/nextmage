@@ -1,0 +1,20 @@
+# name: Thunder Herd
+# archetype: midrange
+# Gruul midrange: big efficient threats on a ramp of mana elves.
+4 Llanowar Elves
+4 Elvish Mystic
+4 Bonecrusher Giant
+4 Lovestruck Beast
+4 Questing Beast
+4 Esika's Chariot
+3 Glorybringer
+3 Rampaging Ferocidon
+3 Thrashing Brontodon
+3 Lightning Strike
+2 Ram Through
+4 Stomping Ground
+4 Cragcrown Pathway
+4 Rootbound Crag
+2 Copperline Gorge
+6 Forest
+2 Mountain

@@ -1,12 +1,45 @@
 import { describe, expect, test } from 'vitest';
-import type { CareerNode, CareerPoolCard } from '../../protocol/generated/views';
+import type { CareerCampaign, CareerNode, CareerPoolCard } from '../../protocol/generated/views';
 import {
+  graduated, graduationOf, requirementLines, schoolsOf, storiesOf,
   PATH_STEP, buildDeck, buildFrom, buildProblems, buildSize, changeBasic, changePick, chapterPath, countNames, crestSpec, emptyBasics,
   focusChapter, focusNode, hashName, mergeByName, legCurve, nodeState, poolEntries, portraitSpec, puzzleZones, rewardLines, runOver, runReward,
   starCount, starSlots, suggestBasics, toggleChoice, twistLines, type LimitedBuild,
 } from './careerModesModel';
 
 const node = (id: string, requires: string[] = [], state = 'locked', extra: Partial<CareerNode> = {}): CareerNode => ({ id, name: id, type: 'duel', requires, state, ...extra });
+
+describe('the academy', () => {
+  const campaigns: CareerCampaign[] = [
+    { id: 'five-paths', name: 'The Five Paths', done: 3, total: 30 },
+    { id: 'modern', name: 'Modern', school: true, order: 6, missing: ['pioneer@2'], chapters: [{ nodes: [] }] },
+    { id: 'pauper', name: 'Pauper', school: true, order: 1, done: 4, total: 4, chapters: [{ nodes: [{ id: 'a' }, { id: 'final', winsNeeded: 2 }] }] },
+    { id: 'pioneer', name: 'Pioneer', school: true, order: 4, missing: ['pauper@2|five-paths@3', 'pauper'], chapters: [{ nodes: [] }] },
+    { id: 'empty', name: 'Empty', school: true, order: 2, open: true },
+  ];
+
+  test('schools hang in their order, a school without acts not at all; the stories stay apart', () => {
+    expect(schoolsOf(campaigns).map((campaign) => campaign.id)).toEqual(['pauper', 'pioneer', 'modern']);
+    expect(storiesOf(campaigns.slice(0, 4)).map((campaign) => campaign.id)).toEqual(['five-paths']);
+  });
+
+  test('a closed school says what it needs, alternatives together', () => {
+    expect(requirementLines(campaigns[3].missing, campaigns)).toEqual([
+      [
+        { key: 'career.academy.needsBosses', vars: { campaign: 'Pauper', count: 2 } },
+        { key: 'career.academy.needsBosses', vars: { campaign: 'The Five Paths', count: 3 } },
+      ],
+      [{ key: 'career.academy.needsAll', vars: { campaign: 'Pauper' } }],
+    ]);
+  });
+
+  test('graduation is every node done, and its reward is on the last node', () => {
+    expect(graduated(campaigns[2])).toBe(true);
+    expect(graduated(campaigns[0])).toBe(false);
+    expect(graduated({ done: 0, total: 0 })).toBe(false);
+    expect(graduationOf(campaigns[2])?.id).toBe('final');
+  });
+});
 
 describe('campaign path', () => {
   test('a chain of nodes winds one step at a time, up and down', () => {

@@ -1,0 +1,24 @@
+# name: Zoo
+# archetype: aggro
+4 Wild Nacatl
+4 Kird Ape
+4 Goblin Guide
+4 Ragavan, Nimble Pilferer
+4 Qasali Pridemage
+4 Bonecrusher Giant
+4 Lightning Bolt
+4 Chain Lightning
+4 Swords to Plowshares
+2 Price of Progress
+1 Mox Ruby
+1 Mox Emerald
+1 Mox Pearl
+4 Wooded Foothills
+4 Windswept Heath
+1 Arid Mesa
+2 Plateau
+2 Taiga
+2 Savannah
+2 Mountain
+1 Forest
+1 Plains

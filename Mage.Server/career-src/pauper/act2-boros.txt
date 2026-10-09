@@ -1,0 +1,17 @@
+# name: Boros Tokens
+# archetype: aggro
+4 Thraben Inspector
+4 Mogg War Marshal
+4 Kor Skyfisher
+4 Goblin Bushwhacker
+2 Attended Knight
+4 Battle Screech
+4 Raise the Alarm
+4 Rally the Peasants
+4 Rally at the Hornburg
+4 Lightning Bolt
+3 Chain Lightning
+2 Journey to Nowhere
+4 Wind-Scarred Crag
+7 Plains
+6 Mountain

@@ -6,7 +6,9 @@ import { api } from '../connection';
 import { useCardInfo } from '../decks/cardInfo';
 import { groupOf } from '../decks/deckModel';
 import { MatchScore } from '../match/MatchScore';
+import { lessonsFor, useCareerLessons } from '../stores/careerLessons';
 import { useEvents, type ConstructState } from '../stores/events';
+import { useT } from '../i18n';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { BASICS, countBasics, initialMain, isBasic, toDeckLists, type BasicName } from './buildDeck';
@@ -60,6 +62,8 @@ function Builder({ construct }: { construct: ConstructState }) {
   const minimum = construct.limited ? 40 : 60;
 
   const wire = useMemo(() => toDeckLists(pool, main, construct.limited ? basics : null), [pool, main, basics, construct.limited]);
+  const lessons = lessonsFor(useCareerLessons((state) => state.plan), construct.tableId);
+  const lesson = construct.kind === 'sideboard' ? lessons?.sideboard ?? null : null;
 
   // keep the server's copy current, so a timeout submits what's on screen
   useEffect(() => {
@@ -80,7 +84,7 @@ function Builder({ construct }: { construct: ConstructState }) {
   };
 
   return (
-    <div className={styles.screen}>
+    <div className={[styles.screen, lesson ? styles.screenLesson : ''].join(' ')}>
       <header className={styles.top}>
         <div>
           <h1 className={styles.title}>{construct.kind === 'construct' ? 'Build your deck' : 'Adjust your deck'}</h1>
@@ -111,6 +115,7 @@ function Builder({ construct }: { construct: ConstructState }) {
           )}
         </div>
       </header>
+      {lesson && <SideboardLesson text={lesson} />}
 
       <section className={styles.zone} aria-label={`Card pool, ${inPool.length} cards`}>
         <div className={styles.zoneHead}>
@@ -240,4 +245,15 @@ function suggestLands(deck: PoolCard[], info: ReadonlyMap<string, CardView>, wan
   const order = [...BASICS].sort((a, b) => symbols[b.name] - symbols[a.name]);
   for (let i = 0; given < lands; i++, given++) result[order[i % order.length].name]++;
   return result;
+}
+
+/** A school's word on sideboarding, between the games of its best-of-three final. */
+function SideboardLesson({ text }: { text: string }) {
+  const t = useT();
+  return (
+    <aside className={styles.lesson} aria-label={t('match.lesson.sideboard')}>
+      <b>{t('match.lesson.sideboard')}</b>
+      <p>{text}</p>
+    </aside>
+  );
 }

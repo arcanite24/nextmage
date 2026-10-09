@@ -1,0 +1,16 @@
+# name: Goblins
+# archetype: aggro
+4 Goblin Lackey
+4 Goblin Guide
+4 Mogg War Marshal
+4 Goblin Warchief
+4 Goblin Matron
+3 Goblin Ringleader
+4 Goblin Piledriver
+4 Goblin Rabblemaster
+2 Krenko, Mob Boss
+4 Lightning Bolt
+1 Mox Ruby
+4 Cavern of Souls
+2 Wasteland
+16 Mountain

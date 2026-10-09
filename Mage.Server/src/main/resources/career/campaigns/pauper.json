@@ -1,0 +1,929 @@
+{
+  "id": "pauper",
+  "name": "The Pauper School",
+  "format": "Pauper",
+  "school": true,
+  "order": 1,
+  "colors": "UB",
+  "summary": "Commons only. Cheap removal, card advantage and artifact lands decide the game.",
+  "text": "Pauper is a constructed format where every card must have been printed at common, in paper or on Magic Online. It's the cheapest way into competitive Magic, and the decks are stronger than you'd expect: Counterspell, Lightning Bolt and Ninjas all live here. You'll start with a green creature deck, play every role, learn Affinity, and finish with the decks people play this month.",
+  "deckType": "Constructed - Pauper",
+  "gameType": "Two Player Duel",
+  "requires": [
+    "five-paths@1"
+  ],
+  "chapters": [
+    {
+      "id": "pauper-1",
+      "name": "First steps",
+      "text": "Pauper decks are 60 cards with up to four copies of each, plus a 15-card sideboard, and every card must have been printed at common. Learn the table with a green creature deck that hits early and hard.",
+      "deck": "pauper/starter.dck",
+      "deckName": "Common Ground",
+      "nodes": [
+        {
+          "id": "pauper-1a",
+          "type": "duel",
+          "name": "Tinder Mags",
+          "text": "A goblin boss with a short fuse and a long line of goblins.",
+          "requires": [],
+          "opponent": {
+            "name": "Tinder Mags",
+            "deck": "pauper/act1-goblins.dck",
+            "skill": 1
+          },
+          "lesson": {
+            "title": "Commons only",
+            "text": "Every card in Pauper was printed at common at least once, so the cards are cheap and plain. That makes speed matter: play a creature every turn and attack. Rancor and Vines of Vastwood turn a small creature into a big threat.",
+            "cards": [
+              "Nettle Sentinel",
+              "Silhana Ledgewalker",
+              "Rancor",
+              "Vines of Vastwood"
+            ]
+          },
+          "tips": [
+            {
+              "on": "start",
+              "title": "Curve out",
+              "text": "Spend all your mana every turn: a one-drop on turn one, a two-drop on turn two. Stompy wins before bigger decks get going."
+            },
+            {
+              "on": "cast:Rancor",
+              "title": "Rancor comes back",
+              "text": "When the creature wearing Rancor dies, Rancor goes back to your hand. Put it on a creature they can't block, like Silhana Ledgewalker."
+            },
+            {
+              "on": "play:Goblin Bushwhacker",
+              "title": "Watch the swing",
+              "text": "A kicked Goblin Bushwhacker gives every goblin +1/+0 and haste this turn. Block the biggest attacker and keep your life total ahead of theirs."
+            }
+          ],
+          "reward": {
+            "coins": 25,
+            "xp": 125
+          },
+          "before": "Goblins! Go! Don't read the cards, just go!",
+          "after": "They went. They just went the wrong way."
+        },
+        {
+          "id": "pauper-1b",
+          "type": "duel",
+          "name": "Sister Halloway",
+          "text": "Little white soldiers, many of them with wings.",
+          "requires": [
+            "pauper-1a"
+          ],
+          "opponent": {
+            "name": "Sister Halloway",
+            "deck": "pauper/act1-weenie.dck",
+            "skill": 2
+          },
+          "lesson": {
+            "title": "The banlist",
+            "text": "Pauper has its own banned list, kept by Wizards of the Coast with advice from a panel of Pauper players. Cards that made games too fast or too one-sided are gone, like Gush, Monastery Swiftspear, Kuldotha Rebirth and Atog. This deck flies over you, so use Savage Swipe on its best flyer and keep attacking on the ground.",
+            "cards": [
+              "Savage Swipe",
+              "Mire Boa",
+              "Kor Skyfisher",
+              "Rally the Peasants"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Savage Swipe",
+              "title": "Fight with a 2-power creature",
+              "text": "Savage Swipe gives +2/+2 only if your creature's power is exactly 2. Nettle Sentinel or Mire Boa become 4/4 and win the fight."
+            },
+            {
+              "on": "cast:Rally the Peasants",
+              "title": "It comes back",
+              "text": "Rally the Peasants has flashback: it can be cast again from the graveyard. Expect a second +2/+0 swing later and keep blockers ready."
+            },
+            {
+              "on": "attack",
+              "title": "Race the flyers",
+              "text": "You can't block flyers, so don't try. Your ground creatures are bigger than theirs: attack every turn and make them block."
+            }
+          ],
+          "reward": {
+            "coins": 30,
+            "xp": 150
+          },
+          "before": "Little soldiers, all in a row. Mind the feathers.",
+          "after": "Rally next time, I suppose."
+        },
+        {
+          "id": "pauper-1t",
+          "type": "trial",
+          "name": "Over the wall",
+          "text": "Your opponent is at 7 life behind a wall. Win this turn.",
+          "hint": "Only a flyer can block Silhana Ledgewalker. Put Rancor on it before combat, then kick Vines of Vastwood once it's unblocked.",
+          "requires": [
+            "pauper-1b"
+          ],
+          "lesson": {
+            "title": "Stack the pump",
+            "text": "A pump spell is a cheap spell that makes a creature bigger for a turn. Stompy wins by stacking pump on one creature that can't be blocked. Count your mana first: Rancor costs G and a kicked Vines of Vastwood costs GG.",
+            "cards": [
+              "Silhana Ledgewalker",
+              "Rancor",
+              "Vines of Vastwood",
+              "Savage Swipe"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Rancor",
+                "Vines of Vastwood",
+                "Savage Swipe"
+              ],
+              "battlefield": [
+                "Silhana Ledgewalker",
+                "Young Wolf",
+                "Forest",
+                "Forest",
+                "Forest"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Nettle Sentinel",
+                "Forest"
+              ]
+            },
+            "opponent": {
+              "life": 7,
+              "hand": [],
+              "battlefield": [
+                "Wall of Wood",
+                "Swamp",
+                "Swamp"
+              ],
+              "graveyard": [],
+              "library": [
+                "Swamp",
+                "Swamp",
+                "Swamp"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "pauper-1boss",
+          "type": "duel",
+          "name": "Dowager Crane",
+          "text": "Every creature you play is one she gets to kill.",
+          "requires": [
+            "pauper-1t"
+          ],
+          "opponent": {
+            "name": "Dowager Crane",
+            "deck": "pauper/act1-boss.dck",
+            "skill": 3,
+            "twists": {
+              "startingLife": 25,
+              "extraCards": 1
+            }
+          },
+          "lesson": {
+            "title": "Removal is cheap here",
+            "text": "Pauper's removal costs one or two mana, and Snuff Out costs none. Don't stack all your pump on one creature while they have mana open. Spread your threats, answer their removal with Vines of Vastwood, and recast Rancor when it comes back.",
+            "cards": [
+              "Snuff Out",
+              "Cast Down",
+              "Vines of Vastwood",
+              "Mire Boa"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Snuff Out",
+              "title": "A free kill",
+              "text": "Snuff Out costs them 4 life instead of mana. That's 4 damage you didn't have to deal. Keep attacking."
+            },
+            {
+              "on": "play:Mire Boa",
+              "title": "Swampwalk",
+              "text": "Mire Boa can't be blocked while they control a Swamp, and it regenerates for G. Against this deck it's the best creature to carry Rancor."
+            },
+            {
+              "on": "play:Gurmag Angler",
+              "title": "Delve",
+              "text": "Delve means each card exiled from the graveyard pays for one generic mana, so Gurmag Angler often costs one or two. Don't trade into a 5/5: race it, or chump once to win the race."
+            }
+          ],
+          "reward": {
+            "coins": 80,
+            "xp": 250,
+            "deckCards": true
+          },
+          "boss": true,
+          "before": "Every creature you play is a card I get to kill.",
+          "after": "You played more than I could kill. How rude."
+        }
+      ]
+    },
+    {
+      "id": "pauper-2",
+      "name": "Archetypes",
+      "text": "Four duels, four roles: aggro, midrange, control and combo. Each loaner is built to beat the deck across the table. Ask yourself every turn who's the beatdown: the player who has to win fast.",
+      "nodes": [
+        {
+          "id": "pauper-2a",
+          "type": "duel",
+          "name": "Moss Vantreck",
+          "text": "A patient gardener whose creatures keep coming back.",
+          "requires": [
+            "pauper-1boss"
+          ],
+          "deck": "pauper/act2-aggro.dck",
+          "deckName": "Red Deck Burns",
+          "opponent": {
+            "name": "Moss Vantreck",
+            "deck": "pauper/act2-golgari.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Aggro: race",
+            "text": "You're the beatdown. Their deck gets better the longer the game goes, so ignore their board when you're ahead on the clock. Point burn at their face, not their creatures, unless a blocker stops several points of damage. Fireblast is your last 4 damage.",
+            "cards": [
+              "Lightning Bolt",
+              "Rift Bolt",
+              "Fireblast",
+              "Ghitu Lavarunner"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Rift Bolt",
+              "title": "Suspend",
+              "text": "Suspend 1 means you exile Rift Bolt for R and it's cast for free on your next turn. Three damage for one mana, a turn late."
+            },
+            {
+              "on": "cast:Fireblast",
+              "title": "Free damage",
+              "text": "Fireblast's other cost is to sacrifice two Mountains instead of paying mana. Cast it when it finishes the game, not before."
+            },
+            {
+              "on": "opponentLife:8",
+              "title": "Count it out",
+              "text": "Add up the burn in your hand and the attackers that can connect. If that's lethal, stop trading creatures and go to their face."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Burn me all you like. Everything here grows back.",
+          "after": "Not fast enough to grow back. Noted."
+        },
+        {
+          "id": "pauper-2b",
+          "type": "duel",
+          "name": "Kettle Brann",
+          "text": "A cheerful arsonist who counts your life out loud.",
+          "requires": [
+            "pauper-2a"
+          ],
+          "deck": "pauper/act2-midrange.dck",
+          "deckName": "Orzhov Monarch",
+          "opponent": {
+            "name": "Kettle Brann",
+            "deck": "pauper/act2-rakdos.dck",
+            "skill": 3
+          },
+          "lesson": {
+            "title": "Midrange: trade, then turn the corner",
+            "text": "Against aggro, you're the control deck at first. Trade creatures early, remove their best attackers and gain life with Lone Missionary. Once they're low on cards, become the monarch with Thorn of the Black Rose: the monarch draws an extra card each end step, and a player who deals combat damage to the monarch takes the title.",
+            "cards": [
+              "Thorn of the Black Rose",
+              "Lone Missionary",
+              "Kor Skyfisher",
+              "Journey to Nowhere"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Thorn of the Black Rose",
+              "title": "Keep the crown",
+              "text": "You're the monarch now. If one of their creatures deals combat damage to you, they take it. Keep blockers back and let your extra cards win."
+            },
+            {
+              "on": "play:Kor Skyfisher",
+              "title": "Return something useful",
+              "text": "Kor Skyfisher returns a permanent you control to your hand. Bounce Lone Missionary for 4 more life, or Thraben Inspector for another Clue."
+            },
+            {
+              "on": "life:10",
+              "title": "Stop the bleeding",
+              "text": "At 10 life, burn can finish you. Block whenever you can and spend your removal on their creatures, not on staying ahead in cards."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Twenty life? I'll have it by turn five.",
+          "after": "Turn five came and went. Hm."
+        },
+        {
+          "id": "pauper-2c",
+          "type": "duel",
+          "name": "Brask Underbough",
+          "text": "A big man with bigger creatures and no patience.",
+          "requires": [
+            "pauper-2b"
+          ],
+          "deck": "pauper/act2-control.dck",
+          "deckName": "Izzet Flicker",
+          "opponent": {
+            "name": "Brask Underbough",
+            "deck": "pauper/act2-gruul.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Control: one for one, then more",
+            "text": "You're not the beatdown. Answer each threat with one card: Lightning Bolt, Counterspell, Exclude. Mulldrifter and Mnemonic Wall give you more than one card each, and Ghostly Flicker on both gives you both again. Win late.",
+            "cards": [
+              "Mnemonic Wall",
+              "Ghostly Flicker",
+              "Mulldrifter",
+              "Counterspell"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Ghostly Flicker",
+              "title": "Flicker for value",
+              "text": "Ghostly Flicker exiles two of your permanents and returns them, so their enters abilities happen again. Flicker Mnemonic Wall and Mulldrifter: the Wall returns Ghostly Flicker to your hand and Mulldrifter draws two."
+            },
+            {
+              "on": "opponentSpell",
+              "title": "Hold it up",
+              "text": "Keep Counterspell or Exclude mana open on their turn. Counter the creatures you can't kill with Lightning Bolt; let the small ones resolve and burn them."
+            },
+            {
+              "on": "cast:Rancor",
+              "title": "Rancor returns",
+              "text": "When the creature wearing Rancor dies, Rancor goes back to their hand. Counter the Rancor itself if you can."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "I smash. You counter. I smash again. Who runs out first?",
+          "after": "Me, apparently. I hate that."
+        },
+        {
+          "id": "pauper-2d",
+          "type": "duel",
+          "name": "Captain Sorrel",
+          "text": "A drill captain with an endless supply of soldiers.",
+          "requires": [
+            "pauper-2c"
+          ],
+          "deck": "pauper/act2-combo.dck",
+          "deckName": "Balustrade Spy",
+          "opponent": {
+            "name": "Captain Sorrel",
+            "deck": "pauper/act2-boros.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Combo: goldfish",
+            "text": "Goldfishing means playing as if your opponent weren't there. Use Land Grant and Generous Ent's forestcycling to get every land out of your library. Then Balustrade Spy, targeting you, mills your whole library. Flash back Dread Return by sacrificing three creatures to bring back Lotleth Giant, which deals 1 damage for each creature card in your graveyard.",
+            "cards": [
+              "Balustrade Spy",
+              "Dread Return",
+              "Lotleth Giant",
+              "Land Grant"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Balustrade Spy",
+              "title": "Target yourself",
+              "text": "Balustrade Spy mills until it reveals a land. With no lands left in your library, it mills everything. Count your lands first: four basics in the deck, plus any you drew."
+            },
+            {
+              "on": "cast:Dread Return",
+              "title": "Walls are fuel",
+              "text": "Dread Return's flashback costs three creatures, not mana. Your walls have done their job; sacrifice them and return Lotleth Giant."
+            },
+            {
+              "on": "attack",
+              "title": "Don't race",
+              "text": "Your creatures are walls and mana. Keep them home to block: they buy you the turns you need to combo."
+            }
+          ],
+          "reward": {
+            "coins": 35,
+            "xp": 175
+          },
+          "before": "Battalion, form up! There's always more of us.",
+          "after": "Where did your whole library go? And why did that hurt?"
+        },
+        {
+          "id": "pauper-2choice",
+          "type": "choice",
+          "name": "The bursar's office",
+          "text": "You've played all four roles. The bursar offers a reward.",
+          "requires": [
+            "pauper-2d"
+          ],
+          "options": [
+            {
+              "id": "coins",
+              "text": "Take 60 coins",
+              "reward": {
+                "coins": 60
+              }
+            },
+            {
+              "id": "wildcard",
+              "text": "Take an uncommon wildcard",
+              "reward": {
+                "wildcard": "uncommon"
+              }
+            },
+            {
+              "id": "xp",
+              "text": "Take 200 XP",
+              "reward": {
+                "xp": 200
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pauper-3",
+      "name": "Artifact lands",
+      "text": "Artifact lands are lands that are also artifacts. They fuel Affinity, Pauper's signature deck: spells that cost 1 less for each artifact you control. Learn to count, and learn what punishes you.",
+      "deck": "pauper/signature.dck",
+      "deckName": "Classic Affinity",
+      "nodes": [
+        {
+          "id": "pauper-3t1",
+          "type": "trial",
+          "name": "Counting artifacts",
+          "text": "Your opponent is at 8 life. Win this turn.",
+          "hint": "Cast the free artifact first: it makes the big one cheaper. Then throw the big one with Fling and finish with a metalcraft Galvanic Blast.",
+          "requires": [
+            "pauper-2choice"
+          ],
+          "lesson": {
+            "title": "Affinity for artifacts",
+            "text": "Affinity for artifacts means a spell costs 1 less for each artifact you control, and your artifact lands count. Frogmite is often free and Myr Enforcer costs one or two. Galvanic Blast deals 4 instead of 2 with metalcraft: three or more artifacts.",
+            "cards": [
+              "Frogmite",
+              "Myr Enforcer",
+              "Galvanic Blast",
+              "Fling"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Myr Enforcer",
+                "Frogmite",
+                "Fling",
+                "Galvanic Blast"
+              ],
+              "battlefield": [
+                "Seat of the Synod",
+                "Great Furnace",
+                "Silverbluff Bridge",
+                "Darksteel Citadel",
+                "Ornithopter"
+              ],
+              "graveyard": [],
+              "library": [
+                "Thoughtcast",
+                "Somber Hoverguard",
+                "Island"
+              ]
+            },
+            "opponent": {
+              "life": 8,
+              "hand": [],
+              "battlefield": [
+                "Gurmag Angler",
+                "Swamp",
+                "Swamp",
+                "Swamp"
+              ],
+              "graveyard": [],
+              "library": [
+                "Swamp",
+                "Swamp",
+                "Swamp"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "pauper-3a",
+          "type": "duel",
+          "name": "Scrapper Jun",
+          "text": "A red mage who eats metal for breakfast.",
+          "requires": [
+            "pauper-3t1"
+          ],
+          "opponent": {
+            "name": "Scrapper Jun",
+            "deck": "pauper/act3-breakers.dck",
+            "skill": 4
+          },
+          "lesson": {
+            "title": "Your lands are artifacts too",
+            "text": "Gorilla Shaman destroys an artifact land for one mana, and Smash to Smithereens hits your best artifact and you for 3. Kill Gorilla Shaman on sight with Galvanic Blast. Keep a basic Island in play when you can, and use Thoughtcast to refill after a trade.",
+            "cards": [
+              "Gorilla Shaman",
+              "Smash to Smithereens",
+              "Galvanic Blast",
+              "Thoughtcast"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Gorilla Shaman",
+              "title": "Kill it now",
+              "text": "Gorilla Shaman pays X twice plus 1 to destroy a noncreature artifact with mana value X. Your lands have mana value 0, so each costs it just 1. Galvanic Blast it before it eats your mana."
+            },
+            {
+              "on": "cast:Thoughtcast",
+              "title": "Two cards for one mana",
+              "text": "Thoughtcast costs {4}{U} minus one per artifact. With four artifacts out it's U: draw two."
+            },
+            {
+              "on": "play:Myr Enforcer",
+              "title": "The big body",
+              "text": "Myr Enforcer is a 4/4 that their Lightning Bolt and Electrickery can't kill. Lead with it when they're holding burn."
+            }
+          ],
+          "reward": {
+            "coins": 40,
+            "xp": 200
+          },
+          "before": "Nice lands. Mind if I eat one?",
+          "after": "Should've eaten faster."
+        },
+        {
+          "id": "pauper-3t2",
+          "type": "trial",
+          "name": "Swap in",
+          "text": "Your opponent is at 9 life behind two walls. Win this turn.",
+          "hint": "Attack in the air. Once no blockers are declared, ninjutsu swaps your weakest unblocked attacker for the ninja.",
+          "requires": [
+            "pauper-3a"
+          ],
+          "lesson": {
+            "title": "Ninjutsu",
+            "text": "Ninjutsu lets you return an unblocked attacker to your hand and put the ninja onto the battlefield tapped and attacking. Ornithopter deals no damage, so it's the perfect creature to swap. Recast it afterwards for free; it still counts for metalcraft.",
+            "cards": [
+              "Moon-Circuit Hacker",
+              "Ornithopter",
+              "Somber Hoverguard",
+              "Galvanic Blast"
+            ]
+          },
+          "trial": {
+            "objective": "win",
+            "you": {
+              "life": 20,
+              "hand": [
+                "Moon-Circuit Hacker",
+                "Galvanic Blast",
+                "Thoughtcast"
+              ],
+              "battlefield": [
+                "Ornithopter",
+                "Somber Hoverguard",
+                "Seat of the Synod",
+                "Seat of the Synod",
+                "Great Furnace",
+                "Silverbluff Bridge"
+              ],
+              "graveyard": [],
+              "library": [
+                "Frogmite",
+                "Island",
+                "Seat of the Synod",
+                "Myr Enforcer"
+              ]
+            },
+            "opponent": {
+              "life": 9,
+              "hand": [],
+              "battlefield": [
+                "Wall of Wood",
+                "Wall of Wood",
+                "Forest",
+                "Forest"
+              ],
+              "graveyard": [],
+              "library": [
+                "Forest",
+                "Forest",
+                "Forest"
+              ]
+            }
+          },
+          "reward": {
+            "coins": 20,
+            "xp": 100
+          }
+        },
+        {
+          "id": "pauper-3boss",
+          "type": "duel",
+          "name": "Magistrate Coil",
+          "text": "Artifacts are contraband in her court, and she enforces it.",
+          "requires": [
+            "pauper-3t2"
+          ],
+          "opponent": {
+            "name": "Magistrate Coil",
+            "deck": "pauper/act3-boss.dck",
+            "skill": 5,
+            "twists": {
+              "startingLife": 25,
+              "permanents": [
+                "Gorilla Shaman"
+              ]
+            }
+          },
+          "lesson": {
+            "title": "Play around the hate",
+            "text": "This deck is full of answers to artifacts: a Gorilla Shaman already in play, Revoke Existence, Dust to Dust and Fiery Cannonade. Kill the Shaman first. Don't play more creatures than you need, and keep Myr Enforcer and Gearseeker Serpent for after a Cannonade.",
+            "cards": [
+              "Gorilla Shaman",
+              "Fiery Cannonade",
+              "Myr Enforcer",
+              "Gearseeker Serpent"
+            ]
+          },
+          "tips": [
+            {
+              "on": "start",
+              "title": "The Shaman is already here",
+              "text": "They start with Gorilla Shaman in play and 25 life. Keep Galvanic Blast or Fling for it, and play basic Islands first if you can."
+            },
+            {
+              "on": "cast:Fiery Cannonade",
+              "title": "Two to everything",
+              "text": "Fiery Cannonade deals 2 damage to each creature. Your Frogmites and Moon-Circuit Hackers die; Myr Enforcer and Gearseeker Serpent don't. Rebuild with those."
+            },
+            {
+              "on": "cast:Dust to Dust",
+              "title": "Lands count",
+              "text": "Dust to Dust exiles two artifacts, and your artifact lands are artifacts. Keep a land in hand when you can, so one sorcery doesn't cut your mana in half."
+            }
+          ],
+          "reward": {
+            "coins": 100,
+            "xp": 300,
+            "packs": 1
+          },
+          "boss": true,
+          "before": "Artifacts are contraband in my court. All of them.",
+          "after": "Case dismissed. Keep your little machines."
+        }
+      ]
+    },
+    {
+      "id": "pauper-4",
+      "name": "The meta",
+      "text": "These are the decks people played in October 2026, taken from MTGTop8. You borrow the control and combo decks; the AI plays the aggro ones. The final is a best of three with sideboarding.",
+      "nodes": [
+        {
+          "id": "pauper-4a",
+          "type": "duel",
+          "name": "Juno Fettle",
+          "text": "Goblins, soldiers and a war cry, all on turn three.",
+          "requires": [
+            "pauper-3boss"
+          ],
+          "deck": "pauper/meta-golgari-garden.dck",
+          "deckName": "Golgari Garden",
+          "opponent": {
+            "name": "Juno Fettle",
+            "deck": "pauper/meta-red-deck-wins.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Pestilence against the swarm",
+            "text": "Pestilence's {B} deals 1 damage to each creature and each player, so one activation kills a whole Rally at the Hornburg. It's sacrificed at the end step if no creatures are on the battlefield, so keep Khalni Garden's Plant or Troll of Khazad-dum around. Food like Nutrient Block and Lembas keeps your life above theirs.",
+            "cards": [
+              "Pestilence",
+              "Khalni Garden",
+              "Troll of Khazad-dum",
+              "Nutrient Block"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Rally at the Hornburg",
+              "title": "Two tokens, one activation",
+              "text": "Rally makes two 1/1s with haste. One Pestilence activation, or a block plus one, cleans them up."
+            },
+            {
+              "on": "play:Goblin Bushwhacker",
+              "title": "Activate after the pump",
+              "text": "Bushwhacker's +1/+0 doesn't add toughness. Let them attack, then activate Pestilence in combat: their 1-toughness creatures still die."
+            },
+            {
+              "on": "life:8",
+              "title": "Pestilence hurts you too",
+              "text": "Every activation costs you 1 life as well. Sacrifice Food for life first, then sweep."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Bushwhacker, Rally, swing. That's the whole plan and it's a good one.",
+          "after": "Every time I made goblins, you made a plague."
+        },
+        {
+          "id": "pauper-4b",
+          "type": "duel",
+          "name": "Ember Vosk",
+          "text": "She throws away her own cards and they explode on the way out.",
+          "requires": [
+            "pauper-4a"
+          ],
+          "deck": "pauper/meta-azorius-familiars.dck",
+          "deckName": "Azorius Familiars",
+          "opponent": {
+            "name": "Ember Vosk",
+            "deck": "pauper/meta-madness-burn.dck",
+            "skill": 5
+          },
+          "lesson": {
+            "title": "Familiars: life and loops",
+            "text": "Sunscape Familiar makes your blue spells cost {1} less, so Snap costs U and untaps two lands. God-Pharaoh's Faithful gains you 1 life whenever you cast a blue spell, which is your plan against burn. Ephemerate and Archaeomancer get your spells and creatures back; keep your life high and win when they run out of fire.",
+            "cards": [
+              "Sunscape Familiar",
+              "God-Pharaoh's Faithful",
+              "Ephemerate",
+              "Archaeomancer"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Fiery Temper",
+              "title": "Madness",
+              "text": "Madness lets a player cast a discarded card for its madness cost. Faithless Looting discards Fiery Temper and they cast it for R. Expect 3 damage whenever they loot."
+            },
+            {
+              "on": "cast:Ephemerate",
+              "title": "Rebound",
+              "text": "Ephemerate exiles your creature and returns it, so its enters ability happens again. With rebound it's cast again for free at your next upkeep. Target Archaeomancer or Mulldrifter."
+            },
+            {
+              "on": "life:6",
+              "title": "Every point counts",
+              "text": "Fireblast is 4 free damage. At 6 life or less, block with everything and cast blue spells even when you'd rather wait: each one is a life with Faithful."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "I discard my cards on purpose. Watch what happens.",
+          "after": "I ran out of fire before you ran out of life."
+        },
+        {
+          "id": "pauper-4c",
+          "type": "duel",
+          "name": "Old Mother Rue",
+          "text": "One elf is a tree. Forty elves are a forest.",
+          "requires": [
+            "pauper-4b"
+          ],
+          "deck": "pauper/meta-urzatron.dck",
+          "deckName": "Flicker Tron",
+          "opponent": {
+            "name": "Old Mother Rue",
+            "deck": "pauper/meta-elves.dck",
+            "skill": 6
+          },
+          "lesson": {
+            "title": "Tron: assemble",
+            "text": "With Urza's Mine, Power Plant and Tower in play, your three lands tap for seven mana. Expedition Map and Crop Rotation find the missing piece. Until then, Cast Down, Candy Trail and Lembas keep you alive. With seven mana, Bramble Wurm gains you 5 life, and Ghostly Flicker on it and Mulldrifter does it all again.",
+            "cards": [
+              "Urza's Tower",
+              "Expedition Map",
+              "Ghostly Flicker",
+              "Bramble Wurm"
+            ]
+          },
+          "tips": [
+            {
+              "on": "play:Priest of Titania",
+              "title": "Kill the engine",
+              "text": "Priest of Titania taps for G for each elf on the battlefield. Cast Down it before it untaps, or they'll double their board."
+            },
+            {
+              "on": "play:Timberwatch Elf",
+              "title": "Count the elves",
+              "text": "Timberwatch Elf gives +X/+X, where X is the number of elves. Block their smallest creatures, not the one it can pump."
+            },
+            {
+              "on": "play:Urza's Tower",
+              "title": "Tron online",
+              "text": "With Mine and Power Plant out, Tower taps for three. Seven mana casts Bramble Wurm, or activates Giant's Boulder to destroy any permanent."
+            }
+          ],
+          "reward": {
+            "coins": 45,
+            "xp": 225
+          },
+          "before": "Sit down, dear. The forest has been expecting you.",
+          "after": "Seven mana on turn three. That's cheating, dear."
+        },
+        {
+          "id": "pauper-final",
+          "type": "duel",
+          "name": "The Cogwright",
+          "text": "The best deck of the month, piloted by its builder. Best of three.",
+          "requires": [
+            "pauper-4c"
+          ],
+          "deck": "pauper/meta-dimir-control.dck",
+          "deckName": "Dimir Control",
+          "opponent": {
+            "name": "The Cogwright",
+            "deck": "pauper/meta-affinity.dck",
+            "skill": 7
+          },
+          "lesson": {
+            "title": "Control against Affinity",
+            "text": "Affinity is this season's most played deck: cheap artifact flyers and Cast Down. Trade one for one with Counterspell and your removal, and win the long game with Lorien Revealed, Baleful Strix and Ninja of the Deep Hours. Snuff Out can't hit their black creatures (Refurbished Familiar, Baleful Strix); use Cast Down on those.",
+            "cards": [
+              "Counterspell",
+              "Snuff Out",
+              "Spellstutter Sprite",
+              "Cast Down"
+            ]
+          },
+          "tips": [
+            {
+              "on": "cast:Myr Enforcer",
+              "title": "Mana value stays 7",
+              "text": "Affinity lowers what they pay, not the mana value. Myr Enforcer is still 7, so Spellstutter Sprite can't counter it. Counterspell can."
+            },
+            {
+              "on": "play:Spellstutter Sprite",
+              "title": "Count your faeries",
+              "text": "Spellstutter Sprite counters a spell with mana value up to the number of Faeries you control. Thoughtcast is 5, Baleful Strix is 2: pick your target."
+            },
+            {
+              "on": "play:Thorn of the Black Rose",
+              "title": "Take the crown carefully",
+              "text": "Their flyers take the monarchy back easily. Make yourself the monarch only when you can block or kill their flyers."
+            }
+          ],
+          "reward": {
+            "coins": 200,
+            "xp": 500,
+            "packs": 2,
+            "wildcard": "rare",
+            "cosmetics": [
+              {
+                "kind": "title",
+                "id": "pauper-graduate"
+              },
+              {
+                "kind": "sleeve",
+                "id": "school-pauper"
+              }
+            ]
+          },
+          "boss": true,
+          "winsNeeded": 2,
+          "sideboard": "Bring in 4 Annul: it counters an artifact spell for U, and almost every threat they cast is an artifact. Take out 2 Dispel, 1 Plunder the Trollshaws and 1 Mukotai Ambusher; they play few instants. Leave Hydroblast and Blue Elemental Blast in the sideboard: they only hit red cards, and this deck has none.",
+          "before": "Every land I play is a part. Every part makes the machine cheaper.",
+          "after": "Counter, kill, draw, repeat. The machine stalls. You've earned the title."
+        }
+      ]
+    }
+  ]
+}

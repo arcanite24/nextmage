@@ -6,6 +6,13 @@ export default {
   // a count of cards after a pile's name ("Your graveyard, 1 card")
   'match.cards': { one: '{label}, {count} card', other: '{label}, {count} cards' },
 
+  // a school duel's tips
+  'match.lesson.tip': 'School tip',
+  'match.lesson.kicker': 'The school',
+  'match.lesson.gotIt': 'Got it',
+  'match.lesson.quiet': 'No more tips',
+  'match.lesson.sideboard': 'Sideboarding',
+
   // the turn ladder
   'match.turn': 'Turn {turn}',
   'match.turn.yours': 'Yours',

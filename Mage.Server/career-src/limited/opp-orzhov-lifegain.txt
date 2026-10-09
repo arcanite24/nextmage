@@ -1,0 +1,26 @@
+# name: Orzhov Lifegain
+# archetype: midrange (Orzhov lifegain, Foundations)
+# season: 2026-10
+1 Healer's Hawk
+2 Ajani's Pridemate
+1 Sun-Blessed Healer
+2 Sanguine Syphoner
+2 Marauding Blight-Priest
+1 Dazzling Angel
+1 Cat Collector
+1 Vampire Nighthawk
+1 Felidar Savior
+1 Fiendish Panda
+1 Vanguard Seraph
+1 Exemplar of Light
+1 Guarded Heir
+1 Stab
+1 Bake into a Pie
+1 Joust Through
+1 Luminous Rebuke
+1 Banishing Light
+1 Midnight Snack
+1 Fleeting Flight
+8 Plains
+8 Swamp
+1 Scoured Barrens

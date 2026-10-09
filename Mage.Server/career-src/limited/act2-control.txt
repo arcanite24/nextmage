@@ -1,0 +1,25 @@
+# name: Threshold Tide
+# archetype: control (Dimir threshold, Foundations)
+# season: 2026-10
+1 Aegis Turtle
+2 Strix Lookout
+2 Dreadwing Scavenger
+1 Cephalid Inkmage
+1 Bigfin Bouncer
+1 Billowing Shriekmass
+2 Icewind Elemental
+1 Skyship Buccaneer
+1 Consuming Aberration
+1 Tolarian Terror
+1 Stab
+2 Bake into a Pie
+1 Hero's Downfall
+1 Essence Scatter
+1 Refute
+1 Think Twice
+1 Uncharted Voyage
+1 Seeker's Folly
+1 Arcane Epiphany
+8 Island
+8 Swamp
+1 Dismal Backwater

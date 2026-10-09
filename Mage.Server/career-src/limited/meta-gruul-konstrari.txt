@@ -1,0 +1,29 @@
+# name: Gruul Konstrari
+# archetype: midrange (Gruul artifacts, Reality Fracture)
+# season: 2026-10
+# source: https://www.17lands.com/card_ratings?expansion=FRA&format=PremierDraft (card and colour-pair win rates, 2026-09-30 to 2026-10-09)
+1 Heartwood Crafter
+2 Konstrari Improviser
+1 Arcane Amphisbaena
+1 Sureshot Sower
+1 Simulacrum Shaper
+1 Greenhouse Propagator
+1 Woodwork Prodigy
+1 Heartstring Puller
+1 Hungering Puppetbeast
+1 Wrecking Gecko
+1 Tether Technician
+1 Kiora of Fire and Ashes
+1 Vinelasher Adept
+1 Craftwork Crusher
+1 No Admittance
+1 Compel Brutality
+1 Wrath of the Bloodmane
+1 Konstrari Charm
+1 Fulminous Forte
+1 Violent Echoes
+1 Bestial Incursion
+1 Awaken the Inferno
+8 Forest
+8 Mountain
+1 Konstrari Annex

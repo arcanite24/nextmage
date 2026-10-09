@@ -1,0 +1,14 @@
+# name: Green Stompy
+# archetype: midrange
+4 Llanowar Elves
+4 Elvish Mystic
+4 Tarmogoyf
+4 Steel Leaf Champion
+4 Leatherback Baloth
+4 Old-Growth Troll
+4 Thragtusk
+3 Pelt Collector
+4 Rancor
+3 Garruk Wildspeaker
+1 Sol Ring
+21 Forest

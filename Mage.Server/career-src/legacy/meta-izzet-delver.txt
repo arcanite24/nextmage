@@ -1,0 +1,35 @@
+# name: Izzet Delver
+# archetype: tempo
+# season: 2026-10
+# source: https://www.mtgtop8.com/event?e=91927&d=898095&f=LE
+1 Island
+3 Cori-Steel Cutter
+3 Scalding Tarn
+4 Dragon's Rage Channeler
+4 Mishra's Bauble
+1 Thundering Falls
+4 Lightning Bolt
+4 Force of Will
+3 Daze
+2 Murktide Regent
+4 Ponder
+3 Misty Rainforest
+3 Polluted Delta
+1 Preordain
+4 Volcanic Island
+4 Brainstorm
+4 Wasteland
+3 Delver of Secrets
+1 Unholy Heat
+3 Flow State
+1 Brazen Borrower
+SB: 2 Unholy Heat
+SB: 1 Abrade
+SB: 3 Consign to Memory
+SB: 1 Force of Negation
+SB: 2 Meltdown
+SB: 1 Hydroblast
+SB: 2 Pyroblast
+SB: 1 Surgical Extraction
+SB: 1 Null Rod
+SB: 1 Rough // Tumble

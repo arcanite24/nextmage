@@ -209,10 +209,33 @@ public final class CareerContent {
         }).orElse(null);
     }
 
+    /** a card's face by its name, for a node without a deck across the table (a trial shows its lesson's first card) */
+    public static CareerCover coverOfCard(String name) {
+        return covers.computeIfAbsent("card:" + name, key -> {
+            try {
+                List<mage.cards.repository.CardInfo> found = mage.cards.repository.CardRepository.instance.findCards(name);
+                if (found.isEmpty()) {
+                    return java.util.Optional.empty();
+                }
+                CareerCover cover = new CareerCover();
+                cover.name = found.get(0).getName();
+                cover.setCode = found.get(0).getSetCode();
+                cover.cardNumber = found.get(0).getCardNumber();
+                return java.util.Optional.of(cover);
+            } catch (RuntimeException e) {
+                return java.util.Optional.empty();
+            }
+        }).orElse(null);
+    }
+
     static CareerCover pickCover(DeckCardLists deck) {
         DeckCardInfo best = null;
         int[] bestScore = null;
-        for (DeckCardInfo card : deck.getCards()) {
+        // a Commander or Brawl deck's face is its commander, kept in the sideboard
+        int sideboard = deck.getSideboard().stream().mapToInt(DeckCardInfo::getAmount).sum();
+        int main = deck.getCards().stream().mapToInt(DeckCardInfo::getAmount).sum();
+        boolean commander = sideboard >= 1 && sideboard <= 2 && (main == 99 || main == 98 || main == 59 || main == 58);
+        for (DeckCardInfo card : commander ? deck.getSideboard() : deck.getCards()) {
             List<mage.cards.repository.CardInfo> found = mage.cards.repository.CardRepository.instance.findCards(card.getCardName());
             if (found.isEmpty()) {
                 continue;

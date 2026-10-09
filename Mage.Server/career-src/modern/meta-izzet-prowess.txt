@@ -1,0 +1,33 @@
+# name: Izzet Prowess
+# archetype: tempo
+# season: 2026-10
+# source: https://www.mtggoldfish.com/archetype/modern-izzet-prowess (チャンピオンズカップファイナル シーズン5ラウンド1 Champions Cup Final Season 5 Round 1,2nd Place, 13-1-2)
+4 Dragon's Rage Channeler
+1 Thundering Falls
+3 Expressive Iteration
+3 Arid Mesa
+4 Lightning Bolt
+3 Scalding Tarn
+4 Preordain
+3 Mutagenic Growth
+3 Mountain
+2 Spell Snare
+4 Mishra's Bauble
+4 Cori-Steel Cutter
+1 Unholy Heat
+3 Steam Vents
+1 Violent Urge
+4 Monastery Swiftspear
+2 Fiery Islet
+3 Bloodstained Mire
+4 Slickshot Show-Off
+4 Lava Dart
+SB: 1 Murktide Regent
+SB: 4 Consign to Memory
+SB: 2 Spell Pierce
+SB: 1 Obsidian Charmaw
+SB: 1 Brazen Borrower
+SB: 2 Tormod's Crypt
+SB: 1 Meltdown
+SB: 1 Spell Snare
+SB: 2 Unholy Heat

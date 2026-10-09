@@ -1,0 +1,44 @@
+# name: Arabella's Toybox
+# archetype: aggro (Boros small creatures)
+# season: 2026-10
+CMDR: Arabella, Abandoned Doll
+1 Savannah Lions
+1 Fanatical Firebrand
+1 Healer's Hawk
+1 Helpful Hunter
+1 Resolute Reinforcements
+1 Cathar Commando
+1 Courageous Goblin
+1 Axgard Cavalry
+1 Firebrand Archer
+1 Inspiring Paladin
+1 Dauntless Veteran
+1 Swiftblade Vindicator
+1 Searslicer Goblin
+1 Frenzied Goblin
+1 Heartfire Immolator
+1 Skyknight Squire
+1 Prideful Parent
+1 Youthful Valkyrie
+1 Dazzling Angel
+1 Goblin Boarders
+1 Mischievous Pup
+1 Emberheart Challenger
+1 Manifold Mouse
+1 Seasoned Warrenguard
+1 Intrepid Rabbit
+1 Burst Lightning
+1 Lightning Strike
+1 Joust Through
+1 Heroic Reinforcements
+1 Goblin Surprise
+1 Quick-Draw Katana
+1 Banishing Light
+1 Abrade
+1 Fleeting Flight
+1 Warleader's Call
+1 Sunbillow Verge
+1 Elegant Parlor
+1 Wind-Scarred Crag
+11 Mountain
+10 Plains

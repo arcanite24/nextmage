@@ -1,0 +1,31 @@
+# name: Azorius Fatehold
+# archetype: tempo (Azorius surveil flyers, Reality Fracture)
+# season: 2026-10
+# source: https://www.17lands.com/card_ratings?expansion=FRA&format=PremierDraft (card and colour-pair win rates, 2026-09-30 to 2026-10-09)
+2 Fatehold Chronologist
+2 Surveillance Phantasm
+1 Campus Crier
+1 Proctor of Potential
+2 Mindseeker Oculus
+1 Prudent Fateseer
+1 Desperate Futurescribe
+1 Denzilore Fatehold
+1 Blossom-Blessed Angel
+1 Semester Foreseer
+1 Undulating Witness
+1 Saheeli, Consul of Oversight
+1 Icy Reception
+1 Unsummon
+1 Fatehold Charm
+1 Surgical Precision
+1 Memory Trap
+1 Your Fate Ends Here
+1 Protege's Awakening
+1 Hexhaven Battalion
+8 Island
+7 Plains
+2 Fatehold Annex
+SB: 1 Refute Destiny
+SB: 1 Infinite Coursework
+SB: 1 Academic Ascent
+SB: 1 Shatterwing Pegasus

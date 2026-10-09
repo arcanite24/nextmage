@@ -1,0 +1,18 @@
+# name: Izzet Flicker
+# archetype: control
+4 Mnemonic Wall
+4 Mulldrifter
+4 Ghostly Flicker
+4 Counterspell
+3 Exclude
+4 Lightning Bolt
+4 Firebolt
+3 Electrickery
+4 Preordain
+2 Brainstorm
+2 Compulsive Research
+2 Kaervek's Torch
+4 Swiftwater Cliffs
+2 Izzet Boilerworks
+9 Island
+5 Mountain

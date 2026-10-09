@@ -1,0 +1,49 @@
+# name: Esper Lurrus Control
+# archetype: control
+# season: 2026-10
+# source: https://www.mtgtop8.com/archetype?a=1289&f=VI (MTGO Vintage Challenge, 2026-10-08)
+4 Psychic Frog
+4 Bilbo, Thief in the Night
+4 Force of Will
+3 Force of Negation
+2 Spell Pierce
+1 Mental Misstep
+3 Swords to Plowshares
+1 Prismatic Ending
+2 Thoughtseize
+4 Flow State
+3 Lorien Revealed
+1 Treasure Cruise
+1 Gitaxian Probe
+1 Ancestral Recall
+1 Time Walk
+1 Demonic Tutor
+1 Null Rod
+1 Soul-Guide Lantern
+1 Black Lotus
+1 Mox Jet
+1 Mox Pearl
+1 Mox Sapphire
+3 Underground Sea
+2 Tundra
+1 Scalding Tarn
+1 Polluted Delta
+1 Misty Rainforest
+1 Flooded Strand
+1 Meticulous Archive
+1 Island
+4 Wasteland
+1 Strip Mine
+1 Karakas
+1 Urza's Saga
+SB: 1 Lurrus of the Dream-Den
+SB: 4 Containment Priest
+SB: 1 Swords to Plowshares
+SB: 1 Prismatic Ending
+SB: 1 Null Rod
+SB: 1 Soul-Guide Lantern
+SB: 1 The Tabernacle at Pendrell Vale
+SB: 1 Long Goodbye
+SB: 1 Mystical Dispute
+SB: 1 Fatal Push
+SB: 2 Consign to Memory

@@ -1,0 +1,19 @@
+# name: Sunforge Boros
+# archetype: aggro
+# Boros creatures and burn on a real two-colour mana base: shock, fastland, pathway, checkland.
+4 Thraben Inspector
+4 Monastery Swiftspear
+4 Fervent Champion
+4 Seasoned Hallowblade
+4 Luminarch Aspirant
+4 Bonecrusher Giant
+3 Reckless Stormseeker
+4 Lightning Strike
+3 Play with Fire
+4 Boros Charm
+4 Sacred Foundry
+4 Inspiring Vantage
+4 Needleverge Pathway
+2 Clifftop Retreat
+4 Plains
+4 Mountain
