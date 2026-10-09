@@ -752,3 +752,15 @@
     transition: none;
   }
 }
+
+/* a set a campaign chapter still has to open: last in the shop, greyed, saying which chapter */
+.packLocked {
+  background: transparent;
+  box-shadow: none;
+  outline: 1px dashed var(--ink-faint);
+  outline-offset: -1px;
+}
+
+.packLocked .packText b {
+  color: var(--ink-soft);
+}

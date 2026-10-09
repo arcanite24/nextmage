@@ -1,4 +1,4 @@
-import { Package, Search } from 'lucide-react';
+import { Lock, Package, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import type { CareerPackResult, CareerShopSet } from '../../protocol/generated/views';
@@ -60,6 +60,18 @@ export function CareerShopScreen() {
       <ul className={styles.shop}>
         {sets.map((set) => {
           const short = coins < (set.price ?? price);
+          // sets a campaign chapter still has to open come last, greyed, saying which chapter
+          if (set.locked) {
+            return (
+              <li key={set.setCode} className={[styles.pack, styles.packLocked].join(' ')}>
+                <Lock size={22} aria-hidden="true" className={styles.packIcon} />
+                <span className={styles.packText}>
+                  <b>{set.name}</b>
+                  <small>{set.setCode} · {t('career.shop.locked', { chapter: set.unlockedBy ?? '' })}</small>
+                </span>
+              </li>
+            );
+          }
           return (
             <li key={set.setCode} className={styles.pack}>
               <Package size={22} aria-hidden="true" className={styles.packIcon} />

@@ -438,7 +438,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             {mode === 'play' && <WatcherCount watchers={watchers} className={styles.watchers} />}
             <GameMenu
               gameId={state.gameId}
-              practice={mode === 'play' && !state.gameOver && returnPath !== '/career' && board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false)}
+              practice={mode === 'play' && !state.gameOver && !returnPath?.startsWith('/career') && board.opponents.length > 0 && board.opponents.every((opponent) => opponent.player.isHuman === false)}
               canConcede={canAct}
               onConcede={() => onCommand({ type: 'action', action: 'CONCEDE' })}
               onLeave={leave}
@@ -483,7 +483,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 message={state.gameOver}
                 endInfo={state.endInfo}
                 onLeave={leave}
-                leaveLabel={eventId ? 'Back to the event' : returnPath === '/career' ? 'Back to Career' : 'Back to Play'}
+                leaveLabel={eventId ? 'Back to the event' : returnPath?.startsWith('/career') ? 'Back to Career' : 'Back to Play'}
                 onPlayAgain={mode === 'play' && deckId && !eventId ? playAgain : undefined}
               />
             )}
