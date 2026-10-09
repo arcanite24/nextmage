@@ -69,6 +69,11 @@ setReporter(serverReporter(
   { path: () => window.location.pathname, userAgent: navigator.userAgent, appVersion: import.meta.env.VITE_APP_VERSION },
 ));
 
+// installable app with an offline shell; the dev server has no service worker
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => void import('./pwa').then((m) => m.registerServiceWorker()));
+}
+
 const router = createBrowserRouter([
   { path: '/login', element: <LoginScreen /> },
   // credits and legal notices, readable before signing in

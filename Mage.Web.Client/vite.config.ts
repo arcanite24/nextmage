@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { pwa } from './scripts/pwa-plugin'
 
 /** Libraries that change rarely get their own chunks, so an app release doesn't re-download them. */
 const VENDOR_CHUNKS: [chunk: string, packages: RegExp][] = [
@@ -12,11 +13,12 @@ const VENDOR_CHUNKS: [chunk: string, packages: RegExp][] = [
 ]
 
 // the product name is a build setting (src/app/brand.ts); index.html's title reads it too
-process.env.VITE_APP_NAME = process.env.VITE_APP_NAME?.trim() || 'Playmat'
+const appName = process.env.VITE_APP_NAME?.trim() || 'Playmat'
+process.env.VITE_APP_NAME = appName
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), pwa(appName)],
   build: {
     // scripts/check-bundle-size.mjs reads the manifest to find each page's chunks
     manifest: true,

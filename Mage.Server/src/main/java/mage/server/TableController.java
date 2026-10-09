@@ -23,6 +23,7 @@ import mage.players.PlayerType;
 import mage.server.game.GameFactory;
 import mage.server.game.PlayerFactory;
 import mage.server.managers.ManagerFactory;
+import mage.server.notify.DiscordNotifier;
 import mage.server.record.TableRecorderImpl;
 import mage.server.tournament.TournamentFactory;
 import mage.server.util.ServerMessagesUtil;
@@ -682,7 +683,9 @@ public class TableController {
                     });
                 }
                 match.startMatch();
-                startGame(null);
+                if (startGame(null)) {
+                    DiscordNotifier.instance().matchStarted(table, options.getPassword(), userPlayerMap.size(), match.getPlayers());
+                }
             } catch (GameException e) {
                 logger.fatal("Error starting match: " + e, e);
                 match.endGame();
@@ -690,7 +693,10 @@ public class TableController {
         }
     }
 
-    private void startGame(UUID choosingPlayerId) throws GameException {
+    /**
+     * @return false when the game could not start (the table is removed)
+     */
+    private boolean startGame(UUID choosingPlayerId) throws GameException {
         try {
             match.startGame();
             table.initGame();
@@ -745,6 +751,7 @@ public class TableController {
             if (match.getGame() != null) {
                 logger.debug("- chatId:  " + managerFactory.gameManager().getChatId(match.getGame().getId()));
             }
+            return true;
         } catch (Exception ex) {
             logger.fatal("Error starting game table: " + table.getId(), ex);
             if (table != null) {
@@ -757,6 +764,7 @@ public class TableController {
                     // game ended by error, so don't add it to ended stats
                 }
             }
+            return false;
         }
     }
 
@@ -772,6 +780,7 @@ public class TableController {
                     });
                 }
                 ServerMessagesUtil.instance.incTournamentsStarted();
+                DiscordNotifier.instance().eventStarted(table, tournament, tournament.getOptions().getPassword(), userPlayerMap.size());
             }
         } catch (Exception ex) {
             logger.fatal("Error starting tournament", ex);
