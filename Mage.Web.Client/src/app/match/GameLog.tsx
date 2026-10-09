@@ -3,6 +3,7 @@ import {
   MessageSquare, Mountain, Shield, Shuffle, Skull, Sparkles, Swords, Trophy, Archive, Zap, X, type LucideIcon,
 } from 'lucide-react';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { DelayedRelay } from '../../core/game/broadcastDelay';
 import type { GameNotice } from '../../core/game/gameSession';
 import {
   buildLogRows, cardInk, collectCards, EMOTES, findLogCard, isEmote, noticeEntry, parseChatMessage,
@@ -45,7 +46,7 @@ const ICONS: Record<LogIcon, LucideIcon> = {
 };
 
 /** Game chat and the game's running log, joined once per game (not for replays, which bring their own log). */
-function useGameChat(gameId: string, view: GameView | null, live: boolean) {
+function useGameChat(gameId: string, view: GameView | null, live: boolean, delayMs: number) {
   // the latest view, read when a line arrives: it says whose turn the line belongs to
   const latest = useRef(view);
   useEffect(() => {
@@ -54,6 +55,10 @@ function useGameChat(gameId: string, view: GameView | null, live: boolean) {
   const [chatId, setChatId] = useState<string | null>(null);
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [unread, setUnread] = useState(0);
+  // watching with a broadcast delay: the log keeps pace with the delayed board, or it would give the game away
+  const [relay] = useState(() => new DelayedRelay<() => void>((show) => show()));
+  useEffect(() => relay.setDelay(delayMs), [relay, delayMs]);
+  useEffect(() => () => relay.dispose(), [relay]);
 
   useEffect(() => {
     if (!live) return;
@@ -81,20 +86,25 @@ function useGameChat(gameId: string, view: GameView | null, live: boolean) {
       if (event.objectId !== chatId) return;
       const parsed = parseChatMessage(message, `c${seq++}`);
       if (!parsed) return;
-      const current = latest.current;
-      const entry = parsed.turn !== null && parsed.turn === current?.turn && current.activePlayerName
-        ? { ...parsed, turnOwner: current.activePlayerName }
-        : parsed;
-      setEntries((current) => [...current, entry].slice(-MAX_LINES));
-      if (entry.tone !== 'chat') return;
       const me = useSession.getState().userName;
-      const fromOther = entry.who !== me;
-      const muted = !!useEmotes.getState().muted[gameId];
-      if (fromOther && muted) return;
-      if (entry.who && isEmote(entry.text)) useEmotes.getState().show(entry.who, entry.text);
-      if (fromOther) setUnread((count) => count + 1);
+      const fromOther = parsed.tone !== 'chat' || parsed.who !== me;
+      const show = () => {
+        const current = latest.current;
+        const entry = parsed.turn !== null && parsed.turn === current?.turn && current.activePlayerName
+          ? { ...parsed, turnOwner: current.activePlayerName }
+          : parsed;
+        setEntries((current) => [...current, entry].slice(-MAX_LINES));
+        if (entry.tone !== 'chat') return;
+        const muted = !!useEmotes.getState().muted[gameId];
+        if (fromOther && muted) return;
+        if (entry.who && isEmote(entry.text)) useEmotes.getState().show(entry.who, entry.text);
+        if (fromOther) setUnread((count) => count + 1);
+      };
+      // one's own words show at once
+      if (fromOther) relay.push(show);
+      else show();
     });
-  }, [chatId, gameId]);
+  }, [chatId, gameId, relay]);
 
   const send = (text: string) => {
     if (chatId && text.trim()) api.chatSendMessage(chatId, useSession.getState().userName, text.trim()).catch(() => undefined);
@@ -119,13 +129,15 @@ function replayEntries(log: readonly ChatMessage[]): LogEntry[] {
   return entries.slice(-MAX_LINES);
 }
 
-export function GameLog({ gameId, notices, canChat, view, replayLog }: {
+export function GameLog({ gameId, notices, canChat, view, replayLog, delayMs = 0 }: {
   gameId: string;
   notices: GameNotice[];
   canChat: boolean;
   view: GameView | null;
   /** replays: the log up to the moment shown */
   replayLog?: readonly ChatMessage[];
+  /** watching: the broadcast delay, which the log keeps too */
+  delayMs?: number;
 }) {
   const open = useMatchUi((state) => state.logOpen);
   const toggle = useMatchUi((state) => state.toggleLog);
@@ -133,7 +145,7 @@ export function GameLog({ gameId, notices, canChat, view, replayLog }: {
   const toggleMute = useEmotes((state) => state.toggleMute);
   const myName = useSession((state) => state.userName);
   const ignored = useSocial((state) => state.ignored);
-  const live = useGameChat(gameId, view, !replayLog);
+  const live = useGameChat(gameId, view, !replayLog, delayMs);
   const recorded = useMemo(() => (replayLog ? replayEntries(replayLog) : null), [replayLog]);
   const chat = recorded ? { ...live, entries: recorded } : live;
   const [draft, setDraft] = useState('');

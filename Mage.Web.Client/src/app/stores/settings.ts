@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../connection';
 import type { TurnCombatStops } from '../../core/game/autoPass';
+import type { BroadcastDelay } from '../../core/game/broadcastDelay';
 import { serverStops } from '../../core/game/stops';
 import type { UserData, UserSkipPrioritySteps } from '../../protocol/generated/views';
 import type { LocalePreference } from '../i18n/locales';
@@ -48,6 +49,12 @@ export interface PlaySettings {
   flag: string;
   /** the interface language, or "auto" for the browser's (local only) */
   locale: LocalePreference;
+  /** watching: the game is shown this many seconds behind, so a stream of it can't give the players away (local only) */
+  broadcastDelay: BroadcastDelay;
+  /** watching: hands show as card backs, even ones the watcher may see (local only) */
+  hideHands: boolean;
+  /** watching and replays: the hovered card shows large at the side of the table, for stream viewers (local only) */
+  largeZoom: boolean;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -81,6 +88,9 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   avatarId: 10,
   flag: 'world',
   locale: 'auto',
+  broadcastDelay: 0,
+  hideHands: true,
+  largeZoom: false,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },
