@@ -13,6 +13,7 @@ import { delayLabel, isBroadcastDelay } from '../../core/game/broadcastDelay';
 import { spectatorHand } from '../../core/game/spectatorHand';
 import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
+import { offBoardTargets } from '../../core/game/offBoardTargets';
 import type { CardView, ChatMessage, GameView, PlayerView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
 import { useT } from '../i18n';
@@ -288,9 +289,14 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   );
   // London mulligan: choose cards from the opening hand to put on the bottom
   const choosingFromHand = pregamePick === 'mulliganBottom';
+  // a target among graveyard or exiled cards (the server sends only their ids): those zones aren't on the board
+  const offBoard = useMemo(
+    () => (interaction.mode === 'target' && !pregamePick ? offBoardTargets(view, clickable) : null),
+    [interaction.mode, pregamePick, view, clickable],
+  );
   const pickerCards = interaction.mode === 'pickCards' && prompt?.kind === 'target' && prompt.cards
     ? Object.values(prompt.cards)
-    : choosingFromHand ? hand : null;
+    : choosingFromHand ? hand : offBoard;
   const canAct = mode === 'play' && !state.gameOver;
   // several opponents: the server asks what each attacker attacks
   const defenders = useMemo(() => (canAct && !awaitingServer ? defenderChoice(prompt, view) : null), [canAct, awaitingServer, prompt, view]);
