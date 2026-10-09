@@ -20,6 +20,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +43,9 @@ public enum CardRepository {
     private static final long CARD_CONTENT_VERSION = 241; // raise this if new cards were added to the server
 
     private Dao<CardInfo, Object> cardsDao;
+
+    // raised whenever the cards table can have changed (cards added, db reopened), so callers can drop their caches
+    private final AtomicLong contentChanges = new AtomicLong();
 
     // store names lists like all cards, lands, etc (it's static data and can be calculated one time only)
     private static final Map<String, Set<String>> namesQueryCache = new HashMap<>();
@@ -122,7 +126,17 @@ public enum CardRepository {
             setContentVersion(newContentVersion);
         } catch (Exception ex) {
             //
+        } finally {
+            contentChanges.incrementAndGet();
         }
+    }
+
+    /**
+     * Changes whenever cards may have been added or the database was reopened. Callers that cache lookups
+     * (e.g. set code and card number to name) compare it to drop stale entries, including cached misses.
+     */
+    public long getContentChanges() {
+        return contentChanges.get();
     }
 
     private void addNewNames(CardInfo card, Set<String> namesList) {
@@ -719,6 +733,7 @@ public enum CardRepository {
         try {
             ConnectionSource connectionSource = new JdbcConnectionSource(DatabaseUtils.prepareH2Connection(DatabaseUtils.DB_NAME_CARDS, true));
             cardsDao = DaoManager.createDao(connectionSource, CardInfo.class);
+            contentChanges.incrementAndGet();
         } catch (SQLException e) {
             Logger.getLogger(CardRepository.class).error("Error opening card repository - " + e, e);
         }
