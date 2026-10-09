@@ -74,6 +74,7 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
         clientCallback.decompressData(); // no-op unless the callback was compressed for a desktop client
         try {
             String json = serialize(clientCallback);
+            BridgeMetrics.get().callback(clientCallback.getMethod().name(), json.length(), clientCallback.getObjectId());
             remember(clientCallback, json);
             WebSocketServerImpl.sendText(conn, json);
         } catch (Exception e) {

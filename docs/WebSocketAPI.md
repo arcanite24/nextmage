@@ -98,9 +98,9 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `connectUser` | `userName: string`, `password: string`, `sessionId: string`, `restoreSessionId?: string`, `clientVersion?: string`, `userIdStr?: string` | `boolean` | login | Log in. Creates the connection's session; restoreSessionId reattaches a user that lost its connection. |
 | `connectAdmin` | `password: string`, `sessionId: string` | `boolean` | login | Log in as server admin. Disabled unless the server was started with a non-empty admin password (-adminPassword=... or -Dxmage.adminPassword=...). After a wrong password the caller's IP is locked out for 1, 2, 4... seconds (at most 5 minutes). |
 | `sessionGetRestoreToken` | `sessionId: string` | `string` | session | Token that reattaches this user (and its tables) from a later connection: pass it as connectUser's restoreSessionId. It changes on every login, so fetch it again after each one. |
-| `authRegister` | `sessionId: string`, `userName: string`, `password: string`, `email: string` | `boolean` | login | Register a new account (servers with authentication enabled). |
-| `authSendTokenToEmail` | `sessionId: string`, `email: string` | `boolean` | login | Send a password reset token by email. |
-| `authResetPassword` | `sessionId: string`, `email: string`, `authToken: string`, `password: string` | `boolean` | login | Set a new password with an emailed token. |
+| `authRegister` | `sessionId: string`, `userName: string`, `password: string`, `email: string` | `boolean` | login | Register a new account (servers with authentication enabled). With a password it becomes the account's password; without one the server emails a generated password. Fails with the reason. |
+| `authSendTokenToEmail` | `sessionId: string`, `email: string` | `boolean` | login | Email a password reset code to an account's address. Succeeds whether or not an account has the address, so addresses can't be probed; fails only when the server can't send mail. |
+| `authResetPassword` | `sessionId: string`, `email: string`, `authToken: string`, `password: string` | `boolean` | login | Set a new password with an emailed code (valid 30 minutes, 5 tries). Fails with the reason. |
 | `disconnectSession` | `sessionId: string`, `keepGames?: boolean` | `boolean` | session | Log out. With keepGames the user's active tables survive for a later reconnect. |
 | `playerLogout` | `sessionId: string`, `keepGames?: boolean` | `boolean` | session | Alias of `disconnectSession`. |
 | `connectSetUserData` | `userName?: string`, `sessionId: string`, `userData: UserData`, `clientVersion?: string`, `userIdStr?: string` | `boolean` | session | Store user preferences (avatar, flag, auto-pass settings). userName is ignored; the session identifies the user. |
@@ -186,8 +186,19 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `adminToggleActivateUser` | `sessionId: string`, `userName: string` | `boolean` | session | Admin: toggle an account's active state. |
 | `adminTableRemove` | `sessionId: string`, `tableId: UUID` | `boolean` | session | Admin: remove any table. |
 | `adminSendBroadcastMessage` | `sessionId: string`, `message: string` | `boolean` | session | Admin: message every connected user. |
+| `adminServerStats` | - | `ServerStats` | session | Admin: load and traffic: users, tables, games, memory, CPU, and the size of messages sent to web clients (with the heaviest callbacks and every one over 256 KB). |
+| `adminGetReports` | `openOnly?: boolean` | `PlayerReport[]` | session | Admin: player reports, newest first; only the open ones unless openOnly is false. |
+| `adminCloseReport` | `reportId: number`, `resolution: string` | `boolean` | session | Admin: close a report with a note about what was done. False when it was closed already. |
+| `adminClientErrors` | - | `ClientError[]` | session | Admin: the latest crash reports from web clients, newest first. |
 | `testEndGame` | `sessionId: string`, `tableId: UUID` | `boolean` | session | Test mode only: end the running game of a table you own. |
 | `testConcedeMatch` | `sessionId: string`, `tableId: UUID`, `losingPlayerIndex?: number` | `boolean` | session | Test mode only: make one player of a table you own concede the match. |
+| `serverInfo` | - | `ServerInfo` | public | Whether the server has accounts and mail, and its name and password rules. Callable before login. |
+| `deckSyncList` | - | `DeckSyncEntry[]` | session | Every deck kept on the server for the signed-in account, without the deck data, deleted ones included (as tombstones, for 90 days). Only on servers with accounts. |
+| `deckSyncGet` | `deckId: string` | `DeckSyncEntry \| null` | session | One deck of the signed-in account with its data, or null when there is none. |
+| `deckSyncPut` | `deckId: string`, `name: string`, `updatedAt: number`, `data: string` | `DeckPutResult` | session | Store a deck for the signed-in account. The newer change wins: when the server's copy is newer, nothing is stored and its updatedAt comes back. Up to 500 decks of 256 KB each. |
+| `deckSyncDelete` | `deckId: string`, `deletedAt: number` | `DeckPutResult` | session | Delete a deck of the signed-in account, unless the server has a change newer than the deletion. |
+| `reportPlayer` | `userName: string`, `reason: string`, `details: string`, `gameId?: string` | `number` | session | Report a player to the server's moderators. Reasons: abuse, cheating, spam, stalling, other. A player can have 5 open reports at a time. Returns the report id. |
+| `clientReportError` | `report: ClientError` | `boolean` | public | A crash report from the web client: kept in the server log and the admin console, never sent elsewhere. Limited per connection; extra reports are dropped. |
 <!-- END GENERATED: methods -->
 
 ## Server events

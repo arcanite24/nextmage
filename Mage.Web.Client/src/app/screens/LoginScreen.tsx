@@ -1,8 +1,9 @@
-import { ChevronDown, KeyRound } from 'lucide-react';
+import { ArrowLeft, ChevronDown, KeyRound } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../brand';
 import { api, rpc } from '../connection';
+import type { ServerInfo } from '../../protocol/generated/views';
 import type { StarterDeck } from '../stores/decks';
 import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
@@ -10,9 +11,19 @@ import { CardFace } from '../ui/CardFace';
 import { Field } from '../ui/Field';
 import { Mark } from '../ui/Mark';
 import { MatPrint } from '../ui/MatPrint';
+import { checkPassword } from './accountRules';
 import styles from './LoginScreen.module.css';
 
 type ServerStatus = 'checking' | 'online' | 'offline';
+type Mode = 'sit' | 'register' | 'forgot' | 'reset';
+
+const MODE_TITLES: Record<Mode | 'signIn', string> = {
+  sit: 'Take a seat',
+  signIn: 'Sign in',
+  register: 'Create an account',
+  forgot: 'Reset your password',
+  reset: 'Reset your password',
+};
 
 const DEAL_MS = 700;
 const ART_EVERY_MS = 9000;
@@ -35,7 +46,12 @@ export function LoginScreen() {
   const [editServer, setEditServer] = useState(false);
   const [dealing, setDealing] = useState(false);
   const [refused, setRefused] = useState(0);
-  const status = useServerStatus(serverUrl);
+  const [mode, setMode] = useState<Mode>('sit');
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [notice, setNotice] = useState<string | null>(null);
+  const [working, setWorking] = useState(false);
+  const { status, info } = useServerStatus(serverUrl);
   const art = useRotatingArt();
   const resumed = useRef(false);
 
@@ -45,19 +61,61 @@ export function LoginScreen() {
     void session.resume().then((ok) => ok && navigate(destination, { replace: true }));
   }, [session, navigate, destination]);
 
+  const accounts = !!info?.accounts;
   const busy = session.phase === 'signingIn' || dealing;
   const name = userName.trim();
   const nameError = name && !/^[A-Za-z0-9_]{3,14}$/.test(name) ? '3 to 14 letters, digits or underscores.' : null;
+  const minPassword = info?.minPasswordLength || 8;
+  const passwordRule = `At least ${minPassword} characters, with a letter and a digit.`;
+  const passwordError = password && (mode === 'register' || mode === 'reset') ? checkPassword(password, minPassword, name) : null;
+  const canSubmit = mode === 'sit' ? !!name && !nameError && (!accounts || !!password)
+    : mode === 'register' ? !!name && !nameError && !!email.trim() && !!password && !passwordError
+      : mode === 'forgot' ? !!email.trim()
+        : code.length === 6 && !!password && !passwordError;
+  const submitLabel = mode === 'register' ? 'Create account' : mode === 'forgot' ? 'Email me a code' : mode === 'reset' ? 'Set the password'
+    : busy ? 'Shuffling up' : accounts ? 'Sign in' : 'Sit down';
+
+  function switchMode(next: Mode) {
+    setMode(next);
+    setNotice(null);
+    setPassword('');
+    useSession.setState({ error: null });
+  }
+
+  function seated() {
+    // the deck is dealt across the table, then Play takes over
+    setDealing(true);
+    setTimeout(() => navigate(destination, { replace: true }), DEAL_MS);
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!name || nameError) return;
-    if (await session.signIn(serverUrl.trim(), name, password)) {
-      // the deck is dealt across the table, then Play takes over
-      setDealing(true);
-      setTimeout(() => navigate(destination, { replace: true }), DEAL_MS);
-    } else {
-      setRefused((count) => count + 1);
+    if (!canSubmit) return;
+    const url = serverUrl.trim();
+    if (mode === 'sit') {
+      if (await session.signIn(url, name, password)) seated();
+      else setRefused((count) => count + 1);
+      return;
+    }
+    setWorking(true);
+    try {
+      if (mode === 'register') {
+        if (await session.register(url, name, email.trim(), password)) seated();
+        else setRefused((count) => count + 1);
+      } else if (mode === 'forgot') {
+        if (await session.requestPasswordReset(url, email.trim())) {
+          setMode('reset');
+          setCode('');
+          setNotice(`If ${email.trim()} belongs to an account, a code is on its way. Check your spam folder too.`);
+        }
+      } else if (await session.resetPassword(url, email.trim(), code, password)) {
+        switchMode('sit');
+        setNotice('Your password is changed. Sign in with it.');
+      } else {
+        setRefused((count) => count + 1);
+      }
+    } finally {
+      setWorking(false);
     }
   }
 
@@ -79,59 +137,123 @@ export function LoginScreen() {
       </header>
 
       <form key={refused} className={[styles.seat, refused > 0 ? styles.refused : ''].join(' ')} onSubmit={submit} aria-labelledby="seat-title">
-        <h2 id="seat-title" className={styles.seatLabel}>Take a seat</h2>
+        <h2 id="seat-title" className={styles.seatLabel}>{MODE_TITLES[mode === 'sit' && accounts ? 'signIn' : mode]}</h2>
 
-        <SeatPlate name={name && !nameError ? name : ''} />
+        {(mode === 'sit' || mode === 'register') && (
+          <>
+            <SeatPlate name={name && !nameError ? name : ''} />
+            <Field
+              label={accounts ? 'Account name' : 'Player name'}
+              value={userName}
+              autoComplete="username"
+              autoFocus
+              maxLength={14}
+              onChange={(event) => setUserName(event.target.value)}
+              error={nameError}
+              required
+            />
+          </>
+        )}
 
-        <Field
-          label="Player name"
-          value={userName}
-          autoComplete="username"
-          autoFocus
-          maxLength={14}
-          onChange={(event) => setUserName(event.target.value)}
-          error={nameError}
-          required
-        />
+        {(mode === 'register' || mode === 'forgot' || mode === 'reset') && (
+          <Field
+            label="Email"
+            type="email"
+            value={email}
+            autoComplete="email"
+            autoFocus={mode === 'forgot'}
+            onChange={(event) => setEmail(event.target.value)}
+            hint={mode === 'register' ? 'For password resets only.' : undefined}
+            required
+            readOnly={mode === 'reset'}
+          />
+        )}
 
-        {needsPassword ? (
+        {mode === 'reset' && (
+          <Field
+            label="Code from the email"
+            value={code}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            maxLength={6}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
+            hint={`Six digits. It works for 30 minutes and five tries.`}
+            required
+          />
+        )}
+
+        {mode === 'sit' && (accounts || needsPassword) && (
           <Field
             label="Password"
             type="password"
             value={password}
             autoComplete="current-password"
-            autoFocus
+            autoFocus={needsPassword && !accounts}
             onChange={(event) => setPassword(event.target.value)}
+            required={accounts}
           />
-        ) : (
+        )}
+        {(mode === 'register' || mode === 'reset') && (
+          <Field
+            label={mode === 'reset' ? 'New password' : 'Password'}
+            type="password"
+            value={password}
+            autoComplete="new-password"
+            onChange={(event) => setPassword(event.target.value)}
+            hint={passwordRule}
+            error={passwordError}
+            required
+          />
+        )}
+
+        {mode === 'sit' && !accounts && !needsPassword && (
           <button type="button" className={styles.linkButton} onClick={() => setNeedsPassword(true)}>
             <KeyRound size={15} aria-hidden="true" /> This server needs a password
           </button>
         )}
 
-        <div className={styles.server}>
-          <button type="button" className={styles.serverChip} aria-expanded={editServer} onClick={() => setEditServer((value) => !value)}>
-            <span className={[styles.dot, styles[status]].join(' ')} aria-hidden="true" />
-            <span>{describeServer(serverUrl)}</span>
-            <span className={styles.statusText}>{status === 'online' ? 'Online' : status === 'offline' ? "Can't reach" : 'Checking'}</span>
-            <ChevronDown size={15} aria-hidden="true" className={editServer ? styles.flipped : ''} />
-          </button>
-          {editServer && (
-            <Field
-              label="Server address"
-              value={serverUrl}
-              onChange={(event) => setServerUrl(event.target.value)}
-              hint="For example ws://localhost:17172 or wss://play.example.com"
-              spellCheck={false}
-            />
-          )}
-        </div>
+        {mode === 'sit' && (
+          <div className={styles.server}>
+            <button type="button" className={styles.serverChip} aria-expanded={editServer} onClick={() => setEditServer((value) => !value)}>
+              <span className={[styles.dot, styles[status]].join(' ')} aria-hidden="true" />
+              <span>{describeServer(serverUrl)}</span>
+              <span className={styles.statusText}>{status === 'online' ? 'Online' : status === 'offline' ? "Can't reach" : 'Checking'}</span>
+              <ChevronDown size={15} aria-hidden="true" className={editServer ? styles.flipped : ''} />
+            </button>
+            {editServer && (
+              <Field
+                label="Server address"
+                value={serverUrl}
+                onChange={(event) => setServerUrl(event.target.value)}
+                hint="For example ws://localhost:17172 or wss://play.example.com"
+                spellCheck={false}
+              />
+            )}
+          </div>
+        )}
 
+        {notice && <p className={styles.notice} role="status">{notice}</p>}
         {session.error && <p className={styles.error} role="alert">{session.error}</p>}
 
-        <Button type="submit" variant="decision" size="xl" busy={busy} disabled={!name || !!nameError} className={styles.submit}>
-          {busy ? 'Shuffling up' : 'Sit down'}
+        <Button type="submit" variant="decision" size="xl" busy={busy || working} disabled={!canSubmit} className={styles.submit}>
+          {submitLabel}
         </Button>
+
+        {mode === 'sit' && accounts && (
+          <div className={styles.accountLinks}>
+            <button type="button" className={styles.linkButton} onClick={() => switchMode('register')}>Create an account</button>
+            {info?.mail
+              ? <button type="button" className={styles.linkButton} onClick={() => switchMode('forgot')}>Forgot your password?</button>
+              : <span className={styles.quiet}>Forgot your password? Ask the server's admin.</span>}
+          </div>
+        )}
+        {mode !== 'sit' && (
+          <button type="button" className={styles.linkButton} onClick={() => switchMode('sit')}>
+            <ArrowLeft size={15} aria-hidden="true" /> Back to sign in
+          </button>
+        )}
+        <Link to="/about" className={styles.about}>About and credits</Link>
       </form>
 
       <Deck dealing={dealing} />
@@ -192,9 +314,12 @@ function describeServer(url: string): string {
   }
 }
 
-/** Whether the server answers, checked on load and when the address changes (the connection is kept for sign-in). */
-function useServerStatus(url: string): ServerStatus {
-  const [result, setResult] = useState<{ url: string; status: ServerStatus } | null>(null);
+/**
+ * Whether the server answers, and whether it has accounts; checked on load and when the address changes (the connection
+ * is kept for sign-in).
+ */
+function useServerStatus(url: string): { status: ServerStatus; info: ServerInfo | null } {
+  const [result, setResult] = useState<{ url: string; status: ServerStatus; info: ServerInfo | null } | null>(null);
   useEffect(() => {
     let cancelled = false;
     const timer = setTimeout(async () => {
@@ -205,9 +330,11 @@ function useServerStatus(url: string): ServerStatus {
         }
         if (rpc.getStatus() !== 'open' || rpc.getUrl() !== url) await rpc.connect(url);
         await api.getServerState();
-        if (!cancelled) setResult({ url, status: 'online' });
+        // older servers don't know serverInfo: they have no accounts as far as the web client is concerned
+        const info = await api.serverInfo().catch(() => null);
+        if (!cancelled) setResult({ url, status: 'online', info });
       } catch {
-        if (!cancelled) setResult({ url, status: 'offline' });
+        if (!cancelled) setResult({ url, status: 'offline', info: null });
       }
     }, 400);
     return () => {
@@ -215,7 +342,7 @@ function useServerStatus(url: string): ServerStatus {
       clearTimeout(timer);
     };
   }, [url]);
-  return result?.url === url ? result.status : 'checking';
+  return result?.url === url ? { status: result.status, info: result.info } : { status: 'checking', info: null };
 }
 
 /** Art printed into the mat, changing every few seconds: the starter decks' covers. */

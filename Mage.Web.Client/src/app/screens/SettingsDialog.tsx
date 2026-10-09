@@ -8,6 +8,7 @@ import { notificationsSupported, requestNotifications } from '../stores/attentio
 import { useAutoAnswers } from '../stores/autoAnswers';
 import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
+import { APP_NAME } from '../brand';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import styles from './SettingsDialog.module.css';
@@ -110,7 +111,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
         </Tabs.Content>
 
         <Tabs.Content value="alerts" className={styles.panel}>
-          <p className={styles.intro}>While Playmat is in a background tab, the tab title counts what waits for you.</p>
+          <p className={styles.intro}>While {APP_NAME} is in a background tab, the tab title counts what waits for you.</p>
           <Row
             label="Browser notifications"
             detail={notificationsSupported()
@@ -228,7 +229,8 @@ function Bookmarklet() {
       .replace(/^\s*\/\/.*$/gm, '')
       .replace(/\n\s+/g, '\n')
       .trim()
-      .replaceAll('__PLAYMAT_ORIGIN__', window.location.origin);
+      .replaceAll('__PLAYMAT_ORIGIN__', window.location.origin)
+      .replaceAll('__APP_NAME__', APP_NAME.replace(/[\\'"]/g, ''));
     link.current?.setAttribute('href', `javascript:${encodeURIComponent(code)}`);
   }, []);
   return (
@@ -237,10 +239,10 @@ function Bookmarklet() {
         Moxfield, MTGGoldfish, AetherHub, TappedOut and Deckstats don’t let other apps read their decks. This bookmark reads the deck on the page you’re looking at, with your browser, and brings it here.
       </p>
       <a ref={link} className={styles.bookmarkletLink} draggable onClick={(event) => event.preventDefault()} title="Drag this to your bookmarks bar">
-        <BookmarkPlus size={18} aria-hidden="true" /> Send to Playmat
+        <BookmarkPlus size={18} aria-hidden="true" /> Send to {APP_NAME}
       </a>
       <ol className={styles.bookmarkletSteps}>
-        <li>Drag <b>Send to Playmat</b> to your bookmarks bar.</li>
+        <li>Drag <b>Send to {APP_NAME}</b> to your bookmarks bar.</li>
         <li>Open a deck on any deck site.</li>
         <li>Click the bookmark. The deck opens here, ready to save.</li>
       </ol>

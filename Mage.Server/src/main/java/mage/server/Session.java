@@ -141,13 +141,22 @@ public class Session {
                 return returnMessage;
             }
 
-            // auto-generated password
-            RandomString randomString = new RandomString(10);
-            password = randomString.nextString();
-            returnMessage = validatePassword(password, userName);
-            if (returnMessage != null) {
-                sendErrorMessageToClient("Auto-generated password fail, try again: " + returnMessage);
-                return returnMessage;
+            // a password the player chose (web client), or a generated one sent by email (desktop client)
+            boolean chosenPassword = password != null && !password.isEmpty();
+            if (chosenPassword) {
+                returnMessage = validatePassword(password, userName);
+                if (returnMessage != null) {
+                    sendErrorMessageToClient(returnMessage);
+                    return returnMessage;
+                }
+            } else {
+                RandomString randomString = new RandomString(10);
+                password = randomString.nextString();
+                returnMessage = validatePassword(password, userName);
+                if (returnMessage != null) {
+                    sendErrorMessageToClient("Auto-generated password fail, try again: " + returnMessage);
+                    return returnMessage;
+                }
             }
 
             // email
@@ -159,24 +168,35 @@ public class Session {
 
             // create
             AuthorizedUserRepository.getInstance().add(userName, password, email);
-            String text = "You are successfully registered as " + userName + '.';
-            text += "  Your initial, generated password is: " + password;
+            String text = "You are successfully registered as " + userName + " on " + serverLabel() + '.';
+            if (!chosenPassword) {
+                text += "  Your initial, generated password is: " + password;
+            }
 
             boolean success;
-            String subject = "XMage Registration Completed";
-            if (!managerFactory.configSettings().getMailUser().isEmpty()) {
+            String subject = "Your account on " + serverLabel();
+            boolean mailConfigured = !managerFactory.configSettings().getMailUser().isEmpty()
+                    || !managerFactory.configSettings().getMailgunApiKey().isEmpty();
+            if (chosenPassword && !mailConfigured) {
+                // nothing to send: the player already knows the password
+                success = true;
+            } else if (!managerFactory.configSettings().getMailUser().isEmpty()) {
                 success = managerFactory.mailClient().sendMessage(email, subject, text);
             } else {
                 success = managerFactory.mailgunClient().sendMessage(email, subject, text);
             }
-            if (success) {
-                String ok = "Email with initial password sent to " + email + " for a user " + userName;
+            if (success || (chosenPassword && Main.isTestMode())) {
+                String ok = chosenPassword ? "Account " + userName + " created"
+                        : "Email with initial password sent to " + email + " for a user " + userName;
                 logger.info(ok);
                 sendInfoMessageToClient(ok);
             } else if (Main.isTestMode()) {
                 String ok = "Email sending failed. Server is in test mode. Your account registered with a password " + password + " for a user " + userName;
                 logger.info(ok);
                 sendInfoMessageToClient(ok);
+            } else if (chosenPassword) {
+                // the account works without the welcome email
+                logger.warn("Welcome email to " + email + " failed for a user " + userName);
             } else {
                 String err = "Email sending failed. Try use another email address or service. Or reset password by email " + email + " for a user " + userName;
                 logger.error(err);
@@ -229,8 +249,25 @@ public class Session {
         return null;
     }
 
+    /**
+     * Server name for emails: the configured name, or a neutral one.
+     */
+    String serverLabel() {
+        String name = managerFactory.configSettings().getServerName();
+        return name == null || name.trim().isEmpty() ? "the game server" : name.trim();
+    }
+
     private String validatePassword(String password, String userName) {
-        ConfigSettings config = managerFactory.configSettings();
+        return passwordProblem(managerFactory.configSettings(), password, userName);
+    }
+
+    /**
+     * @return why a new password is not allowed, or null when it is fine
+     */
+    public static String passwordProblem(ConfigSettings config, String password, String userName) {
+        if (password == null) {
+            return "Choose a password";
+        }
         if (password.length() < config.getMinPasswordLength()) {
             return "Password may not be shorter than " + config.getMinPasswordLength() + " characters";
         }
@@ -292,7 +329,12 @@ public class Session {
                 return errorMsg;
             }
 
-            if (!Main.isTestMode() && !authorizedUser.doCredentialsMatch(userName, password)) {
+            // a reconnect with the restore token of the user's live instance stands in for the password (browser reloads)
+            boolean restoring = restoreSessionId != null && !restoreSessionId.isEmpty()
+                    && managerFactory.userManager().getUserByName(userName)
+                    .map(user -> restoreSessionId.equals(user.getRestoreSessionId()))
+                    .orElse(false);
+            if (!Main.isTestMode() && !restoring && !authorizedUser.doCredentialsMatch(userName, password)) {
                 return errorMsg;
             }
 

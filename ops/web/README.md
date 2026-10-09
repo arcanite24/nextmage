@@ -3,7 +3,8 @@
 Runs the XMage server and the web client together:
 
 - **xmage**: the XMage server. Its WebSocket bridge listens on 17172 inside the network, and only the proxy can reach it.
-- **web**: Caddy serves the built client with automatic HTTPS and forwards `/ws` to the server.
+- **web**: Caddy serves the built client with automatic HTTPS, forwards `/ws` to the server and `/img` to the image cache. It also sets the security headers and per-address rate limits.
+- **imgcache**: nginx caching proxy for Scryfall card pictures and lookups (see [Card image cache](#card-image-cache)).
 - **backup**: dumps the user databases every night into the `xmage-backups` volume.
 
 Under HTTPS, the client connects to `wss://<your domain>/ws` by default, so players never type a server address.
@@ -44,6 +45,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `DOMAIN` | required | Public host name. It becomes the only allowed browser origin. |
 | `XMAGE_ADMIN_PASSWORD` | unset | Admin password (`-Dxmage.adminPassword`). Unset: admin login is disabled. |
 | `XMAGE_AUTH` | `false` | `authenticationActivated`. `true` makes players register and log in with a password. Use it on a public server. |
+| `APP_NAME` | `Playmat` | Product name shown in the web client and its page title. A build argument: rebuild the `web` image (`up -d --build web`) after changing it. |
 | `XMAGE_SAVE_GAMES` | `false` | `saveGameActivated`. Upstream marks game saving as unreliable. |
 | `XMAGE_REPLAYS` | `true` | Record finished games with at least one human player for the web client's replays (`-Dxmage.replays`). |
 | `XMAGE_REPLAY_DAYS` | `30` | Replays older than this many days are deleted. |
@@ -69,6 +71,11 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `BACKUP_AT` | `03:30` | Time of the daily backup, as `HH:MM` in `TZ`. |
 | `BACKUP_KEEP` | `14` | Number of backups to keep. |
 | `TZ` | `UTC` | Time zone for `BACKUP_AT`. |
+| `WS_RATE_LIMIT` / `WS_RATE_WINDOW` | `30` / `1m` | New game connections (`/ws` requests) Caddy lets one client address open per window. Over it: `429` with `Retry-After`. |
+| `IMG_API_RATE_LIMIT` / `IMG_API_RATE_WINDOW` | `300` / `1m` | Scryfall lookups (`/img/api/*`) per client address per window. Pictures (`/img/cards/*`) are not limited. |
+| `IMGCACHE_IMAGES_MAX_SIZE` | `20g` | Disk cap of the picture cache. The least recently used files go first. |
+| `IMGCACHE_API_MAX_SIZE` | `1g` | Disk cap of the lookup cache. |
+| `IMGCACHE_API_RATE` / `IMGCACHE_API_BURST` | `10r/s` / `20` | Requests per second the image cache sends to `api.scryfall.com` for the whole site (cache misses only), and how many more may queue before it answers `429`. |
 
 Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE` and `XMAGE_MAILGUN_API_KEY_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password doesn't show up in `ps`.
 
@@ -76,10 +83,19 @@ Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a me
 
 **Why these defaults.** They target a small box, 2 vCPU and 4 GB RAM. Every running game and every AI opponent takes CPU, and AI turns can spike it, so 4 games and 4 AI players at once keep the server responsive. Raise them together with `XMAGE_MEMORY` on bigger hardware.
 
+## Accounts and moderation
+
+With `XMAGE_AUTH=true`, players register in the web client with a name, an email address and a password they choose. A forgotten password is reset with a six-digit code sent by mail: it works for 30 minutes and 5 tries. Configure Mailgun or SMTP (above), or players can't reset passwords. The web client asks the server (`serverInfo`) whether accounts and mail are on and shows only the forms that work.
+
+Signed-in players' decks sync to their account (`web_decks.db`), so they follow the player to another browser. Without accounts, decks stay in each browser.
+
+The admin console is at `https://DOMAIN/admin`. Sign in with `XMAGE_ADMIN_PASSWORD`. It shows players online, tables and games, CPU, memory and the size of messages sent to web clients, and lets you mute, lock out, deactivate or disconnect a player, remove a table and send a message to everyone. Players report each other from the lobby's player menu or a profile. Reports wait in the console's Reports tab until an admin closes them. Web client crashes appear under Client errors and in the server log (logger `mage.web.clientErrors`).
+
 ## Health
 
 - `xmage` is healthy once its bridge port 17172 accepts connections. It opens only after the card database is loaded, and the first start gets 15 minutes for that.
-- `web` checks Caddy's admin API on `localhost:2019`. It starts only after `xmage` is healthy.
+- `web` checks Caddy's admin API on `localhost:2019`. It starts only after `xmage` and `imgcache` are healthy.
+- `imgcache` answers `/healthz` on port 8080 inside the network.
 - `docker compose -f ops/web/docker-compose.yml ps` shows both states.
 - If `up` stops with "dependency failed to start: container ... is unhealthy" after a failed earlier start, the server usually becomes healthy a little later: run `up -d` again once `ps` shows `xmage` healthy.
 
@@ -92,11 +108,12 @@ Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a me
 
 | Volume | Mounted at | Holds | Back up? |
 |---|---|---|---|
-| `xmage-db` | `/opt/xmage/db` | `authorized_user.h2` (accounts), `feedback.h2`, `user_stats.db` (player stats), `table_record.db` (finished tables) | yes, nightly |
+| `xmage-db` | `/opt/xmage/db` | `authorized_user.h2` (accounts), `feedback.h2`, `user_stats.db` (player stats), `table_record.db` (finished tables), `web_decks.db` (decks synced to accounts), `web_reports.db` (player reports) | yes, nightly |
 | `xmage-cards` | `/opt/xmage/cards-db` | `cards.h2`, the card database | no: a cache built from the image |
 | `xmage-saved` | `/opt/xmage/saved` | saved games (`XMAGE_SAVE_GAMES`) and web client replays (`saved/replays`) | optional |
 | `xmage-logs` | `/opt/xmage/logs` | `mageserver.log*` | no |
 | `xmage-backups` | `/backups` (backup service) | nightly dumps | copy off the machine |
+| `xmage-imgcache` | `/var/cache/nginx/scryfall` (imgcache) | cached Scryfall pictures and lookups | no: a cache |
 | `caddy-data`, `caddy-config` | Caddy | certificates | optional |
 
 XMage opens every database under `./db`. Only user data stays on `xmage-db`. The entrypoint replaces `db/cards.h2.*` with symlinks into `xmage-cards`. It wipes that volume whenever the image build changes, so a card database from an older image can't shadow the new card pool. An existing `xmage-db` volume from the earlier single-volume layout migrates on its own: the old card database files in it are deleted on first start.
@@ -139,6 +156,35 @@ docker compose -f ops/web/docker-compose.yml up -d --build
 - Take a backup first (`xmage-backup once`) when the release notes mention database changes.
 - Settings live in `.env`, so an upgrade never overwrites them.
 
+## Card image cache
+
+The client shows card pictures from Scryfall. The `imgcache` service (nginx, `imgcache.conf.template`) keeps a copy, so
+each picture and lookup leaves the box once instead of once per player:
+
+| Path | Upstream | Cached for |
+|---|---|---|
+| `/img/cards/...` | `https://cards.scryfall.io/...` (pictures) | 30 days (404s: 1 day) |
+| `/img/api/...` (GET) | `https://api.scryfall.com/...` (per-card image links, which redirect to `/img/cards/...`) | 24 hours (404s: 1 hour) |
+| `/img/api/cards/collection` (POST) | batch lookups of up to 75 printings, keyed on the request body | 24 hours |
+
+- The web image is built with `VITE_IMAGE_PROXY=/img`, so the client uses these paths. Build with
+  `--build-arg VITE_IMAGE_PROXY=` to send players straight to Scryfall instead. A client built without the setting
+  (e.g. `npm run dev`) talks to Scryfall directly; links it has cached in the browser keep working either way.
+- Requests to Scryfall carry the `User-Agent` and `Accept` headers Scryfall asks for. Cookies and client addresses
+  are not passed on. Lookups that miss the cache are held to `IMGCACHE_API_RATE` for the whole site.
+- When Scryfall is down or rate limits, expired copies are served (`proxy_cache_use_stale`).
+- Responses carry `X-Cache-Status` (`HIT`, `MISS`, `STALE`...) for checking.
+- Sizes: a `normal` picture is roughly 100 kB, so the 20 GB default holds around 200,000 pictures; lookups are small.
+  Change `IMGCACHE_IMAGES_MAX_SIZE` / `IMGCACHE_API_MAX_SIZE` and `up -d`. nginx evicts the least recently used files.
+- Clear it (players' browsers keep their own copies):
+
+```bash
+C="docker compose -f ops/web/docker-compose.yml"
+$C exec imgcache sh -c 'rm -rf /var/cache/nginx/scryfall/images/* /var/cache/nginx/scryfall/api/*'
+$C restart imgcache
+# or drop the volume: $C stop imgcache web && $C rm -f imgcache && docker volume rm <project>_xmage-imgcache && $C up -d
+```
+
 ## Without Docker on a LAN
 
 For the Compose stack on a LAN, see [Private server on a LAN](#private-server-on-a-lan). Without Docker you don't need the proxy at all. Build the client with `npm run build`, serve `Mage.Web.Client/dist` from any static server, and run the server as usual. Over plain HTTP the client connects to `ws://<page host>:17172`.
@@ -150,4 +196,15 @@ Add the page origin to `websocketAllowedOrigins` in `config.xml` on the `<server
 - Leave port 17172 unpublished. The bridge expects the proxy in front of it, for TLS, the origin check and the client address.
 - Only publish 17171 (the desktop client's port) if desktop players should join the same server.
 - Set `XMAGE_AUTH=true` on a public server, so names need passwords. Configure mail too, so players can reset their passwords.
+- Caddy sends a `Content-Security-Policy`: scripts only from the site itself, styles from the site plus inline
+  styles (React), pictures from the site, `data:`/`blob:` and Scryfall (a client built without the image proxy loads
+  them from Scryfall directly), connections to the site, any `wss:` server and `api.scryfall.com`, and no framing
+  (`frame-ancestors 'none'`). Adding a third-party script or host to the client means adding it there too.
+- Rate limits per client address exist twice. Caddy limits how fast an address opens game connections
+  (`WS_RATE_LIMIT` per `WS_RATE_WINDOW`) and Scryfall lookups (`IMG_API_RATE_LIMIT`), answering `429` with
+  `Retry-After`. The server separately caps concurrent game connections per address
+  (`-Dxmage.web.maxConnectionsPerIp`, 16 by default; set it through `XMAGE_JAVA_OPTS`). Players behind one NAT
+  share both limits.
+- The Caddy binary is built with [caddy-ratelimit](https://github.com/mholt/caddy-ratelimit), pinned to a commit in
+  `Dockerfile.web`. Check `caddy validate` after bumping `CADDY_VERSION` or the module.
 - Caddy sets `X-Forwarded-For` to the real client address and drops any value the client sent, because Caddy itself trusts no upstream proxies. It also adds `X-Real-IP`. The server only trusts those headers from `XMAGE_TRUSTED_PROXIES`. It defaults to `CADDY_IP`, so changing `XMAGE_SUBNET` and `CADDY_IP` together is enough.

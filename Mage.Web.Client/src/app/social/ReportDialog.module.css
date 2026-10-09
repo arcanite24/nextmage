@@ -1,0 +1,19 @@
+.form { display: grid; gap: var(--space-4); }
+.reasons { display: grid; gap: var(--space-2); margin: 0; padding: 0; border: 0; }
+.reasons legend { margin-bottom: var(--space-2); font-weight: 600; color: var(--ink-strong); }
+.reason { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
+.details { display: grid; gap: var(--space-1); color: var(--ink-dim); font-size: var(--text-sm); }
+
+.details textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--ink-faint);
+  border-radius: var(--radius-control);
+  background: var(--mat-800);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-md);
+  resize: vertical;
+}
+
+.error { margin: 0; color: var(--danger-text); }
+.actions { display: flex; justify-content: flex-end; gap: var(--space-2); }

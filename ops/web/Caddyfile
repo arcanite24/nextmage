@@ -1,6 +1,34 @@
-# Serves the web client on $DOMAIN with automatic HTTPS and forwards /ws to the XMage server.
+{
+	# rate_limit comes from github.com/mholt/caddy-ratelimit (built in by Dockerfile.web)
+	order rate_limit before basic_auth
+}
+
+# Serves the web client on $DOMAIN with automatic HTTPS, forwards /ws to the XMage server and /img to the
+# Scryfall image cache.
 {$DOMAIN:localhost} {
 	encode zstd gzip
+
+	# Per client address. Caddy trusts no upstream proxies, so {remote_host} is the real peer address.
+	# Over the limit: 429 with Retry-After. The server also caps concurrent game connections per address.
+	rate_limit {
+		zone ws {
+			match {
+				path /ws*
+			}
+			key {remote_host}
+			events {$WS_RATE_LIMIT:30}
+			window {$WS_RATE_WINDOW:1m}
+		}
+		# Scryfall lookups that may miss the cache (pictures from the CDN are not limited)
+		zone img_api {
+			match {
+				path /img/api/*
+			}
+			key {remote_host}
+			events {$IMG_API_RATE_LIMIT:300}
+			window {$IMG_API_RATE_WINDOW:1m}
+		}
+	}
 
 	# the game connection: WebSocket upgrade to the server's bridge port
 	handle /ws* {
@@ -10,6 +38,11 @@
 			# trusted_proxies of its own, replaces whatever the client sent; X-Real-IP is added here.
 			header_up X-Real-IP {remote_host}
 		}
+	}
+
+	# card pictures and Scryfall lookups, cached by the imgcache service (nginx)
+	handle /img/* {
+		reverse_proxy imgcache:8080
 	}
 
 	handle {
@@ -27,5 +60,9 @@
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# Scryfall origins stay allowed for builds without the image proxy (VITE_IMAGE_PROXY unset); the exported
+		# link lists also point the card back at upload.wikimedia.org. wss: covers a client built with
+		# VITE_MAGE_SERVER_URL pointing at another host.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cards.scryfall.io https://*.scryfall.io https://api.scryfall.com https://c1.scryfall.com https://svgs.scryfall.io https://upload.wikimedia.org; font-src 'self' data:; connect-src 'self' wss: https://api.scryfall.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; worker-src 'self' blob:; manifest-src 'self'"
 	}
 }

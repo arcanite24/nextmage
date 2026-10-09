@@ -38,7 +38,7 @@ describe('session store', () => {
     expect(fake.api.connectUser).toHaveBeenCalledWith('alice', '', '');
     expect(useSession.getState()).toMatchObject({ phase: 'signedIn', roomId: 'room-1', userName: 'alice', error: null });
     expect(restoreSaved()).toEqual({ serverUrl: SERVER, userName: 'alice', token: 'token-1' });
-    expect(JSON.parse(localStorage.getItem('playmat.login')!)).toEqual({ serverUrl: SERVER, userName: 'alice', passwordless: true });
+    expect(JSON.parse(localStorage.getItem('playmat.login')!)).toEqual({ serverUrl: SERVER, userName: 'alice', passwordless: true, account: false });
   });
 
   test('sends the saved restore token only to the same server and user', async () => {

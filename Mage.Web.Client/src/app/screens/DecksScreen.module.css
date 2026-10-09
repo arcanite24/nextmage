@@ -213,3 +213,16 @@
     opacity: 0;
   }
 }
+
+.sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: var(--space-2);
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+}
+
+.syncFailed {
+  color: var(--danger-text);
+}
