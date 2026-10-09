@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from 'zustand';
 import { useEvents } from '../stores/events';
 import { useGames } from '../stores/games';
+import { usePlay } from '../stores/play';
 import { MatchErrorBoundary } from '../match/MatchErrorBoundary';
 import { MatchStage } from '../match/MatchStage';
 import { ReconnectScrim } from '../match/ReconnectScrim';
@@ -16,30 +17,33 @@ export function GameScreen() {
   const session = useGames((state) => state.sessions[gameId]);
   // games inside an event lead back to the event
   const eventId = useEvents((events) => events.currentTournamentId);
+  // Career matches lead back to Career
+  const returnPath = usePlay((play) => play.returnPath) ?? '/';
+  const backLabel = eventId ? 'Back to the event' : returnPath === '/career' ? 'Back to Career' : 'Back to Play';
 
   if (!session) {
     return (
       <div className={styles.missing}>
         <h1>This game isn't open here</h1>
         <p>It may have ended, or it was started in another tab.</p>
-        <Button variant="print" onClick={() => navigate('/')}>Back to Play</Button>
+        <Button variant="print" onClick={() => navigate(returnPath)}>{backLabel}</Button>
       </div>
     );
   }
   return (
     <MatchErrorBoundary
       gameId={gameId}
-      backLabel={eventId ? 'Back to the event' : 'Back to Play'}
-      onBack={() => navigate(eventId ? `/event/${eventId}` : '/')}
+      backLabel={backLabel}
+      onBack={() => navigate(eventId ? `/event/${eventId}` : returnPath)}
     >
       {/* each game of a match gets a fresh stage */}
       <ConnectedStage
         key={gameId}
         gameId={gameId}
-        leaveLabel={eventId ? 'Back to the event' : 'Back to Play'}
+        leaveLabel={backLabel}
         onLeave={() => {
           useGames.getState().close(gameId);
-          navigate(eventId ? `/event/${eventId}` : '/');
+          navigate(eventId ? `/event/${eventId}` : returnPath);
         }}
       />
     </MatchErrorBoundary>

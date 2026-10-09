@@ -62,6 +62,8 @@ export interface PlaySettings {
   hideHands: boolean;
   /** watching and replays: the hovered card shows large at the side of the table, for stream viewers (local only) */
   largeZoom: boolean;
+  /** Career: the player chose to try it (local only; a server Career profile counts too) */
+  careerOptIn: boolean;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -101,6 +103,7 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   broadcastDelay: 0,
   hideHands: true,
   largeZoom: false,
+  careerOptIn: false,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },
