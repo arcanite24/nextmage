@@ -221,3 +221,15 @@
     opacity: 0;
   }
 }
+
+/* --- noncombat damage flying to its target ------------------------------ */
+
+.bolt {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--paper), color-mix(in srgb, var(--oxblood-lit) 80%, transparent) 55%, transparent);
+  box-shadow: 0 0 18px 6px color-mix(in srgb, var(--oxblood-lit) 45%, transparent);
+}

@@ -213,6 +213,7 @@ public class GameSessionPlayer extends GameSessionWatcher {
 
         // full processing for player
         GameView gameView = prepareGameView(game, playerId, userId);
+        attachEvents(gameView, playerId);
 
         if (GameView.ENABLE_GAME_VIEW_CACHE) {
             this.lastGameView = gameView;

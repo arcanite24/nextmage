@@ -10,10 +10,12 @@ import mage.server.managers.UserManager;
 import mage.util.ThreadUtils;
 import mage.view.GameClientMessage;
 import mage.view.GameEndView;
+import mage.view.GameEventView;
 import mage.view.GameView;
 import mage.view.SimpleCardsView;
 import org.apache.log4j.Logger;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,8 +33,12 @@ public class GameSessionWatcher {
     protected final boolean isPlayer;
 
     protected GameView lastGameView = null; // cached game view for non-game threads
+    // the last game event this session's views carried; a session joining late starts from now
+    private long lastEventSeq;
 
     public GameSessionWatcher(UserManager userManager, UUID userId, Game game, boolean isPlayer) {
+        GameEventFeed feed = GameEventFeed.of(game.getId());
+        this.lastEventSeq = feed == null ? 0 : feed.lastSeq();
         this.userManager = userManager;
         this.userId = userId;
         this.game = game;
@@ -157,6 +163,7 @@ public class GameSessionWatcher {
         // short processing for the watcher
         GameView gameView = new GameView(game.getState(), game, null, userId);
         processWatchedHands(game, userId, gameView);
+        attachEvents(gameView, null);
 
         if (GameView.ENABLE_GAME_VIEW_CACHE) {
             this.lastGameView = gameView;
@@ -182,4 +189,17 @@ public class GameSessionWatcher {
         return isPlayer;
     }
 
+
+    /** The game events since this session's previous view, as the viewer may see them. */
+    protected void attachEvents(GameView gameView, UUID viewerId) {
+        GameEventFeed feed = GameEventFeed.of(game.getId());
+        if (feed == null) {
+            return;
+        }
+        List<GameEventView> events = feed.since(lastEventSeq, viewerId);
+        if (!events.isEmpty()) {
+            lastEventSeq = events.get(events.size() - 1).getSeq();
+            gameView.setEvents(events);
+        }
+    }
 }

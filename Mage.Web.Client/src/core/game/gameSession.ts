@@ -64,6 +64,8 @@ export class GameSession {
   private readonly replyTimeoutMs: number;
   /** the last answer sent, for "Send again" */
   private lastCommand: Command | null = null;
+  /** the newest game event a view has carried; a view repeated from the server's cache carries old ones again */
+  private lastEventSeq = 0;
 
   constructor(
     private readonly api: Api,
@@ -276,15 +278,24 @@ export class GameSession {
     // offers, or highlights vanish and auto-pass would think there is nothing to do.
     const hasPlayables = (candidate: GameView | null | undefined) => Object.keys(candidate?.canPlayObjects?.objects ?? {}).length > 0;
     // (a prompt's own view is built with priority, so it is always taken as is)
-    const view = !fromPrompt && prompt && !awaitingServer && hasPlayables(previous) && !hasPlayables(incoming)
+    let view = !fromPrompt && prompt && !awaitingServer && hasPlayables(previous) && !hasPlayables(incoming)
       ? { ...incoming, canPlayObjects: previous!.canPlayObjects }
       : incoming;
+    view = this.freshEvents(view);
     const next = previous ? structuralShare(previous, view) : view;
     if (this.store.getState().resyncing) this.store.setState({ resyncing: false });
     if (next === previous) return;
     const playerId = this.store.getState().playerId ?? (this.store.getState().mode === 'play' ? view.myPlayerId ?? null : null);
     this.store.setState({ view: next, playerId });
     this.refreshInteraction();
+  }
+
+  /** The view with only the events no earlier view carried (none at all, rather than an empty list). */
+  private freshEvents(view: GameView): GameView {
+    if (!view.events && !this.store.getState().view?.events) return view;
+    const fresh = (view.events ?? []).filter((event) => (event.seq ?? 0) > this.lastEventSeq);
+    for (const event of fresh) this.lastEventSeq = Math.max(this.lastEventSeq, event.seq ?? 0);
+    return { ...view, events: fresh.length > 0 ? fresh : undefined };
   }
 
   private applyPrompt(method: PromptEventName, data: unknown): void {

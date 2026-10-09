@@ -105,6 +105,9 @@ public class GameController implements GameCallback {
         this.choosingPlayerId = choosingPlayerId;
         this.gameOptions = gameOptions;
         this.useResponseIdleTimeout = game.getPlayers().values().stream().filter(Player::isHuman).count() > 1;
+        // what happens in the game, for web clients to animate (see GameEventRecorder)
+        GameEventFeed.open(game.getId());
+        game.getState().addWatcher(new GameEventRecorder(game.getId()));
         init();
     }
 
@@ -121,6 +124,7 @@ public class GameController implements GameCallback {
         }
 
         managerFactory.chatManager().destroyChatSession(chatId);
+        GameEventFeed.close(game.getId());
     }
 
     private void init() {

@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { GameView, PermanentView } from '../../protocol/generated/views';
 import { lastPlacement, motionAllowed } from './flip';
+import { eventVisuals } from './vfxEvents';
 import { useObjectCenter, useStage } from './stageContext';
 import styles from './Vfx.module.css';
 
 /**
  * Game effects, printed in the mat's inks: damage splashes in oxblood with the number thrown off the card, healing
  * in sage, shockwaves where cards land, bursts where spells resolve, lunges when combat damage is dealt and ink
- * dissolving where creatures die. Everything is derived from the difference between two game views.
+ * dissolving where creatures die. Damage, healing and the bolts of noncombat damage come from the game events a view
+ * carries (exact even when a creature dies in the same update); the rest, and servers without events, from the
+ * difference between two game views.
  */
 
-type EffectKind = 'damage' | 'heal' | 'enter' | 'resolve' | 'death' | 'charge';
+type EffectKind = 'damage' | 'heal' | 'enter' | 'resolve' | 'death' | 'charge' | 'bolt';
 
 interface Effect {
   key: number;
@@ -20,6 +23,8 @@ interface Effect {
   value?: number;
   /** shockwaves and dissolves follow the card's size */
   size?: number;
+  /** where a bolt lands */
+  to?: { x: number; y: number };
 }
 
 interface Snapshot {
@@ -30,7 +35,7 @@ interface Snapshot {
   step: string | undefined;
 }
 
-const LIFETIME: Record<EffectKind, number> = { damage: 1300, heal: 1300, enter: 700, resolve: 800, death: 900, charge: 600 };
+const LIFETIME: Record<EffectKind, number> = { damage: 1300, heal: 1300, enter: 700, resolve: 800, death: 900, charge: 600, bolt: 480 };
 /** where spells resolve: the top of the stack zone, in stage pixels */
 /** where the stack's top card sits, from the stage's right edge */
 const STACK_POINT = { right: 236 + 105, y: 470 };
@@ -92,26 +97,57 @@ export function Vfx({ view, myPlayerId }: { view: GameView | null; myPlayerId: s
     };
     const elementOf = (id: string) => stage.element?.querySelector(`[data-object-id="${CSS.escape(id)}"]`) ?? null;
 
-    // damage marked on permanents
-    for (const [id, permanent] of now.permanents) {
-      const was = before.permanents.get(id);
-      if (!was) continue;
-      const dealt = (permanent.damage ?? 0) - (was.damage ?? 0);
-      if (dealt > 0) {
-        const at = center(id);
-        if (at) add({ kind: 'damage', ...at, value: dealt });
-        shake(elementOf(id));
-      }
-    }
-    // life changes
-    for (const [id, life] of now.life) {
-      const delta = life - (before.life.get(id) ?? life);
-      if (delta === 0) continue;
+    // where a card or player is now, or where a card stood before it left (a creature killed by this damage)
+    const pointOf = (id: string) => {
       const at = center(id);
-      if (at) add({ kind: delta < 0 ? 'damage' : 'heal', ...at, value: Math.abs(delta) });
-      if (delta < 0) {
-        shake(elementOf(id), 10);
+      if (at) return at;
+      const placement = lastPlacement(id);
+      return placement ? { x: placement.x + placement.width / 2, y: placement.y + placement.height / 2 } : null;
+    };
+    if (view.events) {
+      const visuals = eventVisuals(view.events);
+      for (const [id, amount] of visuals.damage) {
+        const at = pointOf(id);
+        if (at) add({ kind: 'damage', ...at, value: amount });
+        shake(elementOf(id), now.life.has(id) ? 10 : 8);
         if (id === myPlayerId) flush = true;
+      }
+      for (const [id, amount] of visuals.drained) {
+        const at = pointOf(id);
+        if (at) add({ kind: 'damage', ...at, value: amount });
+        if (id === myPlayerId) flush = true;
+      }
+      for (const [id, amount] of visuals.healed) {
+        const at = pointOf(id);
+        if (at) add({ kind: 'heal', ...at, value: amount });
+      }
+      for (const bolt of visuals.bolts) {
+        const from = pointOf(bolt.from);
+        const to = pointOf(bolt.to);
+        if (from && to) add({ kind: 'bolt', ...from, to });
+      }
+    } else {
+      // damage marked on permanents
+      for (const [id, permanent] of now.permanents) {
+        const was = before.permanents.get(id);
+        if (!was) continue;
+        const dealt = (permanent.damage ?? 0) - (was.damage ?? 0);
+        if (dealt > 0) {
+          const at = center(id);
+          if (at) add({ kind: 'damage', ...at, value: dealt });
+          shake(elementOf(id));
+        }
+      }
+      // life changes
+      for (const [id, life] of now.life) {
+        const delta = life - (before.life.get(id) ?? life);
+        if (delta === 0) continue;
+        const at = center(id);
+        if (at) add({ kind: delta < 0 ? 'damage' : 'heal', ...at, value: Math.abs(delta) });
+        if (delta < 0) {
+          shake(elementOf(id), 10);
+          if (id === myPlayerId) flush = true;
+        }
       }
     }
     // cards landing on the battlefield: measured once their flight from the hand or stack has settled
@@ -220,5 +256,19 @@ function EffectView({ effect }: { effect: Effect }) {
       return <span className={styles.dissolve} style={{ ...position, width: (effect.size ?? 120) * 1.3, height: (effect.size ?? 120) * 1.3 * 1.4 }} />;
     case 'charge':
       return <span className={styles.charge} style={position} />;
+    case 'bolt':
+      return <Bolt from={effect} to={effect.to ?? effect} />;
   }
+}
+
+/** Noncombat damage flying from its source to what it hits. */
+function Bolt({ from, to }: { from: { x: number; y: number }; to: { x: number; y: number } }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    ref.current?.animate(
+      [{ translate: '0 0', scale: '0.6' }, { translate: `${to.x - from.x}px ${to.y - from.y}px`, scale: '1' }],
+      { duration: LIFETIME.bolt, easing: 'cubic-bezier(0.5, 0, 0.9, 0.6)', fill: 'forwards' },
+    );
+  }, [from.x, from.y, to.x, to.y]);
+  return <span ref={ref} className={styles.bolt} style={{ left: from.x, top: from.y }} />;
 }
