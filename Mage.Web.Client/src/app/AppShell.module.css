@@ -100,7 +100,7 @@
   gap: 6px;
   padding: 4px 10px;
   border-radius: var(--radius-chip);
-  background: rgb(138 47 42 / 0.3);
+  background: rgb(var(--oxblood-rgb) / 0.3);
   color: var(--oxblood-ink);
   font-size: var(--text-sm);
   font-weight: 600;
@@ -114,14 +114,14 @@
   padding: 0 12px;
   border: 0;
   border-radius: var(--radius-control);
-  background: rgb(233 228 214 / 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
   color: var(--ink);
   font-weight: 600;
   cursor: pointer;
 }
 
 .user:hover {
-  background: rgb(233 228 214 / 0.12);
+  background: var(--ink-ghost);
 }
 
 .menu {
@@ -145,7 +145,7 @@
 }
 
 .menuItem[data-highlighted] {
-  background: rgb(233 228 214 / 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
 }
 
 .menuRule {

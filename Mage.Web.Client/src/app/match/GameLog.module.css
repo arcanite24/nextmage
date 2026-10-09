@@ -2,7 +2,7 @@
   position: absolute;
   left: 24px;
   top: 500px;
-  z-index: 60;
+  z-index: var(--z-vfx);
 }
 
 .badge {
@@ -27,12 +27,12 @@
   left: 84px;
   top: 300px;
   bottom: 300px;
-  z-index: 90;
+  z-index: var(--z-held);
   display: flex;
   flex-direction: column;
   width: 440px;
   border-radius: 14px;
-  background-color: rgb(9 16 13 / 0.94);
+  background-color: rgb(var(--mat-rgb) / 0.94);
   background-image: var(--mat-grain);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint), var(--shadow-held);
   animation: slide var(--dur-place) var(--ease-place);
@@ -87,7 +87,7 @@
 }
 
 .mute[aria-pressed='true'] {
-  background: rgb(233 228 214 / 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
   color: var(--ink-strong);
 }
 
@@ -147,7 +147,7 @@
   padding: 0 4px;
   border: 0;
   border-radius: 4px;
-  background: rgb(233 228 214 / 0.07);
+  background: rgb(var(--ink-rgb) / 0.07);
   box-shadow: inset 0 -1.5px 0 var(--card-ink, var(--ink-faint));
   color: var(--ink-strong);
   font: inherit;
@@ -157,7 +157,7 @@
 
 .card:hover,
 .card:focus-visible {
-  background: rgb(233 228 214 / 0.16);
+  background: rgb(var(--ink-rgb) / 0.16);
 }
 
 .ink_w { --card-ink: var(--mana-w); }
@@ -236,7 +236,7 @@
   padding: 5px 10px;
   border: 0;
   border-radius: 999px;
-  background: rgb(233 228 214 / 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
   box-shadow: inset 0 0 0 1px var(--ink-faint);
   color: var(--ink);
   font-size: 20px;
@@ -244,7 +244,7 @@
 }
 
 .emote:hover:not(:disabled) {
-  background: rgb(233 228 214 / 0.12);
+  background: var(--ink-ghost);
 }
 
 .form {
@@ -257,7 +257,7 @@
   padding: 0 14px;
   border: 0;
   border-radius: 10px;
-  background: rgb(7 12 10 / 0.8);
+  background: rgb(var(--mat-rgb) / 0.8);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   color: var(--ink-strong);
   font-size: 17px;

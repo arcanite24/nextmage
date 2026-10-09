@@ -1,7 +1,7 @@
 .arrows {
   position: absolute;
   inset: 0;
-  z-index: 70;
+  z-index: var(--z-arrows);
   pointer-events: none;
   overflow: visible;
 }
@@ -13,7 +13,7 @@
   stroke-linecap: round;
   stroke-dasharray: 2 12;
   opacity: 0.85;
-  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
+  filter: drop-shadow(0 2px 3px rgb(var(--shade-rgb) / 0.6));
   animation: march 900ms linear infinite;
 }
 
@@ -22,7 +22,7 @@
   stroke-width: 6;
   stroke-linecap: round;
   stroke-dasharray: 12 10;
-  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
+  filter: drop-shadow(0 2px 3px rgb(var(--shade-rgb) / 0.6));
 }
 
 /* a block being dragged, over an attacker it can be dropped on: the block line, lit as the decision */
@@ -31,7 +31,7 @@
   stroke-width: 7;
   stroke-linecap: round;
   stroke-dasharray: 12 10;
-  filter: drop-shadow(0 0 8px var(--decision-glow)) drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
+  filter: drop-shadow(0 0 8px var(--decision-glow)) drop-shadow(0 2px 3px rgb(var(--shade-rgb) / 0.6));
 }
 
 .live {
@@ -39,7 +39,7 @@
   stroke: var(--decision);
   stroke-width: 6;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 8px var(--decision-glow)) drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
+  filter: drop-shadow(0 0 8px var(--decision-glow)) drop-shadow(0 2px 3px rgb(var(--shade-rgb) / 0.6));
 }
 
 @keyframes march {
@@ -69,7 +69,7 @@
 .attackBody {
   stroke: var(--oxblood-lit);
   stroke-width: 9;
-  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.65));
+  filter: drop-shadow(0 3px 4px rgb(var(--shade-rgb) / 0.65));
 }
 
 .attackFlow {

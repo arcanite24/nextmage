@@ -1,7 +1,7 @@
 /* a quick phrase from a player, chalked beside their seat for a moment */
 .bubble {
   position: absolute;
-  z-index: 55;
+  z-index: var(--z-lifted);
   max-width: 260px;
   padding: 10px 16px;
   border-radius: 14px 14px 14px 4px;

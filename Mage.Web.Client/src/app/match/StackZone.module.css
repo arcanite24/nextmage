@@ -3,7 +3,7 @@
   right: 236px;
   top: 300px;
   width: 210px;
-  z-index: 40;
+  z-index: var(--z-rail);
 }
 
 .label {
@@ -27,12 +27,12 @@
   top: calc(var(--i) * 46px);
   left: calc(var(--i) * 6px);
   width: 190px;
-  filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.45));
+  filter: drop-shadow(0 10px 14px rgb(var(--shade-rgb) / 0.45));
   transition: top var(--dur-place) var(--ease-place);
 }
 
 .top {
-  filter: drop-shadow(0 16px 26px rgb(0 0 0 / 0.55));
+  filter: drop-shadow(0 16px 26px rgb(var(--shade-rgb) / 0.55));
 }
 
 .clickable {

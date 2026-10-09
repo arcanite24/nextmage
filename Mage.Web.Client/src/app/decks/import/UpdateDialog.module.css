@@ -14,7 +14,7 @@
   gap: var(--space-3);
   padding: 6px 10px;
   border-radius: var(--radius-control);
-  background: rgb(233 228 214 / 0.04);
+  background: rgb(var(--ink-rgb) / 0.04);
 }
 
 .delta {
@@ -39,7 +39,7 @@
 .removed .name {
   color: var(--ink-dim);
   text-decoration: line-through;
-  text-decoration-color: rgb(229 135 124 / 0.6);
+  text-decoration-color: rgb(var(--danger-rgb) / 0.6);
 }
 
 .name {

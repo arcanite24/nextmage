@@ -50,41 +50,41 @@
   background: linear-gradient(180deg, var(--decision-strong), var(--decision));
   color: var(--decision-ink);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.45),
-    inset 0 -2px 0 rgb(0 0 0 / 0.18),
-    0 0 0 1px rgb(0 0 0 / 0.35),
+    inset 0 1px 0 rgb(var(--gloss-rgb) / 0.45),
+    inset 0 -2px 0 rgb(var(--shade-rgb) / 0.18),
+    0 0 0 1px rgb(var(--shade-rgb) / 0.35),
     var(--shadow-placed);
 }
 
 .decision:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.5),
-    inset 0 -2px 0 rgb(0 0 0 / 0.18),
-    0 0 0 1px rgb(0 0 0 / 0.35),
+    inset 0 1px 0 rgb(var(--gloss-rgb) / 0.5),
+    inset 0 -2px 0 rgb(var(--shade-rgb) / 0.18),
+    0 0 0 1px rgb(var(--shade-rgb) / 0.35),
     0 0 0 6px var(--decision-glow),
     var(--shadow-lifted);
 }
 
 .decision:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.25), 0 0 0 1px rgb(0 0 0 / 0.35);
+  box-shadow: inset 0 2px 4px rgb(var(--shade-rgb) / 0.25), 0 0 0 1px rgb(var(--shade-rgb) / 0.35);
 }
 
 /* screen-printed outline on the mat */
 .print {
-  background: rgb(233 228 214 / 0.04);
+  background: rgb(var(--ink-rgb) / 0.04);
   color: var(--ink);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
 }
 
 .print:hover:not(:disabled) {
-  background: rgb(233 228 214 / 0.09);
+  background: rgb(var(--ink-rgb) / 0.09);
   box-shadow: inset 0 0 0 1.5px var(--ink-soft);
 }
 
 .print:active:not(:disabled) {
-  background: rgb(233 228 214 / 0.14);
+  background: rgb(var(--ink-rgb) / 0.14);
 }
 
 .quiet {
@@ -95,17 +95,17 @@
 
 .quiet:hover:not(:disabled) {
   color: var(--ink-strong);
-  background: rgb(233 228 214 / 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
 }
 
 .danger {
-  background: rgb(138 47 42 / 0.2);
+  background: rgb(var(--oxblood-rgb) / 0.2);
   color: var(--oxblood-ink);
-  box-shadow: inset 0 0 0 1.5px rgb(229 135 124 / 0.5);
+  box-shadow: inset 0 0 0 1.5px rgb(var(--danger-rgb) / 0.5);
 }
 
 .danger:hover:not(:disabled) {
-  background: rgb(138 47 42 / 0.4);
+  background: rgb(var(--oxblood-rgb) / 0.4);
 }
 
 .busy .label {
@@ -140,11 +140,11 @@
 }
 
 .iconButton:hover {
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
   color: var(--ink-strong);
 }
 
 .pressed {
   color: var(--ink-strong);
-  background: rgb(233 228 214 / 0.12);
+  background: var(--ink-ghost);
 }

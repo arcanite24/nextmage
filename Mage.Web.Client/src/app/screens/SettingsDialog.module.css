@@ -34,7 +34,7 @@
 }
 
 .trigger[data-state='active'] {
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
   color: var(--ink-strong);
 }
 
@@ -83,7 +83,7 @@
   height: 26px;
   border: 0;
   border-radius: var(--radius-chip);
-  background: rgb(7 12 10 / 0.7);
+  background: rgb(var(--mat-rgb) / 0.7);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   cursor: pointer;
 }
@@ -176,7 +176,7 @@
   padding: 12px 14px;
   border: 0;
   border-radius: 12px;
-  background: rgb(233 228 214 / 0.04);
+  background: rgb(var(--ink-rgb) / 0.04);
   box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
   color: var(--ink-soft);
   text-align: left;
@@ -201,7 +201,7 @@
 }
 
 .styleOn {
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
   box-shadow: inset 0 0 0 2.5px var(--ink-strong);
 }
 
@@ -265,7 +265,7 @@
   gap: var(--space-4);
   padding: 8px 12px;
   border-radius: var(--radius-control);
-  background: rgb(233 228 214 / 0.04);
+  background: rgb(var(--ink-rgb) / 0.04);
   font-size: var(--text-sm);
   color: var(--ink-soft);
 }

@@ -53,7 +53,7 @@
   height: 44px;
   padding: 0 12px;
   border-radius: var(--radius-control);
-  background: rgb(7 12 10 / 0.6);
+  background: rgb(var(--mat-rgb) / 0.6);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   color: var(--ink-dim);
 }
@@ -149,7 +149,7 @@
   padding: 0 10px;
   border: 0;
   border-radius: var(--radius-control);
-  background: rgb(7 12 10 / 0.6);
+  background: rgb(var(--mat-rgb) / 0.6);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   color: var(--ink-strong);
   font-size: var(--text-sm);
@@ -216,7 +216,7 @@
   gap: 4px;
   padding: 4px 7px;
   border-radius: 999px;
-  background: rgb(7 12 10 / 0.92);
+  background: rgb(var(--mat-rgb) / 0.92);
   box-shadow: inset 0 0 0 1px var(--ink-faint);
   font-family: var(--font-print);
   font-size: 14px;
@@ -254,8 +254,8 @@
   min-height: 0;
   padding: var(--space-4);
   border-radius: var(--radius-zone);
-  background: rgb(7 12 10 / 0.55);
-  box-shadow: inset 0 0 0 1.5px var(--ink-ghost), inset 0 1px 12px rgb(0 0 0 / 0.35);
+  background: rgb(var(--mat-rgb) / 0.55);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost), inset 0 1px 12px rgb(var(--shade-rgb) / 0.35);
   gap: 12px;
 }
 
@@ -424,7 +424,7 @@
 }
 
 .row:hover {
-  background: rgb(233 228 214 / 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
 }
 
 .rowCount {
@@ -469,14 +469,14 @@
   padding: 0;
   border: 0;
   border-radius: 6px;
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
   color: var(--ink);
   cursor: pointer;
 }
 
 .rowActions button:hover,
 .basic button:hover:not(:disabled) {
-  background: rgb(233 228 214 / 0.18);
+  background: rgb(var(--ink-rgb) / 0.18);
 }
 
 .basic button:disabled {
@@ -541,7 +541,7 @@
   position: fixed;
   z-index: var(--z-overlay);
   pointer-events: none;
-  filter: drop-shadow(0 24px 40px rgb(0 0 0 / 0.6));
+  filter: drop-shadow(0 24px 40px rgb(var(--shade-rgb) / 0.6));
   animation: lift var(--dur-quick) var(--ease-lift);
 }
 
@@ -633,7 +633,7 @@
 }
 
 .menuItem[data-highlighted] {
-  background: rgb(233 228 214 / 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
 }
 
 .setSelect {
@@ -653,7 +653,7 @@
   padding: 5px 10px;
   border: 0;
   border-radius: 999px;
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
   color: var(--ink-soft);
   font-size: var(--text-xs);
   text-align: left;
@@ -661,7 +661,7 @@
 }
 
 .fill:hover {
-  background: rgb(233 228 214 / 0.16);
+  background: rgb(var(--ink-rgb) / 0.16);
   color: var(--ink-strong);
 }
 
@@ -729,13 +729,13 @@
   padding: 0;
   border: 0;
   border-radius: 6px;
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
   color: var(--ink);
   cursor: pointer;
 }
 
 .commanderBack:hover {
-  background: rgb(233 228 214 / 0.18);
+  background: rgb(var(--ink-rgb) / 0.18);
 }
 
 .identity {
