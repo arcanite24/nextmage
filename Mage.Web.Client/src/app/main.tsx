@@ -106,6 +106,8 @@ const router = createBrowserRouter([
           { path: '/career/deck', lazy: () => import('./career/CareerDeckScreen').then((m) => ({ Component: m.CareerDeckScreen })) },
           { path: '/career/collection', lazy: () => import('./career/CareerCollectionScreen').then((m) => ({ Component: m.CareerCollectionScreen })) },
           { path: '/career/shop', lazy: () => import('./career/CareerShopScreen').then((m) => ({ Component: m.CareerShopScreen })) },
+          // Career modes (M9): campaign, puzzles, gauntlet, sealed and draft, the weekly challenge; each screen lazy on its own
+          { path: '/career/:mode', lazy: () => import('./career/CareerModesRoute').then((m) => ({ Component: m.CareerModesRoute })) },
           { path: '/history', lazy: () => import('./history/HistoryScreen').then((m) => ({ Component: m.HistoryScreen })) },
         ],
       },

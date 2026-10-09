@@ -13,6 +13,7 @@ import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
 import { downloadText } from '../ui/download';
 import { CareerBar } from './CareerBar';
+import { CareerModesCard } from './CareerModesCard';
 import { ensureCareerDeck } from './careerDeck';
 import {
   exportCareer, importCareer, playCareer, startCareer, useCareerCollection, useCareerOpponents, useCareerStarters, useCareerState,
@@ -249,6 +250,8 @@ function CareerHome({ profile, recent }: { profile: CareerProfile; recent: Caree
         </section>
 
         <aside className={styles.side}>
+          <CareerModesCard />
+
           <section className={styles.card}>
             <h2 className={styles.cardLabel}>{t('career.level', { level: profile.level ?? 1 })}</h2>
             <div className={styles.xpBar} role="progressbar" aria-valuemin={0} aria-valuemax={level.needed || 1} aria-valuenow={level.into} aria-label={t('career.level', { level: profile.level ?? 1 })}>
