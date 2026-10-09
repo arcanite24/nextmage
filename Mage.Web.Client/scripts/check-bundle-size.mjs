@@ -17,10 +17,12 @@ import { gzipSync } from 'node:zlib';
 // into the entry, so the entry grew while the first load shrank
 // app raised 2026-10-09 from 306 kB for M5 (admin console, about page, event variants, report dialog, deck sync),
 // all lazy chunks; the Events screen became lazy to keep the entry under budget
+// app raised 2026-10-09 from 322 kB for B082 (internationalization): the Spanish catalog is a lazy chunk of its own
+// (6.4 kB), downloaded only by players who use Spanish; the Settings dialog went lazy, so the entry shrank 3.7 kB
 const BUDGET_KB = {
   entry: 68,
   initial: 212,
-  app: 322,
+  app: 336,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

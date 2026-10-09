@@ -1,16 +1,17 @@
+import type { MessageKey, Translate } from '../i18n';
 import type { AiOptions, AiType } from '../stores/play';
 
 /** The server AI's skill (1-10) behind each difficulty. */
-export const DIFFICULTIES: { label: string; skill: number; detail: string }[] = [
-  { label: 'Easy', skill: 1, detail: 'Plays its cards, rarely plans ahead.' },
-  { label: 'Normal', skill: 4, detail: 'Sensible attacks and blocks.' },
-  { label: 'Hard', skill: 7, detail: 'Looks further ahead each turn.' },
-  { label: 'Expert', skill: 10, detail: 'Its deepest search; slower turns.' },
+export const DIFFICULTIES: { label: MessageKey; skill: number; detail: MessageKey }[] = [
+  { label: 'ai.difficulty.easy', skill: 1, detail: 'ai.difficulty.easy.detail' },
+  { label: 'ai.difficulty.normal', skill: 4, detail: 'ai.difficulty.normal.detail' },
+  { label: 'ai.difficulty.hard', skill: 7, detail: 'ai.difficulty.hard.detail' },
+  { label: 'ai.difficulty.expert', skill: 10, detail: 'ai.difficulty.expert.detail' },
 ];
 
-export const AI_TYPES: { value: AiType; label: string; detail: string }[] = [
-  { value: 'COMPUTER_MAD', label: 'Standard', detail: 'The usual XMage AI.' },
-  { value: 'COMPUTER_MONTE_CARLO', label: 'Monte Carlo', detail: 'Experimental; plays by simulation and thinks longer.' },
+export const AI_TYPES: { value: AiType; label: MessageKey; detail: MessageKey }[] = [
+  { value: 'COMPUTER_MAD', label: 'ai.type.standard', detail: 'ai.type.standard.detail' },
+  { value: 'COMPUTER_MONTE_CARLO', label: 'ai.type.monteCarlo', detail: 'ai.type.monteCarlo.detail' },
 ];
 
 export function difficultyOf(skill: number) {
@@ -18,13 +19,14 @@ export function difficultyOf(skill: number) {
 }
 
 /** One line describing the AI setup, for the Play zone. */
-export function describeAi(options: AiOptions, deckName: string | null): string {
+export function describeAi(t: Translate, options: AiOptions, deckName: string | null): string {
+  const difficulty = t(difficultyOf(options.skill).label);
   const parts = [
-    options.opponents > 1 ? `${options.opponents} ${difficultyOf(options.skill).label} AIs` : `${difficultyOf(options.skill).label} AI`,
-    deckName ?? 'random starter deck',
-    options.winsNeeded === 2 ? 'best of three' : 'best of one',
+    options.opponents > 1 ? t('ai.summary.many', { count: options.opponents, difficulty }) : t('ai.summary.one', { difficulty }),
+    deckName ?? t('ai.summary.randomDeck'),
+    t(options.winsNeeded === 2 ? 'ai.summary.bestOf3' : 'ai.summary.bestOf1'),
   ];
-  if (options.rules === 'deck') parts.push("your deck's format");
-  if (options.startingLife !== null) parts.push(`${options.startingLife} life`);
+  if (options.rules === 'deck') parts.push(t('ai.summary.deckFormat'));
+  if (options.startingLife !== null) parts.push(t('ai.summary.life', { count: options.startingLife }));
   return parts.join(' · ');
 }

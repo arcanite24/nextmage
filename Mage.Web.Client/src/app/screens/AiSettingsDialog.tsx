@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { isCommanderFormat } from '../../core/decks/formats';
 import { rosterOf, useDecks } from '../stores/decks';
+import { useT } from '../i18n';
 import { DEFAULT_AI_OPTIONS, usePlay } from '../stores/play';
 import { AI_TYPES, DIFFICULTIES, difficultyOf } from './aiSetup';
 import { Button } from '../ui/Button';
@@ -40,51 +41,52 @@ export function AiSettingsDialog({ open, onOpenChange }: { open: boolean; onOpen
   const starters = roster.filter((deck) => deck.starter);
   const mine = roster.filter((deck) => !deck.starter);
   const difficulty = difficultyOf(options.skill);
+  const t = useT();
 
   return (
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Playing the AI"
+      title={t('ai.title')}
       width="md"
       footer={(
         <>
-          <Button variant="quiet" onClick={() => setOptions(DEFAULT_AI_OPTIONS)}>Restore defaults</Button>
-          <Button variant="print" onClick={() => onOpenChange(false)}>Done</Button>
+          <Button variant="quiet" onClick={() => setOptions(DEFAULT_AI_OPTIONS)}>{t('ai.restore')}</Button>
+          <Button variant="print" onClick={() => onOpenChange(false)}>{t('ai.done')}</Button>
         </>
       )}
     >
       <div className={styles.form}>
         <section className={styles.row}>
-          <h3 className={styles.label}>Difficulty</h3>
+          <h3 className={styles.label}>{t('ai.difficulty')}</h3>
           <Segmented
-            label="Difficulty"
+            label={t('ai.difficulty')}
             value={difficulty.skill}
-            options={DIFFICULTIES.map((item) => ({ value: item.skill, label: item.label }))}
+            options={DIFFICULTIES.map((item) => ({ value: item.skill, label: t(item.label) }))}
             onChange={(skill) => setOptions({ skill })}
           />
-          <p className={styles.detail}>{difficulty.detail}</p>
+          <p className={styles.detail}>{t(difficulty.detail)}</p>
         </section>
 
         <section className={styles.row}>
-          <label className={styles.label} htmlFor="ai-deck">Its deck</label>
+          <label className={styles.label} htmlFor="ai-deck">{t('ai.deck')}</label>
           <select
             id="ai-deck"
             className={styles.select}
             value={options.opponentDeckId ?? ''}
             onChange={(event) => setOptions({ opponentDeckId: event.target.value || null })}
           >
-            <option value="">A random starter deck (commander for a commander game)</option>
-            <optgroup label="Starter decks">
+            <option value="">{t('ai.deck.random')}</option>
+            <optgroup label={t('ai.deck.starters')}>
               {starters.filter((deck) => !isCommanderFormat(deck.starter?.format)).map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
             </optgroup>
             {starters.some((deck) => isCommanderFormat(deck.starter?.format)) && (
-              <optgroup label="Commander starters">
+              <optgroup label={t('ai.deck.commanderStarters')}>
                 {starters.filter((deck) => isCommanderFormat(deck.starter?.format)).map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
               </optgroup>
             )}
             {mine.length > 0 && (
-              <optgroup label="Your decks">
+              <optgroup label={t('ai.deck.yours')}>
                 {mine.map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
               </optgroup>
             )}
@@ -92,56 +94,54 @@ export function AiSettingsDialog({ open, onOpenChange }: { open: boolean; onOpen
         </section>
 
         <section className={styles.row}>
-          <h3 className={styles.label}>AI</h3>
-          <Segmented label="AI" value={options.aiType} options={AI_TYPES.map((item) => ({ value: item.value, label: item.label }))} onChange={(aiType) => setOptions({ aiType })} />
-          <p className={styles.detail}>{AI_TYPES.find((item) => item.value === options.aiType)?.detail}</p>
+          <h3 className={styles.label}>{t('ai.type')}</h3>
+          <Segmented label={t('ai.type')} value={options.aiType} options={AI_TYPES.map((item) => ({ value: item.value, label: t(item.label) }))} onChange={(aiType) => setOptions({ aiType })} />
+          <p className={styles.detail}>{t(AI_TYPES.find((item) => item.value === options.aiType)?.detail ?? 'ai.type.standard.detail')}</p>
         </section>
 
         <div className={styles.pair}>
           <section className={styles.row}>
-            <h3 className={styles.label}>Match</h3>
+            <h3 className={styles.label}>{t('ai.match')}</h3>
             <Segmented
-              label="Match length"
+              label={t('ai.match.length')}
               value={options.winsNeeded}
-              options={[{ value: 1 as const, label: 'One game' }, { value: 2 as const, label: 'Best of 3' }]}
+              options={[{ value: 1 as const, label: t('ai.match.one') }, { value: 2 as const, label: t('ai.match.three') }]}
               onChange={(winsNeeded) => setOptions({ winsNeeded })}
             />
           </section>
           <section className={styles.row}>
-            <h3 className={styles.label}>Starting life</h3>
+            <h3 className={styles.label}>{t('ai.life')}</h3>
             <Segmented
-              label="Starting life"
+              label={t('ai.life')}
               value={options.startingLife ?? 0}
-              options={[{ value: 0, label: 'Format' }, ...[20, 30, 40].map((life) => ({ value: life, label: String(life) }))]}
+              options={[{ value: 0, label: t('ai.life.format') }, ...[20, 30, 40].map((life) => ({ value: life, label: String(life) }))]}
               onChange={(life) => setOptions({ startingLife: life === 0 ? null : (life as 20 | 30 | 40) })}
             />
           </section>
         </div>
 
         <section className={styles.row}>
-          <h3 className={styles.label}>Rules</h3>
+          <h3 className={styles.label}>{t('ai.rules')}</h3>
           <Segmented
-            label="Rules"
+            label={t('ai.rules')}
             value={options.rules}
-            options={[{ value: 'casual' as const, label: 'Casual' }, { value: 'deck' as const, label: 'Deck’s format' }]}
+            options={[{ value: 'casual' as const, label: t('ai.rules.casual') }, { value: 'deck' as const, label: t('ai.rules.deck') }]}
             onChange={(rules) => setOptions({ rules })}
           />
           <p className={styles.detail}>
-            {options.rules === 'casual'
-              ? 'Any deck goes. Commander decks still play with their commander.'
-              : 'The game is played in your deck’s format, and both decks must be legal in it.'}
+            {t(options.rules === 'casual' ? 'ai.rules.casual.detail' : 'ai.rules.deck.detail')}
           </p>
         </section>
 
         <section className={styles.row}>
-          <h3 className={styles.label}>Commander pod</h3>
+          <h3 className={styles.label}>{t('ai.pod')}</h3>
           <Segmented
-            label="AI players in a commander game"
+            label={t('ai.pod.label')}
             value={options.opponents}
-            options={[{ value: 1 as const, label: 'One on one' }, { value: 2 as const, label: '3 players' }, { value: 3 as const, label: '4 players' }]}
+            options={[{ value: 1 as const, label: t('ai.pod.one') }, { value: 2 as const, label: t('ai.pod.three') }, { value: 3 as const, label: t('ai.pod.four') }]}
             onChange={(opponents) => setOptions({ opponents })}
           />
-          <p className={styles.detail}>With a commander deck, play a free-for-all against two or three AIs. Other decks always play one on one.</p>
+          <p className={styles.detail}>{t('ai.pod.detail')}</p>
         </section>
       </div>
     </Dialog>
