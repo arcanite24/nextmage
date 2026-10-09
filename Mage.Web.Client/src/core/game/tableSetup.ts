@@ -101,6 +101,8 @@ export function matchOptions(input: {
   playerTypes: string[];
   password?: string;
   advanced?: Partial<TableAdvanced>;
+  /** players kept off the table and out of its games */
+  bannedUsers?: string[];
 }): WebMatchOptions {
   const advanced = { ...DEFAULT_ADVANCED, ...input.advanced };
   const multiplayer = input.playerTypes.length > 2;
@@ -123,6 +125,7 @@ export function matchOptions(input: {
     minimumRating: advanced.minimumRating,
     planeChase: advanced.planeChase,
   };
+  if (input.bannedUsers?.length) options.bannedUsers = input.bannedUsers;
   if (multiplayer) {
     options.attackOption = advanced.attackOption;
     options.range = advanced.range;

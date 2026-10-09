@@ -1,11 +1,14 @@
 package mage.server.websocket.api;
 
 import mage.cards.decks.DeckCardLists;
+import mage.server.User;
+import mage.server.social.UserRelations;
 import mage.server.websocket.rpc.RpcException;
 import mage.server.websocket.rpc.RpcMethod;
 import mage.server.websocket.service.OptionsMapper;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static mage.server.websocket.rpc.RpcParam.Type.INT;
@@ -155,6 +158,21 @@ final class LobbyApi {
                                 throw RpcException.notAuthorized("Join the chat before posting to it");
                             }
                             ctx.server.chatSendMessage(call.uuid(0), userName, call.string(2));
+                            return true;
+                        }),
+
+                RpcMethod.named("chatSetIgnored")
+                        .params(object("names", "string[]"))
+                        .doc("Players this user ignores, by name, for as long as the session lasts (the client keeps the list and "
+                                + "sends it after each login): their table chat doesn't reach the user and their whispers are refused. "
+                                + "At most " + UserRelations.MAX_IGNORED + " names; an empty list clears it.")
+                        .handler(call -> {
+                            String userName = ctx.sessions.userName(call.sessionId())
+                                    .orElseThrow(() -> RpcException.notAuthorized("Log in before setting who you ignore"));
+                            User user = ctx.managers.userManager().getUserByName(userName)
+                                    .orElseThrow(() -> RpcException.notAuthorized("Log in before setting who you ignore"));
+                            String[] names = call.object(0, String[].class);
+                            UserRelations.setIgnored(user.getId(), names == null ? Collections.emptyList() : Arrays.asList(names));
                             return true;
                         }),
 

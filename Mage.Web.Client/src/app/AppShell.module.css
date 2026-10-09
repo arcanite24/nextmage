@@ -111,7 +111,7 @@
   align-items: center;
   gap: 8px;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 12px 0 4px;
   border: 0;
   border-radius: var(--radius-control);
   background: rgb(var(--ink-rgb) / 0.06);
@@ -160,4 +160,9 @@
   min-height: 0;
   padding: var(--space-4) calc(var(--stitch-inset) + var(--space-5)) calc(var(--stitch-inset) + var(--space-5));
   overflow: hidden;
+}
+
+.menuItem[data-disabled] {
+  color: var(--ink-dim);
+  cursor: default;
 }

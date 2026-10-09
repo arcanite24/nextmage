@@ -3,6 +3,7 @@ import { api, events, rpc } from '../connection';
 import { GameSession, type GameSessionMode } from '../../core/game/gameSession';
 import { leaveRequest, type LeaveRequest } from '../../core/game/leave';
 import { stripMarkup } from '../../core/game/prompt';
+import { attention } from './attention';
 import { forgetOpenGame, openGamesToRestore, rememberOpenGame } from './openGames';
 import { useSession } from './session';
 import { notify } from './toasts';
@@ -38,6 +39,34 @@ interface GamesState {
   forget(gameId: string): void;
 }
 
+/** A question the player leaves open this long (auto-pass would have answered it) calls them back to the tab. */
+const ATTENTION_DELAY_MS = 1500;
+const stopWatching = new Map<string, () => void>();
+
+/** Calls the player back when their game waits on them while they are in another tab. */
+function watchForAttention(session: GameSession): () => void {
+  let last: unknown = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const unsubscribe = session.store.subscribe((state) => {
+    if (state.prompt === last) return;
+    last = state.prompt;
+    if (timer) clearTimeout(timer);
+    timer = null;
+    const prompt = state.prompt;
+    if (!prompt || state.mode !== 'play' || state.gameOver) return;
+    timer = setTimeout(() => {
+      const now = session.getState();
+      if (now.prompt !== prompt || now.awaitingServer || now.gameOver) return;
+      const myTurn = !!now.playerId && now.view?.activePlayerId === now.playerId;
+      attention(myTurn ? 'Your turn' : 'Your move', stripMarkup(prompt.text) || 'The game is waiting for you.', { tag: `game:${now.gameId}` });
+    }, ATTENTION_DELAY_MS);
+  });
+  return () => {
+    if (timer) clearTimeout(timer);
+    unsubscribe();
+  };
+}
+
 export const useGames = create<GamesState>((set, get) => ({
   sessions: {},
   latestGameId: null,
@@ -47,13 +76,22 @@ export const useGames = create<GamesState>((set, get) => ({
     const existing = get().sessions[gameId];
     if (existing) return existing;
     const session = new GameSession(api, events, { gameId, playerId, mode });
-    // remembered so a reload can rejoin it (replays are not worth it)
+    const stops: (() => void)[] = [];
+    if (mode === 'play') stops.push(watchForAttention(session));
+    // remembered so a reload can rejoin it (replays are not worth it), until it ends: a reload then has nothing to rejoin
     const { serverUrl, userName } = useSession.getState();
     if (mode !== 'replay') {
       rememberOpenGame(serverUrl, userName, {
         gameId, playerId, mode, tableId: table?.tableId ?? null, parentTableId: table?.parentTableId ?? null, openedAt: Date.now(),
       });
+      const unsubscribe = session.store.subscribe((state) => {
+        if (!state.gameOver) return;
+        forgetOpenGame(serverUrl, userName, gameId);
+        unsubscribe();
+      });
+      stops.push(unsubscribe);
     }
+    stopWatching.set(gameId, () => stops.forEach((stop) => stop()));
     set((state) => ({
       sessions: { ...state.sessions, [gameId]: session },
       tables: table ? { ...state.tables, [gameId]: table } : state.tables,
@@ -83,6 +121,8 @@ export const useGames = create<GamesState>((set, get) => ({
   },
 
   forget(gameId) {
+    stopWatching.get(gameId)?.();
+    stopWatching.delete(gameId);
     get().sessions[gameId]?.dispose();
     const { serverUrl, userName } = useSession.getState();
     forgetOpenGame(serverUrl, userName, gameId);
@@ -106,6 +146,7 @@ events.on('START_GAME', (message) => {
       && !!message.currentTableId && tables[previousId]?.tableId === message.currentTableId)
     .map(([previousId]) => previousId);
   if (finished.length > 0) setTimeout(() => finished.forEach((previousId) => useGames.getState().forget(previousId)), 2000);
+  attention('Your game is starting', 'Come back to the table: your opponents are here.', { tag: `game:${gameId}` });
   useGames.getState().open(gameId, message.playerId ?? null, 'play', {
     tableId: message.currentTableId ?? null,
     parentTableId: message.parentTableId ?? null,
@@ -120,10 +161,16 @@ events.on('GAME_ERROR', (message, event) => {
   if (text) notify('Game error', text, 'error');
 });
 
-events.on('WATCHGAME', (message) => {
-  const gameId = message?.gameId;
+// the server names the watched game in the event's object id; watching starts once the client asks for the game
+events.on('WATCHGAME', (message, event) => {
+  const gameId = message?.gameId ?? event.objectId;
   if (!gameId) return;
-  useGames.getState().open(gameId, null, 'watch');
+  const known = !!useGames.getState().sessions[gameId];
+  useGames.getState().open(gameId, null, 'watch', {
+    tableId: message?.currentTableId ?? null,
+    parentTableId: message?.parentTableId ?? null,
+  });
+  if (!known) api.gameWatchStart(gameId).catch((error) => notify("Couldn't watch the game", String(error?.message ?? error), 'error'));
 });
 
 /**

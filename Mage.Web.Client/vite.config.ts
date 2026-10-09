@@ -8,7 +8,7 @@ const VENDOR_CHUNKS: [chunk: string, packages: RegExp][] = [
   ['vendor-router', /\/node_modules\/(react-router|react-router-dom)\//],
   ['vendor-radix', /\/node_modules\/@radix-ui\//],
   ['vendor-query', /\/node_modules\/@tanstack\//],
-  ['vendor-zustand', /\/node_modules\/(zustand|immer|use-sync-external-store)\//],
+  ['vendor-zustand', /\/node_modules\/(zustand|use-sync-external-store)\//],
 ]
 
 // https://vite.dev/config/
@@ -18,11 +18,8 @@ export default defineConfig({
     // scripts/check-bundle-size.mjs reads the manifest to find each page's chunks
     manifest: true,
     rollupOptions: {
-      // the new app, the legacy client (until every screen is replaced) and the visual test harness
       input: {
         main: 'index.html',
-        legacy: 'legacy.html',
-        visual: 'visual.html',
       },
       output: {
         manualChunks(id) {

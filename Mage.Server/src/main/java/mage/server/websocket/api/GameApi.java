@@ -4,11 +4,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import mage.constants.ManaType;
 import mage.constants.PlayerAction;
+import mage.server.game.GameController;
+import mage.server.replay.ReplayStore;
 import mage.server.websocket.rpc.RpcCall;
 import mage.server.websocket.rpc.RpcException;
 import mage.server.websocket.rpc.RpcMethod;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,6 +62,41 @@ final class GameApi {
                         .params(gameId(), of("sessionId", STRING))
                         .doc("Start spectating a game.")
                         .handler(call -> ctx.server.gameWatchStart(call.uuid(0), call.string(1))),
+
+                RpcMethod.named("replayList")
+                        .returns("ReplayInfo[]")
+                        .doc("Recorded games available for replay, newest first. Games are recorded as a spectator sees them "
+                                + "(xmage.replays, on by default) and kept for xmage.replays.retentionDays (30).")
+                        .handler(call -> {
+                            ctx.sessions.userName(call.sessionId())
+                                    .orElseThrow(() -> RpcException.notAuthorized("Log in to see replays"));
+                            return ReplayStore.get().list();
+                        }),
+
+                RpcMethod.named("replayPage")
+                        .params(gameId(), of("start", INT), of("count", INT))
+                        .returns("ReplayPage | null")
+                        .doc("Events of a recorded game, in order: board snapshots ({t, view, myHand?}) and game log lines ({t, log}). "
+                                + "At most " + ReplayStore.MAX_PAGE + " per page; myHand is the caller's own hand in games they played. "
+                                + "Null when there is no such replay.")
+                        .handler(call -> {
+                            String userName = ctx.sessions.userName(call.sessionId())
+                                    .orElseThrow(() -> RpcException.notAuthorized("Log in to watch replays"));
+                            try {
+                                return ReplayStore.get().page(call.uuid(0), call.integer(1), call.integer(2), userName);
+                            } catch (java.io.IOException e) {
+                                throw new RpcException(RpcException.SERVER_ERROR, "The replay can't be read: " + e.getMessage(), e);
+                            }
+                        }),
+
+                RpcMethod.named("gameWatchers")
+                        .params(gameId())
+                        .returns("string[]")
+                        .doc("Names of the users spectating a running game (empty when the game is over or unknown).")
+                        .handler(call -> {
+                            GameController controller = ctx.managers.gameManager().getGameController().get(call.uuid(0));
+                            return controller == null ? Collections.emptyList() : controller.getWatcherNames();
+                        }),
 
                 RpcMethod.named("gameWatchStop")
                         .session(1)

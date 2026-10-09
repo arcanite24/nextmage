@@ -4,7 +4,6 @@
  *   entry    the app's own entry chunk (main-*.js)
  *   initial  everything the first page load downloads: the entry plus its static imports (vendor chunks)
  *   app      every JS chunk the app can load, lazy screens included
- * The whole dist (legacy client and visual harness too) is printed for reference only.
  *
  * Budgets sit about 15% above the sizes when they were set; raise them deliberately, in the same change
  * that grows the bundle. Usage: npm run build && node scripts/check-bundle-size.mjs [--json]
@@ -13,11 +12,13 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
-// set 2026-10-07 from entry 52.4 kB, initial 194.8 kB, app 254.1 kB
+// reset 2026-10-09 when the legacy client was deleted, from entry 62.2 kB, initial 191.8 kB, app 278.1 kB:
+// modules the legacy client shared with the app (deck storage, protocol helpers) moved from shared chunks
+// into the entry, so the entry grew while the first load shrank
 const BUDGET_KB = {
-  entry: 60,
-  initial: 224,
-  app: 292,
+  entry: 68,
+  initial: 212,
+  app: 306,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;
@@ -72,7 +73,7 @@ const rows = [
   ['entry', `${entry.file}`, measured.entry, BUDGET_KB.entry],
   ['initial', `${initialFiles.length} chunks`, measured.initial, BUDGET_KB.initial],
   ['app', `${appFiles.length} chunks`, measured.app, BUDGET_KB.app],
-  ['all dist JS', `${allFiles.length} chunks (legacy and harness included)`, sum(allFiles), null],
+  ['all dist JS', `${allFiles.length} chunks`, sum(allFiles), null],
 ];
 
 if (process.argv.includes('--json')) {

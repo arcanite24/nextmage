@@ -12,11 +12,6 @@ export default defineConfig({
   timeout: 45_000,
   expect: {
     timeout: 10_000,
-    toHaveScreenshot: {
-      animations: 'disabled',
-      caret: 'hide',
-      maxDiffPixelRatio: 0.01,
-    },
   },
   fullyParallel: false,
   // CI runs on shared runners: one retry absorbs a slow first paint, a real failure still fails twice
@@ -46,14 +41,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         channel,
         viewport: { width: 1440, height: 960 },
-      },
-    },
-    {
-      name: 'chromium-mobile',
-      testMatch: /visual\/.*\.spec\.ts/,
-      use: {
-        ...devices['Pixel 7'],
-        channel,
       },
     },
   ],

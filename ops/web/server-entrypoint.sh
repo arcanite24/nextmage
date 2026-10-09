@@ -97,6 +97,15 @@ rm -f "$DB_DIR/cards.h2.lock.db" "$DB_DIR/cards.h2.mv.db.tempFile"
 # a valid new store and makes every opening resolve to the same path.
 [ -e "$CARDS_DIR/cards.h2.mv.db" ] || : > "$CARDS_DIR/cards.h2.mv.db"
 
+# --- replays (web client) ---------------------------------------------------------------------
+# Finished games are recorded to saved/replays (the xmage-saved volume) for the web client's History.
+REPLAYS=${XMAGE_REPLAYS:-true}
+is_bool "$REPLAYS" || die "XMAGE_REPLAYS must be true or false (got '$REPLAYS')"
+REPLAY_DAYS=${XMAGE_REPLAY_DAYS:-30}
+is_uint "$REPLAY_DAYS" || die "XMAGE_REPLAY_DAYS must be a whole number (got '$REPLAY_DAYS')"
+REPLAY_MAX=${XMAGE_REPLAY_MAX:-300}
+is_uint "$REPLAY_MAX" || die "XMAGE_REPLAY_MAX must be a whole number (got '$REPLAY_MAX')"
+
 # --- JVM ----------------------------------------------------------------------------------------
 # Arguments go through a private @argfile so the admin password does not show up in `ps`.
 umask 077
@@ -105,6 +114,10 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
   echo "-Xmx${XMAGE_MEMORY:-2g}"
   echo "-Dxmage.testMode=false"
   echo "-Dlog4j.configuration=file:$APP/config/log4j-docker.properties"
+  echo "-Dxmage.replays=$REPLAYS"
+  echo "-Dxmage.replays.dir=$APP/saved/replays"
+  echo "-Dxmage.replays.retentionDays=$REPLAY_DAYS"
+  echo "-Dxmage.replays.maxCount=$REPLAY_MAX"
   if [ -n "${XMAGE_ADMIN_PASSWORD:-}" ]; then
     # quoted for the argfile format: backslashes and double quotes escaped
     printf '"-Dxmage.adminPassword=%s"\n' "$(printf '%s' "$XMAGE_ADMIN_PASSWORD" | sed 's/[\\"]/\\&/g')"

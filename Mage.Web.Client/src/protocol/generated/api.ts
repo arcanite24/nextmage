@@ -105,6 +105,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('chatLeave', chatId, SESSION),
     chatSendMessage: (chatId: UUID, userName: string | null, message: string) =>
       rpc.call('chatSendMessage', chatId, userName, message),
+    chatSetIgnored: (names: string[]) =>
+      rpc.call('chatSetIgnored', names),
     chatFindByGame: (gameId: UUID) =>
       rpc.call('chatFindByGame', gameId),
     chatFindByTable: (tableId: UUID) =>
@@ -121,6 +123,12 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('matchQuit', gameId, SESSION),
     gameWatchStart: (gameId: UUID) =>
       rpc.call('gameWatchStart', gameId, SESSION),
+    replayList: () =>
+      rpc.call('replayList'),
+    replayPage: (gameId: UUID, start: number, count: number) =>
+      rpc.call('replayPage', gameId, start, count),
+    gameWatchers: (gameId: UUID) =>
+      rpc.call('gameWatchers', gameId),
     gameWatchStop: (gameId: UUID) =>
       rpc.call('gameWatchStop', gameId, SESSION),
     sendPlayerUUID: (gameId: UUID, data?: UUID | null) =>

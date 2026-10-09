@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { DeckView, DraftPickView, DraftView, SimpleCardView, TournamentView } from '../../protocol/generated/views';
 import { api, events } from '../connection';
+import { attention } from './attention';
 import { notify } from './toasts';
 
 /**
@@ -138,7 +139,12 @@ for (const method of ['DRAFT_INIT', 'DRAFT_PICK'] as const) {
     const draftId = event.objectId;
     if (!draftId) return;
     if (message?.draftView) updateDraft(draftId, { view: message.draftView });
-    if (message?.draftPickView) applyPickView(draftId, message.draftPickView);
+    if (message?.draftPickView) {
+      applyPickView(draftId, message.draftPickView);
+      if (method === 'DRAFT_PICK' && message.draftPickView.picking) {
+        attention('Your draft pick', 'A new pack is waiting for you.', { tag: 'draft' });
+      }
+    }
     // the server waits for the client to show the booster before the pick clock runs
     api.draftSetBoosterLoaded(draftId).catch(() => undefined);
   });

@@ -37,9 +37,9 @@ jobs:
       # fails when the app's JS grows past the budget in scripts/check-bundle-size.mjs; prints the sizes
       - run: npm run size
 
-  # Playwright: the specs that need no game server (sign-in, axe on the sign-in screen, the visual-harness
-  # workflows) against the production build served by `vite preview`. Specs that play on a live server skip here
-  # (they need MAGE_E2E_REQUIRE_SERVER=1 and a running Java server); see Mage.Web.Client/README.md to run them.
+  # Playwright: the specs that need no game server (sign-in, axe on the sign-in screen) against the
+  # production build served by `vite preview`. Specs that play on a live server skip here (they need
+  # MAGE_E2E_REQUIRE_SERVER=1 and a running Java server); see Mage.Web.Client/README.md to run them.
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 30

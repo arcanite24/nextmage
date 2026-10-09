@@ -9,6 +9,8 @@ import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Zone } from '../ui/Zone';
+import { ChatPanel } from '../social/ChatPanel';
+import { useChatRoom } from '../social/useChatRoom';
 import styles from './Event.module.css';
 
 const STATE_TEXT: Record<string, string> = {
@@ -131,6 +133,10 @@ export function EventScreen() {
             })
           )}
         </Zone>
+
+        <Zone label="Event chat" className={styles.chat}>
+          <EventChat tournamentId={tournamentId} />
+        </Zone>
       </div>
 
       <Dialog
@@ -173,4 +179,10 @@ function stateLine(state: string | undefined): string {
     case 'SIDEBOARDING': return 'Sideboarding';
     default: return state ? state.charAt(0) + state.slice(1).toLowerCase() : '';
   }
+}
+
+/** Everyone in the event, between rounds. */
+function EventChat({ tournamentId }: { tournamentId: string }) {
+  const chat = useChatRoom(tournamentId, (id) => api.chatFindByTournament(id));
+  return <ChatPanel label="Event chat" lines={chat.lines} ready={chat.ready} onSend={chat.send} empty="Talk to the other players. /help lists commands." />;
 }

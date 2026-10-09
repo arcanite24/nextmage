@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import mage.game.Game;
+import mage.game.GameInfo;
 import mage.game.Table;
 import mage.game.match.Match;
 import mage.game.match.MatchPlayer;
@@ -59,6 +60,12 @@ public class MatchView implements Serializable {
         
         for (Game game: match.getGames()) {
             games.add(game.getId());
+        }
+        if (games.isEmpty()) {
+            // a finished match drops its games to free memory, but keeps their info (replay links need the ids)
+            for (GameInfo gameInfo : match.getGamesInfo()) {
+                games.add(gameInfo.getGameId());
+            }
         }
         StringBuilder sb1 = new StringBuilder();
         StringBuilder sb2 = new StringBuilder();

@@ -1,0 +1,59 @@
+/* stage pixels: the match is drawn on a 1920 x 1080 board */
+.bar {
+  position: absolute;
+  right: 40px;
+  bottom: 40px;
+  z-index: var(--z-rail);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mode {
+  font-family: var(--font-print);
+  font-size: 28px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-print);
+}
+
+.seat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+}
+
+.seat span {
+  color: var(--ink-dim);
+  font-family: var(--font-print);
+  letter-spacing: var(--tracking-print);
+  text-transform: uppercase;
+}
+
+.seat select {
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--mat-700);
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  color: var(--ink-strong);
+  font: inherit;
+  font-size: 20px;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgb(var(--mat-rgb) / 0.7);
+  box-shadow: inset 0 0 0 1px var(--ink-faint);
+  color: var(--ink);
+  font-family: var(--font-print);
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

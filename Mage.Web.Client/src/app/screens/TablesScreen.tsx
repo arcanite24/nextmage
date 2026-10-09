@@ -1,4 +1,4 @@
-import { Bot, Eye, Lock, Plus, UserRound } from 'lucide-react';
+import { Bot, Eye, Link2, Lock, MessageSquare, Plus, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { api } from '../connection';
@@ -8,13 +8,18 @@ import { rosterOf, useDecks } from '../stores/decks';
 import { useSession } from '../stores/session';
 import { notify } from '../stores/toasts';
 import type { TableView } from '../../protocol/generated/views';
-import { Button } from '../ui/Button';
+import { Button, IconButton } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Field } from '../ui/Field';
 import { Zone } from '../ui/Zone';
 import { formatMenu, formatRules, gameTypesFor, isCommanderFormat } from '../../core/decks/formats';
 import { DEFAULT_ADVANCED, matchOptions, type TableAdvanced } from '../../core/game/tableSetup';
 import { aiDecks } from '../stores/play';
+import { inviteLink } from '../../core/social/chatLine';
+import { ChatPanel } from '../social/ChatPanel';
+import { useChatRoom } from '../social/useChatRoom';
+import { useSocial } from '../stores/social';
+import { joinTable } from './joinTable';
 import { TableAdvancedFields } from './TableAdvancedFields';
 import styles from './TablesScreen.module.css';
 
@@ -64,10 +69,7 @@ export function TablesScreen() {
     }
     setBusyTable(table.tableId);
     try {
-      const { deck } = await decks.loadForPlay(selectedDeck.id);
-      const joined = await api.roomJoinTable(roomId, table.tableId, userName, 'HUMAN', 1, toWire(deck), password ?? '');
-      if (!joined) notify("Couldn't join", table.passworded ? 'Wrong password, or the table did not accept your deck.' : 'The table did not accept your seat or deck.', 'error');
-      await queryClient.invalidateQueries({ queryKey: ['tables'] });
+      await joinTable(table, selectedDeck.id, password ?? '');
     } catch (error) {
       notify("Couldn't join", error instanceof Error ? error.message : String(error), 'error');
     } finally {
@@ -194,23 +196,48 @@ function TableRow({ table, children }: { table: TableView; children?: React.Reac
 function MyTable({ table }: { table: TableView }) {
   const roomId = useSession((state) => state.roomId);
   const userName = useSession((state) => state.userName);
+  const [chatOpen, setChatOpen] = useState(false);
   // the server lists the controller first, then the other seated players: "host, guest"
   const isOwner = (table.controllerName ?? '').split(', ')[0] === userName;
   const ready = table.tableState === 'READY_TO_START';
+  const copyInvite = () => {
+    if (!table.tableId) return;
+    const link = inviteLink(window.location.origin, table.tableId);
+    navigator.clipboard.writeText(link)
+      .then(() => notify('Invite link copied', table.passworded ? 'Send it to a friend, with the table password.' : 'Send it to a friend: it opens this table.'))
+      .catch(() => notify('Invite link', link));
+  };
   return (
-    <TableRow table={table}>
-      {isOwner && table.tableState !== 'DUELING' && (
-        <>
-          <Button size="sm" variant="quiet" onClick={() => roomId && table.tableId && void api.tableRemove(roomId, table.tableId)}>Close</Button>
-          <Button size="sm" variant={ready ? 'decision' : 'print'} disabled={!ready} onClick={() => roomId && table.tableId && void api.matchStart(roomId, table.tableId)}>
-            Start
-          </Button>
-        </>
-      )}
-      {!isOwner && table.tableState === 'WAITING' && (
-        <Button size="sm" variant="quiet" onClick={() => roomId && table.tableId && void api.roomLeaveTableOrTournament(roomId, table.tableId)}>Leave</Button>
-      )}
-    </TableRow>
+    <>
+      <TableRow table={table}>
+        {table.tableState === 'WAITING' && (
+          <Button size="sm" variant="quiet" icon={<Link2 size={16} />} onClick={copyInvite}>Invite</Button>
+        )}
+        <IconButton label={chatOpen ? 'Hide table chat' : 'Table chat'} icon={<MessageSquare size={16} />} pressed={chatOpen} onClick={() => setChatOpen(!chatOpen)} />
+        {isOwner && table.tableState !== 'DUELING' && (
+          <>
+            <Button size="sm" variant="quiet" onClick={() => roomId && table.tableId && void api.tableRemove(roomId, table.tableId)}>Close</Button>
+            <Button size="sm" variant={ready ? 'decision' : 'print'} disabled={!ready} onClick={() => roomId && table.tableId && void api.matchStart(roomId, table.tableId)}>
+              Start
+            </Button>
+          </>
+        )}
+        {!isOwner && table.tableState === 'WAITING' && (
+          <Button size="sm" variant="quiet" onClick={() => roomId && table.tableId && void api.roomLeaveTableOrTournament(roomId, table.tableId)}>Leave</Button>
+        )}
+      </TableRow>
+      {chatOpen && table.tableId && <TableChat tableId={table.tableId} />}
+    </>
+  );
+}
+
+/** The chat of a table you sit at: talk to the others while seats fill. */
+function TableChat({ tableId }: { tableId: string }) {
+  const chat = useChatRoom(tableId, (id) => api.chatFindByTable(id));
+  return (
+    <div className={styles.tableChat}>
+      <ChatPanel label="Table chat" lines={chat.lines} ready={chat.ready} onSend={chat.send} empty="Say hi to the table. /help lists commands." />
+    </div>
   );
 }
 
@@ -270,6 +297,8 @@ function HostDialog({ open, onOpenChange, deckId }: { open: boolean; onOpenChang
         password,
         playerTypes,
         advanced,
+        // players you ignore can't sit at your table or watch it
+        bannedUsers: useSocial.getState().ignored,
       }));
       if (!table.tableId) throw new Error('The server did not create the table.');
       const wire = toWire(deck);

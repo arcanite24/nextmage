@@ -412,6 +412,7 @@
                                 <class>mage.server.websocket.service.DeckValidationService$DeckValidationResult</class>
                                 <class>mage.server.websocket.service.deckimport.ImportedDeck</class>
                                 <class>mage.server.websocket.service.deckimport.DeckImportService$DeckSourceStatus</class>
+                                <class>mage.server.replay.ReplayInfo</class>
                             </classes>
                         </configuration>
                     </plugin>
