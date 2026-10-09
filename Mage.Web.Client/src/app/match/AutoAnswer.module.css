@@ -43,7 +43,7 @@
 }
 
 .menuItem[data-highlighted] {
-  background: rgb(233 228 214 / 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
 }
 
 .menuRule {

@@ -1,10 +1,10 @@
 .scrim {
   position: absolute;
   inset: 0;
-  z-index: 100;
+  z-index: var(--z-overlay);
   display: grid;
   place-items: center;
-  background: radial-gradient(60% 50% at 50% 45%, rgb(7 12 10 / 0.6), rgb(4 7 6 / 0.9));
+  background: radial-gradient(60% 50% at 50% 45%, rgb(var(--mat-rgb) / 0.6), rgb(var(--void-rgb) / 0.9));
   animation: fade var(--dur-place) var(--ease-place);
 }
 

@@ -2,7 +2,7 @@
 .layer {
   position: absolute;
   inset: 0;
-  z-index: 58;
+  z-index: var(--z-assign);
   pointer-events: none;
 }
 
@@ -15,7 +15,7 @@
   transform: translate(-50%, -50%);
   border: 2px solid var(--ink-faint);
   border-radius: var(--radius-chip);
-  background: rgb(7 12 10 / 0.88);
+  background: rgb(var(--mat-rgb) / 0.88);
   box-shadow: var(--shadow-lifted);
   color: var(--ink);
   pointer-events: auto;
@@ -50,13 +50,13 @@
   height: 40px;
   border: 0;
   border-radius: 50%;
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
   color: var(--ink);
   cursor: pointer;
 }
 
 .step:hover:not(:disabled) {
-  background: rgb(233 228 214 / 0.18);
+  background: rgb(var(--ink-rgb) / 0.18);
 }
 
 .step:focus-visible {
@@ -112,7 +112,7 @@
   transform: translateX(-50%);
   padding: 4px 4px 4px 14px;
   border-radius: var(--radius-chip);
-  background: rgb(7 12 10 / 0.85);
+  background: rgb(var(--mat-rgb) / 0.85);
   box-shadow: var(--shadow-placed);
   white-space: nowrap;
   pointer-events: auto;

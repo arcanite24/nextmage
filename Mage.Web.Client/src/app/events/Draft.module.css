@@ -223,7 +223,7 @@
   position: relative;
   padding: var(--space-3) var(--space-6) var(--space-4);
   border-top: 1.5px dashed var(--ink-ghost);
-  background: rgb(4 7 6 / 0.35);
+  background: rgb(var(--void-rgb) / 0.35);
 }
 
 .picksLabel {

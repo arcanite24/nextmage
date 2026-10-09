@@ -5,7 +5,7 @@
   display: grid;
   place-items: center;
   padding: var(--space-4);
-  background: rgb(4 7 6 / 0.78);
+  background: rgb(var(--void-rgb) / 0.78);
   animation: fade var(--dur-place) var(--ease-place) both;
   /* a short blip shouldn't flash the scrim */
   animation-delay: 400ms;

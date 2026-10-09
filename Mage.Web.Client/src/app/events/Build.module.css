@@ -105,8 +105,8 @@
 }
 
 .deckZone {
-  background: rgb(7 12 10 / 0.45);
-  box-shadow: inset 0 0 0 1.5px var(--ink-ghost), inset 0 1px 12px rgb(0 0 0 / 0.35);
+  background: rgb(var(--mat-rgb) / 0.45);
+  box-shadow: inset 0 0 0 1.5px var(--ink-ghost), inset 0 1px 12px rgb(var(--shade-rgb) / 0.35);
 }
 
 .zoneHead {
@@ -194,13 +194,13 @@
   padding: 0;
   border: 0;
   border-radius: 6px;
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
   color: var(--ink);
   cursor: pointer;
 }
 
 .basic button:hover:not(:disabled) {
-  background: rgb(233 228 214 / 0.18);
+  background: rgb(var(--ink-rgb) / 0.18);
 }
 
 .basic button:disabled {
@@ -252,7 +252,7 @@
 }
 
 .card:hover {
-  z-index: 100 !important;
+  z-index: var(--z-overlay) !important;
   transform: translateY(-6px) scale(1.04);
 }
 

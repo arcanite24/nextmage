@@ -10,7 +10,7 @@
 /* the rim the thread sits in: a darker pressed line */
 .groove {
   fill: none;
-  stroke: rgb(0 0 0 / 0.45);
+  stroke: rgb(var(--shade-rgb) / 0.45);
   stroke-width: 4;
 }
 

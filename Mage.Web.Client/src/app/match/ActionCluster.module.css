@@ -7,14 +7,14 @@
   align-items: flex-end;
   gap: 12px;
   width: 420px;
-  z-index: 45;
+  z-index: var(--z-controls);
 }
 
 .headline {
   max-width: 420px;
   padding: 8px 14px;
   border-radius: 10px;
-  background: rgb(7 12 10 / 0.8);
+  background: rgb(var(--mat-rgb) / 0.8);
   box-shadow: inset 0 0 0 1px var(--ink-ghost);
   font-size: 30px;
   font-weight: 600;
@@ -78,7 +78,7 @@
   height: 84px;
   border: 0;
   border-radius: var(--radius-control);
-  background: rgb(7 12 10 / 0.75);
+  background: rgb(var(--mat-rgb) / 0.75);
   box-shadow: inset 0 0 0 1.5px var(--ink-faint);
   color: var(--ink);
   cursor: pointer;
@@ -110,7 +110,7 @@
 }
 
 .menuItem[data-highlighted] {
-  background: rgb(233 228 214 / 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
 }
 
 .menuItem kbd {
@@ -138,7 +138,7 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: rgb(7 12 10 / 0.85);
+  background: rgb(var(--mat-rgb) / 0.85);
   box-shadow: inset 0 0 0 1.5px var(--oxblood);
   font-size: 22px;
   color: var(--ink-strong);
@@ -157,7 +157,7 @@
   padding: 4px 12px;
   border: 0;
   border-radius: 6px;
-  background: rgb(7 12 10 / 0.8);
+  background: rgb(var(--mat-rgb) / 0.8);
   box-shadow: inset 0 0 0 1.5px var(--decision);
   font-family: var(--font-print);
   font-size: 18px;
@@ -169,5 +169,5 @@
 }
 
 .fullControl:hover {
-  background: rgb(240 177 61 / 0.15);
+  background: rgb(var(--decision-rgb) / 0.15);
 }

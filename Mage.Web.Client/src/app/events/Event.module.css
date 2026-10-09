@@ -40,7 +40,7 @@
   color: var(--decision-ink);
   font-weight: 700;
   text-decoration: none;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 -2px 0 rgb(0 0 0 / 0.18), var(--shadow-placed);
+  box-shadow: inset 0 1px 0 rgb(var(--gloss-rgb) / 0.35), inset 0 -2px 0 rgb(var(--shade-rgb) / 0.18), var(--shadow-placed);
 }
 
 .winner {
@@ -49,7 +49,7 @@
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-zone);
-  background: rgb(233 228 214 / 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
   box-shadow: inset 0 0 0 2px var(--ink-strong);
   color: var(--ink-strong);
 }
@@ -104,7 +104,7 @@
 }
 
 .meRow td {
-  background: rgb(233 228 214 / 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
 }
 
 .player {
@@ -152,7 +152,7 @@
   gap: var(--space-3);
   padding: 10px 12px;
   border-radius: 10px;
-  background: rgb(233 228 214 / 0.04);
+  background: rgb(var(--ink-rgb) / 0.04);
   box-shadow: inset 0 0 0 1px var(--ink-ghost);
 }
 

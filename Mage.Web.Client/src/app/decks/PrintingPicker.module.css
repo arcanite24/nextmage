@@ -21,7 +21,7 @@
 }
 
 .option:hover {
-  background: rgb(233 228 214 / 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
 }
 
 .option:focus-visible {
