@@ -55,7 +55,8 @@ export function CardFace({ card, face = 'front', size = 'normal', sleeve, hidden
         ) : (
           <>
             {!loaded && (
-              <div className={styles.frame} aria-hidden={showImage ? true : undefined}>
+              // with a picture on its way the text frame waits a moment: a picture that arrives soon never flashes it
+              <div className={[styles.frame, src === null || showImage ? styles.late : ''].join(' ')} aria-hidden={showImage ? true : undefined}>
                 <div className={styles.titleBar}>
                   <span className={styles.name}>{name}</span>
                   <ManaCost cost={card.manaCostLeftStr ?? card.manaCost} size="sm" />

@@ -58,7 +58,7 @@ final class CareerModesApi {
                             String tableId = CareerApi.startMatch(ctx, call, user, plan.opponentName, "Constructed - Freeform",
                                     plan.playerDeck, aiType(plan.aiType), plan.skill, plan.opponentDeck,
                                     id -> CareerService.get().register(id, user, "campaign", plan.key, plan.setup));
-                            return match(tableId, "campaign:" + plan.key);
+                            return match(tableId, "campaign:" + plan.key, plan.opponentDeck);
                         }),
                 RpcMethod.named("careerCampaignChoose")
                         .params(of("campaignId", STRING), of("nodeId", STRING), of("optionId", STRING))
@@ -115,7 +115,7 @@ final class CareerModesApi {
                             String tableId = CareerApi.startMatch(ctx, call, user, plan.challenge.opponent.name, "Constructed - Freeform",
                                     plan.playerDeck, aiType(plan.challenge.opponent.aiType), plan.challenge.opponent.skill, plan.opponentDeck,
                                     id -> CareerService.get().register(id, user, "challenge", plan.week, plan.setup));
-                            return match(tableId, "challenge:" + plan.week);
+                            return match(tableId, "challenge:" + plan.week, plan.opponentDeck);
                         }),
 
                 // ---- the gauntlet
@@ -153,7 +153,7 @@ final class CareerModesApi {
                             String tableId = CareerApi.startMatch(ctx, call, user, plan.boss.name, "Limited", plan.playerDeck,
                                     aiType(plan.boss.aiType), plan.boss.skill, plan.opponentDeck,
                                     id -> CareerService.get().register(id, user, "gauntlet", plan.runId, plan.setup));
-                            return match(tableId, "gauntlet:" + plan.runId);
+                            return match(tableId, "gauntlet:" + plan.runId, plan.opponentDeck);
                         }),
                 RpcMethod.named("careerGauntletAbandon")
                         .returns("CareerRun")
@@ -209,7 +209,7 @@ final class CareerModesApi {
                             String tableId = CareerApi.startMatch(ctx, call, user, plan.opponentName, "Limited", plan.playerDeck,
                                     PlayerType.COMPUTER_MAD, CareerLimited.OPPONENT_SKILL, plan.opponentDeck,
                                     id -> CareerService.get().register(id, user, "limited", plan.runId, null));
-                            return match(tableId, "limited:" + plan.runId);
+                            return match(tableId, "limited:" + plan.runId, plan.opponentDeck);
                         }),
                 RpcMethod.named("careerLimitedAbandon")
                         .returns("CareerLimitedRun")
@@ -260,9 +260,14 @@ final class CareerModesApi {
     }
 
     private static CareerApi.CareerMatch match(String tableId, String opponentId) {
+        return match(tableId, opponentId, null);
+    }
+
+    private static CareerApi.CareerMatch match(String tableId, String opponentId, DeckCardLists opponentDeck) {
         CareerApi.CareerMatch match = new CareerApi.CareerMatch();
         match.tableId = tableId;
         match.opponentId = opponentId;
+        match.warm = CareerApi.printings(opponentDeck);
         return match;
     }
 }

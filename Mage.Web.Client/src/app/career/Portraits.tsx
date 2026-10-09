@@ -1,6 +1,7 @@
 import { Crown, Lock } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useCardImage } from '../../core/images/useCardImage';
+import { isDecoded, markDecoded } from '../ui/imageCache';
 import { Portrait } from './ModeArt';
 import styles from './Portraits.module.css';
 
@@ -15,14 +16,32 @@ export interface ArtCard {
   cardNumber?: string;
 }
 
-/** A card's art crop filling its box; the drawn portrait from the name and colours until (or unless) it loads. */
+/**
+ * A card's art crop filling its box. While the art is on its way the window stays dark and the art fades in when it
+ * lands (at once when it was seen before); the drawn portrait from the name and colours is for a card without art.
+ */
 export function CardArt({ card, name, colors, boss, className }: { card?: ArtCard | null; name: string; colors?: string; boss?: boolean; className?: string }) {
   const src = useCardImage(card?.name ? card : null, 'front', 'art_crop');
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const picture = typeof src === 'string' && src !== failedSrc ? src : null;
+  const loaded = !!picture && (loadedSrc === picture || isDecoded(picture));
+  const drawn = !card?.name || src === undefined || (typeof src === 'string' && src === failedSrc);
   return (
-    <span className={[styles.art, className ?? ''].join(' ')} aria-hidden="true">
-      {typeof src === 'string'
-        ? <img src={src} alt="" loading="lazy" decoding="async" />
-        : <span className={styles.drawn}><Portrait name={name} colors={colors} boss={boss} size={120} /></span>}
+    <span className={[styles.art, className ?? ''].join(' ')} aria-hidden="true" data-loaded={loaded || undefined}>
+      {drawn && <span className={styles.drawn}><Portrait name={name} colors={colors} boss={boss} size={120} /></span>}
+      {picture && (
+        <img
+          src={picture}
+          alt=""
+          decoding="async"
+          onLoad={() => {
+            markDecoded(picture);
+            setLoadedSrc(picture);
+          }}
+          onError={() => setFailedSrc(picture)}
+        />
+      )}
     </span>
   );
 }

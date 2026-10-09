@@ -42,6 +42,29 @@ export function createIndexedDbImageStore(): ImageLinkStore {
       });
     },
 
+    async getAll(): Promise<[string, PrintingImages][]> {
+      const db = await open();
+      if (!db) return [];
+      return new Promise((resolve) => {
+        try {
+          const entries: [string, PrintingImages][] = [];
+          const request = db.transaction(STORE, 'readonly').objectStore(STORE).openCursor();
+          request.onsuccess = () => {
+            const cursor = request.result;
+            if (!cursor) {
+              resolve(entries);
+              return;
+            }
+            entries.push([String(cursor.key), cursor.value as PrintingImages]);
+            cursor.continue();
+          };
+          request.onerror = () => resolve(entries);
+        } catch {
+          resolve([]);
+        }
+      });
+    },
+
     async setMany(entries: [string, PrintingImages][]): Promise<void> {
       const db = await open();
       if (!db || entries.length === 0) return;

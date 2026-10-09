@@ -15,8 +15,11 @@ import mage.view.TableView;
 import org.apache.log4j.Logger;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static mage.server.websocket.rpc.RpcParam.Type.STRING;
@@ -46,6 +49,29 @@ final class CareerApi {
     public static class CareerMatch {
         public String tableId;
         public String opponentId;
+        /** the printings in the opponent's deck, so the client can fetch their pictures while the table is set */
+        public List<CareerContent.CareerCover> warm;
+    }
+
+    /** each printing in a deck once (main and sideboard); empty without a deck */
+    static List<CareerContent.CareerCover> printings(DeckCardLists deck) {
+        List<CareerContent.CareerCover> printings = new ArrayList<>();
+        if (deck == null) {
+            return printings;
+        }
+        Set<String> seen = new HashSet<>();
+        List<mage.cards.decks.DeckCardInfo> cards = new ArrayList<>(deck.getCards());
+        cards.addAll(deck.getSideboard());
+        for (mage.cards.decks.DeckCardInfo card : cards) {
+            if (seen.add(card.getSetCode() + "/" + card.getCardNumber() + "/" + card.getCardName())) {
+                CareerContent.CareerCover printing = new CareerContent.CareerCover();
+                printing.name = card.getCardName();
+                printing.setCode = card.getSetCode();
+                printing.cardNumber = card.getCardNumber();
+                printings.add(printing);
+            }
+        }
+        return printings;
     }
 
     static List<RpcMethod> methods(ApiContext ctx) {
@@ -228,6 +254,7 @@ final class CareerApi {
         CareerMatch match = new CareerMatch();
         match.tableId = tableId;
         match.opponentId = opponent.id;
+        match.warm = printings(opponentDeck);
         return match;
     }
 
