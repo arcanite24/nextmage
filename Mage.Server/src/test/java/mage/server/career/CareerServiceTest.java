@@ -222,5 +222,14 @@ public class CareerServiceTest {
             }
         }
         assertFalse(content.starters().isEmpty());
+        // the starter picker shows each deck's colors, read from its basic lands
+        for (CareerContent.CareerStarter starter : content.starters()) {
+            assertTrue(starter.colors != null && starter.colors.matches("[WUBRG]{1,5}"), starter.id + " has colors, got " + starter.colors);
+        }
+        assertEquals("BG", content.starter("liliana-death-wielder").colors);
+        // AI opponents sit under their whole name, not cut to the 14 characters people's names get
+        for (CareerContent.Opponent opponent : content.opponents()) {
+            assertEquals(opponent.name, CareerContent.aiSeatName(opponent.name));
+        }
     }
 }

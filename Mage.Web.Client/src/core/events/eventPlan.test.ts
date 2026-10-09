@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { TournamentTypeView } from '../../protocol/generated/views';
-import { CUBE_FROM_DECK, planEvent, tournamentTypeName, type EventChoice } from './eventPlan';
+import { CUBE_FROM_DECK, eliminationRounds, fitPlayers, planEvent, playerCounts, tournamentTypeName, type EventChoice } from './eventPlan';
 
 const TYPES: TournamentTypeView[] = [
   { name: 'Booster Draft Swiss', draft: true, limited: true, numBoosters: 3, minPlayers: 2, maxPlayers: 16 },
@@ -74,5 +74,31 @@ describe('planEvent', () => {
   test("types the server doesn't run, and seat limits, are refused", () => {
     expect(planEvent({ ...BASE, kind: 'sealed', source: 'cube' }, TYPES)).toMatch(/doesn't run/);
     expect(planEvent({ ...BASE, players: 1 }, TYPES)).toMatch(/at least 2/);
+  });
+});
+
+describe('player counts', () => {
+  const types: TournamentTypeView[] = [
+    { name: 'Booster Draft Swiss', minPlayers: 4, maxPlayers: 16 },
+    { name: 'Booster Draft Elimination', minPlayers: 4, maxPlayers: 16 },
+    { name: 'Sealed Swiss', minPlayers: 2, maxPlayers: 16 },
+  ];
+  test('offers only the counts the event type takes, within 2 to 8', () => {
+    expect(playerCounts('draft', true, 'set', types)).toEqual([4, 5, 6, 7, 8]);
+    expect(playerCounts('draft', false, 'set', types)).toEqual([4, 5, 6, 7, 8]);
+    expect(playerCounts('sealed', true, 'set', types)).toEqual([2, 3, 4, 5, 6, 7, 8]);
+    // a type the server doesn't list: the dialog explains that, and offers the usual range meanwhile
+    expect(playerCounts('jumpstart', true, 'set', types)).toEqual([2, 3, 4, 5, 6, 7, 8]);
+  });
+  test('keeps the pick that fits, else the nearest that does', () => {
+    expect(fitPlayers(6, [4, 5, 6, 7, 8])).toBe(6);
+    expect(fitPlayers(2, [4, 5, 6, 7, 8])).toBe(4);
+    expect(fitPlayers(12, [4, 5, 6, 7, 8])).toBe(8);
+  });
+  test('single elimination runs until one is left', () => {
+    expect(eliminationRounds(2)).toBe(1);
+    expect(eliminationRounds(4)).toBe(2);
+    expect(eliminationRounds(5)).toBe(3);
+    expect(eliminationRounds(8)).toBe(3);
   });
 });

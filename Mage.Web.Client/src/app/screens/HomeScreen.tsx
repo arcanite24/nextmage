@@ -98,7 +98,7 @@ export function HomeScreen() {
         <MatPrint card={selected?.cover ?? null} />
         <div className={styles.deckTitle}>
           <h1 className={styles.deckName}>{selected?.name ?? t('home.chooseDeck')}</h1>
-          <p className={styles.deckNote}>{selected?.note ?? ' '}</p>
+          <p className={styles.deckNote}>{selected?.fromStarter ? t('decks.fromStarter', { count: selected.cardCount }) : selected?.note ?? ' '}</p>
         </div>
 
         <div className={styles.playZone} role="group" aria-labelledby="play-zone-label">

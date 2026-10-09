@@ -233,6 +233,14 @@
   color: var(--ink-dim);
 }
 
+.starterColors {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+
 .starterArt {
   display: block;
   transition: transform var(--dur-quick) var(--ease-lift);

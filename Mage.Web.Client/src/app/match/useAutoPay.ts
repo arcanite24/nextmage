@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { manaOf, nextSource, parseCost, type ManaSource } from '../../core/game/autoPay';
+import { handNeeds, manaOf, nextSource, parseCost, type ManaSource } from '../../core/game/autoPay';
 import type { GameSession, GameSessionState } from '../../core/game/gameSession';
 import type { PlayerBoard } from './boardModel';
 
@@ -12,7 +12,7 @@ const TAP_DELAY_MS = 220;
  */
 export function useAutoPay(session: GameSession, state: GameSessionState, me: PlayerBoard | null, enabled: boolean) {
   const lastAsk = useRef<{ text: string; tries: number } | null>(null);
-  const { interaction, awaitingServer } = state;
+  const { interaction, awaitingServer, view } = state;
   const prompt = interaction.prompt;
 
   useEffect(() => {
@@ -35,7 +35,10 @@ export function useAutoPay(session: GameSession, state: GameSessionState, me: Pl
       if (produces === undefined) continue;
       sources.push({ id, produces, isLand: (permanent.cardTypes ?? []).includes('LAND') });
     }
-    const next = nextSource(cost, sources);
+    // generic mana leaves untapped the colors the rest of the hand still needs this turn
+    const owed = cost.generic + Object.values(cost.colored).reduce((sum, value) => sum + (value ?? 0), 0);
+    const handCosts = Object.values(view?.myHand ?? {}).map((card) => (card.manaCostLeftStr ?? []).join(''));
+    const next = nextSource(cost, sources, handNeeds(handCosts, sources.length - owed));
     if (!next) return;
 
     const timer = setTimeout(() => {
@@ -43,5 +46,5 @@ export function useAutoPay(session: GameSession, state: GameSessionState, me: Pl
       session.click(next);
     }, TAP_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [enabled, me, awaitingServer, interaction, prompt, session]);
+  }, [enabled, me, awaitingServer, interaction, prompt, session, view]);
 }

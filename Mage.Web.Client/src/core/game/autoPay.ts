@@ -54,11 +54,31 @@ export function manaOf(permanent: Pick<PermanentView, 'rules' | 'subTypes' | 'ca
 }
 
 /**
+ * How many untapped sources of each color to keep for the rest of the hand: for each color, the most of it one card
+ * asks for, among the cards still castable with the `spare` sources this payment leaves (cost text as "{1}{G}").
+ */
+export function handNeeds(costs: string[], spare: number): Partial<Record<ManaColor, number>> {
+  const needs: Partial<Record<ManaColor, number>> = {};
+  for (const text of costs) {
+    const cost = parseCost(text);
+    if (!cost) continue;
+    const colored = Object.values(cost.colored).reduce((sum, value) => sum + (value ?? 0), 0);
+    if (colored === 0 || cost.generic + colored > spare) continue;
+    for (const color of COLORS) {
+      const wanted = cost.colored[color] ?? 0;
+      if (wanted > (needs[color] ?? 0)) needs[color] = wanted;
+    }
+  }
+  return needs;
+}
+
+/**
  * The next source to tap for this cost, or null when the payment isn't clear enough to make for the player.
  * Colored symbols are covered first by sources of that color; generic mana then uses lands before creatures,
- * and colorless or least-needed colors before the rest.
+ * colorless before colors, and of the colors the ones with sources to spare beyond what `keep` (the rest of the
+ * hand, see handNeeds) wants untapped, colors nothing needs before needed ones, and the most plentiful first.
  */
-export function nextSource(cost: ManaCostParts, sources: ManaSource[]): string | null {
+export function nextSource(cost: ManaCostParts, sources: ManaSource[], keep: Partial<Record<ManaColor, number>> = {}): string | null {
   const usable = sources.filter((source) => source.produces !== null);
   const remaining = [...usable];
   const take = (pick: (source: ManaSource) => boolean, prefer: (a: ManaSource, b: ManaSource) => number) => {
@@ -69,6 +89,12 @@ export function nextSource(cost: ManaCostParts, sources: ManaSource[]): string |
     return chosen;
   };
   const landsFirst = (a: ManaSource, b: ManaSource) => Number(b.isLand) - Number(a.isLand);
+  const left = (color: ManaSource['produces']) => remaining.filter((source) => source.produces === color).length;
+  // colorless first; then colors with sources to spare, and of those the ones nothing in hand needs
+  const rank = ({ produces }: ManaSource) => {
+    const needed = keep[produces!] ?? 0;
+    return produces === 'C' ? 9 : 2 * Number(left(produces) > needed) + Number(!needed);
+  };
 
   const plan: ManaSource[] = [];
   for (const color of COLORS) {
@@ -78,9 +104,9 @@ export function nextSource(cost: ManaCostParts, sources: ManaSource[]): string |
       plan.push(source);
     }
   }
-  // generic: spend what the rest of the cost doesn't need, colorless first
+  // generic: spend what the rest of the cost and the hand don't need, colorless first
   for (let i = 0; i < cost.generic; i++) {
-    const source = take(() => true, (a, b) => landsFirst(a, b) || Number(b.produces === 'C') - Number(a.produces === 'C'));
+    const source = take(() => true, (a, b) => landsFirst(a, b) || rank(b) - rank(a) || left(b.produces) - left(a.produces));
     if (!source) return null;
     plan.push(source);
   }

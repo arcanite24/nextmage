@@ -61,6 +61,24 @@ export function readList(text: string): DeckReading {
   return { list, name: list.name };
 }
 
+const BASIC_NAMES = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes']);
+
+/**
+ * A name for a list that carried none: its commander, else the nonland card it plays most copies of (the first one
+ * on a tie), so a pasted list doesn't arrive as one more "Imported deck".
+ */
+export function suggestDeckName(list: ParsedList, cards: ReadonlyMap<string, CardView | null>): string | null {
+  if (list.commanders.length > 0) return list.commanders.map((card) => card.cardName).join(' & ');
+  let best: DeckCardInfo | null = null;
+  for (const card of list.main) {
+    const view = cards.get(importKey(card));
+    const land = BASIC_NAMES.has(card.cardName) || !!view?.cardTypes?.includes('LAND');
+    if (land || !card.cardName) continue;
+    if (!best || card.amount > best.amount) best = card;
+  }
+  return best?.cardName ?? null;
+}
+
 /** Match every line against the card database and start a draft. */
 export async function startDraft(
   reading: DeckReading,
@@ -71,7 +89,7 @@ export async function startDraft(
   const cards = await resolveCards(importedLines(reading.list), lookup, { fixes: options.fixes, printings });
   return {
     ...reading,
-    name: reading.name?.trim() || options.fallbackName || 'Imported deck',
+    name: reading.name?.trim() || options.fallbackName || suggestDeckName(reading.list, cards) || 'Imported deck',
     format: reading.format || (reading.list.commanders.length > 0 ? COMMANDER_FORMAT : DEFAULT_FORMAT),
     cards,
     leftOut: new Set(),
