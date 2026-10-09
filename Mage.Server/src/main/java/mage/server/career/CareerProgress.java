@@ -156,6 +156,31 @@ public final class CareerProgress {
         public int xp;
     }
 
+    /** What a Career mode (campaign, gauntlet, puzzle, challenge) made of a game, beyond the usual rewards. */
+    public static class CareerModeResult {
+        /** "campaign", "gauntlet", "puzzle", "challenge" or "limited" */
+        public String kind;
+        public String title;
+        /** what happened, one sentence a line */
+        public List<String> lines = new ArrayList<>();
+        public int coins;
+        public int xp;
+        /** a set this game opened in the shop */
+        public String unlockedSet;
+        /** a puzzle's stars, 1 to 3 */
+        public int stars;
+        /** the run or week this game belongs to */
+        public String ref;
+
+        public CareerModeResult() {
+        }
+
+        CareerModeResult(String kind, String title) {
+            this.kind = kind;
+            this.title = title;
+        }
+    }
+
     /** Everything a game paid, for the rewards screen after it. */
     public static class CareerGameResult {
         public String gameKey;
@@ -178,6 +203,8 @@ public final class CareerProgress {
         public int packs;
         /** opponents' tiers this game opened */
         public List<String> opened = new ArrayList<>();
+        /** what a Career mode made of the game; null for a roster duel or a regular game */
+        public CareerModeResult mode;
     }
 
     private static volatile CareerProgress instance;
@@ -421,8 +448,9 @@ public final class CareerProgress {
             result.quests.add(progress);
         }
 
-        // the weekly goal: Career wins only
-        if (result.career && result.won) {
+        // the weekly goal: Career wins only, and not puzzles or the weekly challenge
+        boolean weeklyGame = result.mode == null || !("puzzle".equals(result.mode.kind) || "challenge".equals(result.mode.kind));
+        if (result.career && result.won && weeklyGame) {
             String week = week();
             int before = store.weeklyWins(user, week);
             store.addWeeklyWin(user, week);
@@ -476,7 +504,17 @@ public final class CareerProgress {
         CareerProfile profile = store.profile(user);
         totals.put("level", profile == null ? 1 : profile.level);
         Map<String, Integer> wins = store.winsByOpponent(user);
-        totals.put("opponents_beaten", (int) wins.values().stream().filter(count -> count > 0).count());
+        int beaten = 0;
+        try {
+            for (CareerContent.Opponent opponent : CareerContent.get().opponents()) {
+                if (wins.getOrDefault(opponent.id, 0) > 0) {
+                    beaten++;
+                }
+            }
+        } catch (RuntimeException e) {
+            // no roster content
+        }
+        totals.put("opponents_beaten", beaten);
         int tiersOpen = 1;
         try {
             for (CareerService.CareerOpponent opponent : CareerService.get().opponents(user)) {
@@ -492,7 +530,7 @@ public final class CareerProgress {
     }
 
     /** pays every level reached since the last one paid */
-    private void levelsIn(CareerStore store, String user, int xpBefore, CareerGameResult result, long now) throws SQLException {
+    void levelsIn(CareerStore store, String user, int xpBefore, CareerGameResult result, long now) throws SQLException {
         CareerProfile profile = store.profile(user);
         result.levelBefore = CareerRules.levelFor(xpBefore);
         result.levelAfter = profile.level;

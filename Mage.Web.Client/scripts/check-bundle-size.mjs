@@ -23,10 +23,16 @@ import { gzipSync } from 'node:zlib';
 // first game, playmat settings, state patches, the PWA update prompt; measured 340.6 kB), then for M7 Career (about
 // 14.5 kB of lazy Career screens and their messages, 2.7 kB more Spanish catalog). The entry only gained the Home
 // entry point and its two messages
+// app raised 2026-10-09 from 372 kB for M9 Career modes (campaign map, puzzle book, gauntlet, solo sealed and draft,
+// weekly challenge): about 29.3 kB of lazy chunks, most of it their English and Spanish messages; on top of M8's
+// Career progress screens (371.8 kB on their branch) with about 4 kB of headroom for the merge. The modes share one
+// route in the entry (+0.3 kB)
+// entry raised 2026-10-09 from 68 kB: the generated RPC client lives in the entry, and M9 added 18 Career mode
+// methods to it; with M8 and M9 merged the entry measured 68.2 kB
 const BUDGET_KB = {
-  entry: 68,
+  entry: 69,
   initial: 212,
-  app: 372,
+  app: 405,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

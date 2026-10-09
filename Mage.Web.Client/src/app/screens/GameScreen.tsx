@@ -17,7 +17,7 @@ export function GameScreen() {
   const session = useGames((state) => state.sessions[gameId]);
   // games inside an event lead back to the event
   const eventId = useEvents((events) => events.currentTournamentId);
-  // Career matches lead back to Career
+  // Career matches lead back to Career (a mode's game to that mode's screen)
   const returnPath = usePlay((play) => play.returnPath) ?? '/';
   const backLabel = eventId ? 'Back to the event' : returnPath.startsWith('/career') ? 'Back to Career' : 'Back to Play';
 

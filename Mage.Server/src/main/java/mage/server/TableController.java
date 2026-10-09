@@ -709,6 +709,8 @@ public class TableController {
             gameOptions.planeChase = match.getOptions().isPlaneChase();
             gameOptions.perPlayerEmblemCards = match.getOptions().getPerPlayerEmblemCards();
             gameOptions.globalEmblemCards = match.getOptions().getGlobalEmblemCards();
+            // a Career campaign boss, gauntlet boss or puzzle starts from its own setup
+            gameOptions.setup = CareerService.get().setupFor(table.getId());
             match.getGame().setGameOptions(gameOptions);
             managerFactory.gameManager().createGameSession(match.getGame(), userPlayerMap, table.getId(), choosingPlayerId, gameOptions);
             String creator = null;
