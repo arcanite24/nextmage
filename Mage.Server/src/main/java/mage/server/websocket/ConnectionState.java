@@ -5,6 +5,8 @@ import org.java_websocket.WebSocket;
 import org.jboss.remoting.callback.InvokerCallbackHandler;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -32,6 +34,7 @@ final class ConnectionState implements RpcConnection {
 
     private volatile String sessionId;
     private volatile WebSocketCallbackHandler callbackHandler;
+    private final GameStates gameStates = new GameStates();
 
     private int rateLimitStrikes;
     private double tokens = BURST;
@@ -80,9 +83,43 @@ final class ConnectionState implements RpcConnection {
 
     @Override
     public InvokerCallbackHandler createCallbackHandler() {
-        WebSocketCallbackHandler handler = new WebSocketCallbackHandler(conn);
+        synchronized (gameStates) {
+            gameStates.newSession();
+        }
+        WebSocketCallbackHandler handler = new WebSocketCallbackHandler(conn, gameStates);
         callbackHandler = handler;
         return handler;
+    }
+
+    @Override
+    public List<String> setCapabilities(List<String> requested) {
+        boolean stateDiffs = requested.contains(GameStates.CAPABILITY);
+        synchronized (gameStates) {
+            gameStates.setEnabled(stateDiffs);
+        }
+        return stateDiffs ? Collections.singletonList(GameStates.CAPABILITY) : Collections.emptyList();
+    }
+
+    @Override
+    public boolean resendGameState(UUID gameId) {
+        WebSocketCallbackHandler handler = callbackHandler;
+        return handler != null && handler.resendState(gameId);
+    }
+
+    @Override
+    public void forgetGameState(UUID gameId) {
+        synchronized (gameStates) {
+            gameStates.forget(gameId);
+        }
+    }
+
+    /**
+     * The socket closed: game states are no longer needed.
+     */
+    void closed() {
+        synchronized (gameStates) {
+            gameStates.newSession();
+        }
     }
 
     @Override

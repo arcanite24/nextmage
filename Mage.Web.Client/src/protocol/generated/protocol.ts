@@ -11,6 +11,7 @@ export type RpcAccess = 'public' | 'session' | 'login';
 /** Parameters and result of every RPC method. */
 export interface RpcMethods {
   ping: { params: [sessionId?: string | null, pingInfo?: string | null]; result: boolean };
+  setCapabilities: { params: [capabilities: string[]]; result: string[] };
   connectUser: { params: [userName: string, password: string, sessionId: string, restoreSessionId?: string | null, clientVersion?: string | null, userIdStr?: string | null]; result: boolean };
   connectAdmin: { params: [password: string, sessionId: string]; result: boolean };
   sessionGetRestoreToken: { params: [sessionId: string]; result: string };
@@ -62,6 +63,7 @@ export interface RpcMethods {
   chatFindByRoom: { params: [roomId: UUID]; result: UUID | null };
   gameJoin: { params: [gameId: UUID, sessionId: string]; result: boolean };
   gameResync: { params: [gameId: UUID, sessionId: string]; result: boolean };
+  gameStateResync: { params: [gameId: UUID, sessionId: string]; result: boolean };
   matchQuit: { params: [gameId: UUID, sessionId: string]; result: boolean };
   gameWatchStart: { params: [gameId: UUID, sessionId: string]; result: boolean };
   replayList: { params: []; result: ReplayInfo[] };
@@ -122,6 +124,7 @@ export type RpcMethodName = keyof RpcMethods;
 /** Access rule and session parameter position of every RPC method. */
 export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: RpcAccess; readonly sessionParam: number } } = {
   ping: { access: 'public', sessionParam: 0 },
+  setCapabilities: { access: 'public', sessionParam: -1 },
   connectUser: { access: 'login', sessionParam: 2 },
   connectAdmin: { access: 'login', sessionParam: 1 },
   sessionGetRestoreToken: { access: 'session', sessionParam: 0 },
@@ -173,6 +176,7 @@ export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: Rp
   chatFindByRoom: { access: 'session', sessionParam: -1 },
   gameJoin: { access: 'session', sessionParam: 1 },
   gameResync: { access: 'session', sessionParam: 1 },
+  gameStateResync: { access: 'session', sessionParam: 1 },
   matchQuit: { access: 'session', sessionParam: 1 },
   gameWatchStart: { access: 'session', sessionParam: 1 },
   replayList: { access: 'session', sessionParam: -1 },
