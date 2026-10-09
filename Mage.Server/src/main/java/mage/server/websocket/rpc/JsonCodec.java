@@ -35,6 +35,16 @@ public final class JsonCodec {
             .registerTypeAdapter(SimpleCardView.class, (JsonSerializer<SimpleCardView>) (src, type, context) -> serializeSimpleCard(src))
             .create();
 
+    // simple views are serialized for every draft pick and deck, so names come from a cache, not one query per card
+    private static final CardNameCache CARD_NAMES = new CardNameCache(
+            (setCode, cardNumber) -> {
+                CardInfo cardInfo = CardRepository.instance.findCard(setCode, cardNumber);
+                return cardInfo == null ? null : cardInfo.getName();
+            },
+            () -> CardRepository.instance.getContentChanges(), // lambda: keep the database closed until a lookup
+            CardNameCache.DEFAULT_MAX_ENTRIES
+    );
+
     private JsonCodec() {
     }
 
@@ -53,10 +63,10 @@ public final class JsonCodec {
         String setCode = src.getExpansionSetCode();
         String cardNumber = src.getCardNumber();
         if (setCode != null && cardNumber != null) {
-            CardInfo cardInfo = CardRepository.instance.findCard(setCode, cardNumber);
-            if (cardInfo != null) {
-                json.addProperty("name", cardInfo.getName());
-                json.addProperty("displayName", cardInfo.getName());
+            String name = CARD_NAMES.findName(setCode, cardNumber);
+            if (name != null) {
+                json.addProperty("name", name);
+                json.addProperty("displayName", name);
             }
         }
         return json;

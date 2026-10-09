@@ -1,5 +1,6 @@
 import {
   exceptionLink,
+  isTokenImage,
   namedImageLink,
   printingKey,
   setCodeOf,
@@ -100,7 +101,7 @@ export class ImageResolver {
    * every card for every picture.
    */
   subscribeCard(card: CardImageRef | null | undefined, listener: () => void): () => void {
-    return this.subscribeKey(card && !card.isToken ? printingKey(card) : null, listener);
+    return this.subscribeKey(card && !isTokenImage(card) ? printingKey(card) : null, listener);
   }
 
   /** Per-printing subscription (`set/number`); a null key only hears about the exported link lists loading. */
@@ -131,13 +132,17 @@ export class ImageResolver {
     this.ensureLinks();
     const exception = exceptionLink(card, face, this.links);
     if (exception) return toImageLink(exception, size);
-    if (card.isToken) {
+    if (isTokenImage(card)) {
       // tokens without a mapped picture have no reliable Scryfall printing
       return this.links ? undefined : null;
     }
 
     const key = printingKey(card);
-    if (!key) return card.name ? namedImageLink(card, face, size) : undefined;
+    if (!key) {
+      // command objects without a collector number may still be in the token lists
+      if (!this.links) return null;
+      return card.name ? namedImageLink(card, face, size) : undefined;
+    }
 
     const cached = this.memory.get(key);
     if (cached && !this.isStale(cached)) {
@@ -154,7 +159,7 @@ export class ImageResolver {
   prefetch(cards: Iterable<CardImageRef>): void {
     this.ensureLinks();
     for (const card of cards) {
-      if (card.isToken) continue;
+      if (isTokenImage(card)) continue;
       const key = printingKey(card);
       if (key && !this.memory.has(key)) this.request(key, setCodeOf(card), normalizeCollectorNumber(card.cardNumber));
     }
