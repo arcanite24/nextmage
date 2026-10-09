@@ -158,6 +158,8 @@ function hasAccessibleButtonName(attributes, body) {
         .trim();
 
     if (/[A-Za-z0-9]{2,}/.test(staticText)) return true;
+    // a translated label: t('some.key') always yields text
+    if (/\{\s*t\(/.test(body)) return true;
 
     return /\{[^}]*\b(label|title|name|text|displayName|pageName|tab\.label|activity\.title)\b[^}]*\}/i.test(body);
 }

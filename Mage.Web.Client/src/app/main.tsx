@@ -8,6 +8,7 @@ import { installGlobalErrorHandlers, setReporter } from '../core/telemetry/repor
 import { serverReporter } from '../core/telemetry/serverReporter';
 import { api, rpc } from './connection';
 import { AppShell } from './AppShell';
+import { i18nReady } from './i18n';
 import { queryClient } from './queries';
 import { ImportRoute } from './decks/import/ImportRoute';
 import { DecksScreen } from './screens/DecksScreen';
@@ -103,7 +104,8 @@ const router = createBrowserRouter([
   { path: '*', element: <Navigate to="/" replace /> },
 ]);
 
-createRoot(document.getElementById('root')!).render(
+// a Spanish (or other non-English) player's catalog loads first, so the first paint is already in their language
+void i18nReady.then(() => createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <Tooltip.Provider delayDuration={300}>
@@ -111,4 +113,4 @@ createRoot(document.getElementById('root')!).render(
       </Tooltip.Provider>
     </QueryClientProvider>
   </StrictMode>,
-);
+));
