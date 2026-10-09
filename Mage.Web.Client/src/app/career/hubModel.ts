@@ -1,4 +1,4 @@
-import type { CareerCampaign, CareerOpponent } from '../../protocol/generated/views';
+import type { CareerAchievement, CareerCampaign, CareerOpponent, CareerShopSet } from '../../protocol/generated/views';
 import { readJson, writeJson } from '../stores/persist';
 
 /**
@@ -24,9 +24,23 @@ export function beatenCount(opponents: readonly CareerOpponent[]): number {
   return opponents.filter((opponent) => (opponent.wins ?? 0) > 0).length;
 }
 
-/** Every unlock the hub announces, as ids: open tiers above the first, and open campaign chapters after the first. */
-export function unlockFacts(opponents: readonly CareerOpponent[], campaigns: readonly CareerCampaign[]): string[] {
+/**
+ * Every unlock the hub announces, as ids: open tiers above the first, open campaign chapters after the first, earned
+ * achievements, and shop sets a chapter opened.
+ */
+export function unlockFacts(
+  opponents: readonly CareerOpponent[],
+  campaigns: readonly CareerCampaign[],
+  achievements: readonly CareerAchievement[] = [],
+  shop: readonly CareerShopSet[] = [],
+): string[] {
   const facts = new Set<string>();
+  for (const achievement of achievements) {
+    if (achievement.achieved && achievement.id) facts.add(`achievement:${achievement.id}`);
+  }
+  for (const set of shop) {
+    if (set.unlockedBy && !set.locked && set.setCode) facts.add(`set:${set.setCode}`);
+  }
   for (const opponent of opponents) {
     if (opponent.unlocked && (opponent.tier ?? 1) > 1) facts.add(`tier:${opponent.tier}`);
   }
@@ -61,4 +75,10 @@ export function freshUnlocks(seen: readonly string[] | null, facts: readonly str
   const known = new Set(seen);
   const fresh = facts.filter((fact) => !known.has(fact));
   return { fresh, seen: [...new Set([...seen, ...facts])].sort() };
+}
+
+/** Unlocks announced somewhere else (the results scene), so the hub doesn't announce them again; only once the hub has looked. */
+export function markSeen(user: string, facts: readonly string[]): void {
+  const seen = readSeen(user);
+  if (seen !== null && facts.length > 0) writeSeen(user, [...seen, ...facts]);
 }

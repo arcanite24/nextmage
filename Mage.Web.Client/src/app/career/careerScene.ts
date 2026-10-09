@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import type { CardImageRef } from '../../core/images/imageLinks';
 
@@ -28,4 +28,19 @@ export function useSceneArt(card: { name?: string; setCode?: string; cardNumber?
   useEffect(() => {
     if (name) useCareerScene.getState().setArt({ name, setCode, cardNumber });
   }, [name, setCode, cardNumber]);
+}
+
+type SceneCard = { name?: string; setCode?: string; cardNumber?: string } | null | undefined;
+
+/** A backdrop that turns through several cards, one every `ms`; still, it stays on the first. */
+export function useRotatingSceneArt(cards: readonly SceneCard[], still: boolean, ms = 9000) {
+  const shown = cards.filter((card): card is NonNullable<SceneCard> => !!card?.name);
+  const [index, setIndex] = useState(0);
+  const count = shown.length;
+  useEffect(() => {
+    if (still || count < 2) return;
+    const timer = window.setInterval(() => setIndex((current) => current + 1), ms);
+    return () => window.clearInterval(timer);
+  }, [still, count, ms]);
+  useSceneArt(count > 0 ? shown[index % count] : null);
 }

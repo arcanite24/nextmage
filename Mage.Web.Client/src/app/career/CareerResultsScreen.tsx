@@ -6,9 +6,12 @@ import type { CareerGameResult } from '../../protocol/generated/views';
 import { api } from '../connection';
 import { formatNumber, registerMessages, useT } from '../i18n';
 import messages from '../i18n/en/career';
+import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
 import { refreshCareer, useCareerOpponents, useCareerState } from './careerData';
 import { useCampaigns } from './careerModesData';
+import { achievementMoment, useCeremonies } from './ceremonies';
+import { markSeen } from './hubModel';
 import { useSceneArt } from './careerScene';
 import { playCareerCue } from './careerSound';
 import { DoneMark, ProgressBar, WeeklyGoal } from './CareerScreen';
@@ -101,7 +104,7 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
   useSceneArt(foe?.cover);
   const won = !!result.won;
   const quests = result.quests ?? [];
-  const achievements = result.achievements ?? [];
+  const achievements = useMemo(() => result.achievements ?? [], [result.achievements]);
   const levelRewards = result.levelRewards ?? [];
   const opened = useMemo(() => result.opened ?? [], [result.opened]);
   const packs = result.packs ?? 0;
@@ -121,6 +124,14 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
     // only on a step change: the rest is read once per result
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
+
+  // each achievement earned gets its own moment once the scene is told; the hub won't announce it again
+  const user = useSession((session) => session.userName);
+  useEffect(() => {
+    if (!done || achievements.length === 0) return;
+    markSeen(user, achievements.map((achievement) => `achievement:${achievement.id}`));
+    useCeremonies.getState().show(achievements.map((achievement) => achievementMoment(t, achievement)));
+  }, [done, achievements, user, t]);
 
   // Space or Enter tells the rest at once, before the Continue button takes them
   useEffect(() => {

@@ -40,6 +40,11 @@ describe('unlocks', () => {
     expect(unlockFacts(roster, [campaign])).toEqual(['chapter:five:blue', 'tier:2']);
   });
 
+  test('earned achievements and sets a chapter opened are unlocks too', () => {
+    const facts = unlockFacts([], [], [{ id: 'first-win', achieved: true }, { id: 'later' }], [{ setCode: 'THS', unlockedBy: 'white' }, { setCode: 'BNG', unlockedBy: 'blue', locked: true }, { setCode: 'M14' }]);
+    expect(facts).toEqual(['achievement:first-win', 'set:THS']);
+  });
+
   test('the first look only records what is open', () => {
     expect(freshUnlocks(null, ['tier:2'])).toEqual({ fresh: [], seen: ['tier:2'] });
   });
