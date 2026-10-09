@@ -277,7 +277,7 @@ public class WebClientApiDocsTest {
     private static final Path VIEWS_FILE = Paths.get("..", "Mage.Web.Client", "src", "protocol", "generated", "views.ts");
     // request option objects that only exist on the web side, see src/protocol/options.ts
     private static final java.util.Set<String> CLIENT_OPTION_TYPES = new java.util.HashSet<>(
-            java.util.Arrays.asList("WebMatchOptions", "WebTournamentOptions"));
+            java.util.Arrays.asList("WebMatchOptions", "WebTournamentOptions", "WebCardFilters"));
 
     private static String typescript(List<RpcMethod> methods) throws IOException {
         java.util.Set<String> viewTypes = new java.util.TreeSet<>();

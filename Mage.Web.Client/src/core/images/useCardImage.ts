@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { ImageResolver } from './ImageResolver';
 import { createIndexedDbImageStore } from './indexedDbStore';
-import { printingKey, type CardFace, type CardImageRef, type ImageSize } from './imageLinks';
+import { isTokenImage, printingKey, type CardFace, type CardImageRef, type ImageSize } from './imageLinks';
 
 let sharedResolver: ImageResolver | null = null;
 
@@ -22,7 +22,7 @@ export function useCardImage(
 ): string | null | undefined {
   const resolver = imageResolver();
   // subscribe to this card's printing only: other cards resolving must not re-render this one
-  const key = card && !card.isToken ? printingKey(card) : null;
+  const key = card && !isTokenImage(card) ? printingKey(card) : null;
   const subscribe = useCallback((listener: () => void) => resolver.subscribeKey(key, listener), [resolver, key]);
   // the snapshot is the link itself (a string, null or undefined), so React skips renders when it is unchanged
   return useSyncExternalStore(subscribe, () => (card ? resolver.resolve(card, face, size) : undefined));

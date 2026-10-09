@@ -88,5 +88,38 @@
       "setCode": "AER",
       "cardNumber": "190"
     }
+  },
+  {
+    "file": "krenko-goblin-horde.dck",
+    "name": "Krenko's Goblin Horde",
+    "cards": 100,
+    "format": "Variant Magic - Commander",
+    "cover": {
+      "name": "Krenko, Mob Boss",
+      "setCode": "FDN",
+      "cardNumber": "204"
+    }
+  },
+  {
+    "file": "talrand-spellstorm.dck",
+    "name": "Talrand's Spellstorm",
+    "cards": 100,
+    "format": "Variant Magic - Commander",
+    "cover": {
+      "name": "Talrand, Sky Summoner",
+      "setCode": "M13",
+      "cardNumber": "72"
+    }
+  },
+  {
+    "file": "trostani-selesnya-swarm.dck",
+    "name": "Trostani's Selesnya Swarm",
+    "cards": 100,
+    "format": "Variant Magic - Commander",
+    "cover": {
+      "name": "Trostani, Selesnya's Voice",
+      "setCode": "RTR",
+      "cardNumber": "206"
+    }
   }
 ]

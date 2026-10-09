@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { ImageResolver, type ImageLinkStore, type PrintingImages } from './ImageResolver';
-import { normalizeCollectorNumber, printingKey } from './imageLinks';
+import { exceptionLink, isTokenImage, normalizeCollectorNumber, printingKey, toImageLink, tokenImageName } from './imageLinks';
 
 function memoryStore(initial: Record<string, PrintingImages> = {}): ImageLinkStore & { data: Map<string, PrintingImages> } {
   const data = new Map(Object.entries(initial));
@@ -18,8 +18,19 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 const LINKS = {
-  cards: { 'SOI/Tamiyo\'s Journal/265+a': 'https://api.scryfall.com/cards/soi/265†a/' },
-  tokens: { 'RIX/Golem': 'https://api.scryfall.com/cards/trix/4/en?format=image' },
+  cards: {
+    'SOI/Tamiyo\'s Journal/265+a': 'https://api.scryfall.com/cards/soi/265†a/',
+    'ECL/Blood Crypt/349b': 'https://api.scryfall.com/cards/ecl/349/en?format=image&face=back',
+  },
+  tokens: {
+    'RIX/Golem': 'https://api.scryfall.com/cards/trix/4/en?format=image',
+    '10E/Soldier': 'https://api.scryfall.com/cards/t10e/1/en?format=image',
+    'M19/Goblin/1': 'https://api.scryfall.com/cards/tm19/9/en?format=image',
+    'M19/Goblin/2': 'https://api.scryfall.com/cards/tm19/10/en?format=image',
+    'WAR/Emblem Nissa': 'https://api.scryfall.com/cards/twar/19/en?format=image',
+    'PCA/Plane - Akoum': 'https://api.scryfall.com/cards/pca/57/en?format=image',
+    'XMAGE/Copy/2': 'https://api.scryfall.com/cards/tsnc/1/en?format=image',
+  },
 };
 
 function createResolver(fetchImpl: typeof fetch, store = memoryStore()) {
@@ -89,10 +100,81 @@ describe('ImageResolver', () => {
     expect(collectionCalls).toHaveLength(0);
   });
 
-  test('normalizes XMage collector numbers', () => {
-    expect(normalizeCollectorNumber('123*')).toBe('123');
+  test('normalizes XMage collector numbers like the desktop client', () => {
+    expect(normalizeCollectorNumber('15*')).toBe('15★');
+    expect(normalizeCollectorNumber('23+')).toBe('23†');
+    expect(normalizeCollectorNumber('1Ph')).toBe('1Φ');
+    expect(normalizeCollectorNumber(' 146 ')).toBe('146');
+    expect(printingKey({ expansionSetCode: 'PBNG', cardNumber: '15*' })).toBe('pbng/15★');
     expect(printingKey({ expansionSetCode: 'M10', cardNumber: '146' })).toBe('m10/146');
     expect(printingKey({ expansionSetCode: '', cardNumber: '1' })).toBeNull();
+  });
+
+  test('looks promo printings up with Scryfall collector numbers', async () => {
+    const fetchImpl = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
+      if (String(url).endsWith('scryfall-links.json')) return jsonResponse(LINKS);
+      const body = JSON.parse(String(init?.body));
+      expect(body.identifiers).toEqual([{ set: 'pbng', collector_number: '15★' }]);
+      return jsonResponse({ data: [{ set: 'pbng', collector_number: '15★', image_uris: { normal: 'promo' } }] });
+    }) as unknown as typeof fetch;
+    const resolver = createResolver(fetchImpl);
+    const promo = { name: 'Arbiter of the Ideal', expansionSetCode: 'PBNG', cardNumber: '15*' };
+    expect(resolver.resolve(promo)).toBeNull();
+    await vi.waitFor(() => expect(resolver.resolve(promo)).toBe('promo'));
+  });
+
+  test('serves tokens, emblems, planes and XMage pictures from the token lists', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse(LINKS)) as unknown as typeof fetch;
+    const resolver = createResolver(fetchImpl);
+    // a plane before the lists load waits instead of guessing a name lookup
+    expect(resolver.resolve({ name: 'Plane - Akoum', expansionSetCode: 'PCA' })).toBeNull();
+    await vi.waitFor(() => expect(resolver.getVersion()).toBeGreaterThan(0));
+
+    // the server names tokens "Soldier Token", the lists "Soldier"
+    expect(resolver.resolve({ name: 'Soldier Token', expansionSetCode: '10E', cardNumber: '', isToken: true, mageObjectType: 'TOKEN' }))
+      .toBe('https://api.scryfall.com/cards/t10e/1/en?format=image&version=normal');
+    expect(resolver.resolve({ name: 'Goblin Token', expansionSetCode: 'M19', isToken: true, imageNumber: 2 }))
+      .toBe('https://api.scryfall.com/cards/tm19/10/en?format=image&version=normal');
+    // emblem and plane views carry no object type or collector number
+    expect(resolver.resolve({ name: 'Emblem Nissa', expansionSetCode: 'WAR', imageNumber: 0 }))
+      .toBe('https://api.scryfall.com/cards/twar/19/en?format=image&version=normal');
+    expect(resolver.resolve({ name: 'Plane - Akoum', expansionSetCode: 'PCA' }))
+      .toBe('https://api.scryfall.com/cards/pca/57/en?format=image&version=normal');
+    // XMage's own pictures (copies, face down...) are named by the image file name
+    expect(resolver.resolve({ name: 'Copy', imageFileName: 'Copy', expansionSetCode: 'XMAGE', cardNumber: '0', imageNumber: 2 }))
+      .toBe('https://api.scryfall.com/cards/tsnc/1/en?format=image&version=normal');
+    // unknown command objects fall back to a name lookup
+    expect(resolver.resolve({ name: 'Emblem Unknown', expansionSetCode: 'WAR' })).toContain('cards/named');
+    const collectionCalls = (fetchImpl as unknown as { mock: { calls: unknown[][] } }).mock.calls
+      .filter(([url]) => String(url).includes('/cards/collection'));
+    expect(collectionCalls).toHaveLength(0);
+  });
+
+  test('a token copy of a card shows the card printing', async () => {
+    const fetchImpl = vi.fn(async (url: RequestInfo | URL) => {
+      if (String(url).endsWith('scryfall-links.json')) return jsonResponse(LINKS);
+      return jsonResponse({ data: [{ set: 'm10', collector_number: '146', image_uris: { normal: 'bolt' } }] });
+    }) as unknown as typeof fetch;
+    const resolver = createResolver(fetchImpl);
+    const copy = { name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146', isToken: true, mageObjectType: 'TOKEN' };
+    expect(isTokenImage(copy)).toBe(false);
+    resolver.resolve(copy);
+    await vi.waitFor(() => expect(resolver.resolve(copy)).toBe('bolt'));
+  });
+
+  test('builds image links from the exported lists', () => {
+    expect(toImageLink('https://api.scryfall.com/cards/dis/176/', 'large'))
+      .toBe('https://api.scryfall.com/cards/dis/176?format=image&version=large');
+    expect(exceptionLink({ name: 'Tamiyo\'s Journal', expansionSetCode: 'SOI', cardNumber: '265+a' }, 'front', LINKS))
+      .toBe('https://api.scryfall.com/cards/soi/265†a/');
+    expect(toImageLink(LINKS.cards['ECL/Blood Crypt/349b'], 'normal'))
+      .toBe('https://api.scryfall.com/cards/ecl/349/en?format=image&face=back&version=normal');
+    expect(exceptionLink({ name: 'Blood Crypt', expansionSetCode: 'ECL', cardNumber: '349' }, 'back', LINKS))
+      .toBe(LINKS.cards['ECL/Blood Crypt/349b']);
+    expect(tokenImageName({ name: 'Goblin Token' })).toBe('Goblin');
+    expect(tokenImageName({ name: '', imageFileName: 'Face Down' })).toBe('Face Down');
+    expect(isTokenImage({ name: 'Face Down', expansionSetCode: 'XMAGE', cardNumber: '0' })).toBe(true);
+    expect(isTokenImage({ name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' })).toBe(false);
   });
 
   describe('notifications', () => {

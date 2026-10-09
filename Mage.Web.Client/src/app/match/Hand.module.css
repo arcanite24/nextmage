@@ -4,7 +4,7 @@
   bottom: -118px;
   height: 236px;
   transform: translateX(-50%);
-  z-index: 30;
+  z-index: var(--z-hand);
 }
 
 .card {
@@ -23,7 +23,7 @@
 .card:hover,
 .card:focus-visible {
   transform: translateY(-120px) rotate(0deg) scale(1.22);
-  z-index: 90 !important;
+  z-index: var(--z-held) !important;
 }
 
 .playable {
@@ -35,7 +35,7 @@
   position: absolute;
   inset: -3px;
   border-radius: 10px;
-  box-shadow: 0 0 0 2px var(--ink-soft), 0 0 16px 3px rgb(233 228 214 / 0.35);
+  box-shadow: 0 0 0 2px var(--ink-soft), 0 0 16px 3px rgb(var(--ink-rgb) / 0.35);
   pointer-events: none;
 }
 
@@ -75,5 +75,5 @@
 
 .dragging {
   cursor: grabbing;
-  filter: drop-shadow(0 30px 40px rgb(0 0 0 / 0.55));
+  filter: drop-shadow(0 30px 40px rgb(var(--shade-rgb) / 0.55));
 }

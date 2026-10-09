@@ -81,7 +81,7 @@
   line-height: 0.9;
   text-transform: uppercase;
   color: var(--ink-strong);
-  text-shadow: 0 3px 18px rgb(0 0 0 / 0.55);
+  text-shadow: 0 3px 18px rgb(var(--shade-rgb) / 0.55);
 }
 
 /* the printed PLAY zone, in card-zone proportions */
@@ -96,7 +96,7 @@
   padding: var(--space-5);
   border-radius: var(--radius-zone);
   /* printed flat on the mat: an ivory-ink outline, lightly shaded for legibility */
-  background: rgb(7 12 10 / 0.55);
+  background: rgb(var(--mat-rgb) / 0.55);
   box-shadow: inset 0 0 0 2px var(--ink-soft);
 }
 
@@ -119,7 +119,7 @@
   padding: 0 12px;
   border: 0;
   border-radius: var(--radius-control);
-  background: rgb(233 228 214 / 0.04);
+  background: rgb(var(--ink-rgb) / 0.04);
   box-shadow: inset 0 0 0 1.5px var(--ink-ghost);
   color: var(--ink-soft);
   font-family: var(--font-print);
@@ -137,7 +137,7 @@
 }
 
 .modeOn {
-  background: rgb(233 228 214 / 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
   box-shadow: inset 0 0 0 2.5px var(--ink-strong);
   color: var(--ink-strong);
 }
@@ -151,7 +151,7 @@
 .error {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-control);
-  background: rgb(138 47 42 / 0.3);
+  background: rgb(var(--oxblood-rgb) / 0.3);
   color: var(--oxblood-ink);
   font-size: var(--text-sm);
 }
@@ -164,7 +164,7 @@
   padding: 10px 12px;
   border: 0;
   border-radius: var(--radius-control);
-  background: rgb(233 228 214 / 0.04);
+  background: rgb(var(--ink-rgb) / 0.04);
   box-shadow: inset 0 0 0 1px var(--ink-ghost);
   color: var(--ink-soft);
   font-size: var(--text-sm);

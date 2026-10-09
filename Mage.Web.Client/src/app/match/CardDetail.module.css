@@ -5,7 +5,7 @@
   inset: 0;
   /* a dialog laid over the stage: it portals into the stage, so it tops every stage layer but stays under app dialogs and toasts */
   z-index: var(--z-dialog);
-  background: rgb(4 7 6 / 0.74);
+  background: rgb(var(--void-rgb) / 0.74);
   animation: fade var(--dur-place) var(--ease-place);
 }
 
@@ -181,12 +181,12 @@
 }
 
 .chip {
-  background: rgb(233 228 214 / 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
   color: var(--ink);
 }
 
 .chipDamage {
-  background: rgb(138 47 42 / 0.55);
+  background: rgb(var(--oxblood-rgb) / 0.55);
   color: var(--oxblood-ink);
 }
 
@@ -317,7 +317,7 @@
 }
 
 .close:hover {
-  background: rgb(233 228 214 / 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
   color: var(--ink-strong);
 }
 
