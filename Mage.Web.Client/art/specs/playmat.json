@@ -1,0 +1,16 @@
+{
+  "$comment": "Career playmats (CAREER_PLAYMATS): the print each one lays over its cloth's dye in the match and in the locker.",
+  "out": "public/career-art/playmat",
+  "grid": { "cols": 2, "rows": 2, "canvas": "square" },
+  "size": "640x640",
+  "pad": 0.02,
+  "anchors": ["refs/playmat/anchor.png"],
+  "style": "Playmat prints: one large circular ornamental design per cell, front view, perfectly symmetrical, drawn ONLY in pale antique-gold filigree line work and engraving (monochrome gold, no other colours, no filled background inside the circle), like a design screen-printed onto a cloth mat. Each design fills about 95% of its cell.",
+  "spare": "a simple circular gold knotwork ring",
+  "items": [
+    { "id": "sand", "subject": "a desert compass rose inside a sun ring with dune-wave engravings" },
+    { "id": "slate", "subject": "a ring of interlaced stone-carved knotwork around a mountain range" },
+    { "id": "midnight", "subject": "a celestial ring of constellations around a crescent moon and stars" },
+    { "id": "rose", "subject": "a ring of climbing roses and thorny vines around a single blooming rose" }
+  ]
+}

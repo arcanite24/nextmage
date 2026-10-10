@@ -1,0 +1,74 @@
+{
+  "$comment": "Career card sleeves (CAREER_SLEEVES in progressModel.ts): card backs, drawn on card faces and deck boxes.",
+  "out": "public/career-art/sleeve",
+  "grid": {
+    "cols": 4,
+    "rows": 2,
+    "canvas": "landscape"
+  },
+  "size": "360x504",
+  "pad": 0.0,
+  "anchors": [
+    "refs/sleeve/anchor.png"
+  ],
+  "style": "Trading card backs: one upright card back per cell, front view, perfectly flat and symmetrical, all exactly the same size and the same 5:7 rectangle with slightly rounded corners. The card's outline is a clean straight-edged rectangle: every ornament stays INSIDE it and nothing sticks out past its edges. A rich cloth or lacquer field in the given colour, a thin gilded ornamental border just inside the edge, and one central gilded emblem in a medallion. Each card fills about 90% of its cell's height.",
+  "spare": "a plain dark green card back",
+  "items": [
+    {
+      "id": "copper",
+      "subject": "burnished copper-brown field, emblem: a sunburst"
+    },
+    {
+      "id": "silver",
+      "subject": "cool silver-grey field, emblem: a crescent moon"
+    },
+    {
+      "id": "gold",
+      "subject": "deep gold-ochre field, emblem: a crown"
+    },
+    {
+      "id": "obsidian",
+      "subject": "glossy black obsidian field with faint violet sheen, emblem: a many-faceted crystal"
+    },
+    {
+      "id": "foil",
+      "subject": "iridescent violet-to-teal holographic foil field, emblem: a five-pointed star"
+    },
+    {
+      "id": "school-pauper",
+      "subject": "moss-green field, emblem: a copper coin over a wooden bowl"
+    },
+    {
+      "id": "school-commander",
+      "subject": "royal purple field, emblem: a crown above a raised banner"
+    },
+    {
+      "id": "school-limited",
+      "subject": "parchment-tan field, emblem: an open book with a single card on it"
+    },
+    {
+      "id": "school-pioneer",
+      "subject": "steel-blue field, emblem: a compass rose"
+    },
+    {
+      "id": "school-standard",
+      "subject": "deep teal field, emblem: a battle standard flag"
+    },
+    {
+      "id": "school-modern",
+      "subject": "crimson field, emblem: a gear struck by lightning"
+    },
+    {
+      "id": "school-legacy",
+      "subject": "navy blue field, emblem: an ancient stone tower"
+    },
+    {
+      "id": "school-vintage",
+      "subject": "olive-gold field, emblem: a dark lotus flower"
+    },
+    {
+      "id": "school-brawl",
+      "subject": "rose-red field, emblem: two crossed axes"
+    }
+  ]
+}

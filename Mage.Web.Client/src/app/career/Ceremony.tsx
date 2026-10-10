@@ -4,6 +4,7 @@ import { useT } from '../i18n';
 import { Button } from '../ui/Button';
 import { useCeremonies, type CeremonyMoment } from './ceremonies';
 import { playCareerCue } from './careerSound';
+import { Art as Painted } from './Art';
 import { Crest } from './ModeArt';
 import { useStill } from './motion';
 import styles from './Ceremony.module.css';
@@ -45,7 +46,11 @@ export function Ceremony({ moment, onDone }: { moment: CeremonyMoment; onDone():
       <div className={styles.rays} aria-hidden="true" />
       <div className={styles.moment} onClick={(event) => event.stopPropagation()}>
         <div className={styles.frame}>
-          {moment.card ? <Art card={moment.card} /> : moment.crest ? <Crest name={moment.crest.name} colors={moment.crest.colors} size={160} /> : null}
+          {moment.card ? <Art card={moment.card} /> : moment.crest ? (
+            moment.achievement
+              ? <Painted kind="achievement" id={moment.achievement} size={160} fallback={<Crest name={moment.crest.name} colors={moment.crest.colors} size={160} />} />
+              : <Crest name={moment.crest.name} colors={moment.crest.colors} size={160} />
+          ) : null}
         </div>
         <p className={styles.kicker}>{moment.kicker}</p>
         <h2 id="ceremony-title" className={styles.title}>{moment.title}</h2>

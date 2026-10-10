@@ -1,8 +1,18 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
   achievementState, careerSleeveOf, fetchResult, fraction, hasUnlock, levelAt, levelRows, resultIsEmpty, rewardParts, sortAchievements, titleLabel, unlockedIds, weeklyMarks, xpAtLevel, xpSweep,
-  rewardsPath, safeBack,
+  recentOpponent, rewardsPath, safeBack,
 } from './progressModel';
+
+describe('recent games', () => {
+  test('a roster opponent, or the mode a game was played in', () => {
+    expect(recentOpponent('wren')).toEqual({ kind: 'duel', id: 'wren' });
+    expect(recentOpponent('campaign:pauper/n3')).toEqual({ kind: 'campaign', campaign: 'pauper' });
+    expect(recentOpponent('trial:modern/t1')).toEqual({ kind: 'campaign', campaign: 'modern' });
+    expect(recentOpponent('gauntlet:42')).toEqual({ kind: 'gauntlet' });
+    expect(recentOpponent(undefined)).toEqual({ kind: 'duel', id: '' });
+  });
+});
 
 describe('career progress model', () => {
   test('total XP maps to a level and back', () => {

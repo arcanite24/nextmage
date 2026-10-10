@@ -1,0 +1,6 @@
+{
+  "$comment": "The house style every generated asset shares. generate.mjs puts `global` into every prompt and passes `anchors` (plus the type's own anchors) as reference images, so a new batch of any type matches what's already in the app.",
+  "global": "Hand-painted fantasy game art in the style of a premium digital card game: rich but restrained painterly rendering, crisp readable silhouettes, warm antique gold metal with soft specular highlights, deep jewel-tone accents (emerald, ruby, sapphire, amethyst), aged parchment and dark leather as secondary materials. One soft warm key light from the upper left, a faint cool rim light, gentle ambient occlusion. Cohesive, slightly desaturated palette that sits on a dark green-black table. No text, letters, numbers, runes that read as text, signatures, logos or watermarks.",
+  "background": "#1b2a24",
+  "anchors": ["refs/house/anchor.png"]
+}

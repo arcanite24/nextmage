@@ -19,6 +19,8 @@ import { levelProgress } from './careerModel';
 import { screenOf } from './careerScreens';
 import { useMenuNav } from './menuNav';
 import { useCountUp, useStill } from './motion';
+import { Art } from './Art';
+import { usePaintedArt, wildcardArt } from './careerArt';
 import { titleLabel } from './progressModel';
 import motion from './motion.module.css';
 import styles from './CareerShell.module.css';
@@ -105,6 +107,9 @@ function useMusic(on: boolean) {
   useEffect(() => () => stopCareerMusic(), []);
 }
 
+/** The wildcards the wallet counts (common ones are never paid). */
+const WALLET_WILDCARDS = ['uncommon', 'rare', 'mythic'] as const;
+
 function Hud({ profile }: { profile: CareerProfile }) {
   const t = useT();
   const user = useSession((session) => session.userName);
@@ -114,26 +119,28 @@ function Hud({ profile }: { profile: CareerProfile }) {
   const still = useStill();
   const coins = useCountUp(profile.coins ?? 0, { still, duration: 800 });
   const level = levelProgress(profile.xp ?? 0, profile.level ?? 1);
-  const rare = profile.wildcards?.rare ?? 0;
-  const mythic = profile.wildcards?.mythic ?? 0;
+  const wildcards = WALLET_WILDCARDS.map((rarity) => ({ rarity, count: profile.wildcards?.[rarity] ?? 0 }));
   const packs = profile.packTokens ?? 0;
 
   return (
     <div className={styles.hudRight}>
       <div className={styles.wallet} aria-label={t('career.hud.wallet')} role="group">
         <span className={styles.coin} title={t('career.coins', { count: profile.coins ?? 0 })}>
-          <Coins size={18} aria-hidden="true" />
+          <Art kind="reward" id="coins" size={26} fallback={<Coins size={18} aria-hidden="true" />} />
           <b aria-hidden="true">{formatNumber(coins)}</b>
           <span className={styles.srOnly}>{t('career.coins', { count: profile.coins ?? 0 })}</span>
         </span>
         <span className={styles.wild} title={t('career.wildcards')}>
-          <Sparkles size={16} aria-hidden="true" />
-          <span className={styles.wildRare} aria-label={t('career.wildcard.rare', { count: rare })}>{rare}</span>
-          <span className={styles.wildMythic} aria-label={t('career.wildcard.mythic', { count: mythic })}>{mythic}</span>
+          {wildcards.map(({ rarity, count }) => (
+            <span key={rarity} className={styles.wildcard} data-rarity={rarity} aria-label={t(`career.wildcard.${rarity}`, { count })}>
+              <Art kind="reward" id={wildcardArt(rarity)} size={26} fallback={<Sparkles size={14} aria-hidden="true" />} />
+              <b aria-hidden="true">{count}</b>
+            </span>
+          ))}
         </span>
         {packs > 0 && (
           <span className={styles.packs} title={t('career.hud.packs', { count: packs })}>
-            <Package size={16} aria-hidden="true" />
+            <Art kind="reward" id="pack" size={26} fallback={<Package size={16} aria-hidden="true" />} />
             <b aria-hidden="true">{packs}</b>
             <span className={styles.srOnly}>{t('career.hud.packs', { count: packs })}</span>
           </span>
@@ -166,14 +173,15 @@ function Hud({ profile }: { profile: CareerProfile }) {
   );
 }
 
-/** The player's crest in a ring that fills with XP, the level stamped on it. */
+/** The player's crest in a ring that fills with XP, set in a gold frame, the level stamped on it. */
 export function LevelMedallion({ level, fraction, label, size = 56, children }: { level: number; fraction: number; label: string; size?: number; children: React.ReactNode }) {
   const t = useT();
+  const painted = usePaintedArt();
   const radius = 26;
   const length = 2 * Math.PI * radius;
   return (
     <span
-      className={styles.medallion}
+      className={[styles.medallion, painted ? styles.medalPainted : ''].join(' ')}
       style={{ '--medal': `${size}px` } as CSSProperties}
       role="img"
       aria-label={`${t('career.level', { level })}, ${label}`}
@@ -184,6 +192,7 @@ export function LevelMedallion({ level, fraction, label, size = 56, children }: 
         <circle cx="30" cy="30" r={radius} className={styles.ringFill} strokeDasharray={length} strokeDashoffset={length * (1 - Math.min(Math.max(fraction, 0), 1))} />
       </svg>
       <span className={styles.medalFace}>{children}</span>
+      <Art kind="frame" id="medallion" size={Math.round(size * 1.3)} className={styles.medalFrame} />
       <b className={styles.medalLevel} aria-hidden="true">{level}</b>
     </span>
   );

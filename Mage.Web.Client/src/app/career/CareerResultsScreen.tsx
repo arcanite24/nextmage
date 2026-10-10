@@ -15,6 +15,7 @@ import { markSeen } from './hubModel';
 import { useSceneArt } from './careerScene';
 import { playCareerCue } from './careerSound';
 import { DoneMark, ProgressBar, WeeklyGoal } from './CareerScreen';
+import { Art } from './Art';
 import { dealStyle, useCountUp, useSequence, useStill } from './motion';
 import { PortraitCard, type ArtCard } from './Portraits';
 import { describePay, describeReward, fetchResult, fraction, resultIsEmpty, rewardParts, safeBack, xpSweep } from './progressModel';
@@ -180,12 +181,12 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
       {step >= 1 && (
         <div className={[styles.pay, motion.deal].join(' ')}>
           <span className={styles.coins}>
-            <Coins size={26} aria-hidden="true" />
+            <Art kind="reward" id="coins" size={40} fallback={<Coins size={26} aria-hidden="true" />} />
             <b aria-live="off">+{formatNumber(coins)}</b>
             <span className={styles.srOnly}>{t('career.coins', { count: result.coins ?? 0 })}</span>
           </span>
           <span className={styles.xp}>
-            <Sparkles size={22} aria-hidden="true" />
+            <Art kind="reward" id="xp" size={36} fallback={<Sparkles size={22} aria-hidden="true" />} />
             <b>+{t('career.reward.xp', { xp: result.xp ?? 0 })}</b>
           </span>
         </div>
@@ -217,7 +218,7 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
           <ul className={styles.prizes}>
             {achievements.map((achievement, index) => (
               <li key={achievement.id} className={[styles.prize, motion.deal].join(' ')} style={dealStyle(index)}>
-                <Trophy size={28} aria-hidden="true" />
+                <Art kind="achievement" id={achievement.id ?? ''} size={56} fallback={<Trophy size={28} aria-hidden="true" />} />
                 <b>{achievement.name}</b>
                 <small>{achievement.text}</small>
                 <small className={styles.prizePay}>
@@ -227,14 +228,14 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
             ))}
             {levelRewards.map((reward, index) => (
               <li key={`level-${reward.level}`} className={[styles.prize, styles.prizeLevel, motion.deal].join(' ')} style={dealStyle(achievements.length + index)}>
-                <Gift size={28} aria-hidden="true" />
+                <Art kind="reward" id="level" size={56} fallback={<Gift size={28} aria-hidden="true" />} />
                 <b>{t('career.level', { level: reward.level ?? 0 })}</b>
                 <small className={styles.prizePay}>{describeReward(t, rewardParts(reward))}</small>
               </li>
             ))}
             {cosmetics.map((cosmetic, index) => (
               <li key={`cosmetic-${cosmetic.kind}-${cosmetic.id}`} className={[styles.prize, motion.deal].join(' ')} style={dealStyle(index)}>
-                <GraduationCap size={28} aria-hidden="true" />
+                <Art kind="reward" id="graduate" size={56} fallback={<GraduationCap size={28} aria-hidden="true" />} />
                 <b>{t('career.results.graduated')}</b>
                 <small className={styles.prizePay}>{describeReward(t, [{ kind: 'cosmetic', cosmetic }])}</small>
               </li>
@@ -242,7 +243,7 @@ function Results({ result, back }: { result: CareerGameResult; back: string }) {
             {/* a tier the win opened; the hub gives it its full moment on the way back */}
             {opened.map((name, index) => (
               <li key={`opened-${name}`} className={[styles.prize, styles.prizeLevel, motion.deal].join(' ')} style={dealStyle(achievements.length + levelRewards.length + index)}>
-                <Unlock size={28} aria-hidden="true" />
+                <Art kind="reward" id="unlock" size={56} fallback={<Unlock size={28} aria-hidden="true" />} />
                 <b>{name}</b>
                 <small className={styles.prizePay}>{t('career.ceremony.tier')}</small>
               </li>

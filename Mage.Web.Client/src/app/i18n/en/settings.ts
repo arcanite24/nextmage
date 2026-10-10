@@ -6,7 +6,7 @@ export default {
   'settings.tab.play': 'Gameplay',
   'settings.tab.stops': 'Stops',
   'settings.tab.answers': 'Auto answers',
-  'settings.tab.display': 'Motion',
+  'settings.tab.display': 'Display',
   'settings.tab.sound': 'Sound',
   'settings.tab.alerts': 'Alerts',
   'settings.tab.import': 'Import',
@@ -55,6 +55,8 @@ export default {
   'settings.stops.stack': 'Stop when a spell or ability goes on the stack',
 
   'settings.motion': 'Card motion',
+  'settings.paintedArt': 'Painted art',
+  'settings.paintedArt.detail': 'AI-generated pictures for Career icons, avatars, crests, sleeves and playmat prints. Off, the simple drawn versions show instead.',
   'settings.motion.detail': "Cards fly between zones and settle on the mat. Your system's reduced-motion setting always wins.",
 
   'settings.alerts.intro': 'While {app} is in a background tab, the tab title counts what waits for you.',

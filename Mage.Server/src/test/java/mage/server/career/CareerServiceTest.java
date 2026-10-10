@@ -1,6 +1,8 @@
 package mage.server.career;
 
 import mage.cards.decks.DeckCardInfo;
+import mage.cards.repository.CardInfo;
+import mage.constants.Rarity;
 import mage.cards.decks.DeckCardLists;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,6 +77,36 @@ public class CareerServiceTest {
         assertEquals(CareerRules.START_COINS + CareerRules.winCoins(1) + firstWinCoins(), profile.coins);
         assertEquals(1, profile.wins);
         assertEquals(1, store.payouts("Ana", 10).size());
+    }
+
+    private static CardInfo printing(String cardName, Rarity cardRarity) {
+        // an initializer sees CardInfo's own fields first, so the parameters need names of their own
+        return new CardInfo() {
+            {
+                this.name = cardName;
+                this.setCode = "TST";
+                this.cardNumber = "1";
+                this.rarity = cardRarity;
+                this.supertypes = "";
+            }
+        };
+    }
+
+    @Test
+    public void anUncommonWildcardIsSpentBeforeCoins() throws Exception {
+        service.useCardLookup(key -> printing("Llanowar Elves", Rarity.UNCOMMON));
+        try {
+            store.addWildcard("Ana", CareerRules.UNCOMMON, 1);
+            CareerProfile profile = service.craft("Ana", "TST", "1");
+            assertEquals(0, profile.wildcards.uncommon, "the level 6 wildcard pays for an uncommon");
+            assertEquals(CareerRules.START_COINS, profile.coins);
+
+            profile = service.craft("Ana", "TST", "1");
+            assertEquals(CareerRules.START_COINS - CareerRules.craftCoins(CareerRules.UNCOMMON), profile.coins, "then coins");
+            assertEquals(2, store.owned("Ana", "Llanowar Elves"));
+        } finally {
+            service.useCardLookup(null);
+        }
     }
 
     @Test
