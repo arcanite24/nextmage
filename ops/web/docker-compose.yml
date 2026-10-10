@@ -65,6 +65,10 @@ services:
         VITE_APP_NAME: ${APP_NAME:-Playmat}
     environment:
       DOMAIN: ${DOMAIN:?set DOMAIN}
+      # optional: the host's LAN address, served too (with its own certificate) for devices that can't resolve DOMAIN
+      LAN_IP: ${LAN_IP:-}
+      TLS_DEFAULT_SNI: ${LAN_IP:-${DOMAIN}}
+      PUBLIC_HTTPS_PORT: ${HTTPS_PORT:-443}
       # per client address, at the proxy (the server adds its own cap of concurrent game connections per address)
       WS_RATE_LIMIT: ${WS_RATE_LIMIT:-30}
       WS_RATE_WINDOW: ${WS_RATE_WINDOW:-1m}

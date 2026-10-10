@@ -1,11 +1,24 @@
 {
 	# rate_limit comes from github.com/mholt/caddy-ratelimit (built in by Dockerfile.web)
 	order rate_limit before basic_auth
+
+	# A browser opening the site by IP address sends no server name, and inside Docker the connection's local
+	# address is the container's, so Caddy couldn't pick a certificate: this name's is used then ($LAN_IP when
+	# set, else $DOMAIN; Compose fills it in)
+	default_sni {$TLS_DEFAULT_SNI:localhost}
+
+	servers :443 {
+		# plain http:// typed at the HTTPS port (a non-standard one, like 8443) is redirected, not refused
+		listener_wrappers {
+			http_redirect
+			tls
+		}
+	}
 }
 
-# Serves the web client on $DOMAIN with automatic HTTPS, forwards /ws to the XMage server and /img to the
-# Scryfall image cache.
-{$DOMAIN:localhost} {
+# Serves the web client on $DOMAIN (and on $LAN_IP, for devices that can't resolve the name) with automatic
+# HTTPS, forwards /ws to the XMage server and /img to the Scryfall image cache.
+{$DOMAIN:localhost} {$LAN_IP} {
 	encode zstd gzip
 
 	# Per client address. Caddy trusts no upstream proxies, so {remote_host} is the real peer address.
@@ -72,4 +85,10 @@
 		# VITE_MAGE_SERVER_URL pointing at another host.
 		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cards.scryfall.io https://*.scryfall.io https://api.scryfall.com https://c1.scryfall.com https://svgs.scryfall.io https://upload.wikimedia.org; font-src 'self' data:; connect-src 'self' wss: https://api.scryfall.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; worker-src 'self' blob:; manifest-src 'self'"
 	}
+}
+
+# http:// on the HTTP port goes to HTTPS on the port players actually use (Caddy's own redirect would assume 443,
+# which is wrong when HTTPS_PORT maps another host port to it). ACME HTTP challenges are answered before this.
+http:// {
+	redir https://{host}:{$PUBLIC_HTTPS_PORT:443}{uri} permanent
 }
