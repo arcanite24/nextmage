@@ -7,6 +7,10 @@
 	# set, else $DOMAIN; Compose fills it in)
 	default_sni {$TLS_DEFAULT_SNI:localhost}
 
+	# the http:// site at the end does the HTTP to HTTPS redirect (Caddy's own would win for the site's hosts and
+	# assume port 443)
+	auto_https disable_redirects
+
 	servers :443 {
 		# plain http:// typed at the HTTPS port (a non-standard one, like 8443) is redirected, not refused
 		listener_wrappers {
