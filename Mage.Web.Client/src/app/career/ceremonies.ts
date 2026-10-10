@@ -18,6 +18,8 @@ export interface CeremonyMoment {
   /** a card whose art fills the moment, or a crest drawn from a name and colours */
   card?: { name?: string; setCode?: string; cardNumber?: string };
   crest?: { name: string; colors?: string };
+  /** an achievement's painted emblem, shown instead of the crest while painted art is on */
+  achievement?: string;
   cue?: CareerCue;
 }
 
@@ -49,6 +51,7 @@ export function achievementMoment(t: ReturnType<typeof useT>, achievement: Caree
     title: achievement.name ?? '',
     text: [achievement.text, pay].filter(Boolean).join(' — '),
     crest: { name: achievement.name ?? '', colors: 'C' },
+    achievement: achievement.id,
     cue: 'levelUp',
   };
 }

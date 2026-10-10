@@ -2,6 +2,7 @@ import type {
   CareerAchievement, CareerCosmetic, CareerGameResult, CareerLevelReward, CareerWeekly,
 } from '../../protocol/generated/views';
 import type { MessageKey, Translate } from '../i18n';
+import { CAREER_SLEEVES } from '../ui/sleeveArt';
 import { MAX_LEVEL, xpForLevel } from './careerModel';
 
 /**
@@ -124,26 +125,12 @@ export function sortAchievements(achievements: readonly CareerAchievement[]): Ca
 
 export type CosmeticKind = 'sleeve' | 'playmat' | 'avatar' | 'title';
 
-/** Career sleeves: matte dyes like the free ones, so they read the same around card art. */
-export const CAREER_SLEEVES: Record<string, string> = {
-  copper: '#6e3f24',
-  silver: '#5b6168',
-  gold: '#7a5f1c',
-  obsidian: '#121014',
-  foil: '#4a3d78',
-  // a school's graduates
-  'school-pauper': '#3d5a36',
-  'school-commander': '#4b2a5e',
-  'school-limited': '#66583c',
-  'school-pioneer': '#2c4a66',
-  'school-standard': '#22605b',
-  'school-modern': '#6a2a2c',
-  'school-legacy': '#25305e',
-  'school-vintage': '#4f4a1e',
-  'school-brawl': '#7b3550',
-};
+export { CAREER_SLEEVES, careerSleeveOf } from '../ui/sleeveArt';
 
-/** Career avatars: a crest's colors (light, dark) and its line drawing in a 24px box. */
+/**
+ * Career avatars: the colours (light, dark) of the medallion their painted bust sits on, and the line drawing (in a
+ * 24px box) that stands in for the bust when painted art is off.
+ */
 export const CAREER_AVATARS: Record<string, { light: string; dark: string; path: string }> = {
   owl: { light: '#7c7fb0', dark: '#262842', path: 'M5 5l3 3m11-3l-3 3M8.5 8a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm7 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 14.5l-1.5 2.5h3z' },
   fox: { light: '#d0743a', dark: '#4d1f0f', path: 'M4 4l4 6h8l4-6-1.5 9L12 20l-6.5-7zM9.5 13h.01m5 0h.01' },
@@ -154,6 +141,25 @@ export const CAREER_AVATARS: Record<string, { light: string; dark: string; path:
 
 /** Career playmat cloths (their shades live with the other cloths, in the match's playmats). */
 export const CAREER_PLAYMATS = ['sand', 'slate', 'midnight', 'rose'];
+
+/** What a recent game was played against: a roster opponent (by id), or a mode's game ("campaign:pauper/n3"). */
+export type RecentOpponent =
+  | { kind: 'duel'; id: string }
+  | { kind: 'campaign'; campaign: string }
+  | { kind: 'gauntlet' | 'puzzle' | 'challenge' | 'limited' };
+
+const MODE_KINDS: Record<string, RecentOpponent['kind']> = {
+  campaign: 'campaign', trial: 'campaign', gauntlet: 'gauntlet', puzzle: 'puzzle', challenge: 'challenge', limited: 'limited',
+};
+
+export function recentOpponent(opponent: string | undefined): RecentOpponent {
+  const id = opponent ?? '';
+  const at = id.indexOf(':');
+  const kind = at > 0 ? MODE_KINDS[id.slice(0, at)] : undefined;
+  if (!kind) return { kind: 'duel', id };
+  if (kind === 'campaign') return { kind, campaign: id.slice(at + 1).split('/')[0] };
+  return { kind } as RecentOpponent;
+}
 
 export function hasUnlock(unlocks: readonly CareerCosmetic[], kind: CosmeticKind, id: string): boolean {
   return unlocks.some((unlock) => unlock.kind === kind && unlock.id === id);
@@ -167,13 +173,6 @@ export function unlockedIds(unlocks: readonly CareerCosmetic[], kind: CosmeticKi
 /** A title as shown under a name: "questing knight" reads "Questing Knight", "pauper-graduate" "Pauper Graduate". */
 export function titleLabel(id: string): string {
   return id.replace(/-/g, ' ').replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
-}
-
-/** The Career sleeve a color belongs to, if it's one. */
-export function careerSleeveOf(color: string | undefined): string | null {
-  if (!color) return null;
-  const lower = color.toLowerCase();
-  return Object.keys(CAREER_SLEEVES).find((id) => CAREER_SLEEVES[id] === lower) ?? null;
 }
 
 function knownCosmetic(kind: string | undefined, id: string): boolean {

@@ -1,4 +1,4 @@
-import { Check, Coins, Download, HelpCircle, Lock, Sparkles, Trophy } from 'lucide-react';
+import { CalendarDays, Check, Coins, Download, HelpCircle, KeyRound, Lock, Package, Sparkles, Trophy } from 'lucide-react';
 import { useEffect, useMemo, useRef, type CSSProperties, type WheelEvent } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import type { CareerAchievement, CareerCosmetic, CareerLevelReward, CareerLevelTrack, CareerPayout, CareerProfile } from '../../protocol/generated/views';
@@ -14,14 +14,18 @@ import { downloadText } from '../ui/download';
 import { BoosterPack } from './BoosterPack';
 import { exportCareer, useCareerAchievements, useCareerLevels, useCareerLook, useCareerOpponents, useCareerState } from './careerData';
 import { exportFileName } from './careerModel';
+import { Art } from './Art';
+import { usePaintedArt, wildcardArt } from './careerArt';
 import { CareerAvatar, CountAiGames, ProgressBar } from './CareerScreen';
 import { LevelMedallion } from './CareerShell';
 import { dealStyle } from './motion';
 import motion from './motion.module.css';
 import { CardArt } from './Portraits';
+import { Crest } from './ModeArt';
+import { useCampaigns } from './careerModesData';
 import {
   CAREER_AVATARS, CAREER_PLAYMATS, CAREER_SLEEVES, achievementState, cosmeticName, describePay, describeReward, fraction, hasUnlock, levelRows,
-  rewardParts, sortAchievements, titleLabel, unlockedIds, type RewardPart,
+  recentOpponent, rewardParts, sortAchievements, titleLabel, unlockedIds, type RewardPart,
 } from './progressModel';
 import styles from './Career.module.css';
 import progress from './Progress.module.css';
@@ -164,6 +168,7 @@ function RewardRoad({ track }: { track: CareerLevelTrack }) {
                 </div>
               ) : <div className={progress.prizeNone} aria-hidden="true" />}
               <span className={progress.milestone}>
+                {parts.length > 0 && <Art kind="frame" id={reached ? 'stop-reached' : 'stop'} size={here ? 48 : 36} className={progress.stopArt} />}
                 <b>{row.level}</b>
               </span>
               {here && <span className={progress.youMarker}>{t('career.levels.current')}</span>}
@@ -179,14 +184,21 @@ function RewardRoad({ track }: { track: CareerLevelTrack }) {
 function RewardArt({ parts }: { parts: RewardPart[] }) {
   const t = useT();
   const user = useSession((session) => session.userName);
+  const painted = usePaintedArt();
   const first = parts.find((part) => part.kind === 'cosmetic') ?? parts[0];
   switch (first.kind) {
     case 'coins':
-      return <span className={[progress.art, progress.artCoins].join(' ')}><Coins size={34} aria-hidden="true" /><b>+{formatNumber(first.amount)}</b></span>;
+      return painted
+        ? <span className={[progress.art, progress.painted].join(' ')}><Art kind="reward" id="coins" size={72} /><b>+{formatNumber(first.amount)}</b></span>
+        : <span className={[progress.art, progress.artCoins].join(' ')}><Coins size={34} aria-hidden="true" /><b>+{formatNumber(first.amount)}</b></span>;
     case 'packs':
-      return <span className={progress.art}><BoosterPack setCode="" setName={t('career.progress.freePack')} size="sm" className={progress.artPack} /></span>;
+      return painted
+        ? <span className={[progress.art, progress.painted].join(' ')}><Art kind="reward" id="pack" size={84} label={t('career.progress.freePack')} /></span>
+        : <span className={progress.art}><BoosterPack setCode="" setName={t('career.progress.freePack')} size="sm" className={progress.artPack} /></span>;
     case 'wildcard':
-      return <span className={[progress.art, progress.artWild].join(' ')} data-rarity={first.rarity}><Sparkles size={30} aria-hidden="true" /></span>;
+      return painted
+        ? <span className={[progress.art, progress.painted].join(' ')}><Art kind="reward" id={wildcardArt(first.rarity)} size={84} /></span>
+        : <span className={[progress.art, progress.artWild].join(' ')} data-rarity={first.rarity}><Sparkles size={30} aria-hidden="true" /></span>;
     case 'cosmetic':
       return <span className={progress.art}><CosmeticPreview cosmetic={first.cosmetic} user={user} /></span>;
   }
@@ -201,10 +213,10 @@ function CosmeticPreview({ cosmetic, user }: { cosmetic: CareerCosmetic; user: s
       return <span className={progress.sleeve}><CardFace card={{ name: '' }} hidden sleeve={CAREER_SLEEVES[id]} size="normal" /></span>;
     case 'playmat': {
       const cloth = MAT_CLOTHS.find((item) => item.id === id);
-      return <span className={progress.cloth} style={cloth ? clothSwatch(cloth) : undefined} />;
+      return <span className={progress.cloth} style={cloth ? clothSwatch(cloth) : undefined}><Art kind="playmat" id={id} size={56} className={progress.clothPrint} /></span>;
     }
     default:
-      return <span className={progress.plate}>{titleLabel(id)}</span>;
+      return <span className={progress.titleArt}><Art kind="reward" id="title" size={64} /><span className={progress.plate}>{titleLabel(id)}</span></span>;
   }
 }
 
@@ -215,6 +227,7 @@ function MedalCase({ list }: { list: CareerAchievement[] }) {
   const sorted = useMemo(() => sortAchievements(list), [list]);
   const earned = list.filter((achievement) => achievement.achieved).length;
   const dates = useMemo(() => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }), []);
+  const painted = usePaintedArt();
   return (
     <section className={progress.case} aria-label={t('career.progress.achievements')}>
       <header className={progress.caseHead}>
@@ -231,8 +244,14 @@ function MedalCase({ list }: { list: CareerAchievement[] }) {
           ].filter(Boolean).join(' · ');
           return (
             <li key={achievement.id} className={[progress.medal, progress[kind], motion.deal].join(' ')} style={dealStyle(index)}>
-              <span className={progress.disc} style={{ '--part': kind === 'progress' ? part : kind === 'earned' ? 1 : 0 } as CSSProperties} aria-hidden="true">
-                {kind === 'earned' ? <Trophy size={26} /> : kind === 'secret' ? <HelpCircle size={24} /> : kind === 'progress' && part > 0 ? <b>{Math.round(part * 100)}%</b> : <Lock size={20} />}
+              <span className={[progress.disc, painted ? progress.discArt : ''].join(' ')} style={{ '--part': kind === 'progress' ? part : kind === 'earned' ? 1 : 0 } as CSSProperties} aria-hidden="true">
+                {painted ? (
+                  <>
+                    <Art kind={kind === 'secret' ? 'reward' : 'achievement'} id={kind === 'secret' ? 'secret' : achievement.id ?? ''} size={54} />
+                    {kind === 'progress' && part > 0 && <b>{Math.round(part * 100)}%</b>}
+                    {kind === 'open' && <Lock size={14} className={progress.medalLock} />}
+                  </>
+                ) : kind === 'earned' ? <Trophy size={26} /> : kind === 'secret' ? <HelpCircle size={24} /> : kind === 'progress' && part > 0 ? <b>{Math.round(part * 100)}%</b> : <Lock size={20} />}
               </span>
               <span className={progress.medalText}>
                 <b>{kind === 'secret' ? t('career.achievements.secret') : achievement.name}</b>
@@ -350,7 +369,7 @@ function Locker({ track, achievements }: { track: CareerLevelTrack; achievements
             const swatch = MAT_CLOTHS.find((item) => item.id === id);
             return (
               <LockerItem key={id} on={cloth === id} open={open} label={open ? cosmeticName(t, cosmetic) : how(cosmetic)} onPick={() => useSettings.getState().update({ matCloth: id })}>
-                <span className={progress.cloth} style={swatch ? clothSwatch(swatch) : undefined} />
+                <span className={progress.cloth} style={swatch ? clothSwatch(swatch) : undefined}><Art kind="playmat" id={id} size={56} className={progress.clothPrint} /></span>
               </LockerItem>
             );
           })}
@@ -385,6 +404,7 @@ function Record({ profile, recent }: { profile: CareerProfile; recent: CareerPay
   const user = useSession((session) => session.userName);
   const opponents = useCareerOpponents(true);
   const byId = useMemo(() => new Map((opponents.data ?? []).map((opponent) => [opponent.id, opponent])), [opponents.data]);
+  const campaigns = useCampaigns(recent.some((payout) => recentOpponent(payout.opponent).kind === 'campaign'));
   const games = (profile.wins ?? 0) + (profile.losses ?? 0);
 
   async function exportNow() {
@@ -404,13 +424,21 @@ function Record({ profile, recent }: { profile: CareerProfile; recent: CareerPay
         {recent.length === 0 ? <p className={styles.small}>{t('career.recent.none')}</p> : (
           <ul className={progress.games}>
             {recent.slice(0, 10).map((payout, index) => {
-              const opponent = byId.get(payout.opponent);
-              const name = opponent?.name ?? payout.opponent ?? '';
+              const against = recentOpponent(payout.opponent);
+              const opponent = against.kind === 'duel' ? byId.get(against.id) : undefined;
+              const campaign = against.kind === 'campaign' ? campaigns.data?.find((item) => item.id === against.campaign) : undefined;
+              const name = against.kind === 'duel' ? opponent?.name ?? against.id : campaign?.name ?? t(MODE_NAMES[against.kind]);
               return (
                 <li key={payout.matchKey} className={[progress.game, payout.won ? progress.gameWon : '', motion.deal].join(' ')} style={dealStyle(index)}>
-                  <span className={progress.gameArt}><CardArt card={opponent?.cover} name={name} colors={opponent?.colors} /></span>
+                  <span className={[progress.gameArt, against.kind === 'duel' ? '' : progress.gameMode].join(' ')}>
+                    {against.kind === 'duel' ? <CardArt card={opponent?.cover} name={name} colors={opponent?.colors} />
+                      : against.kind === 'campaign' ? <Crest name={name} colors={campaign?.colors} school={against.campaign} size={48} />
+                        : <ModeEmblem kind={against.kind} />}
+                  </span>
                   <span className={progress.gameText}>
-                    <b>{t(payout.won ? 'career.recent.won' : 'career.recent.lost', { opponent: name })}</b>
+                    <b>{against.kind === 'duel'
+                      ? t(payout.won ? 'career.recent.won' : 'career.recent.lost', { opponent: name })
+                      : t(payout.won ? 'career.recent.wonIn' : 'career.recent.lostIn', { mode: name })}</b>
                     <small>{payout.note || t('career.recent.paid', { coins: payout.coins ?? 0, xp: payout.xp ?? 0 })}</small>
                   </span>
                   <span className={progress.verdict}>{t(payout.won ? 'career.results.victory' : 'career.results.defeat')}</span>
@@ -427,4 +455,23 @@ function Record({ profile, recent }: { profile: CareerProfile; recent: CareerPay
       </section>
     </div>
   );
+}
+
+const MODE_NAMES: Record<'campaign' | 'gauntlet' | 'puzzle' | 'challenge' | 'limited', MessageKey> = {
+  campaign: 'career.modes.campaign',
+  gauntlet: 'career.modes.gauntlet',
+  puzzle: 'career.modes.puzzles',
+  challenge: 'career.modes.challenge',
+  limited: 'career.modes.limited',
+};
+
+/** A mode's emblem, for a recent game played in it. */
+function ModeEmblem({ kind }: { kind: 'gauntlet' | 'puzzle' | 'challenge' | 'limited' }) {
+  const [id, Icon] = ({
+    gauntlet: ['achievement', Trophy],
+    puzzle: ['unlock', KeyRound],
+    challenge: ['level', CalendarDays],
+    limited: ['pack', Package],
+  } as const)[kind];
+  return <Art kind="reward" id={id} size={48} fallback={<Icon size={24} aria-hidden="true" />} />;
 }

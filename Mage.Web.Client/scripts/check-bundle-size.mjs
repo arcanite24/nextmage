@@ -42,10 +42,13 @@ import { gzipSync } from 'node:zlib';
 // app raised 2026-10-09 from 432 kB for M11 (the academy: its hall and school pages, lessons and trials on the node
 // card, the deck list, the in-game lesson coach and the sideboarding note, with their English and Spanish messages),
 // measured 433.8 kB
+// app raised 2026-10-09 from 438 kB for the painted art (the Art component and its fallbacks, the painted-art setting,
+// keyword effects on permanents, the pack showcase and peek, the card picker filter); the pictures themselves are in
+// public/ and not counted, measured 438.2 kB
 const BUDGET_KB = {
   entry: 69,
   initial: 212,
-  app: 438,
+  app: 442,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

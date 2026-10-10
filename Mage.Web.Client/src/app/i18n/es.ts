@@ -183,7 +183,7 @@ const es: Catalog = {
   'settings.tab.play': 'Juego',
   'settings.tab.stops': 'Paradas',
   'settings.tab.answers': 'Respuestas automáticas',
-  'settings.tab.display': 'Movimiento',
+  'settings.tab.display': 'Pantalla',
   'settings.tab.sound': 'Sonido',
   'settings.tab.alerts': 'Avisos',
   'settings.tab.import': 'Importar',
@@ -232,6 +232,8 @@ const es: Catalog = {
   'settings.stops.stack': 'Parar cuando un hechizo o habilidad entra en la pila',
 
   'settings.motion': 'Movimiento de las cartas',
+  'settings.paintedArt': 'Arte pintado',
+  'settings.paintedArt.detail': 'Imágenes generadas con IA para los iconos, avatares, escudos, fundas y estampados de tapete de Carrera. Desactivado, se muestran las versiones dibujadas sencillas.',
   'settings.motion.detail': 'Las cartas vuelan entre zonas y se asientan en el tapete. El ajuste de movimiento reducido de tu sistema siempre manda.',
 
   'settings.alerts.intro': 'Mientras {app} está en una pestaña de fondo, el título de la pestaña cuenta lo que te espera.',
@@ -478,6 +480,7 @@ const es: Catalog = {
   'career.nav.shop': 'Tienda',
   'career.coins': { one: '{count} moneda', other: '{count} monedas' },
   'career.wildcards': 'Comodines',
+  'career.wildcard.uncommon': { one: '{count} comodín infrecuente', other: '{count} comodines infrecuentes' },
   'career.wildcard.rare': { one: '{count} comodín raro', other: '{count} comodines raros' },
   'career.wildcard.mythic': { one: '{count} comodín mítico', other: '{count} comodines míticos' },
   'career.level': 'Nivel {level}',
@@ -505,6 +508,8 @@ const es: Catalog = {
   'career.recent': 'Partidas recientes',
   'career.recent.won': 'Ganaste a {opponent}',
   'career.recent.lost': 'Perdiste contra {opponent}',
+  'career.recent.wonIn': 'Ganaste en {mode}',
+  'career.recent.lostIn': 'Perdiste en {mode}',
   'career.recent.paid': '+{coins} monedas · +{xp} XP',
   'career.recent.none': 'Aún no hay partidas de Career.',
 
@@ -542,7 +547,7 @@ const es: Catalog = {
   'career.pack.revealAll': 'Revelar todo',
   'career.pack.done': 'Listo',
   'career.pack.another': 'Abrir otro',
-  'career.pack.tap': 'Haz clic en una carta para darle la vuelta.',
+  'career.pack.tap': 'Haz clic en una carta para darle la vuelta; clic derecho en una carta vista para verla de cerca.',
   'career.pack.new': { one: '{count} carta nueva', other: '{count} cartas nuevas' },
   'career.pack.coins': 'Las copias de sobra dieron {coins} monedas',
   'career.pack.wildcards': { one: '{count} comodín', other: '{count} comodines' },

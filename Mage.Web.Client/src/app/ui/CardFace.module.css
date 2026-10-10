@@ -116,3 +116,11 @@
     linear-gradient(180deg, var(--mat-600), var(--mat-900));
   box-shadow: inset 0 0 0 3px rgb(var(--ink-rgb) / 0.15);
 }
+
+/* a Career sleeve's painted back (the sleeve's dye shows through while it loads) */
+.back[data-art] {
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: none;
+}

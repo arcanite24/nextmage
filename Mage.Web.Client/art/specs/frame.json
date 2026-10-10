@@ -1,0 +1,16 @@
+{
+  "$comment": "Frames the UI draws into: the level medallion around the avatar and the reward road's stops (numbers are overlaid by CSS).",
+  "out": "public/career-art/frame",
+  "grid": { "cols": 2, "rows": 2, "canvas": "square" },
+  "size": "320x320",
+  "pad": 0.02,
+  "anchors": ["refs/achievement/anchor.png"],
+  "style": "UI frame pieces seen straight on (front view, perfectly symmetrical, perfectly circular where round), the same gilded antique gold finish as the achievement emblems. Each piece fills about 90% of its cell.",
+  "spare": "a small gold rosette ornament",
+  "items": [
+    { "id": "medallion", "subject": "a thick ornate circular gold frame ring engraved with laurels, four small emeralds at the compass points; its centre is an EMPTY transparent hole about 70% of the ring's width" },
+    { "id": "stop", "subject": "a round bronze plaque with a raised rim and a flat, plain, empty centre" },
+    { "id": "stop-reached", "subject": "the same round plaque in polished gold with a ring of tiny rubies on its rim and a flat, plain, empty centre" },
+    { "id": "stop-locked", "subject": "the same round plaque in dull dark iron with a flat, plain, empty centre" }
+  ]
+}

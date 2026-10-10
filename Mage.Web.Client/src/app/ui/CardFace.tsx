@@ -6,6 +6,8 @@ import type { CardFace as Face, CardImageRef, ImageSize } from '../../core/image
 import type { CardType, SubType } from '../../protocol/generated/views';
 import { useT } from '../i18n';
 import { ManaCost } from './ManaCost';
+import { sleeveBackOf } from './sleeveArt';
+import { useSettings } from '../stores/settings';
 import styles from './CardFace.module.css';
 
 export interface CardFaceProps {
@@ -51,7 +53,7 @@ export function CardFace({ card, face = 'front', size = 'normal', sleeve, hidden
     >
       <div className={styles.card}>
         {hidden ? (
-          <div className={styles.back} aria-label={t('ui.hiddenCard')} role="img" />
+          <CardBack sleeve={sleeve} label={t('ui.hiddenCard')} />
         ) : (
           <>
             {!loaded && (
@@ -87,5 +89,20 @@ export function CardFace({ card, face = 'front', size = 'normal', sleeve, hidden
         )}
       </div>
     </div>
+  );
+}
+
+/** The back: a Career sleeve's painted back (unless painted art is off), or our own printed weave. */
+function CardBack({ sleeve, label }: { sleeve: string | undefined; label: string }) {
+  const painted = useSettings((state) => state.settings.paintedArt);
+  const art = painted ? sleeveBackOf(sleeve) : null;
+  return (
+    <div
+      className={styles.back}
+      aria-label={label}
+      role="img"
+      data-art={art ? '' : undefined}
+      style={art ? { backgroundImage: `url(${art})` } : undefined}
+    />
   );
 }

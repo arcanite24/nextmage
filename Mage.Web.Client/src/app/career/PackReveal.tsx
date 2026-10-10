@@ -1,10 +1,11 @@
 import { Coins, Sparkles } from 'lucide-react';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { CareerCard } from '../../protocol/generated/views';
 import { useT } from '../i18n';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
+import { attachLongPress } from '../match/useLongPress';
 import { BoosterPack, type PackState } from './BoosterPack';
 import { packSummary, revealOrder, spareCoins } from './careerModel';
 import { playCareerCue } from './careerSound';
@@ -18,14 +19,29 @@ const STAGGER_MS = 160;
 const CHARGE_MS = 520;
 /** from the tear to the cards flying out */
 const TEAR_MS = 560;
-/** how long a mythic holds the spotlight */
-const SPOTLIGHT_MS = 1100;
+/** how long a mythic holds centre stage before it settles back into its place */
+const SPOTLIGHT_MS = 1900;
+/** the settling back */
+const SETTLE_MS = 380;
+/** sparks thrown by a rare or mythic as it turns */
+const SPARKS = 14;
+
+/** A mythic on centre stage: where its place in the fan is, relative to the middle of the screen, and its scale there. */
+interface Showcase {
+  index: number;
+  dx: number;
+  dy: number;
+  scale: number;
+  leaving: boolean;
+}
 
 /**
  * A freshly bought pack, opened on the whole screen, as the moment it should be: the pack under a light, shaking as
  * it's torn, light spilling out of the tear, the cards flying out face down into a fan. Rares and mythics glow before
- * they turn (brass, copper), burst when they do, and a mythic takes the spotlight and jolts the table. Cards new to the
- * collection say so; spares say what they became; a summary closes it. Everything can be skipped with Reveal all.
+ * they turn (brass, copper) and throw sparks when they do; a mythic jolts the table and flies to centre stage over turning
+ * light before it settles back. A turned card shows big beside the pointer, and a right click (or a long press) opens
+ * it on its own. Cards new to the collection say so; spares say what they became; a summary closes it. Everything can
+ * be skipped with Reveal all.
  */
 export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyAnother, onAnother, onClose }: {
   setName: string;
@@ -45,7 +61,9 @@ export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyA
   const [stage, setStage] = useState<PackState | 'open'>('sealed');
   const [shown, setShown] = useState<ReadonlySet<number>>(() => new Set());
   const [jolt, setJolt] = useState(false);
-  const [spotlight, setSpotlight] = useState<number | null>(null);
+  const [showcase, setShowcase] = useState<Showcase | null>(null);
+  const [peek, setPeek] = useState<{ index: number; anchor: DOMRect } | null>(null);
+  const [zoom, setZoom] = useState<number | null>(null);
   const timers = useRef<number[]>([]);
   const tear = useRef<HTMLButtonElement>(null);
   const finish = useRef<HTMLButtonElement>(null);
@@ -67,11 +85,13 @@ export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyA
       if (event.key !== 'Escape') return;
       event.preventDefault();
       event.stopPropagation();
-      onClose();
+      // a card looked at closely is put down first
+      if (zoom !== null) setZoom(null);
+      else onClose();
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [onClose]);
+  }, [onClose, zoom]);
 
   // the cards fly out of the pack: each starts where the pack was (the middle of the screen) and lands in its place
   useLayoutEffect(() => {
@@ -87,6 +107,30 @@ export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyA
     // set outside React's attributes, so later renders of the list leave the flight alone
     fan.current.dataset.fly = '';
   }, [stage, still]);
+
+  // touch has no right button: a long press on a turned card opens it on its own
+  useEffect(() => {
+    const element = fan.current;
+    if (stage !== 'open' || !element) return;
+    return attachLongPress(element, {
+      onLongPress: (target) => {
+        const index = Number(target.closest<HTMLElement>('[data-pack-index]')?.dataset.packIndex ?? NaN);
+        if (Number.isNaN(index) || !up.current.has(index)) return false;
+        setZoom(index);
+        return true;
+      },
+    });
+  }, [stage]);
+
+  function hover(index: number, event: ReactPointerEvent<HTMLButtonElement>) {
+    if (event.pointerType !== 'mouse' || !up.current.has(index)) return;
+    setPeek({ index, anchor: event.currentTarget.getBoundingClientRect() });
+  }
+
+  function settle() {
+    setShowcase((current) => (current && !current.leaving ? { ...current, leaving: true } : current));
+    later(SETTLE_MS, () => setShowcase((current) => (current?.leaving ? null : current)));
+  }
 
   function open() {
     if (stage !== 'sealed') return;
@@ -112,11 +156,22 @@ export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyA
     const rarity = order[index]?.rarity;
     if (!quiet || rarity === 'rare' || rarity === 'mythic') playCareerCue(rarity === 'mythic' ? 'mythic' : rarity === 'rare' ? 'rare' : 'flip');
     if (rarity === 'mythic' && !still) {
-      // a mythic takes the spotlight, and the table jolts
+      // a mythic jolts the table and takes centre stage, flying there from its place in the fan
       setJolt(true);
-      setSpotlight(index);
+      const slot = fan.current?.querySelector<HTMLElement>(`[data-pack-index="${index}"]`)?.getBoundingClientRect();
+      if (slot) {
+        const size = Math.min(380, window.innerHeight * 0.62 * (63 / 88), window.innerWidth * 0.8);
+        setShowcase({
+          index,
+          dx: Math.round(slot.left + slot.width / 2 - window.innerWidth / 2),
+          dy: Math.round(slot.top + slot.height / 2 - window.innerHeight / 2),
+          scale: slot.width / size,
+          leaving: false,
+        });
+        timers.current.push(window.setTimeout(() => setShowcase((current) => (current?.index === index ? { ...current, leaving: true } : current)), SPOTLIGHT_MS));
+        timers.current.push(window.setTimeout(() => setShowcase((current) => (current?.index === index ? null : current)), SPOTLIGHT_MS + SETTLE_MS));
+      }
       timers.current.push(window.setTimeout(() => setJolt(false), 460));
-      timers.current.push(window.setTimeout(() => setSpotlight((current) => (current === index ? null : current)), SPOTLIGHT_MS));
     }
   }, [order, still]);
 
@@ -148,7 +203,7 @@ export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyA
           <p className={styles.hint} aria-hidden={stage !== 'sealed'}>{stage === 'sealed' ? t('career.pack.tearHint') : ' '}</p>
         </div>
       ) : (
-        <ul ref={fan} className={[styles.fan, spotlight !== null ? styles.dimmed : ''].join(' ')}>
+        <ul ref={fan} className={[styles.fan, showcase ? styles.dimmed : ''].join(' ')}>
           {order.map((card, index) => {
             const faceUp = shown.has(index);
             const ref = { name: card.name, setCode: card.setCode, cardNumber: card.cardNumber };
@@ -157,13 +212,22 @@ export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyA
             return (
               <li
                 key={index}
-                className={[styles.slot, rarity ? styles[`${rarity}Slot`] : '', spotlight === index ? styles.spot : ''].join(' ')}
+                className={[styles.slot, rarity ? styles[`${rarity}Slot`] : '', showcase?.index === index ? styles.spot : ''].join(' ')}
                 style={{ '--i': index } as CSSProperties}
               >
                 <button
                   type="button"
                   className={[styles.flip, faceUp ? styles.flipUp : ''].join(' ')}
+                  data-pack-index={index}
                   onClick={() => show(index)}
+                  onPointerEnter={(event) => hover(index, event)}
+                  onPointerLeave={() => setPeek((current) => (current?.index === index ? null : current))}
+                  onContextMenu={(event) => {
+                    if (!faceUp) return;
+                    event.preventDefault();
+                    setPeek(null);
+                    setZoom(index);
+                  }}
                   aria-label={faceUp ? card.name : t('ui.hiddenCard')}
                   aria-pressed={faceUp}
                   data-nav
@@ -173,6 +237,13 @@ export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyA
                     <span className={styles.flipFront} aria-hidden={!faceUp}><CardFace card={ref} size="normal" /></span>
                   </span>
                   {faceUp && rarity && <span className={styles.ring} aria-hidden="true" />}
+                  {faceUp && rarity && (
+                    <span className={styles.sparks} aria-hidden="true">
+                      {Array.from({ length: SPARKS }, (_, spark) => (
+                        <i key={spark} style={{ '--a': `${(360 / SPARKS) * spark + (index % 3) * 9}deg`, '--d': `${70 + ((spark * 37) % 50)}%` } as CSSProperties} />
+                      ))}
+                    </span>
+                  )}
                   {isNew && <span className={styles.newTag}>{t('career.binder.new')}</span>}
                   {faceUp && card.convertedTo === 'coins' && (
                     <span className={styles.badge}><Coins size={13} aria-hidden="true" /> {t('career.pack.toCoins', { coins: spareCoins(card.rarity) })}</span>
@@ -185,6 +256,30 @@ export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyA
             );
           })}
         </ul>
+      )}
+
+      {showcase && order[showcase.index] && (
+        <div
+          className={[styles.showcase, showcase.leaving ? styles.showcaseLeaving : ''].join(' ')}
+          style={{ '--sx': `${showcase.dx}px`, '--sy': `${showcase.dy}px`, '--ss': showcase.scale } as CSSProperties}
+          onClick={settle}
+          aria-hidden="true"
+        >
+          <span className={styles.rays} />
+          <span className={styles.showcaseCard}>
+            <CardFace card={{ name: order[showcase.index].name, setCode: order[showcase.index].setCode, cardNumber: order[showcase.index].cardNumber }} size="large" />
+          </span>
+        </div>
+      )}
+
+      {peek && zoom === null && !showcase && order[peek.index] && <Peek card={order[peek.index]} anchor={peek.anchor} />}
+
+      {zoom !== null && order[zoom] && (
+        <div className={styles.zoom} onClick={() => setZoom(null)} onContextMenu={(event) => { event.preventDefault(); setZoom(null); }} role="presentation">
+          <span className={styles.zoomCard} role="img" aria-label={order[zoom].name}>
+            <CardFace card={{ name: order[zoom].name, setCode: order[zoom].setCode, cardNumber: order[zoom].cardNumber }} size="large" />
+          </span>
+        </div>
       )}
 
       <footer className={styles.foot}>
@@ -203,5 +298,20 @@ export function PackReveal({ setName, setCode, cover, cards, fresh = [], canBuyA
       </footer>
     </div>,
     document.body,
+  );
+}
+
+/** A turned card, big, beside the one the pointer is on: on whichever side has room. */
+function Peek({ card, anchor }: { card: CareerCard; anchor: DOMRect }) {
+  const width = Math.min(300, window.innerWidth * 0.3);
+  const height = width * (88 / 63);
+  const gap = 18;
+  const fitsRight = anchor.right + gap + width <= window.innerWidth - gap;
+  const left = fitsRight ? anchor.right + gap : Math.max(gap, anchor.left - gap - width);
+  const top = Math.max(12, Math.min(window.innerHeight - height - 12, anchor.top + anchor.height / 2 - height / 2));
+  return (
+    <div className={styles.peek} style={{ left, top, width }} aria-hidden="true">
+      <CardFace card={{ name: card.name, setCode: card.setCode, cardNumber: card.cardNumber }} size="large" />
+    </div>
   );
 }

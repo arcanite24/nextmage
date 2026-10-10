@@ -54,3 +54,39 @@ export function keywordMarks(card: CardView): KeywordMark[] {
     .filter((name) => now.has(name))
     .map((name) => ({ name, gained: !!printed && !printed.has(name) && !(card.isToken ?? false) }));
 }
+
+/**
+ * What a permanent's keywords look like on the board, beyond their icons: a flier floats over its shadow, deathtouch
+ * and infect smoke, trample raises dust, lifelink glows, first and double strike flash a blade, indestructible is rimmed
+ * in gold, the hard-to-touch keywords hold a ward around it, menace smoulders and haste flickers. One effect per kind,
+ * in the order the marks come in.
+ */
+export type KeywordEffect = 'float' | 'death' | 'infect' | 'dust' | 'life' | 'strike' | 'doubleStrike' | 'gold' | 'ward' | 'menace' | 'haste';
+
+const EFFECTS: Partial<Record<MarkedKeyword, KeywordEffect>> = {
+  Flying: 'float',
+  Deathtouch: 'death',
+  Infect: 'infect',
+  Trample: 'dust',
+  Lifelink: 'life',
+  'First strike': 'strike',
+  'Double strike': 'doubleStrike',
+  Indestructible: 'gold',
+  Hexproof: 'ward',
+  Shroud: 'ward',
+  Ward: 'ward',
+  Protection: 'ward',
+  Menace: 'menace',
+  Haste: 'haste',
+};
+
+export function keywordEffects(marks: readonly KeywordMark[]): KeywordEffect[] {
+  const effects = new Set<KeywordEffect>();
+  for (const mark of marks) {
+    const effect = EFFECTS[mark.name as MarkedKeyword];
+    if (effect) effects.add(effect);
+  }
+  // double strike already flashes twice
+  if (effects.has('doubleStrike')) effects.delete('strike');
+  return [...effects];
+}
