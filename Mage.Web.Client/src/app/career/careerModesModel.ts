@@ -494,6 +494,22 @@ export function crestSpec(name: string, colors?: string): CrestSpec {
   };
 }
 
+/** The academy schools with a painted crest of their own (art/specs/crest.json). */
+export const SCHOOL_CRESTS: readonly string[] = ['pauper', 'commander', 'limited', 'pioneer', 'standard', 'modern', 'legacy', 'vintage', 'brawl'];
+
+/** The painted crest for a name: a school's own, else its mana colour's (M for two or more). */
+export function crestArt(name: string, colors?: string, school?: string): string {
+  if (school && SCHOOL_CRESTS.includes(school)) return school;
+  const painted = artColors(name, colors);
+  return painted.length > 1 ? 'M' : painted[0];
+}
+
+/** The painted stand-in portrait for an opponent without card art: their colour's duelist, or its boss. */
+export function portraitArt(name: string, colors?: string, boss = false): string {
+  const letter = (colors ?? '').toUpperCase() === 'C' ? 'C' : artColors(`portrait:${name}`, colors)[0];
+  return boss ? `${letter}-boss` : letter;
+}
+
 export type Headwear = 'hood' | 'crown' | 'horns' | 'helm' | 'bare' | 'circlet';
 const HEADWEAR: readonly Headwear[] = ['hood', 'crown', 'horns', 'helm', 'bare', 'circlet'];
 

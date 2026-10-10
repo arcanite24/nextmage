@@ -78,7 +78,11 @@
 .panelHead {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.panelHead > :first-child {
+  margin-right: auto;
 }
 
 .panelTitle {

@@ -72,7 +72,7 @@ function SchoolCard({ school, campaigns }: { school: CareerCampaign; campaigns: 
   const done = graduated(school);
   const body = (
     <>
-      <span className={academy.crest}><Crest name={school.name ?? ''} colors={school.colors} size={76} /></span>
+      <span className={academy.crest}><Crest name={school.name ?? ''} colors={school.colors} school={school.id} size={76} /></span>
       <span className={academy.text}>
         <small className={academy.format}>{school.format}</small>
         <b className={academy.name}>{school.name}</b>

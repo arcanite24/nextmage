@@ -853,3 +853,140 @@ button.item:not(:disabled):hover {
     transition: none;
   }
 }
+
+/* ---- painted art (Settings, Display: Painted art); the drawn versions above show when it's off */
+
+/* a stop with a reward is a painted plaque, the level struck on it */
+.milestone b {
+  position: relative;
+}
+
+.stopArt {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+}
+
+.milestone:has(.stopArt),
+.reached .milestone:has(.stopArt) {
+  background: none;
+  box-shadow: none;
+  color: var(--ink-strong);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+}
+
+.painted {
+  position: relative;
+}
+
+.painted img {
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45));
+}
+
+.painted > b {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  translate: -50% 0;
+  padding: 0 7px;
+  border-radius: var(--radius-chip);
+  background: rgb(var(--void-rgb) / 0.75);
+  color: var(--brass-ink);
+  font-family: var(--font-print);
+  font-size: var(--text-sm);
+}
+
+/* the playmat's print, pressed into its cloth */
+.cloth:has(.clothPrint) {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.clothPrint {
+  opacity: 0.6;
+  mix-blend-mode: screen;
+}
+
+.titleArt {
+  display: grid;
+  justify-items: center;
+}
+
+.titleArt img + .plate {
+  margin-top: -18px;
+}
+
+/* the medal case: each achievement's own emblem */
+.discArt {
+  background: radial-gradient(closest-side, rgb(var(--ink-rgb) / 0.06), transparent);
+  box-shadow: none;
+}
+
+.discArt > * {
+  grid-area: 1 / 1;
+}
+
+.discArt b {
+  align-self: end;
+  padding: 0 5px;
+  border-radius: var(--radius-chip);
+  background: rgb(var(--void-rgb) / 0.8);
+  font-size: var(--text-xs);
+}
+
+.medalLock {
+  align-self: end;
+  justify-self: end;
+  color: var(--ink-soft);
+}
+
+.earned .discArt {
+  background: radial-gradient(closest-side, rgb(var(--brass-rgb) / 0.35), transparent);
+  box-shadow: none;
+}
+
+.earned .discArt img {
+  filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.5));
+}
+
+/* under way: the emblem in shadow inside the ring that fills as you go */
+.medal.progress .discArt {
+  background:
+    radial-gradient(closest-side, rgb(var(--mat-rgb)) 86%, transparent 88%),
+    conic-gradient(var(--brass) calc(var(--part) * 1turn), rgb(var(--ink-rgb) / 0.14) 0);
+}
+
+.medal.progress .discArt img {
+  width: 46px;
+  height: 46px;
+  filter: grayscale(0.7) brightness(0.75);
+}
+
+/* not started: a dull, cold emblem */
+.open .discArt img {
+  filter: grayscale(1) brightness(0.55);
+}
+
+.secret .discArt {
+  background: radial-gradient(closest-side, rgb(var(--ink-rgb) / 0.06), transparent);
+}
+
+/* a game played in a mode: its crest or emblem, centred in the picture's place */
+.gameMode {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(closest-side, rgb(var(--ink-rgb) / 0.08), transparent);
+}
+
+.gameArt.gameMode > * {
+  width: auto;
+  height: 100%;
+}
+
+/* a painted crest or emblem: a fixed box, since a percentage height has nothing to resolve against in the grid */
+.gameArt.gameMode > img {
+  width: 48px;
+  height: 48px;
+}

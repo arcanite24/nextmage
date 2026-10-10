@@ -3,8 +3,9 @@ import {
   ShieldHalf, Skull, Sword, Swords, Users, Zap, type LucideIcon,
 } from 'lucide-react';
 import { memo, useMemo, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
-import { keywordMarks, type MarkedKeyword } from '../../core/game/keywords';
+import { keywordEffects, keywordMarks, type KeywordEffect, type MarkedKeyword } from '../../core/game/keywords';
 import type { PermanentView } from '../../protocol/generated/views';
+import { useSettings } from '../stores/settings';
 import { CardFace } from '../ui/CardFace';
 import { cardKey, stackOffsetRatio, type PermanentGroup } from './boardModel';
 import { useFlip } from './flip';
@@ -61,6 +62,21 @@ const KEYWORD_ICONS: Record<MarkedKeyword, LucideIcon> = {
   Shroud: EyeOff,
   Ward: ShieldHalf,
   Protection: ShieldCheck,
+};
+
+/** The layer each keyword effect draws (PermanentStack.module.css); float moves the card itself. */
+const FX_CLASS: Record<KeywordEffect, string> = {
+  float: 'fxFloat',
+  death: 'fxDeath',
+  infect: 'fxInfect',
+  dust: 'fxDust',
+  life: 'fxLife',
+  strike: 'fxStrike',
+  doubleStrike: 'fxDoubleStrike',
+  gold: 'fxGold',
+  ward: 'fxWard',
+  menace: 'fxMenace',
+  haste: 'fxHaste',
 };
 
 /** A permanent (or a stack of identical lands/tokens) placed on the mat, with its attachments tucked behind. */
@@ -120,6 +136,8 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
   const isBlocking = blocking.has(id);
   const setZoom = useMatchUi((state) => state.setZoom);
   const keywords = useMemo(() => keywordMarks(permanent), [permanent]);
+  const effects = useMemo(() => keywordEffects(keywords), [keywords]);
+  const motion = useSettings((state) => state.settings.animations);
   useFlip(cardKey(permanent), ref, { rotation: tapped ? 90 : 0 });
   const stage = useStage();
   const setBlockDrag = useMatchUi((state) => state.setBlockDrag);
@@ -209,7 +227,11 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
       onPointerLeave={() => setZoom(null)}
       data-object-id={id}
     >
-      <CardFace card={permanent} sleeve={sleeve} size={width > 140 ? 'normal' : 'small'} />
+      {effects.includes('float') && <span className={styles.flightShadow} aria-hidden="true" />}
+      <div className={[styles.body, effects.includes('float') ? styles.floating : ''].join(' ')} data-still={motion ? undefined : ''}>
+        {effects.map((effect) => <span key={effect} className={[styles.fx, styles[FX_CLASS[effect]]].join(' ')} aria-hidden="true" />)}
+        <CardFace card={permanent} sleeve={sleeve} size={width > 140 ? 'normal' : 'small'} />
+      </div>
 
       <div className={styles.marks} style={{ transform: tapped ? 'rotate(-90deg)' : undefined }}>
         {permanent.summoningSickness && isCreature && (

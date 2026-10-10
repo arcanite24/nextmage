@@ -132,15 +132,18 @@ export function revealOrder<T extends Pick<CareerCard, 'rarity'>>(cards: readonl
   return cards.map((card, index) => ({ card, index })).sort((a, b) => rank(a.card) - rank(b.card) || a.index - b.index).map((item) => item.card);
 }
 
-export type CraftCost = { coins: number } | { wildcard: 'rare' | 'mythic' } | null;
+export type CraftCost = { coins: number } | { wildcard: 'common' | 'uncommon' | 'rare' | 'mythic' } | null;
 
-/** What crafting a copy costs: coins for commons and uncommons, a wildcard for rares and mythics; basics aren't crafted. */
-export function craftCost(rarity: string | undefined): CraftCost {
+/**
+ * What crafting a copy costs: rares and mythics take a wildcard; commons and uncommons take their wildcard when the
+ * profile has one (levels and campaign choices pay uncommon ones), coins otherwise; basics aren't crafted. The server
+ * spends the same way.
+ */
+export function craftCost(rarity: string | undefined, profile?: CareerProfile): CraftCost {
   switch (rarity) {
     case 'common':
-      return { coins: 25 };
     case 'uncommon':
-      return { coins: 50 };
+      return (profile?.wildcards?.[rarity] ?? 0) > 0 ? { wildcard: rarity } : { coins: rarity === 'common' ? 25 : 50 };
     case 'rare':
     case 'mythic':
       return { wildcard: rarity };

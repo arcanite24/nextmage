@@ -84,6 +84,9 @@ describe('CardPicker', () => {
     const picker = dialog('Search your library');
     const forest = within(picker).getByRole('button', { name: 'Forest, chosen' });
     expect(forest.getAttribute('aria-pressed')).toBe('true');
+    // only what can be chosen, until Show all
+    expect(within(picker).queryByRole('button', { name: 'Island' })).toBeNull();
+    fireEvent.click(within(picker).getByRole('button', { name: 'Show all (2)' }));
     const island = within(picker).getByRole('button', { name: 'Island' }) as HTMLButtonElement;
     expect(island.disabled).toBe(true);
 

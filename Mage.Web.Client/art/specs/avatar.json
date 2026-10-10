@@ -1,0 +1,18 @@
+{
+  "$comment": "Career avatars (CAREER_AVATARS in progressModel.ts, granted by levels.json). Shown in circles over a CSS medallion in the avatar's colours.",
+  "out": "public/career-art/avatar",
+  "grid": { "cols": 3, "rows": 2, "canvas": "landscape" },
+  "size": "256x256",
+  "pad": 0.04,
+  "align": "bottom",
+  "anchors": ["refs/avatar/anchor.png"],
+  "style": "Heraldic creature portraits: head-and-shoulders bust of one noble fantasy creature per cell, three-quarter view facing slightly left, looking toward the viewer, painted like a premium card game avatar. The bust is cut off cleanly at the bottom of the chest, and head and shoulders fill the cell.",
+  "spare": "a heraldic lion bust",
+  "items": [
+    { "id": "owl", "subject": "a great horned owl with violet-blue plumage accents and a small gold circlet" },
+    { "id": "fox", "subject": "a clever red fox in a small gold-trimmed green hood" },
+    { "id": "stag", "subject": "a noble white stag with gilded antlers" },
+    { "id": "drake", "subject": "a young teal-scaled drake with gold horn caps" },
+    { "id": "phoenix", "subject": "a phoenix of orange and crimson flame-feathers with a gold crest" }
+  ]
+}

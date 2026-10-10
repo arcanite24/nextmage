@@ -1,0 +1,28 @@
+{
+  "$comment": "The Career's currencies and prizes: the reward road, the results screen, the HUD, locks.",
+  "out": "public/career-art/reward",
+  "grid": { "cols": 4, "rows": 4, "canvas": "square" },
+  "size": "192x192",
+  "pad": 0.06,
+  "anchors": ["refs/achievement/anchor.png"],
+  "style": "Game reward icons: one single object per cell, three-quarter view, the same gilded treasure finish as the achievement emblems. Each object fills about 75% of its cell. Bold readable silhouette at small sizes.",
+  "spare": "a small gold rosette ornament",
+  "items": [
+    { "id": "coins", "subject": "a small heap of gold coins stamped with a fleur-de-lis" },
+    { "id": "xp", "subject": "a glowing pale-blue star-shaped crystal" },
+    { "id": "wildcard-common", "subject": "an upright playing card with a dark iron frame and a glowing white starburst sigil on its face" },
+    { "id": "wildcard-uncommon", "subject": "the same upright card with a polished silver frame and a glowing silver-blue starburst sigil" },
+    { "id": "wildcard-rare", "subject": "the same upright card with a gold frame and a glowing gold starburst sigil" },
+    { "id": "wildcard-mythic", "subject": "the same upright card with a fiery orange-bronze frame and a blazing orange starburst sigil" },
+    { "id": "pack", "subject": "a sealed card booster pack wrapped in dark green foil with a gold wax seal" },
+    { "id": "title", "subject": "a blank engraved brass nameplate hanging from a red ribbon" },
+    { "id": "achievement", "subject": "a gold trophy cup" },
+    { "id": "level", "subject": "a small treasure chest with its lid ajar and light spilling out" },
+    { "id": "graduate", "subject": "a graduate's mortarboard cap with a gold tassel" },
+    { "id": "unlock", "subject": "an ornate gold key" },
+    { "id": "lock", "subject": "a heavy closed iron padlock with gold trim" },
+    { "id": "secret", "subject": "a black velvet pouch tied shut with a glowing violet cord" },
+    { "id": "sleeve", "subject": "a small fanned stack of three ornate card backs" },
+    { "id": "playmat", "subject": "a rolled-up cloth playmat tied with a gold cord" }
+  ]
+}

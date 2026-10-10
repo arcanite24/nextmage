@@ -48,7 +48,8 @@ export function MulliganOverlay({ hand, interaction, sleeve, onCommand }: {
 
 /**
  * Choose among cards: off-board cards (library search, revealed cards) or the hand during a London mulligan.
- * Each click toggles a card; the server answers with the updated choice.
+ * Each click toggles a card; the server answers with the updated choice. Only the cards that can be chosen are shown
+ * (a library search shows the lands it allows, not the whole library); Show all brings back the rest, greyed.
  */
 export function CardPicker({ title, cards, interaction, sleeve, footer, onCommand }: {
   title: string;
@@ -60,7 +61,11 @@ export function CardPicker({ title, cards, interaction, sleeve, footer, onComman
   onCommand(command: Command): void;
 }) {
   const [hidden, setHidden] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const main = interaction.mainButton;
+  const choosable = cards.filter((card) => interaction.clickable.has(card.id!) || interaction.selected.has(card.id!));
+  const others = cards.length - choosable.length;
+  const shown = showAll ? cards : choosable;
   if (hidden) {
     return (
       <div className={styles.peek}>
@@ -73,11 +78,17 @@ export function CardPicker({ title, cards, interaction, sleeve, footer, onComman
       <div className={styles.panel}>
         <header className={styles.panelHead}>
           <h2 className={styles.panelTitle}>{cards.length > 0 && cards.every(isStackAbility) ? 'Choose an ability' : cleanText(title)}</h2>
+          {others > 0 && (
+            <Button variant="quiet" size="sm" aria-pressed={showAll} onClick={() => setShowAll(!showAll)}>
+              {showAll ? 'Only what can be chosen' : `Show all (${cards.length})`}
+            </Button>
+          )}
           <Button variant="quiet" size="sm" onClick={() => setHidden(true)}>See the board</Button>
         </header>
         <p className={styles.panelText}><PromptText text={interaction.headline} /></p>
+        {shown.length === 0 && <p className={styles.panelText}>None of these can be chosen.</p>}
         <div className={styles.grid}>
-          {cards.map((card) => {
+          {shown.map((card) => {
             const id = card.id!;
             const clickable = interaction.clickable.has(id);
             const selected = interaction.selected.has(id);

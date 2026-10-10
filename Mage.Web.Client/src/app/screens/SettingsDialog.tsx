@@ -124,6 +124,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
 
         <Tabs.Content value="display" className={styles.panel}>
           <Row label={t('settings.motion')} detail={t('settings.motion.detail')}>{toggle('animations')}</Row>
+          <Row label={t('settings.paintedArt')} detail={t('settings.paintedArt.detail')}>{toggle('paintedArt')}</Row>
         </Tabs.Content>
 
         <Tabs.Content value="playmat" className={styles.panel}>

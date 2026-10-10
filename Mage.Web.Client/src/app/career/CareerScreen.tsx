@@ -28,6 +28,8 @@ import { RosterVersus } from './rosterPlay';
 import { useCareerDeck } from './useCareerDeck';
 import hub from './CareerHub.module.css';
 import motion from './motion.module.css';
+import { Art } from './Art';
+import { usePaintedArt } from './careerArt';
 import styles from './Career.module.css';
 
 registerMessages(messages);
@@ -487,19 +489,19 @@ export function CareerSleeves({ current, swatchClass, onPick }: { current: strin
 
 // ---- progress pieces the Career screens share
 
-/** A Career avatar: a dyed crest with its line drawing, or the player's initial before one is chosen. */
+/** A Career avatar: its painted bust on a medallion in its colours, or the player's initial before one is chosen. */
 export function CareerAvatar({ id, name, size = 48 }: { id: string | null | undefined; name: string; size?: number }) {
+  const painted = usePaintedArt();
   const art = id ? CAREER_AVATARS[id] : undefined;
   const style = { '--crest-size': `${size}px`, ...(art ? { '--crest-light': art.light, '--crest-dark': art.dark } : {}) } as CSSProperties;
+  const drawn = art && (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d={art.path} />
+    </svg>
+  );
   return (
-    <span className={styles.crest} style={style} aria-hidden="true">
-      {art ? (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <path d={art.path} />
-        </svg>
-      ) : (
-        <b>{name.slice(0, 1).toUpperCase()}</b>
-      )}
+    <span className={[styles.crest, art && painted ? styles.crestArt : ''].join(' ')} style={style} aria-hidden="true">
+      {art && id ? <Art kind="avatar" id={id} size={size} fallback={drawn} /> : <b>{name.slice(0, 1).toUpperCase()}</b>}
     </span>
   );
 }
