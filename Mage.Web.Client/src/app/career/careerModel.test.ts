@@ -70,6 +70,10 @@ describe('career model', () => {
     expect(canAfford({ coins: 30 }, craftCost('uncommon'))).toBe(false);
     expect(canAfford({ wildcards: { rare: 1 } }, craftCost('rare'))).toBe(true);
     expect(canAfford({ wildcards: { rare: 1 } }, craftCost('mythic'))).toBe(false);
+    // an uncommon wildcard (level 6 pays one) is spent before coins
+    expect(craftCost('uncommon', { coins: 0, wildcards: { uncommon: 1 } })).toEqual({ wildcard: 'uncommon' });
+    expect(canAfford({ coins: 0, wildcards: { uncommon: 1 } }, craftCost('uncommon', { wildcards: { uncommon: 1 } }))).toBe(true);
+    expect(craftCost('uncommon', { coins: 60, wildcards: { uncommon: 0 } })).toEqual({ coins: 50 });
     expect(careerRarity('SPECIAL')).toBe('rare');
   });
 

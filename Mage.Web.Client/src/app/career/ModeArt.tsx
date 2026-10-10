@@ -1,9 +1,13 @@
-import { useId, useMemo } from 'react';
-import { ART_COLORS, crestSpec, portraitSpec, type Sigil } from './careerModesModel';
+import { useId, useMemo, type CSSProperties } from 'react';
+import { Art } from './Art';
+import { usePaintedArt } from './careerArt';
+import { ART_COLORS, crestArt, crestSpec, portraitArt, portraitSpec, type Sigil } from './careerModesModel';
+import styles from './CareerArt.module.css';
 
 /**
- * Career's own art: crests for campaign chapters and runs, portraits for opponents, drawn from a name and its colours
- * (the same name always draws the same picture). Printed on the mat like the rest of Playmat; nothing is fetched.
+ * Career's own art: crests for schools, campaign chapters and runs, portraits for opponents without card art. Painted
+ * (art/specs/crest.json and portrait.json) by default; with painted art off, drawn from a name and its colours (the
+ * same name always draws the same picture), printed on the mat like the rest of Playmat.
  */
 
 const SHIELD = 'M50 6 L90 16 C90 56 78 82 50 96 C22 82 10 56 10 16 Z';
@@ -29,7 +33,14 @@ function sigilPath(sigil: Sigil): string {
   }
 }
 
-export function Crest({ name, colors, size = 56, label }: { name: string; colors?: string; size?: number; label?: string }) {
+/** A crest: a school's own (pass its id), or one in the name's colours. */
+export function Crest({ name, colors, school, size = 56, label }: { name: string; colors?: string; school?: string; size?: number; label?: string }) {
+  return (
+    <Art kind="crest" id={crestArt(name, colors, school)} size={size} label={label} fallback={<DrawnCrest name={name} colors={colors} size={size} label={label} />} />
+  );
+}
+
+function DrawnCrest({ name, colors, size, label }: { name: string; colors?: string; size: number; label?: string }) {
   const id = useId().replace(/:/g, '');
   const spec = useMemo(() => crestSpec(name, colors), [name, colors]);
   const first = ART_COLORS[spec.colors[0]] ?? ART_COLORS.C;
@@ -68,7 +79,26 @@ export function Crest({ name, colors, size = 56, label }: { name: string; colors
   );
 }
 
+/** A stand-in opponent: a painted duelist of their colour on a backdrop in it, framed like a portrait. */
 export function Portrait({ name, colors, boss = false, size = 72, label }: { name: string; colors?: string; boss?: boolean; size?: number; label?: string }) {
+  const painted = usePaintedArt();
+  const drawn = <DrawnPortrait name={name} colors={colors} boss={boss} size={size} label={label} />;
+  if (!painted) return drawn;
+  const back = ART_COLORS[portraitArt(name, colors)[0]] ?? ART_COLORS.C;
+  return (
+    <span
+      className={[styles.portrait, boss ? styles.portraitBoss : ''].join(' ')}
+      style={{ '--size': `${size}px`, '--back-light': back.light, '--back-dark': back.dark } as CSSProperties}
+      role={label ? 'img' : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+    >
+      <Art kind="portrait" id={portraitArt(name, colors, boss)} size={size} fallback={drawn} />
+    </span>
+  );
+}
+
+function DrawnPortrait({ name, colors, boss = false, size, label }: { name: string; colors?: string; boss?: boolean; size: number; label?: string }) {
   const id = useId().replace(/:/g, '');
   const spec = useMemo(() => portraitSpec(name, colors, boss), [name, colors, boss]);
   const back = ART_COLORS[spec.colors[0]] ?? ART_COLORS.C;

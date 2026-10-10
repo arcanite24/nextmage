@@ -141,9 +141,9 @@ public final class CareerService {
         return accounts && !"off".equalsIgnoreCase(setting == null ? "" : setting.trim());
     }
 
-    /** for tests: resolve cards without the card database */
+    /** for tests: resolve cards without the card database (null puts the database back) */
     void useCardLookup(Function<String, CardInfo> lookup) {
-        cardLookup = lookup;
+        cardLookup = lookup == null ? CareerService::lookupPrinting : lookup;
     }
 
     // ---- opening a Career
@@ -737,14 +737,17 @@ public final class CareerService {
                 throw new SQLException(new CareerException("You already have " + CareerRules.PLAYSET + " copies of " + card.name + "."));
             }
             int coins = CareerRules.craftCoins(card.rarity);
-            if (coins > 0) {
+            int ownWildcards = wildcardsOf(profile, card.rarity);
+            if (coins > 0 && ownWildcards > 0) {
+                // a common or uncommon wildcard (levels and campaign choices pay them) is spent before coins
+                store.addWildcard(user, card.rarity, -1);
+            } else if (coins > 0) {
                 if (profile.coins < coins) {
                     throw new SQLException(new CareerException(card.name + " costs " + coins + " coins to craft; you have " + profile.coins + "."));
                 }
                 store.addCoins(user, -coins);
             } else {
-                int wildcards = CareerRules.MYTHIC.equals(card.rarity) ? profile.wildcards.mythic : profile.wildcards.rare;
-                if (wildcards < 1) {
+                if (ownWildcards < 1) {
                     throw new SQLException(new CareerException(card.name + " takes a " + card.rarity + " wildcard; you have none."));
                 }
                 store.addWildcard(user, card.rarity, -1);
@@ -755,6 +758,24 @@ public final class CareerService {
             return null;
         }));
         return store.profile(user);
+    }
+
+    private static int wildcardsOf(CareerProfile profile, String rarity) {
+        if (profile.wildcards == null) {
+            return 0;
+        }
+        switch (rarity) {
+            case CareerRules.COMMON:
+                return profile.wildcards.common;
+            case CareerRules.UNCOMMON:
+                return profile.wildcards.uncommon;
+            case CareerRules.RARE:
+                return profile.wildcards.rare;
+            case CareerRules.MYTHIC:
+                return profile.wildcards.mythic;
+            default:
+                return 0;
+        }
     }
 
     // ---- export and import

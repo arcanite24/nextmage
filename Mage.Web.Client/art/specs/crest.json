@@ -1,0 +1,28 @@
+{
+  "$comment": "School crests (one per academy school) and stand-in crests by mana colour for campaign chapters and gauntlet runs. Replaces the drawn Crest in ModeArt.tsx.",
+  "out": "public/career-art/crest",
+  "grid": { "cols": 4, "rows": 4, "canvas": "square" },
+  "size": "256x256",
+  "pad": 0.04,
+  "anchors": ["refs/crest/anchor.png"],
+  "style": "Heraldic school crests: one heater-shaped shield per cell, front view, perfectly symmetrical, all the same shield outline and size, gilded antique gold rim, enamel field in the given colour, one embossed gold emblem in the centre. Each shield fills about 85% of its cell's height.",
+  "spare": "a plain gold shield",
+  "items": [
+    { "id": "pauper", "subject": "moss-green field, emblem: a humble copper coin over a wooden bowl" },
+    { "id": "commander", "subject": "royal purple field, emblem: a crown above a raised banner" },
+    { "id": "limited", "subject": "parchment-tan field, emblem: an open book with a single card on it" },
+    { "id": "pioneer", "subject": "steel-blue field, emblem: a compass rose" },
+    { "id": "standard", "subject": "deep teal field, emblem: a battle standard flag on a pole" },
+    { "id": "modern", "subject": "crimson field, emblem: a gear struck by a lightning bolt" },
+    { "id": "legacy", "subject": "navy blue field, emblem: an ancient stone tower" },
+    { "id": "vintage", "subject": "olive-gold field, emblem: a dark lotus flower" },
+    { "id": "brawl", "subject": "rose-red field, emblem: two crossed axes" },
+    { "id": "W", "subject": "pearl-white field, emblem: a sun" },
+    { "id": "U", "subject": "sapphire-blue field, emblem: a water droplet" },
+    { "id": "B", "subject": "onyx-black field, emblem: a skull" },
+    { "id": "R", "subject": "ruby-red field, emblem: a flame" },
+    { "id": "G", "subject": "emerald-green field, emblem: a tree" },
+    { "id": "C", "subject": "grey stone field, emblem: a diamond" },
+    { "id": "M", "subject": "field split into five wedges of white, blue, black, red and green, emblem: a five-pointed star" }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "$comment": "Stand-in opponents for when there is no card art: one per mana colour (W U B R G C), a regular and a boss. Replaces the drawn Portrait in ModeArt.tsx.",
+  "out": "public/career-art/portrait",
+  "grid": { "cols": 4, "rows": 3, "canvas": "landscape" },
+  "size": "256x256",
+  "pad": 0.04,
+  "align": "bottom",
+  "anchors": ["refs/avatar/anchor.png"],
+  "style": "Character portraits: head-and-shoulders bust of one fantasy duelist per cell, three-quarter view facing slightly left, looking toward the viewer, painted like a premium card game opponent portrait. The bust is cut off cleanly at the bottom of the chest, and head and shoulders fill the cell.",
+  "spare": "a hooded traveller",
+  "items": [
+    { "id": "W", "subject": "a paladin in white-and-gold plate with a sunburst tabard" },
+    { "id": "W-boss", "subject": "a crowned archon queen in radiant white-gold armour, eyes glowing softly" },
+    { "id": "U", "subject": "a hooded sea-blue wizard with a silver circlet" },
+    { "id": "U-boss", "subject": "a sphinx-masked archmage in deep blue robes, eyes glowing blue" },
+    { "id": "B", "subject": "a pale necromancer in black robes with a bone collar" },
+    { "id": "B-boss", "subject": "a horned lich lord in black and violet, eyes glowing violet" },
+    { "id": "R", "subject": "a red-bearded berserker in a horned iron helm" },
+    { "id": "R-boss", "subject": "a dragon-crowned warlord in crimson armour, eyes glowing orange" },
+    { "id": "G", "subject": "an elf druid with a leafy circlet and green cloak" },
+    { "id": "G-boss", "subject": "an antlered forest titan, bark-skinned, eyes glowing green" },
+    { "id": "C", "subject": "an artificer with brass goggles and a leather apron" },
+    { "id": "C-boss", "subject": "a stone-and-brass golem king with a glowing core in its chest" }
+  ]
+}

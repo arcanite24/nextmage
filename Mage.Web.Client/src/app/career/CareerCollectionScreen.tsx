@@ -144,7 +144,7 @@ const OwnedCard = memo(function OwnedCard({ card, count, onPick }: { card: Print
 function CraftDialog({ card, profile, owned, onClose }: { card: Printing | null; profile: CareerProfile; owned: number; onClose(): void }) {
   const t = useT();
   const [busy, setBusy] = useState(false);
-  const cost = card ? craftCost(card.rarity) : null;
+  const cost = card ? craftCost(card.rarity, profile) : null;
   const full = owned >= PLAYSET;
   const affordable = canAfford(profile, cost);
 
@@ -180,7 +180,7 @@ function CraftDialog({ card, profile, owned, onClose }: { card: Printing | null;
               : full ? <p>{t('career.craft.full')}</p>
                 : 'coins' in cost
                   ? <p>{t('career.craft.costCoins', { coins: cost.coins, have: profile.coins ?? 0 })}</p>
-                  : <p>{t('career.craft.costWildcard', { rarity: t(cost.wildcard === 'rare' ? 'career.rarity.rare' : 'career.rarity.mythic').toLowerCase(), have: profile.wildcards?.[cost.wildcard] ?? 0 })}</p>}
+                  : <p>{t('career.craft.costWildcard', { rarity: t(`career.rarity.${cost.wildcard}`).toLowerCase(), have: profile.wildcards?.[cost.wildcard] ?? 0 })}</p>}
           </div>
         </div>
       )}

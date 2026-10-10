@@ -65,7 +65,7 @@
   pointer-events: none;
 }
 
-.attacking > :first-child {
+.attacking .body > :last-child {
   box-shadow: 0 0 0 2px var(--oxblood), var(--shadow-lifted);
 }
 
@@ -213,3 +213,259 @@
 }
 
 
+
+/* ---- keywords you can see: each keyword's effect is a layer behind or over the card (the card face is the body's
+   last child, so the layers before it in the body sit behind it with z-index -1, the ones marked over sit on it) */
+
+.body {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+}
+
+.fx {
+  position: absolute;
+  pointer-events: none;
+}
+
+.fxFloat {
+  display: none;
+}
+
+/* flying: the card floats, its shadow left on the mat below */
+.floating {
+  animation: kw-float 3.6s ease-in-out infinite;
+}
+
+@keyframes kw-float {
+  0%,
+  100% {
+    transform: translateY(-5px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.flightShadow {
+  position: absolute;
+  inset: 8% 6% 0;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.55);
+  filter: blur(7px);
+  transform: translateY(6px);
+  animation: kw-shadow 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes kw-shadow {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateY(6px) scale(0.98);
+  }
+  50% {
+    opacity: 0.45;
+    transform: translateY(8px) scale(0.92);
+  }
+}
+
+/* deathtouch: black-green smoke curling off the edges; infect: the same, poison green */
+.fxDeath,
+.fxInfect {
+  inset: -8% -10%;
+  z-index: -1;
+  border-radius: 40%;
+  background:
+    radial-gradient(closest-side at 20% 85%, rgb(40 90 50 / 0.7), transparent),
+    radial-gradient(closest-side at 80% 20%, rgb(60 30 80 / 0.6), transparent),
+    radial-gradient(closest-side at 75% 90%, rgb(20 40 25 / 0.8), transparent);
+  filter: blur(6px);
+  animation: kw-smoke 4.8s ease-in-out infinite alternate;
+}
+
+.fxInfect {
+  background:
+    radial-gradient(closest-side at 25% 80%, rgb(120 200 60 / 0.6), transparent),
+    radial-gradient(closest-side at 80% 25%, rgb(60 140 40 / 0.5), transparent),
+    radial-gradient(closest-side at 70% 85%, rgb(150 220 90 / 0.45), transparent);
+}
+
+@keyframes kw-smoke {
+  from {
+    opacity: 0.55;
+    transform: rotate(-4deg) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(5deg) scale(1.04);
+  }
+}
+
+/* trample: dust kicked up at its feet, a cloud of it when it attacks */
+.fxDust {
+  left: -14%;
+  right: -14%;
+  bottom: -10%;
+  height: 34%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(150 120 80 / 0.55), transparent);
+  filter: blur(5px);
+  opacity: 0.6;
+}
+
+.attacking .fxDust {
+  animation: kw-dust 900ms ease-out infinite;
+}
+
+@keyframes kw-dust {
+  from {
+    opacity: 0.9;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.4) translateY(-12%);
+  }
+}
+
+/* lifelink: a warm light breathing around it */
+.fxLife {
+  inset: -5%;
+  z-index: -1;
+  border-radius: 12px;
+  box-shadow: 0 0 18px 6px rgb(255 226 160 / 0.5);
+  animation: kw-breathe 2.8s ease-in-out infinite;
+}
+
+@keyframes kw-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* menace: a red smoulder; haste: embers flickering at its feet */
+.fxMenace {
+  inset: -6%;
+  z-index: -1;
+  border-radius: 14px;
+  box-shadow: 0 0 20px 6px rgb(150 20 20 / 0.55), inset 0 0 0 1px rgb(200 40 40 / 0.4);
+  animation: kw-breathe 1.9s ease-in-out infinite;
+}
+
+.fxHaste {
+  left: 5%;
+  right: 5%;
+  bottom: -6%;
+  height: 22%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 140 40 / 0.75), rgb(200 50 10 / 0.3) 60%, transparent);
+  filter: blur(4px);
+  animation: kw-flicker 0.9s steps(4) infinite;
+}
+
+@keyframes kw-flicker {
+  25% {
+    opacity: 0.6;
+    transform: scaleX(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.05);
+  }
+  75% {
+    opacity: 0.75;
+  }
+}
+
+/* first strike: a blade's glint across the card now and then; double strike: two in a row */
+.fxStrike,
+.fxDoubleStrike {
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.fxStrike::before,
+.fxDoubleStrike::before,
+.fxDoubleStrike::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.55) 45%, rgb(220 235 255 / 0.85) 50%, transparent 58%);
+  transform: skewX(-18deg);
+  mix-blend-mode: screen;
+  animation: kw-glint 4.5s ease-in-out infinite;
+}
+
+.fxDoubleStrike::after {
+  animation-delay: 0.28s;
+}
+
+@keyframes kw-glint {
+  0%,
+  78% {
+    left: -60%;
+  }
+  92%,
+  100% {
+    left: 130%;
+  }
+}
+
+/* indestructible: rimmed in gold that catches the light */
+.fxGold {
+  inset: 0;
+  z-index: 1;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px rgb(222 186 96 / 0.9), inset 0 0 10px rgb(255 214 120 / 0.35), 0 0 8px rgb(222 186 96 / 0.45);
+}
+
+/* hexproof, shroud, ward, protection: a ward of light held around it */
+.fxWard {
+  inset: -7%;
+  z-index: -1;
+  border-radius: 16px;
+  background: conic-gradient(from 0deg, rgb(120 190 255 / 0.05), rgb(150 210 255 / 0.5), rgb(120 190 255 / 0.05) 35%, rgb(150 210 255 / 0.45) 65%, rgb(120 190 255 / 0.05));
+  mask: radial-gradient(closest-side, transparent 78%, #000 92%, transparent);
+  animation: kw-spin 7s linear infinite;
+}
+
+@keyframes kw-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* still: with card motion off (or the system's reduced motion) the effects hold still */
+.body[data-still],
+.body[data-still] .fx,
+.body[data-still] .fx::before,
+.body[data-still] .fx::after {
+  animation: none;
+}
+
+.body[data-still].floating {
+  transform: translateY(-6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating,
+  .flightShadow,
+  .fx,
+  .fx::before,
+  .fx::after {
+    animation: none;
+  }
+
+  .floating {
+    transform: translateY(-6px);
+  }
+}

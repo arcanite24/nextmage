@@ -68,6 +68,9 @@ export interface PlaySettings {
   careerMusic: boolean;
   /** Career: the music's volume, 0 to 1, under the master volume (local only) */
   musicVolume: number;
+  /** painted art (generated with an image model: icons, avatars, crests, sleeves, playmat prints) instead of the
+   * drawn SVG and CSS art (local only) */
+  paintedArt: boolean;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -110,6 +113,7 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   careerOptIn: false,
   careerMusic: true,
   musicVolume: 0.5,
+  paintedArt: true,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },

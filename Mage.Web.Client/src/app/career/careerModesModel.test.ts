@@ -2,8 +2,8 @@ import { describe, expect, test } from 'vitest';
 import type { CareerCampaign, CareerNode, CareerPoolCard } from '../../protocol/generated/views';
 import {
   graduated, graduationOf, requirementLines, schoolsOf, storiesOf,
-  PATH_STEP, buildDeck, buildFrom, buildProblems, buildSize, changeBasic, changePick, chapterPath, countNames, crestSpec, emptyBasics,
-  focusChapter, focusNode, hashName, mergeByName, legCurve, nodeState, poolEntries, portraitSpec, puzzleZones, rewardLines, runOver, runReward,
+  PATH_STEP, buildDeck, buildFrom, buildProblems, buildSize, changeBasic, changePick, chapterPath, countNames, crestArt, crestSpec, emptyBasics,
+  focusChapter, focusNode, hashName, mergeByName, legCurve, nodeState, poolEntries, portraitArt, portraitSpec, puzzleZones, rewardLines, runOver, runReward,
   starCount, starSlots, suggestBasics, toggleChoice, twistLines, type LimitedBuild,
 } from './careerModesModel';
 
@@ -229,5 +229,12 @@ describe('procedural art', () => {
     expect(crestSpec('Nobody').colors).toHaveLength(1);
     expect(['crown', 'horns']).toContain(portraitSpec('The Last Gate', undefined, true).headwear);
     expect(portraitSpec('Corporal Wren', 'W').glow).toBe(false);
+    // the painted crests and portraits
+    expect(crestArt('Pauper school', 'G', 'pauper')).toBe('pauper');
+    expect(crestArt('Gruul', 'RG')).toBe('M');
+    expect(crestArt('The White Path', 'W')).toBe('W');
+    expect(portraitArt('The Last Gate', 'B', true)).toBe('B-boss');
+    expect(portraitArt('Golem', 'C')).toBe('C');
+    expect(['W', 'U', 'B', 'R', 'G']).toContain(portraitArt('Nobody'));
   });
 });
