@@ -28,13 +28,14 @@ For a group on one home network, with no public domain:
 
 ```bash
 DOMAIN=multivac.local            # the host's mDNS name
+LAN_IP=192.168.1.156             # the host's address, for devices that can't resolve .local names
 HTTPS_PORT=8443                  # when another proxy already owns 443
 HTTP_PORT=8088
-XMAGE_ALLOWED_ORIGINS=https://multivac.local:8443
+XMAGE_ALLOWED_ORIGINS=https://multivac.local:8443,https://192.168.1.156:8443
 COMPOSE_PROJECT_NAME=xmage
 ```
 
-Caddy can't get a public certificate for a `.local` name, so it signs one with its own local CA. Each player accepts the browser warning once, or installs Caddy's root certificate (`docker compose cp web:/data/caddy/pki/authorities/local/root.crt .`). Players then open `https://multivac.local:8443`. Nothing is reachable from the internet unless the router forwards the port.
+Caddy can't get a public certificate for a `.local` name, so it signs one with its own local CA. Each player accepts the browser warning once, or installs Caddy's root certificate (`docker compose cp web:/data/caddy/pki/authorities/local/root.crt .`). Players then open `https://multivac.local:8443`, or `https://192.168.1.156:8443` on devices that don't resolve `.local` names (Android, some Windows setups); typing `http://` or leaving the scheme out redirects to HTTPS. Reserve the address for the host in the router's DHCP settings so it doesn't change. Nothing is reachable from the internet unless the router forwards the port.
 
 ## Settings
 
@@ -43,6 +44,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | Variable | Default | Meaning |
 |---|---|---|
 | `DOMAIN` | required | Public host name. It becomes the only allowed browser origin. |
+| `LAN_IP` | empty | The host's LAN address, served too (Caddy signs a certificate for it) for devices that can't resolve `DOMAIN`. Add `https://<LAN_IP>:<HTTPS_PORT>` to `XMAGE_ALLOWED_ORIGINS`. |
 | `XMAGE_ADMIN_PASSWORD` | unset | Admin password (`-Dxmage.adminPassword`). Unset: admin login is disabled. |
 | `XMAGE_AUTH` | `false` | `authenticationActivated`. `true` makes players register and log in with a password. Use it on a public server. |
 | `APP_NAME` | `Playmat` | Product name shown in the web client and its page title. A build argument: rebuild the `web` image (`up -d --build web`) after changing it. |
