@@ -18,7 +18,9 @@ export function webManifest(name: string) {
     id: '/',
     start_url: '/',
     scope: '/',
-    display: 'standalone',
+    // a game wants the whole screen: no status bar over the table on Android; browsers without fullscreen fall back
+    display: 'fullscreen',
+    display_override: ['fullscreen', 'standalone'],
     theme_color: THEME_COLOR,
     background_color: BACKGROUND_COLOR,
     icons: [

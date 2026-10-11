@@ -174,3 +174,53 @@
   color: var(--ink-dim);
   cursor: default;
 }
+
+/* short screens: a slimmer rail leaves the room to the screen below it */
+@media (max-height: 640px) {
+  .mat {
+    grid-template-rows: 54px minmax(0, 1fr);
+  }
+
+  .immersive {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .main {
+    padding-top: var(--space-2);
+  }
+}
+
+/* a portrait tablet: the name gives way to the mark, and the labels pull closer so the rail fits the width */
+@media (max-width: 860px) {
+  .rail {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--space-3);
+  }
+
+  .brand > span {
+    display: none;
+  }
+
+  .nav {
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .navItem {
+    padding: 8px 10px;
+  }
+
+  .navItem::after {
+    left: 10px;
+    right: 10px;
+  }
+
+  .user {
+    padding: 0 4px;
+  }
+
+  .user > span:last-child {
+    display: none;
+  }
+}

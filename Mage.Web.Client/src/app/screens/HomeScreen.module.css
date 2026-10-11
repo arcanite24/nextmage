@@ -44,12 +44,13 @@
 .mat {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+  grid-template-columns: minmax(180px, 1fr) minmax(320px, 440px);
   grid-template-rows: 1fr auto;
   gap: var(--space-5);
   padding: var(--space-6);
   border-radius: var(--radius-zone);
-  overflow: hidden;
+  /* a screen too short for the play zone scrolls it instead of cutting off the play button */
+  overflow: hidden auto;
   isolation: isolate;
 }
 
@@ -77,7 +78,9 @@
 /* the deck name, printed big on the mat */
 .deckName {
   max-width: 14ch;
-  font-size: clamp(2.8rem, 9cqi, 6rem);
+  /* the narrow column beside the play zone (a tablet) prints it smaller rather than under the zone */
+  font-size: clamp(2rem, 9cqi, 6rem);
+  overflow-wrap: anywhere;
   line-height: 0.9;
   text-transform: uppercase;
   color: var(--ink-strong);
@@ -89,7 +92,7 @@
   position: relative;
   grid-column: 2;
   grid-row: 1 / span 2;
-  align-self: center;
+  align-self: safe center;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -201,7 +204,7 @@
   min-width: 220px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 960px) {
   .mat {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
@@ -214,6 +217,45 @@
   .playZone {
     grid-column: 1;
     grid-row: 2;
+  }
+}
+
+/* a portrait tablet: the decks above, the mat below at the height its play zone needs */
+@media (max-width: 860px) {
+  .home {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(160px, 1fr) auto;
+    gap: var(--space-4);
+  }
+
+  .mat {
+    max-height: 100%;
+  }
+
+  /* the roster already names the deck; here the title gives its room to the list */
+  .deckName {
+    font-size: clamp(2rem, 7cqi, 3rem);
+  }
+}
+
+/* short screens (a tablet held sideways): the play zone tightens so PLAY stays on screen */
+@media (max-height: 760px) {
+  .mat {
+    gap: var(--space-4);
+    padding: var(--space-5);
+  }
+
+  .playZone {
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .zoneLabel {
+    font-size: var(--text-xl);
+  }
+
+  .mode {
+    min-height: 44px;
   }
 }
 
