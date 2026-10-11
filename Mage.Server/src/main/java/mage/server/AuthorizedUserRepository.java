@@ -21,7 +21,9 @@ import org.apache.shiro.crypto.hash.SimpleHash;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class AuthorizedUserRepository {
 
@@ -37,7 +39,13 @@ public class AuthorizedUserRepository {
         instance = new AuthorizedUserRepository(DatabaseUtils.prepareH2Connection(DatabaseUtils.DB_NAME_USERS, false));
     }
 
+    // "keep me signed in": a device that hasn't signed in for this long has to type the password again
+    private static final long REMEMBERED_LOGIN_TTL_MS = TimeUnit.DAYS.toMillis(90);
+    private static final long REMEMBERED_LOGIN_TOUCH_MS = TimeUnit.DAYS.toMillis(1);
+    private static final int REMEMBERED_LOGINS_PER_USER = 10;
+
     private Dao<AuthorizedUser, Object> usersDao;
+    private Dao<RememberedLogin, String> rememberedDao;
 
     public AuthorizedUserRepository(String connectionString) {
         File file = new File("db");
@@ -48,6 +56,8 @@ public class AuthorizedUserRepository {
             ConnectionSource connectionSource = new JdbcConnectionSource(connectionString);
             TableUtils.createTableIfNotExists(connectionSource, AuthorizedUser.class);
             usersDao = DaoManager.createDao(connectionSource, AuthorizedUser.class);
+            TableUtils.createTableIfNotExists(connectionSource, RememberedLogin.class);
+            rememberedDao = DaoManager.createDao(connectionSource, RememberedLogin.class);
         } catch (SQLException ex) {
             LOGGER.error("Error creating / assigning authorized_user repository - ", ex);
         }
@@ -78,7 +88,91 @@ public class AuthorizedUserRepository {
         Hash hash = new SimpleHash(Sha256Hash.ALGORITHM_NAME, password, rng.nextBytes(), 1024);
         user.setPasswordHash(hash);
         update(user);
+        // a new password signs every remembered device out
+        forgetLogins(userName);
         return true;
+    }
+
+    /**
+     * Remembers a device for the user ("keep me signed in").
+     *
+     * @return the token the device signs in with instead of the password, or null when it couldn't be stored
+     */
+    public String rememberLogin(final String userName) {
+        String token = rng.nextBytes(32).toHex();
+        try {
+            rememberedDao.create(new RememberedLogin(tokenHash(token), userName, new Date()));
+            // keep the newest few devices per user
+            QueryBuilder<RememberedLogin, String> qb = rememberedDao.queryBuilder();
+            qb.where().eq("name", new SelectArg(userName));
+            qb.orderBy("lastUsed", false);
+            List<RememberedLogin> logins = rememberedDao.query(qb.prepare());
+            for (RememberedLogin old : logins.subList(Math.min(REMEMBERED_LOGINS_PER_USER, logins.size()), logins.size())) {
+                rememberedDao.delete(old);
+            }
+            return token;
+        } catch (SQLException ex) {
+            LOGGER.error("Error remembering a login - ", ex);
+            return null;
+        }
+    }
+
+    /**
+     * @return whether the token is a remembered device of this user that was used recently enough; using it keeps it
+     */
+    public boolean isRememberedLogin(final String userName, final String token) {
+        if (token == null || token.isEmpty()) {
+            return false;
+        }
+        try {
+            RememberedLogin login = rememberedDao.queryForId(tokenHash(token));
+            if (login == null || !login.name.equals(userName)) {
+                return false;
+            }
+            long now = System.currentTimeMillis();
+            if (login.lastUsed == null || now - login.lastUsed.getTime() > REMEMBERED_LOGIN_TTL_MS) {
+                rememberedDao.delete(login);
+                return false;
+            }
+            if (now - login.lastUsed.getTime() > REMEMBERED_LOGIN_TOUCH_MS) {
+                login.lastUsed = new Date(now);
+                rememberedDao.update(login);
+            }
+            return true;
+        } catch (SQLException ex) {
+            LOGGER.error("Error checking a remembered login - ", ex);
+            return false;
+        }
+    }
+
+    /**
+     * Forgets one remembered device (signing out on it).
+     */
+    public void forgetLogin(final String userName, final String token) {
+        if (token == null || token.isEmpty()) {
+            return;
+        }
+        try {
+            DeleteBuilder<RememberedLogin, String> db = rememberedDao.deleteBuilder();
+            db.where().eq("tokenHash", new SelectArg(tokenHash(token))).and().eq("name", new SelectArg(userName));
+            db.delete();
+        } catch (SQLException ex) {
+            LOGGER.error("Error forgetting a remembered login - ", ex);
+        }
+    }
+
+    public void forgetLogins(final String userName) {
+        try {
+            DeleteBuilder<RememberedLogin, String> db = rememberedDao.deleteBuilder();
+            db.where().eq("name", new SelectArg(userName));
+            db.delete();
+        } catch (SQLException ex) {
+            LOGGER.error("Error forgetting remembered logins - ", ex);
+        }
+    }
+
+    private static String tokenHash(String token) {
+        return new Sha256Hash(token).toHex();
     }
 
     public void remove(final String userName) {
@@ -89,6 +183,7 @@ public class AuthorizedUserRepository {
         } catch (SQLException ex) {
             LOGGER.error("Error removing a user from DB - ", ex);
         }
+        forgetLogins(userName);
     }
 
     public AuthorizedUser getByName(String userName) {

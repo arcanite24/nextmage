@@ -12,9 +12,11 @@ export type RpcAccess = 'public' | 'session' | 'login';
 export interface RpcMethods {
   ping: { params: [sessionId?: string | null, pingInfo?: string | null]; result: boolean };
   setCapabilities: { params: [capabilities: string[]]; result: string[] };
-  connectUser: { params: [userName: string, password: string, sessionId: string, restoreSessionId?: string | null, clientVersion?: string | null, userIdStr?: string | null]; result: boolean };
+  connectUser: { params: [userName: string, password: string, sessionId: string, restoreSessionId?: string | null, clientVersion?: string | null, userIdStr?: string | null, rememberToken?: string | null]; result: boolean };
   connectAdmin: { params: [password: string, sessionId: string]; result: boolean };
   sessionGetRestoreToken: { params: [sessionId: string]; result: string };
+  authRememberLogin: { params: [sessionId: string]; result: string };
+  authForgetLogin: { params: [userName: string, rememberToken: string]; result: boolean };
   authRegister: { params: [sessionId: string, userName: string, password: string, email: string]; result: boolean };
   authSendTokenToEmail: { params: [sessionId: string, email: string]; result: boolean };
   authResetPassword: { params: [sessionId: string, email: string, authToken: string, password: string]; result: boolean };
@@ -167,6 +169,8 @@ export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: Rp
   connectUser: { access: 'login', sessionParam: 2 },
   connectAdmin: { access: 'login', sessionParam: 1 },
   sessionGetRestoreToken: { access: 'session', sessionParam: 0 },
+  authRememberLogin: { access: 'session', sessionParam: 0 },
+  authForgetLogin: { access: 'public', sessionParam: -1 },
   authRegister: { access: 'login', sessionParam: 0 },
   authSendTokenToEmail: { access: 'login', sessionParam: 0 },
   authResetPassword: { access: 'login', sessionParam: 0 },
