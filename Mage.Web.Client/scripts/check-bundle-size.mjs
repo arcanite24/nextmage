@@ -51,10 +51,12 @@ import { gzipSync } from 'node:zlib';
 // client gained 15 methods; the admin Access and Audit pages are lazy. Measured entry 69.9 kB, app 448.1 kB
 // app raised 2026-10-11 from 450 kB for M13 (staff roles): the account menu asks for the player's role, the admin
 // console's side nav, Staff page and reason prompts (lazy), measured 450.5 kB
+// app raised 2026-10-11 from 455 kB for M14 (accounts): the admin Accounts and Feedback pages (lazy) and Send
+// feedback in the account menu (a lazy dialog), measured 454.3 kB
 const BUDGET_KB = {
   entry: 71,
   initial: 212,
-  app: 455,
+  app: 460,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

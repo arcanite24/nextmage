@@ -452,13 +452,19 @@ final class AccessApi {
     }
 
     static boolean takeRequestSlot(String address, long now) {
+        return takeSlot(address, now, REQUESTS_PER_HOUR);
+    }
+
+    /** At most perHour calls an hour for this key (an address, or "kind:name"). */
+    static boolean takeSlot(String key, long now, int perHour) {
+        String address = key;
         synchronized (recentRequests) {
             recentRequests.values().removeIf(times -> times.isEmpty() || now - times.peekLast() >= HOUR);
             Deque<Long> times = recentRequests.computeIfAbsent(address, a -> new ArrayDeque<>());
             while (!times.isEmpty() && now - times.peekFirst() >= HOUR) {
                 times.pollFirst();
             }
-            if (times.size() >= REQUESTS_PER_HOUR) {
+            if (times.size() >= perHour) {
                 return false;
             }
             times.addLast(now);

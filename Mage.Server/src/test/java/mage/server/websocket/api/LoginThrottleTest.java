@@ -45,4 +45,24 @@ public class LoginThrottleTest {
         throttle.recordSuccess("ip");
         assertThat(throttle.tryBegin("ip")).isZero();
     }
+
+    @Test
+    void playersGetAFewFreeTries() {
+        AtomicLong now = new AtomicLong(1_000_000);
+        LoginThrottle throttle = new LoginThrottle(now::get, 3);
+
+        for (int i = 0; i < 3; i++) {
+            assertThat(throttle.tryBegin("name:pat")).isZero();
+            assertThat(throttle.tryBegin("name:pat")).as("no in-flight lock during free tries").isZero();
+            throttle.recordFailure("name:pat");
+        }
+        assertThat(throttle.tryBegin("name:pat")).isZero();
+        throttle.recordFailure("name:pat");
+        assertThat(throttle.tryBegin("name:pat")).isEqualTo(1000);
+
+        now.addAndGet(1000);
+        assertThat(throttle.tryBegin("name:pat")).isZero();
+        throttle.recordSuccess("name:pat");
+        assertThat(throttle.tryBegin("name:pat")).isZero();
+    }
 }

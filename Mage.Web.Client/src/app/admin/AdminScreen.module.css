@@ -243,3 +243,30 @@
 
 .mono { font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--text-xs); }
 .number { width: 6.5em; }
+
+.chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-strong);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.linkButton:hover { text-decoration-color: var(--decision); }
+
+.code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--text-2xl);
+  letter-spacing: 0.2em;
+  color: var(--ink-strong);
+  user-select: all;
+}
+
+.numbersTight { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }

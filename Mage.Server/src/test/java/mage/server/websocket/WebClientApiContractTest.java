@@ -73,12 +73,13 @@ public class WebClientApiContractTest {
             "accessRequest", "githubStart", "githubFinish", // access policy and admin store (admin/AccessPolicyTest, AccessGateTest)
             "adminGetUsers", "adminDisconnectUser", "adminEndUserSession", "adminMuteUser", "adminLockUser", "adminActivateUser",
             "adminToggleActivateUser", "adminTableRemove", "adminSendBroadcastMessage", // Moderation, for staff on player sessions too
-            "staffMe", "adminStaff", "adminStaffGrant", "adminStaffRevoke" // staff roles (api/StaffRolesTest)
+            "staffMe", "adminStaff", "adminStaffGrant", "adminStaffRevoke", // staff roles (api/StaffRolesTest)
+            "adminAccounts", "adminAccount", "adminResetCode", "adminAccountExport", "adminDeleteAccount", "adminFeedback",
+            "adminFeedbackMark", "sendFeedback" // accounts and feedback (api/AccountsApiTest)
     ));
 
     static {
         SERVER_METHOD_OVERRIDES.put("submitDeck", "deckSubmit");
-        SERVER_METHOD_OVERRIDES.put("sendFeedback", "serverAddFeedbackMessage");
         SERVER_METHOD_OVERRIDES.put("getGameTypes", "getServerState");
         SERVER_METHOD_OVERRIDES.put("getTournamentGameTypes", "getServerState");
         SERVER_METHOD_OVERRIDES.put("getTournamentTypes", "getServerState");

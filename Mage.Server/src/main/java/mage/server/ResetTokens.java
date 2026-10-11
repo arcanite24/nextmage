@@ -38,8 +38,12 @@ final class ResetTokens {
      * @return a new code for this email address; it replaces any earlier one
      */
     synchronized String issue(String email, long now) {
+        return issue(email, now, VALID_MILLIS);
+    }
+
+    synchronized String issue(String email, long now, long validMillis) {
         String code = String.format("%06d", random.nextInt(1_000_000));
-        pending.put(key(email), new Pending(code, now + VALID_MILLIS));
+        pending.put(key(email), new Pending(code, now + validMillis));
         return code;
     }
 

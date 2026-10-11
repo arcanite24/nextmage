@@ -191,6 +191,40 @@ public class AuthorizedUserRepository {
         forgetLogins(userName);
     }
 
+    /**
+     * Accounts whose name or email contains the text (any case), by name, a page at a time.
+     */
+    public List<AuthorizedUser> list(String text, long offset, long limit) {
+        try {
+            QueryBuilder<AuthorizedUser, Object> qb = usersDao.queryBuilder().orderByRaw("LOWER(name)").offset(offset).limit(limit);
+            matching(qb, text);
+            return usersDao.query(qb.prepare());
+        } catch (SQLException ex) {
+            LOGGER.error("Error listing authorized_user - ", ex);
+            return java.util.Collections.emptyList();
+        }
+    }
+
+    public long count(String text) {
+        try {
+            QueryBuilder<AuthorizedUser, Object> qb = usersDao.queryBuilder().setCountOf(true);
+            matching(qb, text);
+            return usersDao.countOf(qb.prepare());
+        } catch (SQLException ex) {
+            LOGGER.error("Error counting authorized_user - ", ex);
+            return 0;
+        }
+    }
+
+    private static void matching(QueryBuilder<AuthorizedUser, Object> qb, String text) throws SQLException {
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+        String like = "%" + text.trim().toLowerCase(java.util.Locale.ROOT).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+        qb.where().raw("(LOWER(name) LIKE ? OR LOWER(email) LIKE ?)",
+                new SelectArg(com.j256.ormlite.field.SqlType.STRING, like), new SelectArg(com.j256.ormlite.field.SqlType.STRING, like));
+    }
+
     public AuthorizedUser getByName(String userName) {
         try {
             QueryBuilder<AuthorizedUser, Object> qb = usersDao.queryBuilder();

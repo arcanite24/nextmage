@@ -51,6 +51,52 @@ public final class AccountService {
         return null;
     }
 
+    /** how long a code made by staff works: they pass it on by hand, which takes longer than an email */
+    public static final long STAFF_CODE_MILLIS = java.util.concurrent.TimeUnit.HOURS.toMillis(24);
+
+    /** A reset code staff made for a player. */
+    public static class StaffResetCode {
+        /** shown to staff once, to pass on */
+        public String code;
+        /** the account's email, which the player enters with the code */
+        public String email;
+        /** the code was emailed to the player as well */
+        public boolean emailed;
+        public long expiresAt;
+    }
+
+    /**
+     * A password reset code for an account, for servers without mail or players without access to theirs. The player
+     * enters it under Forgot password with the account's email. It replaces any earlier code for the account.
+     */
+    public StaffResetCode staffResetCode(String userName) {
+        if (!managers.configSettings().isAuthenticationActivated()) {
+            throw new IllegalStateException(Session.REGISTRATION_DISABLED_MESSAGE);
+        }
+        AuthorizedUser user = AuthorizedUserRepository.getInstance().getByName(userName == null ? "" : userName.trim());
+        if (user == null) {
+            throw new IllegalArgumentException("There is no account named " + userName);
+        }
+        if (user.email == null || user.email.trim().isEmpty()) {
+            throw new IllegalArgumentException(user.getName() + " has no email address, which a reset code needs");
+        }
+        long now = System.currentTimeMillis();
+        StaffResetCode result = new StaffResetCode();
+        result.code = TOKENS.issue(user.email, now, STAFF_CODE_MILLIS);
+        result.email = user.email;
+        result.expiresAt = now + STAFF_CODE_MILLIS;
+        boolean mail = !managers.configSettings().getMailUser().isEmpty() || !managers.configSettings().getMailgunApiKey().isEmpty();
+        if (mail) {
+            String text = "The server's staff made a code to reset " + user.getName() + "'s password: " + result.code + '\n'
+                    + "Enter it under Forgot password with this email address. It works for 24 hours.";
+            result.emailed = !managers.configSettings().getMailUser().isEmpty()
+                    ? managers.mailClient().sendMessage(user.email, "Password reset code", text)
+                    : managers.mailgunClient().sendMessage(user.email, "Password reset code", text);
+        }
+        logger.info("Password reset code made by staff for " + user.getName());
+        return result;
+    }
+
     public String resetPassword(String email, String code, String password) {
         if (!managers.configSettings().isAuthenticationActivated()) {
             return Session.REGISTRATION_DISABLED_MESSAGE;

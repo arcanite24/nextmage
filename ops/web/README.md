@@ -163,6 +163,12 @@ The shared admin password (`XMAGE_ADMIN_PASSWORD`) still opens the console as an
 
 Every staff action that changes something is in the Audit tab, with the staff member's name and the reason they gave.
 
+The Accounts tab lists every registered account (search by name or email). An account's page shows its sessions, stats, reports by and about it, the feedback it sent and what staff did to it; moderators see neither email nor IP addresses. From there admins can mute, lock and deactivate offline accounts, make a **reset code** (a one-time code the player enters under Forgot password; emailed too when mail works, otherwise shown once for you to pass on, valid 24 hours), **export** everything the server keeps about the account as JSON, and **delete** it with its decks, Career, reports, stats and feedback. The audit log keeps the record of the deletion.
+
+Players send feedback from the account menu (five an hour each); it lands in the Feedback tab to mark seen or done, with a note.
+
+Password sign-ins are throttled per address and per account name: after five failures each further try waits longer, doubling up to five minutes. Remembered devices don't count.
+
 ## Discord notifications
 
 With `XMAGE_DISCORD_WEBHOOK` set (Discord: channel settings, Integrations, Webhooks, New Webhook, Copy Webhook URL), the server posts to that channel when:

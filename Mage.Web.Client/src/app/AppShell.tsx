@@ -1,6 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useQuery } from '@tanstack/react-query';
-import { IdCard, Info, LogOut, Settings, ShieldCheck, WifiOff } from 'lucide-react';
+import { IdCard, Info, LogOut, MessageSquare, Settings, ShieldCheck, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { NavLink, Outlet, useMatch, useNavigate } from 'react-router-dom';
 import { APP_NAME } from './brand';
@@ -37,6 +37,16 @@ const ReportDialog = lazy(() => import('./social/ReportDialog').then((module) =>
 
 // settings load the first time they open, then stay mounted so the dialog can animate out
 const SettingsDialog = lazy(() => import('./screens/SettingsDialog').then((module) => ({ default: module.SettingsDialog })));
+
+const FeedbackDialog = lazy(() => import('./screens/FeedbackDialog').then((module) => ({ default: module.FeedbackDialog })));
+
+function FeedbackHost() {
+  const open = useShellUi((state) => state.feedbackOpen);
+  const setOpen = useShellUi((state) => state.setFeedbackOpen);
+  const [loaded, setLoaded] = useState(false);
+  if (open && !loaded) setLoaded(true);
+  return loaded ? <Suspense fallback={null}><FeedbackDialog open={open} onOpenChange={setOpen} /></Suspense> : null;
+}
 
 function SettingsHost({ open, onOpenChange }: { open: boolean; onOpenChange(open: boolean): void }) {
   const [loaded, setLoaded] = useState(false);
@@ -119,6 +129,9 @@ export function AppShell() {
                       <ShieldCheck size={16} aria-hidden="true" /> {t('shell.admin')}
                     </DropdownMenu.Item>
                   )}
+                  <DropdownMenu.Item className={styles.menuItem} onSelect={() => useShellUi.getState().setFeedbackOpen(true)}>
+                    <MessageSquare size={16} aria-hidden="true" /> {t('shell.feedback')}
+                  </DropdownMenu.Item>
                   <DropdownMenu.Item className={styles.menuItem} onSelect={() => navigate('/about')}>
                     <Info size={16} aria-hidden="true" /> {t('shell.about')}
                   </DropdownMenu.Item>
@@ -137,6 +150,7 @@ export function AppShell() {
       </main>
       <SocialHost />
       <SettingsHost open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <FeedbackHost />
       <ImportSheetHost />
       <Toaster />
     </div>

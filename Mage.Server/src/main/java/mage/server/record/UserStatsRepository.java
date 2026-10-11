@@ -83,6 +83,17 @@ public enum UserStatsRepository {
         return null;
     }
 
+    public void remove(String userName) {
+        if (statsDao == null) return;
+        try {
+            com.j256.ormlite.stmt.DeleteBuilder<UserStats, Object> delete = statsDao.deleteBuilder();
+            delete.where().eq("userName", new SelectArg(userName));
+            delete.delete();
+        } catch (SQLException ex) {
+            Logger.getLogger(UserStatsRepository.class).error("Error removing a user_stats from DB - ", ex);
+        }
+    }
+
     public List<UserStats> getAllUsers() {
         if (statsDao == null) return Collections.emptyList();
         try {

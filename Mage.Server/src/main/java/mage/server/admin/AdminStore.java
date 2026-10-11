@@ -3,6 +3,7 @@ package mage.server.admin;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.SelectArg;
 import com.j256.ormlite.stmt.Where;
@@ -45,6 +46,7 @@ public final class AdminStore {
     private final Dao<AccessRequest, Long> requests;
     private final Dao<GithubLink, Long> githubLinks;
     private final Dao<StaffMember, String> staff;
+    private final Dao<FeedbackEntry, Long> feedback;
 
     public AdminStore(String jdbcUrl) throws SQLException {
         ConnectionSource source = new JdbcConnectionSource(jdbcUrl);
@@ -55,6 +57,7 @@ public final class AdminStore {
         TableUtils.createTableIfNotExists(source, AccessRequest.class);
         TableUtils.createTableIfNotExists(source, GithubLink.class);
         TableUtils.createTableIfNotExists(source, StaffMember.class);
+        TableUtils.createTableIfNotExists(source, FeedbackEntry.class);
         audit = DaoManager.createDao(source, AuditEntry.class);
         settings = DaoManager.createDao(source, AdminSetting.class);
         allowlist = DaoManager.createDao(source, AllowEntry.class);
@@ -62,6 +65,7 @@ public final class AdminStore {
         requests = DaoManager.createDao(source, AccessRequest.class);
         githubLinks = DaoManager.createDao(source, GithubLink.class);
         staff = DaoManager.createDao(source, StaffMember.class);
+        feedback = DaoManager.createDao(source, FeedbackEntry.class);
     }
 
     public static AdminStore get() {
@@ -155,6 +159,97 @@ public final class AdminStore {
     /** false when the account wasn't staff */
     public synchronized boolean revokeStaff(String userName) throws SQLException {
         return !isBlank(userName) && staff.deleteById(userName.trim().toLowerCase(Locale.ROOT)) > 0;
+    }
+
+    // --- feedback ---------------------------------------------------------------------------------
+
+    public static final int MAX_FEEDBACK_MESSAGE = 4000;
+    /** kept at a time; the oldest handled ones go first */
+    public static final int MAX_FEEDBACK = 2000;
+
+    public synchronized FeedbackEntry addFeedback(String userName, String type, String title, String message, String context, long now) throws SQLException {
+        if (isBlank(message)) {
+            throw new IllegalArgumentException("Write something first.");
+        }
+        FeedbackEntry entry = new FeedbackEntry();
+        entry.createdAt = now;
+        entry.userName = cut(userName, 40);
+        entry.type = "bug".equals(type) || "idea".equals(type) ? type : "other";
+        entry.title = cut(isBlank(title) ? firstLine(message) : title.trim(), 200);
+        entry.message = cut(message.trim(), MAX_FEEDBACK_MESSAGE);
+        entry.context = cut(context, 300);
+        entry.status = FeedbackEntry.NEW;
+        feedback.create(entry);
+        if (feedback.countOf() > MAX_FEEDBACK) {
+            QueryBuilder<FeedbackEntry, Long> oldest = feedback.queryBuilder().orderBy("id", true).limit(1L);
+            oldest.where().ne("status", FeedbackEntry.NEW);
+            FeedbackEntry drop = oldest.queryForFirst();
+            if (drop != null) {
+                feedback.delete(drop);
+            }
+        }
+        return entry;
+    }
+
+    /** Newest first; status null for all. */
+    public synchronized List<FeedbackEntry> feedback(String status, int limit) throws SQLException {
+        QueryBuilder<FeedbackEntry, Long> query = feedback.queryBuilder().orderBy("id", false).limit((long) clamp(limit, 1, 500));
+        if (!isBlank(status)) {
+            query.where().eq("status", new SelectArg(status.trim()));
+        }
+        return query.query();
+    }
+
+    public synchronized long newFeedbackCount() throws SQLException {
+        return feedback.queryBuilder().where().eq("status", FeedbackEntry.NEW).countOf();
+    }
+
+    public synchronized FeedbackEntry markFeedback(long id, String status, String note, String by, long now) throws SQLException {
+        if (!FeedbackEntry.NEW.equals(status) && !FeedbackEntry.SEEN.equals(status) && !FeedbackEntry.DONE.equals(status)) {
+            throw new IllegalArgumentException("The status is new, seen or done");
+        }
+        FeedbackEntry entry = feedback.queryForId(id);
+        if (entry == null) {
+            throw new IllegalArgumentException("There is no feedback " + id);
+        }
+        entry.status = status;
+        if (note != null) {
+            entry.note = cut(note.trim(), MAX_NOTE);
+        }
+        entry.handledBy = by;
+        entry.handledAt = now;
+        feedback.update(entry);
+        return entry;
+    }
+
+    public synchronized List<FeedbackEntry> feedbackFrom(String userName, int limit) throws SQLException {
+        return feedback.queryBuilder().orderBy("id", false).limit((long) clamp(limit, 1, 500))
+                .where().eq("userName", new SelectArg(userName)).query();
+    }
+
+    private static String firstLine(String text) {
+        String line = text.trim().split("\\R", 2)[0];
+        return line.length() > 80 ? line.substring(0, 80) + "…" : line;
+    }
+
+    // --- an account's records ---------------------------------------------------------------------
+
+    /**
+     * Everything this store keeps about an account, gone: its allowlist entries by name, staff role, GitHub link and
+     * feedback. The audit log stays: it is the record of what staff did.
+     */
+    public synchronized void forgetAccount(String userName) throws SQLException {
+        String key = userName.trim().toLowerCase(Locale.ROOT);
+        DeleteBuilder<AllowEntry, Long> allowed = allowlist.deleteBuilder();
+        allowed.where().eq("name", new SelectArg(key));
+        allowed.delete();
+        staff.deleteById(key);
+        DeleteBuilder<GithubLink, Long> links = githubLinks.deleteBuilder();
+        links.where().eq("account", new SelectArg(userName.trim()));
+        links.delete();
+        DeleteBuilder<FeedbackEntry, Long> sent = feedback.deleteBuilder();
+        sent.where().eq("userName", new SelectArg(userName.trim()));
+        sent.delete();
     }
 
     // --- settings ---------------------------------------------------------------------------------
