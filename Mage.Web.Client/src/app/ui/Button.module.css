@@ -114,14 +114,26 @@
   opacity: 0.6;
 }
 
+/* a fixed ring that never shrinks with a long label, drawn on its own layer so WebViews keep turning it */
 .busy::after {
   content: '';
+  flex: none;
+  box-sizing: border-box;
   width: 14px;
   height: 14px;
   border-radius: 50%;
   border: 2px solid currentColor;
   border-right-color: transparent;
+  will-change: transform;
   animation: spin 700ms linear infinite;
+}
+
+/* reduced motion stops decorative motion (base.css), but a frozen ring reads as broken: it turns slowly instead */
+@media (prefers-reduced-motion: reduce) {
+  .busy::after {
+    animation-duration: 1600ms !important;
+    animation-iteration-count: infinite !important;
+  }
 }
 
 @keyframes spin {
