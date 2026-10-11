@@ -46,6 +46,7 @@ export default {
   'login.codeHint': 'Six digits. It works for 30 minutes and five tries.',
   'login.password': 'Password',
   'login.newPassword': 'New password',
+  'login.remember': 'Keep me signed in on this device',
   'login.needsPassword': 'This server needs a password',
   'login.server.online': 'Online',
   'login.server.offline': "Can't reach",

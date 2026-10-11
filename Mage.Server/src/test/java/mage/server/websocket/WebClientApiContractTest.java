@@ -66,7 +66,8 @@ public class WebClientApiContractTest {
             "careerChallenge", "careerChallengePlay", "careerGauntlet", "careerGauntletStart", "careerGauntletPick",
             "careerGauntletPlay", "careerGauntletAbandon", "careerLimited", "careerLimitedStart", "careerLimitedPick",
             "careerLimitedDeck", "careerLimitedPlay", "careerLimitedAbandon", // career modes (career/CareerModesTest)
-            "authRegister", "authSendTokenToEmail", "authResetPassword" // session and AccountService, with readable errors
+            "authRegister", "authSendTokenToEmail", "authResetPassword", // session and AccountService, with readable errors
+            "authRememberLogin", "authForgetLogin" // remembered devices in the account database
     ));
 
     static {
@@ -305,6 +306,27 @@ public class WebClientApiContractTest {
     }
 
     @Test
+    void rememberedLoginTokenIsCheckedForTheNewSessionBeforeLogin() throws Exception {
+        FakeConnection first = new FakeConnection();
+        dispatcher.dispatch("connectUser", params("alice", "secret", "x"), first);
+        sessions.names.put(first.getSessionId(), "alice");
+        Object token = dispatcher.dispatch("authRememberLogin", params("x"), first);
+
+        FakeConnection second = new FakeConnection("192.0.2.44");
+        dispatcher.dispatch("connectUser", params("alice", "", "x", "", "", "", (String) token), second);
+        assertThat(sessions.trusted).containsExactly(second.getSessionId() + ":alice");
+
+        FakeConnection third = new FakeConnection("192.0.2.45");
+        dispatcher.dispatch("connectUser", params("mallory", "", "x", "", "", "", (String) token), third);
+        assertThat(sessions.trusted).as("another user's token proves nothing").hasSize(1);
+
+        assertThat(dispatcher.dispatch("authForgetLogin", params("alice", (String) token), new FakeConnection())).isEqualTo(true);
+        assertThat(sessions.rememberedLogins).isEmpty();
+        assertThatThrownBy(() -> dispatcher.dispatch("authRememberLogin", params("x"), new FakeConnection()))
+                .isInstanceOfSatisfying(RpcException.class, e -> assertThat(e.getCode()).isEqualTo(RpcException.NOT_AUTHORIZED));
+    }
+
+    @Test
     void methodNamesAreUnique() {
         List<String> names = dispatcher.getMethods().stream().map(RpcMethod::getName).collect(Collectors.toList());
         assertThat(names).doesNotHaveDuplicates();
@@ -421,6 +443,8 @@ public class WebClientApiContractTest {
         final Map<String, String> hosts = new HashMap<>();
         final Map<String, String> names = new HashMap<>();
         final Set<String> chatMembers = new HashSet<>(); // "sessionId:chatId"
+        final Map<String, String> rememberedLogins = new HashMap<>(); // token -> user name
+        final List<String> trusted = new ArrayList<>(); // "sessionId:userName"
         boolean everyoneIsInEveryChat = true;
 
         @Override
@@ -448,6 +472,25 @@ public class WebClientApiContractTest {
         public Optional<String> restoreToken(String sessionId) {
             // like the server: the restore id of a logged in user is its current session id
             return exists(sessionId) ? Optional.of(sessionId) : Optional.empty();
+        }
+
+        @Override
+        public Optional<String> rememberLogin(String sessionId) {
+            String token = "token-" + rememberedLogins.size();
+            rememberedLogins.put(token, userName(sessionId).orElse(""));
+            return Optional.of(token);
+        }
+
+        @Override
+        public void trustRememberedLogin(String sessionId, String userName, String token) {
+            if (userName.equals(rememberedLogins.get(token))) {
+                trusted.add(sessionId + ":" + userName);
+            }
+        }
+
+        @Override
+        public void forgetLogin(String userName, String token) {
+            rememberedLogins.remove(token, userName);
         }
 
         @Override

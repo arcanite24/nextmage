@@ -80,10 +80,18 @@ final class SessionApi {
                 RpcMethod.named("connectUser")
                         .establishes(2)
                         .params(of("userName", STRING), of("password", STRING), of("sessionId", STRING),
-                                optional("restoreSessionId", STRING), optional("clientVersion", STRING), optional("userIdStr", STRING))
-                        .doc("Log in. Creates the connection's session; restoreSessionId reattaches a user that lost its connection.")
-                        .handler(call -> ctx.server.connectUser(call.string(0), call.string(1), call.string(2),
-                                call.optString(3, ""), serverVersion, call.optString(5, ""))),
+                                optional("restoreSessionId", STRING), optional("clientVersion", STRING), optional("userIdStr", STRING),
+                                optional("rememberToken", STRING))
+                        .doc("Log in. Creates the connection's session; restoreSessionId reattaches a user that lost its connection. "
+                                + "rememberToken (from authRememberLogin) stands in for an account's password.")
+                        .handler(call -> {
+                            String rememberToken = call.optString(6, "");
+                            if (!rememberToken.isEmpty()) {
+                                ctx.sessions.trustRememberedLogin(call.string(2), call.string(0), rememberToken);
+                            }
+                            return ctx.server.connectUser(call.string(0), call.string(1), call.string(2),
+                                    call.optString(3, ""), serverVersion, call.optString(5, ""));
+                        }),
 
                 RpcMethod.named("connectAdmin")
                         .establishes(1)
@@ -101,6 +109,25 @@ final class SessionApi {
                                 + "connectUser's restoreSessionId. It changes on every login, so fetch it again after each one.")
                         .handler(call -> ctx.sessions.restoreToken(call.sessionId())
                                 .orElseThrow(() -> RpcException.notAuthorized("Log in before asking for a restore token"))),
+
+                RpcMethod.named("authRememberLogin")
+                        .session(0)
+                        .params(of("sessionId", STRING))
+                        .returns("string")
+                        .doc("\"Keep me signed in\": a token that signs this account in from this device without the password "
+                                + "(connectUser's rememberToken) until it goes unused for 90 days, the password changes or "
+                                + "authForgetLogin. Fails on servers without accounts.")
+                        .handler(call -> ctx.sessions.rememberLogin(call.sessionId())
+                                .orElseThrow(() -> RpcException.invalidParams("This server has no accounts to remember"))),
+
+                RpcMethod.named("authForgetLogin")
+                        .publicAccess()
+                        .params(of("userName", STRING), of("rememberToken", STRING))
+                        .doc("Signs a remembered device out: its token stops working. Always succeeds.")
+                        .handler(call -> {
+                            ctx.sessions.forgetLogin(call.string(0), call.string(1));
+                            return true;
+                        }),
 
                 RpcMethod.named("authRegister")
                         .establishes(0)

@@ -50,6 +50,7 @@ export function LoginScreen() {
   const destination = !restarted && from && !from.startsWith('/game/') && from !== '/login' ? from : '/';
   const [userName, setUserName] = useState(session.userName);
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(true);
   const [needsPassword, setNeedsPassword] = useState(false);
   const [serverUrl, setServerUrl] = useState(session.serverUrl);
   const [editServer, setEditServer] = useState(false);
@@ -103,14 +104,14 @@ export function LoginScreen() {
     if (!canSubmit) return;
     const url = serverUrl.trim();
     if (mode === 'sit') {
-      if (await session.signIn(url, name, password)) seated();
+      if (await session.signIn(url, name, password, remember)) seated();
       else setRefused((count) => count + 1);
       return;
     }
     setWorking(true);
     try {
       if (mode === 'register') {
-        if (await session.register(url, name, email.trim(), password)) seated();
+        if (await session.register(url, name, email.trim(), password, remember)) seated();
         else setRefused((count) => count + 1);
       } else if (mode === 'forgot') {
         if (await session.requestPasswordReset(url, email.trim())) {
@@ -215,6 +216,13 @@ export function LoginScreen() {
             error={passwordError}
             required
           />
+        )}
+
+        {((mode === 'sit' && accounts) || mode === 'register') && (
+          <label className={styles.remember}>
+            <input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} />
+            {t('login.remember')}
+          </label>
         )}
 
         {mode === 'sit' && !accounts && !needsPassword && (
