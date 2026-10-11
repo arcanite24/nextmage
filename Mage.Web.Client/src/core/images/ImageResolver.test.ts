@@ -34,7 +34,7 @@ const LINKS = {
 };
 
 function createResolver(fetchImpl: typeof fetch, store = memoryStore(), imageProxy?: string) {
-  return new ImageResolver({ fetch: fetchImpl, store, batchDelayMs: 1, minRequestIntervalMs: 0, imageProxy });
+  return new ImageResolver({ fetch: fetchImpl, store, batchDelayMs: 1, minRequestIntervalMs: 0, retryDelayMs: 1, imageProxy });
 }
 
 describe('ImageResolver', () => {
@@ -115,6 +115,22 @@ describe('ImageResolver', () => {
     await vi.waitFor(() => expect(resolver.getVersion()).toBeGreaterThan(1));
     expect(resolver.resolve({ name: 'Custom Card', expansionSetCode: 'CUS', cardNumber: '1' }))
       .toContain('https://api.scryfall.com/cards/named?exact=Custom+Card');
+  });
+
+  test('retries a lookup the proxy or the network failed, instead of sending every card to Scryfall alone', async () => {
+    let lookups = 0;
+    const fetchImpl = vi.fn(async (url: RequestInfo | URL) => {
+      if (String(url).endsWith('scryfall-links.json')) return jsonResponse(LINKS);
+      lookups++;
+      if (lookups === 1) return jsonResponse({}, 502);
+      if (lookups === 2) throw new TypeError('Failed to fetch');
+      return jsonResponse({ data: [{ set: 'm10', collector_number: '146', image_uris: { normal: 'bolt' } }] });
+    }) as unknown as typeof fetch;
+    const resolver = new ImageResolver({ fetch: fetchImpl, store: memoryStore(), batchDelayMs: 1, minRequestIntervalMs: 0, retryDelayMs: 1 });
+    const bolt = { name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' };
+    resolver.resolve(bolt);
+    await vi.waitFor(() => expect(resolver.resolve(bolt)).toBe('bolt'));
+    expect(lookups).toBe(3);
   });
 
   test('reads the persistent cache before the network', async () => {

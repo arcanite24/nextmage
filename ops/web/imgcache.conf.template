@@ -22,11 +22,22 @@ proxy_cache_path /var/cache/nginx/scryfall/api levels=1:2 keys_zone=scryfall_api
 limit_req_zone $server_port zone=scryfall_upstream:1m rate=${IMGCACHE_API_RATE};
 limit_req_status 429;
 
+# Scryfall's API answers carry long headers (CORS, rate and tracing fields); past nginx's default 4k buffer a lookup
+# fails with 502 "upstream sent too big header", and the client then treats a whole batch of cards as missing
+proxy_buffer_size 32k;
+proxy_buffers 16 32k;
+proxy_busy_buffers_size 64k;
+
+# timings and cache hits, to tell a slow Scryfall from a slow host
+log_format imgcache '$remote_addr [$time_local] "$request" $status $body_bytes_sent '
+                    'rt=$request_time urt=$upstream_response_time cache=$upstream_cache_status';
+
 # --- what Caddy talks to ------------------------------------------------------------------------------------
 server {
     listen 8080;
     server_name _;
     server_tokens off;
+    access_log /var/log/nginx/access.log imgcache;
     # redirects stay relative ("/img/cards/..."): behind Caddy this server's own host and port mean nothing
     absolute_redirect off;
 

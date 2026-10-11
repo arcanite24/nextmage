@@ -38,6 +38,8 @@ export interface ImageResolverOptions {
   /** Scryfall asks clients to stay under 10 requests per second */
   minRequestIntervalMs?: number;
   batchDelayMs?: number;
+  /** first wait before retrying a lookup that was refused or failed; doubled each time */
+  retryDelayMs?: number;
   /** cached links older than this are refreshed */
   maxAgeMs?: number;
   now?: () => number;
@@ -91,6 +93,7 @@ export class ImageResolver {
       linksUrl: options.linksUrl ?? '/data/scryfall-links.json',
       minRequestIntervalMs: options.minRequestIntervalMs ?? 120,
       batchDelayMs: options.batchDelayMs ?? 40,
+      retryDelayMs: options.retryDelayMs ?? 1000,
       maxAgeMs: options.maxAgeMs ?? 30 * DAY,
       now: options.now ?? (() => Date.now()),
       imageProxy: 'imageProxy' in options ? options.imageProxy : configuredImageProxy(),
@@ -280,12 +283,14 @@ export class ImageResolver {
         }),
       });
     } catch {
-      this.giveUp(batch);
-      return;
+      response = Response.error();
     }
 
-    if (response.status === 429 && attempt < 3) {
-      await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt));
+    // rate limited, a dropped connection or a passing proxy error: try again before giving up, because giving up
+    // sends every card in the batch to Scryfall on its own, which hits Scryfall's limit and loses pictures
+    const transient = response.status === 0 || response.status === 429 || response.status >= 500;
+    if (transient && attempt < 3) {
+      await new Promise((resolve) => setTimeout(resolve, this.options.retryDelayMs * 2 ** attempt));
       await this.fetchBatch(batch, attempt + 1);
       return;
     }

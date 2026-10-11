@@ -17,10 +17,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,8 +30,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Card pictures kept on the device for good. Every picture the page shows (the site's image proxy under /img/cards/,
- * or Scryfall's CDN and set symbols directly) is answered from app storage when it is there, and downloaded once and kept when it
- * is not. Pictures never change at a given address (Scryfall versions them in the query), so a stored one is never
+ * or Scryfall's CDN and set symbols directly) is answered from app storage when it is there, and downloaded once in the
+ * background and kept when it is not. Pictures never change at a given address (Scryfall versions them in the query), so a stored one is never
  * revalidated. The store is capped; past the cap the least recently used pictures go.
  *
  * The WebView's own HTTP cache would also keep them, but it is small, shared with everything else the page loads
@@ -48,6 +50,8 @@ final class PictureCache {
     private final ExecutorService prefetchPool = Executors.newFixedThreadPool(4);
     /** One download per picture at a time: a second request for it waits for the first. */
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
+    /** Pictures waiting for a download, so asking again while one waits does not queue it twice. */
+    private final Set<String> queued = ConcurrentHashMap.newKeySet();
     private final AtomicBoolean trimming = new AtomicBoolean(false);
     private long writtenSinceTrim = TRIM_EVERY_BYTES; // trim once soon after start
 
@@ -82,15 +86,23 @@ final class PictureCache {
         return !host.equals("localhost") && path.startsWith("/img/cards/");
     }
 
-    /** The stored picture, or a fresh download that is stored on the way; null lets the WebView load it itself. */
+    /**
+     * The stored picture. One not stored yet returns null so the WebView loads it itself straight away, and a copy is
+     * stored in the background for next time: the WebView answers requests from a few threads, and holding one through
+     * a download stalls every other request the page makes behind it.
+     */
     WebResourceResponse respond(WebResourceRequest request) {
         String url = request.getUrl().toString();
+        File file = fileFor(url);
+        if (!file.exists()) {
+            prefetch(Collections.singletonList(url));
+            return null;
+        }
         try {
-            File file = fetch(url);
-            if (file == null) return null;
+            touch(file);
             return response(file);
         } catch (IOException e) {
-            Log.w(TAG, "Picture not cached: " + url + " (" + e.getMessage() + ")");
+            Log.w(TAG, "Stored picture unreadable: " + url + " (" + e.getMessage() + ")");
             return null;
         }
     }
@@ -98,12 +110,14 @@ final class PictureCache {
     /** Downloads pictures in the background, ahead of need; ones already stored are skipped. */
     void prefetch(List<String> urls) {
         for (String url : urls) {
-            if (url == null || !isPicture(Uri.parse(url)) || fileFor(url).exists()) continue;
+            if (url == null || !isPicture(Uri.parse(url)) || fileFor(url).exists() || !queued.add(url)) continue;
             prefetchPool.execute(() -> {
                 try {
                     fetch(url);
                 } catch (IOException e) {
                     Log.w(TAG, "Prefetch failed: " + url + " (" + e.getMessage() + ")");
+                } finally {
+                    queued.remove(url);
                 }
             });
         }
