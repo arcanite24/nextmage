@@ -18,6 +18,7 @@ import messages from '../i18n/en/settings';
 import { browserLocale } from '../i18n/locales';
 import { RichText } from '../i18n/RichText';
 import { Button } from '../ui/Button';
+import { CARD_BACKS, cardBackImage, type CardBackId } from '../ui/cardBack';
 import { Dialog } from '../ui/Dialog';
 import styles from './SettingsDialog.module.css';
 
@@ -46,7 +47,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title={t('settings.title')} width="lg"
       footer={(
-        <Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag, locale: settings.locale, matCloth: settings.matCloth, matArt: settings.matArt, matCard: settings.matCard })}>
+        <Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag, locale: settings.locale, matCloth: settings.matCloth, matArt: settings.matArt, matCard: settings.matCard, cardBack: settings.cardBack })}>
           {t('settings.restore')}
         </Button>
       )}>
@@ -414,6 +415,29 @@ function PlaymatSettings() {
         </div>
         {problem && <p className={styles.rowDetail} role="alert">{problem}</p>}
       </form>
+      <div className={styles.backs}>
+        <div className={styles.rowLabel} id={`${listId}-backs`}>{t('settings.playmat.back')}</div>
+        <div className={styles.rowDetail}>{t('settings.playmat.back.detail')}</div>
+        <div className={styles.backGrid} role="radiogroup" aria-labelledby={`${listId}-backs`}>
+          {([...CARD_BACKS, 'classic'] as CardBackId[]).map((id) => {
+            const label = t(`settings.playmat.back.${id}` as MessageKey);
+            return (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={settings.cardBack === id}
+                aria-label={label}
+                title={label}
+                className={styles.back}
+                onClick={() => update({ cardBack: id })}
+              >
+                <img src={cardBackImage(id)} alt="" loading="lazy" decoding="async" draggable={false} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }

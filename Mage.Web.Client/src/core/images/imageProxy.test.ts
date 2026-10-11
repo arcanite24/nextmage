@@ -17,6 +17,8 @@ describe('proxiedScryfallUrl', () => {
       .toBe('/img/api/cards/named?exact=Lightning+Bolt&format=image');
     expect(proxiedScryfallUrl('https://cards.scryfall.io/large/back/a/b/x.jpg?1700000000', '/img'))
       .toBe('/img/cards/large/back/a/b/x.jpg?1700000000');
+    expect(proxiedScryfallUrl('https://backs.scryfall.io/large/0/a/0aeebaf5-8c7d-4636-9e82-8c27447861f7.jpg', '/img'))
+      .toBe('/img/backs/large/0/a/0aeebaf5-8c7d-4636-9e82-8c27447861f7.jpg');
   });
 
   test('accepts a trailing slash or a full origin as the proxy', () => {
@@ -31,7 +33,7 @@ describe('proxiedScryfallUrl', () => {
       'https://scryfall.com/card/m10/146',
       'https://svgs.scryfall.io/card-symbols/W.svg',
       'http://api.scryfall.com/cards/m10/146',
-      '/back.webp',
+      '/card-back.webp',
       'bolt-normal',
     ]) {
       expect(proxiedScryfallUrl(url, '/img')).toBe(url);

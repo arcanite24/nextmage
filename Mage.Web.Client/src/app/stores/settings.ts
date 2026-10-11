@@ -8,6 +8,7 @@ import type { LocalePreference } from '../i18n/locales';
 import type { CardImageRef } from '../../core/images/imageLinks';
 import { readJson, writeJson } from './persist';
 import { useSession } from './session';
+import { DEFAULT_CARD_BACK, type CardBackId } from '../ui/cardBack';
 
 export interface PlaySettings {
   /** tap lands automatically when the payment is unambiguous */
@@ -71,6 +72,9 @@ export interface PlaySettings {
   /** painted art (generated with an image model: icons, avatars, crests, sleeves, playmat prints) instead of the
    * drawn SVG and CSS art (local only) */
   paintedArt: boolean;
+  /** the back of hidden cards: one of Playmat's designs, or the original Magic back loaded from Scryfall like card
+   * pictures (a Career sleeve's back still wins; local only) */
+  cardBack: CardBackId;
 }
 
 const SETTINGS_KEY = 'playmat.settings';
@@ -114,6 +118,7 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   careerMusic: true,
   musicVolume: 0.5,
   paintedArt: true,
+  cardBack: DEFAULT_CARD_BACK,
   stops: {
     yourTurn: { upkeep: false, draw: false, main1: true, beforeCombat: false, endOfCombat: false, main2: true, endOfTurn: false },
     opponentTurn: { upkeep: false, draw: false, main1: false, beforeCombat: false, endOfCombat: false, main2: false, endOfTurn: true },
