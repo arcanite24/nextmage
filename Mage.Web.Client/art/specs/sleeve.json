@@ -11,64 +11,64 @@
   "anchors": [
     "refs/sleeve/anchor.png"
   ],
-  "style": "Trading card backs: one upright card back per cell, front view, perfectly flat and symmetrical, all exactly the same size and the same 5:7 rectangle with slightly rounded corners. The card's outline is a clean straight-edged rectangle: every ornament stays INSIDE it and nothing sticks out past its edges. A rich cloth or lacquer field in the given colour, a thin gilded ornamental border just inside the edge, and one central gilded emblem in a medallion. Each card fills about 90% of its cell's height.",
-  "spare": "a plain dark green card back",
+  "style": "Card backs: one upright card back per cell, front view, perfectly flat and symmetrical, all the same 5:7 rectangle with slightly rounded corners and straight edges; nothing sticks out past the card's edge. The whole card is ONE flat solid field of the accent ink named by the subject (printed like a solid letterpress block, with its speckle), with a thin ivory border inset from the edge and one bold ivory emblem in the centre, carved like the other pictograms. Each card fills about 90% of its cell's height.",
+  "spare": "a card back in deep green-black accent ink with an ivory diamond",
   "items": [
     {
       "id": "copper",
-      "subject": "burnished copper-brown field, emblem: a sunburst"
+      "subject": "accent ink #6e3f24 for the whole card, emblem: a sunburst"
     },
     {
       "id": "silver",
-      "subject": "cool silver-grey field, emblem: a crescent moon"
+      "subject": "accent ink #5b6168 for the whole card, emblem: a crescent moon"
     },
     {
       "id": "gold",
-      "subject": "deep gold-ochre field, emblem: a crown"
+      "subject": "accent ink #7a5f1c for the whole card, emblem: a crown"
     },
     {
       "id": "obsidian",
-      "subject": "glossy black obsidian field with faint violet sheen, emblem: a many-faceted crystal"
+      "subject": "accent ink #121014 for the whole card, emblem: a many-faceted crystal"
     },
     {
       "id": "foil",
-      "subject": "iridescent violet-to-teal holographic foil field, emblem: a five-pointed star"
+      "subject": "accent ink #4a3d78 for the whole card, emblem: a five-pointed star"
     },
     {
       "id": "school-pauper",
-      "subject": "moss-green field, emblem: a copper coin over a wooden bowl"
+      "subject": "accent ink #3d5a36 for the whole card, emblem: a copper coin over a wooden bowl"
     },
     {
       "id": "school-commander",
-      "subject": "royal purple field, emblem: a crown above a raised banner"
+      "subject": "accent ink #4b2a5e for the whole card, emblem: a crown above a raised banner"
     },
     {
       "id": "school-limited",
-      "subject": "parchment-tan field, emblem: an open book with a single card on it"
+      "subject": "accent ink #66583c for the whole card, emblem: an open book with a single card on it"
     },
     {
       "id": "school-pioneer",
-      "subject": "steel-blue field, emblem: a compass rose"
+      "subject": "accent ink #2c4a66 for the whole card, emblem: a compass rose"
     },
     {
       "id": "school-standard",
-      "subject": "deep teal field, emblem: a battle standard flag"
+      "subject": "accent ink #22605b for the whole card, emblem: a battle standard flag"
     },
     {
       "id": "school-modern",
-      "subject": "crimson field, emblem: a gear struck by lightning"
+      "subject": "accent ink #6a2a2c for the whole card, emblem: a gear struck by lightning"
     },
     {
       "id": "school-legacy",
-      "subject": "navy blue field, emblem: an ancient stone tower"
+      "subject": "accent ink #25305e for the whole card, emblem: an ancient stone tower"
     },
     {
       "id": "school-vintage",
-      "subject": "olive-gold field, emblem: a dark lotus flower"
+      "subject": "accent ink #4f4a1e for the whole card, emblem: a dark lotus flower"
     },
     {
       "id": "school-brawl",
-      "subject": "rose-red field, emblem: two crossed axes"
+      "subject": "accent ink #7b3550 for the whole card, emblem: two crossed axes"
     }
   ]
 }
