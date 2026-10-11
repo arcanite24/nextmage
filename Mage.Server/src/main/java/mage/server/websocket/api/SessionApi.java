@@ -89,8 +89,7 @@ final class SessionApi {
                             if (!rememberToken.isEmpty()) {
                                 ctx.sessions.trustRememberedLogin(call.string(2), call.string(0), rememberToken);
                             }
-                            return ctx.server.connectUser(call.string(0), call.string(1), call.string(2),
-                                    call.optString(3, ""), serverVersion, call.optString(5, ""));
+                            return connectUser(ctx, call, serverVersion);
                         }),
 
                 RpcMethod.named("connectAdmin")
@@ -187,14 +186,52 @@ final class SessionApi {
                         .session(0)
                         .params(of("sessionId", STRING), of("userName", STRING), of("title", STRING), of("type", STRING),
                                 of("message", STRING), optional("email", STRING))
-                        .doc("Send feedback to the server admin.")
+                        .doc("Send feedback to the server's staff (the admin Feedback inbox). type is bug, idea or other; title "
+                                + "may be empty; email carries where the app was and its version. " + FEEDBACK_PER_HOUR
+                                + " an hour per player.")
                         .handler(call -> {
                             String userName = ctx.sessions.userName(call.sessionId()).orElse(call.string(1));
-                            ctx.server.serverAddFeedbackMessage(call.string(0), userName, call.string(2), call.string(3),
-                                    call.string(4), call.optString(5, ""));
+                            if (!AccessApi.takeSlot("feedback:" + userName.toLowerCase(java.util.Locale.ROOT), System.currentTimeMillis(), FEEDBACK_PER_HOUR)) {
+                                throw new RpcException(RpcException.RATE_LIMITED, "Thanks! That's plenty for now. Try again in an hour.");
+                            }
+                            AccessApi.store(() -> mage.server.admin.AccessPolicy.get().store().addFeedback(userName, call.string(3),
+                                    call.string(2), call.string(4), call.optString(5, ""), System.currentTimeMillis()));
                             return true;
                         })
         );
+    }
+
+    /**
+     * Password sign-ins are throttled per address and per account name: after a few failures each further try waits
+     * longer, so a closed server doesn't invite password guessing. Remembered devices and restored sessions aren't
+     * guesses and aren't counted.
+     */
+    static final int FEEDBACK_PER_HOUR = 5;
+
+    private static boolean connectUser(ApiContext ctx, RpcCall call, MageVersion serverVersion) throws Exception {
+        String password = call.string(1);
+        if (password.isEmpty()) {
+            return ctx.server.connectUser(call.string(0), password, call.string(2), call.optString(3, ""), serverVersion, call.optString(5, ""));
+        }
+        String ipKey = "ip:" + call.getConnection().getRemoteHost();
+        String nameKey = "name:" + call.string(0).trim().toLowerCase(java.util.Locale.ROOT);
+        long lockMillis = Math.max(ctx.playerLoginThrottle.tryBegin(ipKey), ctx.playerLoginThrottle.tryBegin(nameKey));
+        if (lockMillis > 0) {
+            ctx.sessions.disconnect(call.sessionId(), DisconnectReason.LostConnection);
+            call.getConnection().bindSession(null);
+            logger.warn("Sign-in throttled: " + call.string(0) + " from " + call.getConnection().getRemoteHost());
+            throw new RpcException(RpcException.RATE_LIMITED,
+                    "Too many failed sign-ins. Try again in " + ((lockMillis + 999) / 1000) + " s");
+        }
+        boolean ok = ctx.server.connectUser(call.string(0), password, call.string(2), call.optString(3, ""), serverVersion, call.optString(5, ""));
+        if (ok) {
+            ctx.playerLoginThrottle.recordSuccess(ipKey);
+            ctx.playerLoginThrottle.recordSuccess(nameKey);
+        } else {
+            ctx.playerLoginThrottle.recordFailure(ipKey);
+            ctx.playerLoginThrottle.recordFailure(nameKey);
+        }
+        return ok;
     }
 
     private static boolean connectAdmin(ApiContext ctx, RpcCall call, MageVersion serverVersion) throws Exception {

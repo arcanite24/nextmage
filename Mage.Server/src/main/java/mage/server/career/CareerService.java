@@ -794,6 +794,19 @@ public final class CareerService {
         int levelPaid;
     }
 
+    /** The account's Career, gone for good (an account deletion). False when it had none. */
+    public boolean delete(String user) throws SQLException {
+        CareerStore store = CareerStore.get();
+        if (store.profile(user) == null) {
+            return false;
+        }
+        store.transaction(() -> {
+            store.deleteProfile(user);
+            return null;
+        });
+        return true;
+    }
+
     /** the whole Career as a signed text file, for keeping a copy or moving it back after a loss */
     public String export(String user) throws SQLException, CareerException {
         CareerStore store = CareerStore.get();

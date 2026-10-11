@@ -22,6 +22,8 @@ public final class ApiContext {
     final DeckValidationService deckValidation = new DeckValidationService();
     final DeckImportService deckImport = new DeckImportService();
     final LoginThrottle adminLoginThrottle = new LoginThrottle();
+    /** player sign-ins with a password, per address and per account name */
+    final LoginThrottle playerLoginThrottle = LoginThrottle.forPlayers();
     /**
      * Server admin password; admin login over the bridge is disabled when it is empty.
      */

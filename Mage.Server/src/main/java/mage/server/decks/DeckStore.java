@@ -92,6 +92,24 @@ public final class DeckStore {
     /**
      * @return the deck with its data, or null when the account has no such deck (or it was deleted)
      */
+    /** Every deck of the account, tombstones too, gone for good. */
+    public synchronized int deleteAll(String owner) throws SQLException {
+        DeleteBuilder<StoredDeck, String> delete = dao.deleteBuilder();
+        delete.where().eq("owner", new SelectArg(key(owner)));
+        return delete.delete();
+    }
+
+    /** Every live deck of the account with its data, for an export. */
+    public synchronized List<DeckSyncEntry> export(String owner) throws SQLException {
+        List<DeckSyncEntry> entries = new ArrayList<>();
+        for (StoredDeck deck : dao.queryForEq("owner", new SelectArg(key(owner)))) {
+            if (!deck.deleted) {
+                entries.add(new DeckSyncEntry(deck, true));
+            }
+        }
+        return entries;
+    }
+
     public synchronized DeckSyncEntry get(String owner, String deckId) throws SQLException {
         StoredDeck deck = dao.queryForId(key(owner) + '/' + checkId(deckId));
         return deck == null || deck.deleted ? null : new DeckSyncEntry(deck, true);

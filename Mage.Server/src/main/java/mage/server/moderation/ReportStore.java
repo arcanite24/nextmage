@@ -99,6 +99,20 @@ public final class ReportStore {
         return query.query();
     }
 
+    /** Reports by or about the player, newest first. */
+    public synchronized List<PlayerReport> involving(String userName, int limit) throws SQLException {
+        com.j256.ormlite.stmt.QueryBuilder<PlayerReport, Long> query = dao.queryBuilder().orderBy("id", false).limit((long) Math.max(1, Math.min(limit, 500)));
+        query.where().eq("reporter", new SelectArg(userName)).or().eq("reported", new SelectArg(userName));
+        return query.query();
+    }
+
+    /** Reports by or about the player, gone for good (an account deletion). */
+    public synchronized int forget(String userName) throws SQLException {
+        com.j256.ormlite.stmt.DeleteBuilder<PlayerReport, Long> delete = dao.deleteBuilder();
+        delete.where().eq("reporter", new SelectArg(userName)).or().eq("reported", new SelectArg(userName));
+        return delete.delete();
+    }
+
     public synchronized boolean close(long id, String resolution, long now) throws SQLException {
         PlayerReport report = dao.queryForId(id);
         if (report == null || !report.open) {

@@ -34,6 +34,48 @@ export interface AccessRequest {
     status?: string;
 }
 
+export interface AccountDetail {
+    account?: AccountRow;
+    audit?: AuditEntry[];
+    decks?: number;
+    feedback?: FeedbackEntry[];
+    githubLogin?: string;
+    matches?: number;
+    matchesQuit?: number;
+    rating?: number;
+    reports?: PlayerReport[];
+    sessions?: AccountSession[];
+    tourneys?: number;
+}
+
+export interface AccountRow {
+    active?: boolean;
+    allowlisted?: boolean;
+    career?: boolean;
+    email?: string;
+    lastConnection?: number;
+    lockedUntil?: number;
+    mutedUntil?: number;
+    name?: string;
+    online?: boolean;
+    staffRole?: string;
+}
+
+export interface AccountSession {
+    connectedAt?: number;
+    host?: string;
+    lastActivity?: number;
+    playing?: string;
+    sessionId?: string;
+    state?: string;
+}
+
+export interface AccountsPage {
+    accounts?: AccountRow[];
+    offset?: number;
+    total?: number;
+}
+
 export interface AllowEntry {
     addedAt?: number;
     addedBy?: string;
@@ -858,6 +900,20 @@ export interface ExpansionSetInfo {
     type?: string;
 }
 
+export interface FeedbackEntry {
+    context?: string;
+    createdAt?: number;
+    handledAt?: number;
+    handledBy?: string;
+    id?: number;
+    message?: string;
+    note?: string;
+    status?: string;
+    title?: string;
+    type?: string;
+    userName?: string;
+}
+
 export interface GameClientMessage extends Serializable {
     cardsView1?: { [index: string]: CardView };
     cardsView2?: { [index: string]: CardView };
@@ -1294,6 +1350,13 @@ export interface StaffMember {
     key?: string;
     name?: string;
     role?: string;
+}
+
+export interface StaffResetCode {
+    code?: string;
+    email?: string;
+    emailed?: boolean;
+    expiresAt?: number;
 }
 
 export interface TableClientMessage extends Serializable {

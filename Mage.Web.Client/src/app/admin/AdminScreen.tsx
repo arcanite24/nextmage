@@ -1,6 +1,6 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Ban, KeyRound, LogOut, Mic, MicOff, Power, ShieldCheck, Trash2, Unlock } from 'lucide-react';
+import { ArrowLeft, Ban, KeyRound, LogOut, Mic, MicOff, Power, Trash2 } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { createApi } from '../../protocol/generated/api';
@@ -12,8 +12,10 @@ import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
 import { Field } from '../ui/Field';
 import { AccessPage } from './AccessPage';
+import { AccountsPage } from './AccountsPage';
 import { AuditPage } from './AuditPage';
 import { ConfirmAction } from './ConfirmAction';
+import { FeedbackPage } from './FeedbackPage';
 import { StaffPage } from './StaffPage';
 import { atLeast, describeAge, formatBytes, formatDuration, MUTE_CHOICES, type StaffRole } from './adminFormat';
 import styles from './AdminScreen.module.css';
@@ -138,7 +140,9 @@ function ConsoleSignIn({ onSignedIn }: { onSignedIn(admin: { api: AdminApi; rpc:
 const SECTIONS: { id: string; label: string; role: StaffRole }[] = [
   { id: 'overview', label: 'Overview', role: 'moderator' },
   { id: 'players', label: 'Players', role: 'moderator' },
+  { id: 'accounts', label: 'Accounts', role: 'moderator' },
   { id: 'reports', label: 'Reports', role: 'moderator' },
+  { id: 'feedback', label: 'Feedback', role: 'moderator' },
   { id: 'tables', label: 'Tables', role: 'admin' },
   { id: 'broadcast', label: 'Broadcast', role: 'admin' },
   { id: 'access', label: 'Access', role: 'admin' },
@@ -163,7 +167,9 @@ function Console({ staff }: { staff: StaffSession }) {
       </Tabs.List>
       <Tabs.Content value="overview" className={styles.panel}><Overview api={api} /></Tabs.Content>
       <Tabs.Content value="players" className={styles.panel}><Players api={api} role={role} /></Tabs.Content>
+      <Tabs.Content value="accounts" className={styles.panel}><AccountsPage api={api} role={role} /></Tabs.Content>
       <Tabs.Content value="reports" className={styles.panel}><Reports api={api} role={role} /></Tabs.Content>
+      <Tabs.Content value="feedback" className={styles.panel}><FeedbackPage api={api} /></Tabs.Content>
       {atLeast(role, 'admin') && (
         <>
           <Tabs.Content value="tables" className={styles.panel}><TablesPanel api={api} /></Tabs.Content>
@@ -346,38 +352,8 @@ function Players({ api, role }: { api: AdminApi; role: StaffRole }) {
           })}
         </tbody>
       </table>
-      {admin && <AccountForm api={api} />}
+      <p className={styles.quiet}>Players who are offline are under Accounts.</p>
     </div>
-  );
-}
-
-/** Undoing a lock or a deactivation for a player who is offline. */
-function AccountForm({ api }: { api: AdminApi }) {
-  const [name, setName] = useState('');
-  const [note, setNote] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  async function run(work: () => Promise<unknown>, done: string) {
-    setError(null);
-    try {
-      await work();
-      setNote(done);
-      setName('');
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
-    }
-  }
-  const who = name.trim();
-  return (
-    <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); void run(() => api.adminActivateUser(who, true), `${who} can sign in again.`); }}>
-      <Field label="An account by name" value={name} placeholder="someone offline" onChange={(event) => setName(event.target.value)} />
-      <Button type="submit" size="sm" icon={<ShieldCheck size={15} />} disabled={!who}>Activate</Button>
-      <Button type="button" size="sm" icon={<Unlock size={15} />} disabled={!who}
-        onClick={() => void run(() => api.adminLockUser(who, 0), `${who} is unlocked.`)}>Unlock</Button>
-      <Button type="button" size="sm" icon={<Mic size={15} />} disabled={!who}
-        onClick={() => void run(() => api.adminMuteUser(who, 0), `${who} can chat again.`)}>Unmute</Button>
-      {note && <span className={styles.quiet} role="status">{note}</span>}
-      {error && <span className={styles.error} role="alert">{error}</span>}
-    </form>
   );
 }
 

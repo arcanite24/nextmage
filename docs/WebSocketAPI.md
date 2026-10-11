@@ -141,7 +141,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `disconnectSession` | `sessionId: string`, `keepGames?: boolean` | `boolean` | session | Log out. With keepGames the user's active tables survive for a later reconnect. |
 | `playerLogout` | `sessionId: string`, `keepGames?: boolean` | `boolean` | session | Alias of `disconnectSession`. |
 | `connectSetUserData` | `userName?: string`, `sessionId: string`, `userData: UserData`, `clientVersion?: string`, `userIdStr?: string` | `boolean` | session | Store user preferences (avatar, flag, auto-pass settings). userName is ignored; the session identifies the user. |
-| `sendFeedback` | `sessionId: string`, `userName: string`, `title: string`, `type: string`, `message: string`, `email?: string` | `boolean` | session | Send feedback to the server admin. |
+| `sendFeedback` | `sessionId: string`, `userName: string`, `title: string`, `type: string`, `message: string`, `email?: string` | `boolean` | session | Send feedback to the server's staff (the admin Feedback inbox). type is bug, idea or other; title may be empty; email carries where the app was and its version. 5 an hour per player. |
 | `serverGetMainRoomId` | - | `UUID` | public | Id of the main lobby room. |
 | `serverGetPromotionMessages` | `sessionId?: string` | `unknown` | public | Server news shown after login. |
 | `getServerState` | - | `ServerState` | public | Server version and every game, tournament, player and deck type. Also used as a status probe. |
@@ -250,6 +250,13 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `adminStaff` | - | `StaffList` | session | Staff (owner): who has a staff role. |
 | `adminStaffGrant` | `userName: string`, `role: string`, `reason?: string` | `StaffMember` | session | Staff (owner): give an account a role (moderator, admin or owner), or change it. |
 | `adminStaffRevoke` | `userName: string`, `reason?: string` | `boolean` | session | Staff (owner): take an account's role away. False when it had none. |
+| `adminAccounts` | `search?: string`, `offset?: number` | `AccountsPage` | session | Staff (moderator): registered accounts whose name or email contains search, by name, 50 at a time from offset. |
+| `adminAccount` | `userName: string` | `AccountDetail` | session | Staff (moderator): one account with its sessions, stats, reports by and about it, its feedback and its audit history. |
+| `adminResetCode` | `userName: string`, `reason?: string` | `StaffResetCode` | session | Staff (admin): a one-time password reset code for the account, shown once; it is emailed too when the server can send mail. The player enters it under Forgot password with the account's email. |
+| `adminAccountExport` | `userName: string` | `string` | session | Staff (admin): everything the server keeps about the account as JSON, for the player or before a deletion. Passwords and sign-in tokens are left out. |
+| `adminDeleteAccount` | `userName: string`, `reason: string` | `boolean` | session | Staff (admin): delete the account with its decks, Career, reports, stats, feedback, allowlist entry and staff role, signing its player out. Can't be undone: export first. The audit log keeps the record of the deletion. |
+| `adminFeedback` | `status?: string` | `FeedbackEntry[]` | session | Staff (moderator): feedback players sent, newest first, 200 at most; status new, seen or done narrows it. |
+| `adminFeedbackMark` | `id: number`, `status: string`, `note?: string` | `FeedbackEntry` | session | Staff (moderator): mark feedback new, seen or done, with an optional note (such as the issue it became). |
 | `serverInfo` | - | `ServerInfo` | public | Whether the server has accounts and mail, and its name and password rules. Callable before login. |
 | `deckSyncList` | - | `DeckSyncEntry[]` | session | Every deck kept on the server for the signed-in account, without the deck data, deleted ones included (as tombstones, for 90 days). Only on servers with accounts. |
 | `deckSyncGet` | `deckId: string` | `DeckSyncEntry \| null` | session | One deck of the signed-in account with its data, or null when there is none. |

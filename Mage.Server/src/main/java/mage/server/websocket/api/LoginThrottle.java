@@ -28,14 +28,28 @@ final class LoginThrottle {
 
     private final Map<String, Entry> entries = new ConcurrentHashMap<>();
     private final LongSupplier clock;
+    /** failures allowed before any lockout: players mistype, so they get a few; the admin password gets none */
+    private final int freeFailures;
 
     LoginThrottle() {
         this(System::currentTimeMillis);
     }
 
     LoginThrottle(LongSupplier clock) {
-        this.clock = clock;
+        this(clock, 0);
     }
+
+    LoginThrottle(LongSupplier clock, int freeFailures) {
+        this.clock = clock;
+        this.freeFailures = freeFailures;
+    }
+
+    /** For player sign-ins: a few free tries, then the same doubling lockout. */
+    static LoginThrottle forPlayers() {
+        return new LoginThrottle(System::currentTimeMillis, PLAYER_FREE_FAILURES);
+    }
+
+    static final int PLAYER_FREE_FAILURES = 5;
 
     /**
      * Starts a login attempt. While an attempt is running, other attempts from the same IP are refused too,
@@ -59,7 +73,9 @@ final class LoginThrottle {
             if (remaining > 0) {
                 return remaining;
             }
-            entry.lockedUntil = now + BASE_LOCK_MILLIS; // until the attempt's result is recorded
+            if (entry.failures >= freeFailures) {
+                entry.lockedUntil = now + BASE_LOCK_MILLIS; // until the attempt's result is recorded
+            }
             return 0;
         }
     }
@@ -70,8 +86,10 @@ final class LoginThrottle {
         synchronized (entry) {
             entry.failures++;
             entry.lastSeen = now;
-            int shift = Math.min(entry.failures - 1, 20);
-            entry.lockedUntil = now + Math.min(MAX_LOCK_MILLIS, BASE_LOCK_MILLIS << shift);
+            if (entry.failures > freeFailures) {
+                int shift = Math.min(entry.failures - freeFailures - 1, 20);
+                entry.lockedUntil = now + Math.min(MAX_LOCK_MILLIS, BASE_LOCK_MILLIS << shift);
+            }
         }
     }
 

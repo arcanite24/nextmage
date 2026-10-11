@@ -259,6 +259,20 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('adminStaffGrant', userName, role, reason),
     adminStaffRevoke: (userName: string, reason?: string | null) =>
       rpc.call('adminStaffRevoke', userName, reason),
+    adminAccounts: (search?: string | null, offset?: number | null) =>
+      rpc.call('adminAccounts', search, offset),
+    adminAccount: (userName: string) =>
+      rpc.call('adminAccount', userName),
+    adminResetCode: (userName: string, reason?: string | null) =>
+      rpc.call('adminResetCode', userName, reason),
+    adminAccountExport: (userName: string) =>
+      rpc.call('adminAccountExport', userName),
+    adminDeleteAccount: (userName: string, reason: string) =>
+      rpc.call('adminDeleteAccount', userName, reason),
+    adminFeedback: (status?: string | null) =>
+      rpc.call('adminFeedback', status),
+    adminFeedbackMark: (id: number, status: string, note?: string | null) =>
+      rpc.call('adminFeedbackMark', id, status, note),
     serverInfo: () =>
       rpc.call('serverInfo'),
     deckSyncList: () =>

@@ -231,7 +231,7 @@ final class AdminApi {
     }
 
     /** staff can't lock or deactivate the owner, or anyone above their own role */
-    private static void refuseStaffTarget(ApiContext ctx, String actor, String userName) throws RpcException {
+    static void refuseStaffTarget(ApiContext ctx, String actor, String userName) throws RpcException {
         StaffRole target = AccessPolicy.get().roleOf(userName);
         if (target == null || Staff.CONSOLE.equals(actor)) {
             return;
