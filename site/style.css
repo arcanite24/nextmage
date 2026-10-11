@@ -25,7 +25,12 @@
   --gutter: 24px;
   --shadow-lifted: 0 24px 60px -12px rgb(0 0 0 / 0.65), 0 8px 18px -6px rgb(0 0 0 / 0.5);
   color-scheme: dark;
+  accent-color: var(--decision);
+  caret-color: var(--decision);
+  scrollbar-color: var(--mat-400) var(--mat-950);
 }
+
+::selection { background: var(--decision); color: var(--decision-ink); }
 
 * { box-sizing: border-box; }
 
@@ -92,14 +97,6 @@ p { margin: 0; text-wrap: pretty; }
 .wrap { width: min(1200px, 100% - var(--gutter) * 2); margin-inline: auto; }
 .center { text-align: center; }
 
-.eyebrow {
-  font: 700 0.9rem/1 var(--font-print);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--decision);
-  margin-bottom: 14px;
-}
-
 .skip {
   position: absolute;
   left: 12px;
@@ -152,9 +149,7 @@ p { margin: 0; text-wrap: pretty; }
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgb(11 18 15 / 0.78);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  background: var(--mat-900);
   border-bottom: 1px solid var(--ink-ghost);
 }
 
@@ -210,22 +205,6 @@ p { margin: 0; text-wrap: pretty; }
   pointer-events: none;
 }
 
-/* ---------- facts ---------- */
-
-.facts { padding: 40px 0 24px; }
-.fact-row {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  border-block: 1.5px dashed var(--thread);
-}
-.fact-row li { padding: 26px 22px; display: grid; gap: 4px; }
-.fact-row li + li { border-left: 1px solid var(--ink-ghost); }
-.fact-row b { font: 800 2rem/1 var(--font-print); text-transform: uppercase; color: var(--ink-strong); letter-spacing: 0.01em; }
-.fact-row span { color: var(--ink-dim); font-size: 0.95rem; }
-
 /* ---------- features ---------- */
 
 .feature { padding: 96px 0 0; }
@@ -233,7 +212,7 @@ p { margin: 0; text-wrap: pretty; }
 .feature-row.flip { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
 .feature-row.flip .feature-copy { order: 2; }
 .feature-copy { display: grid; gap: 18px; }
-.feature-copy > p:not(.eyebrow) { color: var(--ink-soft); font-size: 1.08rem; }
+.feature-copy > p { color: var(--ink-soft); font-size: 1.08rem; }
 
 .ticks { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 10px; }
 .ticks li { position: relative; padding-left: 28px; color: var(--ink-soft); }
@@ -264,31 +243,25 @@ p { margin: 0; text-wrap: pretty; }
 }
 .career-head { text-align: center; display: grid; justify-items: center; gap: 16px; }
 .career-head h2 { max-width: 22ch; }
-.career-head p:not(.eyebrow) { color: var(--ink-soft); max-width: 60ch; font-size: 1.1rem; }
+.career-head p { color: var(--ink-soft); max-width: 60ch; font-size: 1.1rem; }
 
 .career-shots { position: relative; margin-top: 56px; padding-bottom: 12%; }
 .career-hub { width: 78%; }
 .career-pack { position: absolute; width: 46%; right: 0; bottom: 0; box-shadow: 0 0 0 1px var(--ink-faint), 0 30px 70px -10px rgb(0 0 0 / 0.8); }
 
-.modes {
-  list-style: none;
-  padding: 0;
-  margin: 64px 0 0;
+/* the modes and the XMage list are printed ledgers: a term, its line, a stitched rule between rows */
+.modes, .also { margin: 64px 0 0; display: grid; column-gap: 56px; }
+.modes { grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1.5px dashed var(--thread); }
+.modes > div, .also > div {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  gap: 20px;
+  align-items: baseline;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--ink-ghost);
 }
-.modes li {
-  padding: 20px 22px;
-  border-radius: var(--radius-control);
-  background: rgb(233 228 214 / 0.03);
-  box-shadow: inset 0 0 0 1px var(--ink-ghost);
-  display: grid;
-  gap: 4px;
-  align-content: start;
-}
-.modes b { font: 700 1.3rem/1.1 var(--font-print); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-strong); }
-.modes span { color: var(--ink-dim); font-size: 0.95rem; }
+.modes dt, .also dt { font: 700 1.25rem/1.1 var(--font-print); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-strong); }
+.modes dd, .also dd { margin: 0; color: var(--ink-soft); }
 
 .gallery { margin-top: 72px; display: grid; gap: 36px; justify-items: center; }
 .bosses { display: flex; justify-content: center; gap: clamp(8px, 2vw, 28px); flex-wrap: wrap; }
@@ -304,37 +277,21 @@ p { margin: 0; text-wrap: pretty; }
 /* ---------- more ---------- */
 
 .more { padding: 112px 0 0; }
-.cards {
-  list-style: none;
-  padding: 0;
-  margin: 48px 0 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-.cards li {
-  padding: 26px 24px;
-  border-radius: var(--radius-zone);
-  background: rgb(15 23 20 / 0.72);
-  box-shadow: inset 0 0 0 1px var(--ink-ghost);
-  display: grid;
-  gap: 10px;
-  align-content: start;
-}
-.cards p { color: var(--ink-dim); }
+.also { max-width: 880px; margin-inline: auto; margin-top: 48px; border-top: 1.5px dashed var(--thread); }
+.also > div { grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); padding: 20px 0; }
 
 /* ---------- host ---------- */
 
 .host { padding: 112px 0 0; }
 .host-row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 56px; align-items: center; }
 .host-copy { display: grid; gap: 18px; }
-.host-copy > p:not(.eyebrow):not(.small) { color: var(--ink-soft); font-size: 1.08rem; }
+.host-copy > p:not(.small) { color: var(--ink-soft); font-size: 1.08rem; }
 .small { color: var(--ink-dim); font-size: 0.95rem; }
 
-.stack { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
-.stack li { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: baseline; }
-.stack b { font: 600 0.95rem ui-monospace, 'SF Mono', Menlo, Consolas, monospace; color: var(--sage); }
-.stack span { color: var(--ink-soft); }
+.stack { margin: 0; display: grid; gap: 10px; }
+.stack > div { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: baseline; }
+.stack dt { font: 600 0.95rem ui-monospace, 'SF Mono', Menlo, Consolas, monospace; color: var(--sage); }
+.stack dd { margin: 0; color: var(--ink-soft); }
 
 .terminal {
   min-width: 0;
@@ -343,9 +300,6 @@ p { margin: 0; text-wrap: pretty; }
   box-shadow: 0 0 0 1px var(--ink-ghost), var(--shadow-lifted);
   overflow: hidden;
 }
-.terminal-bar { display: flex; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--ink-ghost); }
-.terminal-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--ink-ghost); }
-.terminal-bar i:first-child { background: var(--decision); }
 .terminal pre { margin: 0; padding: 22px 24px 26px; overflow-x: auto; }
 .terminal code { background: none; padding: 0; font-size: 0.92rem; line-height: 1.75; color: var(--ink-strong); }
 .terminal .c { color: var(--ink-dim); }
@@ -369,10 +323,7 @@ p { margin: 0; text-wrap: pretty; }
 @media (max-width: 960px) {
   .feature-row, .feature-row.flip, .tablet-row, .host-row { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .feature-row.flip .feature-copy { order: 0; }
-  .fact-row { grid-template-columns: repeat(2, 1fr); }
-  .fact-row li:nth-child(3) { border-left: 0; }
-  .fact-row li:nth-child(n + 3) { border-top: 1px solid var(--ink-ghost); }
-  .modes, .cards { grid-template-columns: repeat(2, 1fr); }
+  .modes { grid-template-columns: minmax(0, 1fr); }
   .career-hub { width: 100%; }
   .career-shots { padding-bottom: 0; display: grid; gap: 20px; }
   .career-pack { position: static; width: 100%; }
@@ -386,13 +337,11 @@ p { margin: 0; text-wrap: pretty; }
   .brand img { height: 32px; }
   .hero { padding-top: 56px; }
   .btn { height: 48px; padding: 0 20px; font-size: 1.08rem; }
-  .fact-row { grid-template-columns: 1fr; }
-  .fact-row li + li { border-left: 0; border-top: 1px solid var(--ink-ghost); }
-  .modes, .cards { grid-template-columns: 1fr; }
+  .modes > div, .also > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .feature, .more, .host, .xmage { padding-top: 72px; }
   .career { margin-top: 80px; padding: 72px 0; }
   .xmage-box { grid-template-columns: 1fr; padding: 36px 28px; }
-  .stack li { grid-template-columns: 1fr; gap: 2px; }
+  .stack > div { grid-template-columns: 1fr; gap: 2px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
