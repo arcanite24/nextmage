@@ -70,3 +70,7 @@ mage-bundle.zip
 
 # design review screenshots (regenerate with node e2e/review-shots.mjs)
 Mage.Web.Client/.impeccable/review/
+
+# local agent and editor config
+.agent/
+.claude/
