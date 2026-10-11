@@ -17,22 +17,31 @@
 			http_redirect
 			tls
 		}
+		trusted_proxies static {$UPSTREAM_PROXIES:127.0.0.1/32}
+		trusted_proxies_strict
+	}
+
+	# A reverse proxy in front (UPSTREAM_PROXIES, e.g. the host's main Caddy serving PROXIED_HOST) is trusted to
+	# say who the client is, so {client_ip} is the player rather than the proxy. Only peers in that range are
+	# believed; anyone else's X-Forwarded-For is ignored.
+	servers :80 {
+		trusted_proxies static {$UPSTREAM_PROXIES:127.0.0.1/32}
+		trusted_proxies_strict
 	}
 }
 
-# Serves the web client on $DOMAIN (and on $LAN_IP, for devices that can't resolve the name) with automatic
-# HTTPS, forwards /ws to the XMage server and /img to the Scryfall image cache.
-{$DOMAIN:localhost} {$LAN_IP} {
+# The site: the web client, /ws forwarded to the XMage server and /img to the Scryfall image cache.
+(site) {
 	encode zstd gzip
 
-	# Per client address. Caddy trusts no upstream proxies, so {remote_host} is the real peer address.
+	# Per client address: the peer, or the client a trusted upstream proxy names (see UPSTREAM_PROXIES).
 	# Over the limit: 429 with Retry-After. The server also caps concurrent game connections per address.
 	rate_limit {
 		zone ws {
 			match {
 				path /ws*
 			}
-			key {remote_host}
+			key {client_ip}
 			events {$WS_RATE_LIMIT:30}
 			window {$WS_RATE_WINDOW:1m}
 		}
@@ -41,7 +50,7 @@
 			match {
 				path /img/api/*
 			}
-			key {remote_host}
+			key {client_ip}
 			events {$IMG_API_RATE_LIMIT:300}
 			window {$IMG_API_RATE_WINDOW:1m}
 		}
@@ -51,9 +60,10 @@
 	handle /ws* {
 		reverse_proxy xmage:17172 {
 			# The server limits and logs by client address. It trusts these headers only from the
-			# proxy network (XMAGE_TRUSTED_PROXIES). Caddy sets X-Forwarded-For itself and, with no
-			# trusted_proxies of its own, replaces whatever the client sent; X-Real-IP is added here.
-			header_up X-Real-IP {remote_host}
+			# proxy network (XMAGE_TRUSTED_PROXIES). Both are set to the client address alone (the peer, or the
+			# client a trusted upstream proxy named), replacing whatever the client sent.
+			header_up X-Forwarded-For {client_ip}
+			header_up X-Real-IP {client_ip}
 		}
 	}
 
@@ -89,6 +99,17 @@
 		# VITE_MAGE_SERVER_URL pointing at another host.
 		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cards.scryfall.io https://*.scryfall.io https://api.scryfall.com https://c1.scryfall.com https://svgs.scryfall.io https://upload.wikimedia.org; font-src 'self' data:; connect-src 'self' wss: https://api.scryfall.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; worker-src 'self' blob:; manifest-src 'self'"
 	}
+}
+
+# Served on $DOMAIN (and on $LAN_IP, for devices that can't resolve the name) with automatic HTTPS.
+{$DOMAIN:localhost} {$LAN_IP} {
+	import site
+}
+
+# Served over plain HTTP on PROXIED_HOST, for a reverse proxy in front that holds that name's certificate (the
+# host's main Caddy, say). Only that proxy should reach this port; the default name matches nothing.
+http://{$PROXIED_HOST:proxied.invalid} {
+	import site
 }
 
 # http:// on the HTTP port goes to HTTPS on the port players actually use (Caddy's own redirect would assume 443,
