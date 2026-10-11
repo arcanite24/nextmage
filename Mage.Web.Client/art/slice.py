@@ -12,7 +12,8 @@ lines. A cell's subject is trimmed to its bounds, scaled to fit the output box l
 standing on the bottom edge, for busts), so every asset of a type has the same size and the same margin whatever the
 model drew. An id of "-" skips that cell (a spare).
 
-If a grid comes back opaque, the flat background (--bg, or the corner colour) is keyed out first.
+If a grid comes back opaque, the flat background (--bg, or the corner colour) is keyed out first; for a single-ink set
+(--ink) the key is exact, every pixel being a mix of that ink and the background.
 """
 import argparse
 import sys
@@ -33,7 +34,7 @@ def hex_rgb(text):
     return np.array([int(text[i:i + 2], 16) for i in (0, 2, 4)], dtype=np.float32)
 
 
-def ensure_alpha(image, bg):
+def ensure_alpha(image, bg, ink=None):
     """RGBA with a real alpha channel: the model's own, or the flat background keyed out."""
     rgba = np.array(image.convert('RGBA'), dtype=np.float32)
     alpha = rgba[..., 3]
@@ -43,6 +44,16 @@ def ensure_alpha(image, bg):
     corners = np.median(np.concatenate([rgb[:8, :8].reshape(-1, 3), rgb[-8:, -8:].reshape(-1, 3)]), axis=0)
     # the asked-for key colour if the corners show it, else whatever flat colour the corners are
     key = hex_rgb(bg) if bg and np.linalg.norm(corners - hex_rgb(bg)) < 60 else corners
+    if ink:
+        # one ink: every pixel is a mix of the ink and the key, so its alpha is how far it sits from one to the other
+        # (exact, with no key colour left in the thin carved lines a distance key leaves fringed)
+        fg = hex_rgb(ink)
+        span = fg - key
+        alpha = np.clip(((rgb - key) * span).sum(axis=-1) / float((span * span).sum()), 0, 1)
+        alpha = np.clip((alpha - 0.06) / 0.88, 0, 1)
+        rgba[..., :3] = fg
+        rgba[..., 3] = alpha * 255
+        return rgba, True
     distance = np.linalg.norm(rgb - key, axis=-1)
     alpha = np.clip((distance - 18) / 50, 0, 1)
     # despill: edge pixels lose the key colour mixed into them
@@ -127,6 +138,7 @@ def main():
     parser.add_argument('--pad', type=float, default=0.06)
     parser.add_argument('--align', choices=['center', 'bottom'], default='center')
     parser.add_argument('--bg')
+    parser.add_argument('--ink', help='the one ink of a single-ink set, for an exact key when the background is opaque')
     parser.add_argument('--quality', type=int, default=88)
     parser.add_argument('--sheet', help='also write a contact sheet of the cut assets, on light and dark, for review')
     args = parser.parse_args()
@@ -134,7 +146,7 @@ def main():
     ids = args.ids.split(',')
     if len(ids) > args.cols * args.rows:
         sys.exit(f'{len(ids)} ids for {args.cols * args.rows} cells')
-    rgba, keyed = ensure_alpha(Image.open(args.grid), args.bg)
+    rgba, keyed = ensure_alpha(Image.open(args.grid), args.bg, args.ink)
     if keyed:
         print(f'warning: {args.grid} had no transparency; keyed out its background', file=sys.stderr)
     masks = cell_masks(rgba[..., 3], args.cols, args.rows)
