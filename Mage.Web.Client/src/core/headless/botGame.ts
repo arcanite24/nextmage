@@ -1,8 +1,9 @@
 import { createApi } from '../../protocol/generated/api';
-import type { DeckCardLists, TableClientMessage } from '../../protocol/generated/views';
+import type { DeckCardLists, TableClientMessage, UserData } from '../../protocol/generated/views';
 import { RpcClient } from '../rpc/RpcClient';
 import { EventBus } from '../rpc/EventBus';
-import { GameSession } from '../game/gameSession';
+import { GameSession, type GameSessionState } from '../game/gameSession';
+import type { Command } from '../game/interaction';
 import { chooseBotCommand } from './simpleBot';
 
 /**
@@ -40,6 +41,10 @@ export interface BotGameOptions {
   maxTurns?: number;
   /** game states as patches (on by default, like the app) */
   stateDiffs?: boolean;
+  /** preferences sent after signing in, as the app does (stops, auto-payment...); the server's defaults otherwise */
+  userData?: UserData;
+  /** answers a prompt before the bot does: a command, or undefined to let the bot answer */
+  intercept?: (state: GameSessionState) => Command | undefined;
 }
 
 export interface BotGameStats {
@@ -63,6 +68,7 @@ export async function playBotGame(options: BotGameOptions): Promise<BotGameStats
   await rpc.connect(options.serverUrl);
   try {
     if (!await api.connectUser(options.userName, 'testpass')) throw new Error(`${options.userName} could not sign in`);
+    if (options.userData) await api.connectSetUserData(null, options.userData, 'web', '');
     const roomId = await api.serverGetMainRoomId();
     const gameStarted = new Promise<TableClientMessage>((resolve) => bus.on('START_GAME', (message) => resolve(message)));
     const table = await api.roomCreateTable(roomId, {
@@ -113,7 +119,7 @@ export async function playBotGame(options: BotGameOptions): Promise<BotGameStats
         }
         // the same payment prompt after clicking a source: that source paid nothing, so don't click it again
         if (state.interaction.mode === 'payMana' && lastPay && lastPay.headline === state.interaction.headline) unaffordable.add(lastPay.id);
-        const command = chooseBotCommand(state.view, state.interaction, unaffordable);
+        const command = options.intercept?.(state) ?? chooseBotCommand(state.view, state.interaction, unaffordable);
         lastPay = state.interaction.mode === 'payMana' && command?.type === 'uuid' && command.id
           ? { headline: state.interaction.headline, id: command.id }
           : null;

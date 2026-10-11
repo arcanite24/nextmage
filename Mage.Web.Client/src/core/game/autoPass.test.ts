@@ -103,19 +103,19 @@ describe('full control and combat stops', () => {
     const own = {
       yourTurn: { upkeep: false, main1: true }, opponentTurn: { endOfTurn: true }, stopOnDeclareAttackers: false, stopOnStackNewObjects: false,
     };
-    expect(serverStops(own, false)).toBe(own);
     const full = serverStops(own, true);
     expect(full.yourTurn).toMatchObject({ upkeep: true, draw: true, main1: true, beforeCombat: true, endOfCombat: true, main2: true, endOfTurn: true });
     expect(full.opponentTurn).toEqual(full.yourTurn);
     expect(full).toMatchObject({ stopOnDeclareAttackers: true, stopOnStackNewObjects: true, stopOnDeclareBlockersWithZeroPermanents: true });
   });
 
-  it('with auto-pass on, the server also stops at your beginning of combat so the client can see Vehicles', () => {
+  it('the server always stops at your beginning of combat so the client can see Vehicles', () => {
     const own = { yourTurn: { beforeCombat: false, main1: true }, opponentTurn: { beforeCombat: false } };
-    const stops = serverStops(own, false, true);
+    const stops = serverStops(own, false);
     expect(stops.yourTurn).toEqual({ beforeCombat: true, main1: true });
     expect(stops.opponentTurn).toEqual({ beforeCombat: false });
-    expect(serverStops(own, false, false)).toBe(own);
+    const set = { ...own, yourTurn: { beforeCombat: true } };
+    expect(serverStops(set, false)).toBe(set);
   });
 });
 
@@ -130,6 +130,13 @@ describe('beginning of combat on your turn', () => {
   });
   it('passes the stop the player did not ask for when only spells or other abilities are available', () => {
     expect(autoAnswer(combat({ bolt: { basicCastAbilities: record }, map: { other: [{ value: '{T}, Sacrifice: search...' }] } }), priority, on)).toBe('pass');
+  });
+  it('passes it with auto-pass off too, and keeps it for a Vehicle', () => {
+    const off = { ...on, autoPass: false };
+    expect(autoAnswer(combat({ bolt: { basicCastAbilities: record } }), priority, off)).toBe('pass');
+    expect(autoAnswer(combat({ vehicle: crew }), priority, off)).toBeNull();
+    // anywhere else, auto-pass off answers nothing
+    expect(autoAnswer({ ...combat({}), step: 'PRECOMBAT_MAIN' }, priority, off)).toBeNull();
   });
   it("keeps the player's own stop and anything on the stack", () => {
     expect(autoAnswer(combat({ bolt: { basicCastAbilities: record } }), priority, { ...on, beginCombatStop: true })).toBeNull();

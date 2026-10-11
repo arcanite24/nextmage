@@ -84,6 +84,20 @@ describe('session store', () => {
     expect(restoreSaved()).toMatchObject({ token: 'token-2' });
   });
 
+  test('preferences go to the server after every login, the silent one after a dropped connection too', async () => {
+    const { useSession, fake } = await load();
+    await import('./settings');
+    await useSession.getState().signIn(SERVER, 'alice', '');
+    await vi.waitFor(() => expect(fake.api.connectSetUserData).toHaveBeenCalledTimes(1));
+
+    // the server forgets them with the old session: without them it skips the beginning of combat (Greasefang)
+    fake.rpc.setStatus('reconnecting');
+    fake.rpc.setStatus('open');
+    await vi.waitFor(() => expect(fake.api.connectSetUserData).toHaveBeenCalledTimes(2));
+    const userData = fake.api.connectSetUserData.mock.lastCall?.[1] as { userSkipPrioritySteps: { yourTurn: { beforeCombat: boolean } } };
+    expect(userData.userSkipPrioritySteps.yourTurn.beforeCombat).toBe(true);
+  });
+
   test('a reconnect to a restarted server sends the player to sign in again', async () => {
     const { useSession, fake } = await load();
     await useSession.getState().signIn(SERVER, 'alice', '');
