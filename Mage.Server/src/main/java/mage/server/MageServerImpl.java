@@ -147,11 +147,13 @@ public class MageServerImpl implements MageServer {
 
     @Override
     public TableView roomCreateTable(final String sessionId, final UUID roomId, final MatchOptions options) throws MageException {
+        Maintenance.get().refuseNewTables();
         return executeWithResult("createTable", sessionId, new CreateTableAction(sessionId, options, roomId));
     }
 
     @Override
     public TableView roomCreateTournament(final String sessionId, final UUID roomId, final TournamentOptions options) throws MageException {
+        Maintenance.get().refuseNewTables();
         return executeWithResult("createTournamentTable", sessionId, new ActionWithTableViewResult() {
             @Override
             public TableView execute() throws MageException {
@@ -177,7 +179,7 @@ public class MageServerImpl implements MageServer {
                     }
 
                     // limit number of workable AI opponents (draft bots are unlimited)
-                    String maxAiOpponents = managerFactory.configSettings().getMaxAiOpponents();
+                    String maxAiOpponents = mage.server.admin.RuntimeSettings.get().maxAiOpponents(managerFactory.configSettings().getMaxAiOpponents());
                     if (maxAiOpponents != null) {
                         int aiPlayers = options.getPlayerTypes().stream()
                                 .mapToInt(t -> t.isAI() && t.isWorkablePlayer() ? 1 : 0)

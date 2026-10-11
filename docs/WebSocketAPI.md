@@ -224,11 +224,13 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `adminActivateUser` | `sessionId: string`, `userName: string`, `active: boolean`, `reason?: string` | `boolean` | session | Staff (admin): activate or deactivate an account. |
 | `adminToggleActivateUser` | `sessionId: string`, `userName: string` | `boolean` | session | Staff (admin): toggle an online player's active state. |
 | `adminTableRemove` | `sessionId: string`, `tableId: UUID`, `reason?: string` | `boolean` | session | Staff (admin): remove any table. False when it was gone already. |
+| `adminTableWatch` | `sessionId: string`, `tableId: UUID` | `string` | session | Staff (moderator): watch any running game from your own player session, whatever its spectator settings; the game opens through the usual watch callback. Returns the game id, or null when there is no running game or you play in it. |
 | `adminSendBroadcastMessage` | `sessionId: string`, `message: string` | `boolean` | session | Staff (admin): message every connected player; a message starting with "warn" shows in red. |
 | `adminServerStats` | - | `ServerStats` | session | Staff (moderator): load and traffic: users, tables, games, memory, CPU, and the size of messages sent to web clients (with the heaviest callbacks and every one over 256 KB). |
 | `adminGetReports` | `openOnly?: boolean` | `PlayerReport[]` | session | Staff (moderator): player reports, newest first; only the open ones unless openOnly is false. |
 | `adminCloseReport` | `reportId: number`, `resolution: string` | `boolean` | session | Staff (moderator): close a report with a note about what was done. False when it was closed already. |
-| `adminClientErrors` | - | `ClientError[]` | session | Staff (moderator): the latest crash reports from web clients, newest first. |
+| `adminClientErrors` | `includeResolved?: boolean` | `ClientErrorGroup[]` | session | Staff (moderator): crash reports from web clients, one row per kind of error with how often it happened, seen most recently first; resolved ones only when asked for. |
+| `adminClientErrorResolve` | `id: number`, `resolved?: boolean` | `ClientErrorGroup` | session | Staff (moderator): mark a kind of client error fixed (or, with resolved false, open again). It opens again by itself when it happens again. |
 | `testEndGame` | `sessionId: string`, `tableId: UUID` | `boolean` | session | Test mode only: end the running game of a table you own. |
 | `testConcedeMatch` | `sessionId: string`, `tableId: UUID`, `losingPlayerIndex?: number` | `boolean` | session | Test mode only: make one player of a table you own concede the match. |
 | `adminAudit` | `actor?: string`, `action?: string`, `target?: string`, `before?: number` | `AuditEntry[]` | session | Staff: the audit log, newest first, 100 at a time. action matches a family ("access" covers "access.mode"); before is the id to page back from. |
@@ -245,7 +247,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `inviteCheck` | `code: string` | `InviteCheck` | public | Whether an invite link still works. Callable before login. |
 | `githubStart` | - | `string` | public | Sign in with GitHub: the GitHub page to send the player to. GitHub sends them back to /auth/github?code=...&state=..., for githubFinish. Fails when it isn't set up. |
 | `githubFinish` | `state: string`, `code: string`, `userName?: string` | `GithubSignInResult` | public | Sign in with GitHub, back from GitHub: the account to sign in to with its rememberToken (connectUser's), or a suggestedName when a new account needs a name (call again with userName). On a contributors server, the repository's people and allowlisted emails get in. |
-| `accessRequest` | `userName: string`, `email: string`, `note?: string` | `boolean` | public | Ask to be let in to a contributors-only server: staff see it in /admin. 3 an hour from one address. Callable before login. |
+| `accessRequest` | `userName: string`, `email: string`, `note?: string` | `boolean` | public | Ask to be let in to a contributors-only server, or for an account while registration is invite only: staff see it in /admin. 3 an hour from one address. Callable before login. |
 | `staffMe` | - | `StaffMe` | session | The calling session's staff role, or a null role for players. |
 | `adminStaff` | - | `StaffList` | session | Staff (owner): who has a staff role. |
 | `adminStaffGrant` | `userName: string`, `role: string`, `reason?: string` | `StaffMember` | session | Staff (owner): give an account a role (moderator, admin or owner), or change it. |
@@ -257,6 +259,11 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `adminDeleteAccount` | `userName: string`, `reason: string` | `boolean` | session | Staff (admin): delete the account with its decks, Career, reports, stats, feedback, allowlist entry and staff role, signing its player out. Can't be undone: export first. The audit log keeps the record of the deletion. |
 | `adminFeedback` | `status?: string` | `FeedbackEntry[]` | session | Staff (moderator): feedback players sent, newest first, 200 at most; status new, seen or done narrows it. |
 | `adminFeedbackMark` | `id: number`, `status: string`, `note?: string` | `FeedbackEntry` | session | Staff (moderator): mark feedback new, seen or done, with an optional note (such as the issue it became). |
+| `adminSettings` | - | `ServerSettings` | session | Staff (admin): settings that change without a restart (registration, Career, AI opponents, time to answer, Discord posts), each with where its value comes from; the Discord webhooks; planned maintenance. |
+| `adminSetSetting` | `name: string`, `value: string`, `reason?: string` | `ServerSettings` | session | Staff (admin): change a setting; an empty value goes back to the server's config. |
+| `adminMaintenance` | `minutes: number`, `message?: string`, `restartWhenIdle?: boolean` | `ServerSettings` | session | Staff (owner): announce maintenance in so many minutes (0: now). New tables stop at once and players are warned; with restartWhenIdle the server exits once the time has come and no game is running, and its restart policy brings it back. A new announcement replaces the old one. |
+| `adminMaintenanceCancel` | - | `ServerSettings` | session | Staff (owner): call planned maintenance off; tables can start again. |
+| `adminDiscordTest` | `channel: string` | `string` | session | Staff (admin): post a test message to the lobby or staff channel now, and say what Discord answered. |
 | `serverInfo` | - | `ServerInfo` | public | Whether the server has accounts and mail, and its name and password rules. Callable before login. |
 | `deckSyncList` | - | `DeckSyncEntry[]` | session | Every deck kept on the server for the signed-in account, without the deck data, deleted ones included (as tombstones, for 90 days). Only on servers with accounts. |
 | `deckSyncGet` | `deckId: string` | `DeckSyncEntry \| null` | session | One deck of the signed-in account with its data, or null when there is none. |

@@ -22,6 +22,7 @@ import mage.game.turn.Phase;
 import mage.interfaces.Action;
 import mage.players.Player;
 import mage.server.Main;
+import mage.server.StaffWatch;
 import mage.server.User;
 import mage.server.managers.ManagerFactory;
 import mage.server.replay.ReplayRecorder;
@@ -516,7 +517,7 @@ public class GameController implements GameCallback {
             // You can't watch a game if you already watch it
             return false;
         }
-        if (!isAllowedToWatch(userId)) {
+        if (!StaffWatch.take(userId, game.getId()) && !isAllowedToWatch(userId)) {
             // Dont want people on our ignore list to stalk us
             managerFactory.userManager().getUser(userId).ifPresent(user -> {
                 user.showUserMessage("Not allowed", "You are banned from watching this game");
@@ -1216,7 +1217,7 @@ public class GameController implements GameCallback {
     }
 
     private long getResponseIdleTimeoutSecs() {
-        return Main.isTestMode() ? 3600 : managerFactory.configSettings().getMaxSecondsIdle();
+        return Main.isTestMode() ? 3600 : mage.server.admin.RuntimeSettings.get().maxSecondsIdle(managerFactory.configSettings().getMaxSecondsIdle());
     }
 
     private void stopResponseIdleTimeout() {

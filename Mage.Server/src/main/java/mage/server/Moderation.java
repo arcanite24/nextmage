@@ -111,6 +111,19 @@ public final class Moderation {
         return managers.tableManager().removeTableByStaff(tableId);
     }
 
+    /**
+     * Opens a running game for a staff member's own player session to watch.
+     *
+     * @return the game, or null when the table has no running game or the staff member plays in it
+     */
+    public UUID watchTable(String staffSessionId, UUID tableId) {
+        User user = managers.sessionManager().getUser(staffSessionId)
+                .orElseThrow(() -> new IllegalStateException("Watch from your player session: sign in to the app as yourself"));
+        return managers.tableManager().getController(tableId)
+                .map(controller -> controller.watchTableAsStaff(user.getId()))
+                .orElse(null);
+    }
+
     /** Every connected player sees it; a message starting with "warn" shows in red. */
     public void broadcast(String message) {
         MessageColor color = message.toLowerCase(Locale.ENGLISH).startsWith("warn") ? MessageColor.RED : MessageColor.BLUE;

@@ -1,11 +1,12 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useQuery } from '@tanstack/react-query';
-import { IdCard, Info, LogOut, MessageSquare, Settings, ShieldCheck, WifiOff } from 'lucide-react';
+import { IdCard, Info, LogOut, MessageSquare, Settings, ShieldCheck, WifiOff, Wrench } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { NavLink, Outlet, useMatch, useNavigate } from 'react-router-dom';
 import { APP_NAME } from './brand';
 import { api } from './connection';
 import { useT, type MessageKey } from './i18n';
+import { useServerInfo } from './queries';
 import { Avatar } from './social/Avatar';
 import { LobbyButton } from './social/LobbyButton';
 import { useImportSheet } from './stores/importSheet';
@@ -39,6 +40,25 @@ const ReportDialog = lazy(() => import('./social/ReportDialog').then((module) =>
 const SettingsDialog = lazy(() => import('./screens/SettingsDialog').then((module) => ({ default: module.SettingsDialog })));
 
 const FeedbackDialog = lazy(() => import('./screens/FeedbackDialog').then((module) => ({ default: module.FeedbackDialog })));
+
+/** Planned maintenance, from the server info: when it starts, and what it means for new tables. */
+function MaintenanceChip() {
+  const t = useT();
+  const info = useServerInfo();
+  const at = info.data?.maintenanceAt ?? 0;
+  if (!at) return null;
+  const now = info.dataUpdatedAt;
+  const label = at > now
+    ? t('shell.maintenance', { time: new Date(at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) })
+    : t('shell.maintenanceNow');
+  const message = info.data?.maintenanceMessage?.trim();
+  return (
+    <span className={styles.maintenance} role="status" title={[t('shell.maintenanceHint'), message].filter(Boolean).join(' ')}>
+      <Wrench size={16} aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
 
 function FeedbackHost() {
   const open = useShellUi((state) => state.feedbackOpen);
@@ -109,6 +129,7 @@ export function AppShell() {
                 {connection === 'reconnecting' ? t('shell.reconnecting') : t('shell.offline')}
               </span>
             )}
+            <MaintenanceChip />
             <LobbyButton />
             <IconButton label={t('shell.settings')} icon={<Settings size={18} />} onClick={() => setSettingsOpen(true)} />
             <DropdownMenu.Root>

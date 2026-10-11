@@ -114,6 +114,19 @@
   font-weight: 600;
 }
 
+.maintenance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-chip);
+  background: rgb(var(--decision-rgb) / 0.18);
+  color: var(--decision);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .user {
   display: inline-flex;
   align-items: center;

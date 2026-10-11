@@ -1,10 +1,10 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Ban, KeyRound, LogOut, Mic, MicOff, Power, Trash2 } from 'lucide-react';
+import { ArrowLeft, Ban, Eye, KeyRound, LogOut, Mic, MicOff, Power, Trash2 } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createApi } from '../../protocol/generated/api';
-import type { ClientError, PlayerReport, ServerStats, TableView, UserView } from '../../protocol/generated/views';
+import type { ClientErrorGroup, PlayerReport, ServerStats, TableView, UserView } from '../../protocol/generated/views';
 import { RpcClient } from '../../core/rpc/RpcClient';
 import { APP_NAME } from '../brand';
 import { api as appApi } from '../connection';
@@ -16,8 +16,9 @@ import { AccountsPage } from './AccountsPage';
 import { AuditPage } from './AuditPage';
 import { ConfirmAction } from './ConfirmAction';
 import { FeedbackPage } from './FeedbackPage';
+import { SettingsPage } from './SettingsPage';
 import { StaffPage } from './StaffPage';
-import { atLeast, describeAge, formatBytes, formatDuration, MUTE_CHOICES, type StaffRole } from './adminFormat';
+import { atLeast, describeAge, formatBytes, formatDate, formatDuration, MUTE_CHOICES, type StaffRole } from './adminFormat';
 import styles from './AdminScreen.module.css';
 
 export type AdminApi = ReturnType<typeof createApi>;
@@ -143,9 +144,10 @@ const SECTIONS: { id: string; label: string; role: StaffRole }[] = [
   { id: 'accounts', label: 'Accounts', role: 'moderator' },
   { id: 'reports', label: 'Reports', role: 'moderator' },
   { id: 'feedback', label: 'Feedback', role: 'moderator' },
-  { id: 'tables', label: 'Tables', role: 'admin' },
+  { id: 'tables', label: 'Tables', role: 'moderator' },
   { id: 'broadcast', label: 'Broadcast', role: 'admin' },
   { id: 'access', label: 'Access', role: 'admin' },
+  { id: 'settings', label: 'Settings', role: 'admin' },
   { id: 'staff', label: 'Staff', role: 'owner' },
   { id: 'errors', label: 'Client errors', role: 'moderator' },
   { id: 'audit', label: 'Audit', role: 'moderator' },
@@ -170,11 +172,12 @@ function Console({ staff }: { staff: StaffSession }) {
       <Tabs.Content value="accounts" className={styles.panel}><AccountsPage api={api} role={role} /></Tabs.Content>
       <Tabs.Content value="reports" className={styles.panel}><Reports api={api} role={role} /></Tabs.Content>
       <Tabs.Content value="feedback" className={styles.panel}><FeedbackPage api={api} /></Tabs.Content>
+      <Tabs.Content value="tables" className={styles.panel}><TablesPanel api={api} role={role} /></Tabs.Content>
       {atLeast(role, 'admin') && (
         <>
-          <Tabs.Content value="tables" className={styles.panel}><TablesPanel api={api} /></Tabs.Content>
           <Tabs.Content value="broadcast" className={styles.panel}><Broadcast api={api} /></Tabs.Content>
           <Tabs.Content value="access" className={styles.panel}><AccessPage api={api} /></Tabs.Content>
+          <Tabs.Content value="settings" className={styles.panel}><SettingsPage api={api} role={role} /></Tabs.Content>
         </>
       )}
       {atLeast(role, 'owner') && <Tabs.Content value="staff" className={styles.panel}><StaffPage api={api} actor={staff.actor} /></Tabs.Content>}
@@ -193,8 +196,26 @@ function Overview({ api }: { api: AdminApi }) {
   const buckets = bridge?.buckets ?? [];
   const limits = bridge?.bucketLimits ?? [];
   const most = Math.max(1, ...buckets);
+  const backup = data.backup;
+  const maintenance = data.maintenance;
   return (
     <div className={styles.overview}>
+      <p className={styles.quiet}>
+        Version {data.version ?? 'unknown'}
+        {data.commit
+          ? <> · commit <a className={styles.code} href={`https://github.com/arcanite24/playmat/commit/${data.commit}`} target="_blank" rel="noreferrer">{data.commit.slice(0, 7)}</a></>
+          : ' · a development build'}
+        {backup && (
+          <span className={backup.problem ? styles.backupBad : undefined}>
+            {' · '}{backup.problem ?? `last backup ${describeAge((backup.lastOkAt ?? 0) * 1000, data.now ?? 0)}${backup.size ? ` (${backup.size})` : ''}`}
+          </span>
+        )}
+      </p>
+      {maintenance && (
+        <p className={styles.maintenance}>
+          Maintenance {(maintenance.startsAt ?? 0) > (data.now ?? 0) ? `at ${formatDate(maintenance.startsAt ?? 0)}` : 'under way'}, announced by {maintenance.by}: no new tables can start.
+        </p>
+      )}
       <dl className={styles.numbers}>
         <Stat label="Players online" value={data.usersOnline ?? 0} />
         <Stat label="Tables" value={data.tables ?? 0} />
@@ -357,7 +378,7 @@ function Players({ api, role }: { api: AdminApi; role: StaffRole }) {
   );
 }
 
-function TablesPanel({ api }: { api: AdminApi }) {
+function TablesPanel({ api, role }: { api: AdminApi; role: StaffRole }) {
   const client = useQueryClient();
   const room = useQuery({ queryKey: ['admin', 'room'], queryFn: () => api.serverGetMainRoomId(), staleTime: Infinity });
   const tables = useQuery({
@@ -367,6 +388,20 @@ function TablesPanel({ api }: { api: AdminApi }) {
     refetchInterval: 5_000,
   });
   const [pending, setPending] = useState<TableView | null>(null);
+  const [watchError, setWatchError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  // a game opens on the player's own connection; the console sign-in has no game screen to open it in
+  const ownSession = api === appApi;
+  async function watch(table: TableView) {
+    setWatchError(null);
+    try {
+      const gameId = await api.adminTableWatch(table.tableId!);
+      if (gameId) navigate(`/game/${gameId}`);
+      else setWatchError(`“${table.tableName}” has no game running that you can watch.`);
+    } catch (caught) {
+      setWatchError(caught instanceof Error ? caught.message : String(caught));
+    }
+  }
   async function remove(reason: string) {
     await api.adminTableRemove(pending!.tableId!, reason);
     setPending(null);
@@ -378,6 +413,7 @@ function TablesPanel({ api }: { api: AdminApi }) {
         <ConfirmAction title={`Remove “${pending.tableName}”`} what={`The table closes and its players lose the game: ${pending.seatsInfo || 'no one seated'}.`}
           confirmLabel="Remove" onConfirm={remove} onCancel={() => setPending(null)} />
       )}
+      {watchError && <p className={styles.error} role="alert">{watchError}</p>}
       {tables.data?.length === 0 && <p className={styles.quiet}>No tables are open.</p>}
       <table className={styles.table}>
         <thead><tr><th>Table</th><th>Host</th><th>Game</th><th>State</th><th>Seats</th><th><span className="visually-hidden">Actions</span></th></tr></thead>
@@ -390,7 +426,13 @@ function TablesPanel({ api }: { api: AdminApi }) {
               <td>{table.tableStateText ?? table.tableState}</td>
               <td className={styles.clip}>{table.seatsInfo}</td>
               <td className={styles.actions}>
-                <Button size="sm" variant="danger" icon={<Trash2 size={14} />} onClick={() => setPending(table)}>Remove</Button>
+                {ownSession && table.tableState === 'DUELING' && (
+                  <Button size="sm" variant="quiet" icon={<Eye size={14} />} title={`Watch ${table.tableName}, whatever its spectator settings`}
+                    onClick={() => watch(table)}>Watch</Button>
+                )}
+                {atLeast(role, 'admin') && (
+                  <Button size="sm" variant="danger" icon={<Trash2 size={14} />} onClick={() => setPending(table)}>Remove</Button>
+                )}
               </td>
             </tr>
           ))}
@@ -459,20 +501,47 @@ function CloseReport({ api, role, report, onClose }: { api: AdminApi; role: Staf
 }
 
 function ClientErrors({ api }: { api: AdminApi }) {
-  const errors = useQuery({ queryKey: ['admin', 'errors'], queryFn: () => api.adminClientErrors(), refetchInterval: 15_000 });
+  const client = useQueryClient();
+  const [showResolved, setShowResolved] = useState(false);
+  const errors = useQuery({ queryKey: ['admin', 'errors', showResolved], queryFn: () => api.adminClientErrors(showResolved), refetchInterval: 15_000 });
+  const resolve = useMutation({
+    mutationFn: ({ id, resolved }: { id: number; resolved: boolean }) => api.adminClientErrorResolve(id, resolved),
+    onSettled: () => client.invalidateQueries({ queryKey: ['admin', 'errors'] }),
+  });
   const now = errors.dataUpdatedAt;
-  if (errors.data?.length === 0) return <p className={styles.quiet}>No crash reports from web clients since the server started.</p>;
   return (
-    <ul className={styles.reports}>
-      {(errors.data ?? []).map((error: ClientError, index) => (
-        <li key={index} className={styles.report}>
-          <p><strong>{error.message}</strong>{(error.repeats ?? 0) > 0 && <span className={styles.tag}>×{(error.repeats ?? 0) + 1}</span>}</p>
-          <p className={styles.quiet}>{error.userName ?? 'a visitor'} · {error.path} · {error.source} · {error.appVersion ?? 'dev'} · {describeAge(error.receivedAt ?? 0, now)}</p>
-          {error.stack && <details><summary>Stack</summary><pre>{error.stack}</pre></details>}
-          {error.context && <p className={styles.quiet}>{error.context}</p>}
-        </li>
-      ))}
-    </ul>
+    <div className={styles.block}>
+      <label className={styles.check}>
+        <input type="checkbox" checked={showResolved} onChange={(event) => setShowResolved(event.target.checked)} /> Show resolved errors too
+      </label>
+      {errors.error && <p className={styles.error}>{String(errors.error)}</p>}
+      {resolve.error && <p className={styles.error} role="alert">{resolve.error.message}</p>}
+      {errors.data?.length === 0 && <p className={styles.quiet}>{showResolved ? 'No crash reports from web clients yet.' : 'Nothing open. Each kind of crash shows here once, with how often it happened.'}</p>}
+      <ul className={styles.reports}>
+        {(errors.data ?? []).map((error: ClientErrorGroup) => (
+          <li key={error.id} className={styles.report}>
+            <p>
+              <strong>{error.message || 'No message'}</strong>
+              <span className={styles.tag}>×{error.count ?? 1}</span>
+              {error.regressed && <span className={styles.tag}>back again</span>}
+              {error.resolved && <span className={styles.tag}>resolved</span>}
+            </p>
+            <p className={styles.quiet}>
+              {error.source} · {error.path} · last {describeAge(error.lastSeen ?? 0, now)}, to {error.lastUser ?? 'a visitor'} on {error.appVersion ?? 'dev'}
+              {(error.count ?? 1) > 1 && ` · first ${describeAge(error.firstSeen ?? 0, now)}`}
+              {error.resolved && error.resolvedBy && ` · resolved by ${error.resolvedBy}`}
+            </p>
+            {error.stack && <details><summary>Stack</summary><pre>{error.stack}</pre></details>}
+            {error.context && <p className={styles.quiet}>{error.context}</p>}
+            <div className={styles.inline}>
+              {error.resolved
+                ? <Button size="sm" variant="quiet" onClick={() => resolve.mutate({ id: error.id!, resolved: false })}>Open again</Button>
+                : <Button size="sm" onClick={() => resolve.mutate({ id: error.id!, resolved: true })}>Resolved</Button>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

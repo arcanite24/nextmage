@@ -332,6 +332,8 @@ public final class Main {
 
                 Runtime.getRuntime().addShutdownHook(new Thread(webSocketServer::shutdown, "WebSocket shutdown"));
                 logger.info("Started MAGE WebSocket server - listening on port " + websocketPort);
+                Health.start(managerFactory);
+                BackupStatus.startChecks();
 
                 if (testMode) {
                     logger.info("MAGE server running in test mode");

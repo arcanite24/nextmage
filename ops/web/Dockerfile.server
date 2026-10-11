@@ -10,6 +10,11 @@ RUN --mount=type=cache,target=/root/.m2 \
  && cd Mage.Server && mvn -B -q package assembly:single -DskipTests \
  && mkdir -p /opt/xmage && cd /opt/xmage && jar xf /src/Mage.Server/target/mage-server.zip \
  && date -u +%Y%m%dT%H%M%S%N > /opt/xmage/.build-id
+# the commit the admin console and /healthz report; git itself isn't in this image, so read the ref files
+RUN ref=$(sed -n 's/^ref: //p' .git/HEAD 2>/dev/null); \
+    { if [ -n "$ref" ] && [ -f ".git/$ref" ]; then cat ".git/$ref"; \
+      elif [ -n "$ref" ]; then grep " $ref\$" .git/packed-refs | cut -d' ' -f1; \
+      else cat .git/HEAD; fi; } > /opt/xmage/.commit 2>/dev/null || true
 
 FROM eclipse-temurin:17-jre
 # xmlstarlet renders config.xml at start; sqlite3 takes consistent backups of the stats databases

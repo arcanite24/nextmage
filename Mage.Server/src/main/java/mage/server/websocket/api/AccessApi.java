@@ -261,7 +261,7 @@ final class AccessApi {
                         .publicAccess()
                         .params(of("userName", STRING), of("email", STRING), optional("note", STRING))
                         .returns("boolean")
-                        .doc("Ask to be let in to a contributors-only server: staff see it in /admin. " + REQUESTS_PER_HOUR
+                        .doc("Ask to be let in to a contributors-only server, or for an account while registration is invite only: staff see it in /admin. " + REQUESTS_PER_HOUR
                                 + " an hour from one address. Callable before login.")
                         .handler(call -> requestAccess(ctx, call))
         );
@@ -435,7 +435,8 @@ final class AccessApi {
     }
 
     private static Object requestAccess(ApiContext ctx, RpcCall call) throws RpcException {
-        if (!AccessPolicy.get().isAllowlist()) {
+        // an approved request puts the name on the allowlist, which also lets it register while registration is invite only
+        if (!AccessPolicy.get().isAllowlist() && mage.server.admin.RuntimeSettings.get().registrationOpen()) {
             throw RpcException.invalidParams("This server is open to everyone: just register.");
         }
         String address = call.getConnection() == null ? "" : call.getConnection().getRemoteHost();

@@ -153,9 +153,9 @@ Staff sign in with their own player accounts and find **Admin** in the account m
 
 | Role | Can |
 |---|---|
-| moderator | see who is online, mute and sign players out, work through reports, read the audit log, server stats and client errors |
-| admin | also lock and deactivate accounts, remove tables, broadcast, and run Access (mode, allowlist, invites, requests, notice) |
-| owner | also give and take staff roles |
+| moderator | see who is online, mute and sign players out, watch any running game, work through reports and client errors, read the audit log and server stats |
+| admin | also lock and deactivate accounts, remove tables, broadcast, run Access (mode, allowlist, invites, requests, notice) and change Settings |
+| owner | also give and take staff roles, and plan maintenance |
 
 `XMAGE_OWNER` is always an owner and can't be changed from the console; give roles from the console's Staff tab. Roles need accounts (`XMAGE_AUTH=true`). A role is checked on every action, so taking it away works at once. Staff are always let in on a contributors server.
 
@@ -168,6 +168,28 @@ The Accounts tab lists every registered account (search by name or email). An ac
 Players send feedback from the account menu (five an hour each); it lands in the Feedback tab to mark seen or done, with a note.
 
 Password sign-ins are throttled per address and per account name: after five failures each further try waits longer, doubling up to five minutes. Remembered devices don't count.
+
+**Watch** in the Tables tab opens any running game for staff on their own player session, whatever its spectator settings and the players' ignore lists; the game chat says who started watching, and the audit log records it.
+
+**Client errors** groups crash reports from web clients by kind (message, source and top stack frame), with how often and how recently each happened. Mark one resolved when it is fixed; it opens again by itself if it comes back. Each address sends at most 20 reports a minute, and visitors who aren't signed in share 60 a minute between them.
+
+### Settings
+
+The Settings tab (admins) changes these at once, without a restart; they are kept in `web_admin.db` and survive restarts. Back to config returns one to what the environment and `config.xml` say.
+
+| Setting | Values |
+|---|---|
+| New accounts | anyone can register, or invite only: an invite link, a place on the allowlist, or an approved access request |
+| Career | on or off; `XMAGE_CAREER=off` turns it off for good |
+| AI opponents per table | 0 to 15, or empty for the config's `maxAiOpponents` |
+| Time to answer | 30 to 3600 seconds, or the config's `maxSecondsIdle` |
+| Discord posts | tables, events, matches and staff news, each on or off |
+
+The Discord part also says whether each webhook is set (the address stays on the server) and posts a test message on request.
+
+### Maintenance
+
+Owners announce maintenance from Settings: now or in up to a day, with an optional message. From the announcement on, no new tables can start, everyone online is warned (again 30, 10, 5 and 1 minutes before), the sign-in screen and the app's top bar show it, and the staff channel hears about it. With **restart** checked, the server exits once the time has come and no game is running; `restart: unless-stopped` brings it back, on a new image if one was built (`docker compose build xmage` first). The plan is kept in memory, so a restart ends it. Calling it off opens tables again.
 
 ## Discord notifications
 
@@ -183,7 +205,8 @@ Posting never holds up a game: posts wait in a small queue (20) for one backgrou
 
 ## Health
 
-- `xmage` is healthy once its bridge port 17172 accepts connections. It opens only after the card database is loaded, and the first start gets 15 minutes for that.
+- `xmage` answers `GET /healthz` on `127.0.0.1:17173` inside its container (`-Dxmage.healthPort`, 0 turns it off): its version and commit, uptime, players online, games running, planned maintenance and any backup problem, as JSON. It is healthy once that answers, which is after the card database is loaded; the first start gets 15 minutes for that. `docker compose exec xmage bash -c 'exec 3<>/dev/tcp/127.0.0.1/17173; printf "GET /healthz HTTP/1.0\r\n\r\n" >&3; cat <&3'` shows it.
+- The admin Overview shows the same version, the commit (the image build reads it from the checkout's `.git`), and the last backup.
 - `web` checks Caddy's admin API on `localhost:2019`. It starts only after `xmage` and `imgcache` are healthy.
 - `imgcache` answers `/healthz` on port 8080 inside the network.
 - `docker compose -f ops/web/docker-compose.yml ps` shows both states.
@@ -229,7 +252,9 @@ XMage opens every database under `./db`. Only user data stays on `xmage-db`. The
 The `backup` service runs daily at `BACKUP_AT` and writes `/backups/<UTC timestamp>/` into the `xmage-backups` volume:
 
 - `authorized_user.h2.sql.gz` and `feedback.h2.sql.gz`: H2 SQL dumps. They're taken online by joining the running server's database through H2's auto-server mode, so each dump is consistent.
-- `user_stats.db` and `table_record.db`: SQLite copies made with SQLite's online backup API.
+- `user_stats.db`, `table_record.db`, `web_decks.db`, `web_reports.db`, `career.db` and `web_admin.db`: SQLite copies made with SQLite's online backup API.
+
+Every run writes `db/backup-status.json` (when, whether it worked, its size and the last good one). The admin Overview shows it, and once an hour the server checks it: a failed run, or no good backup for 36 hours, is posted to the staff channel (once a day at most).
 
 The newest `BACKUP_KEEP` backups are kept. The card database is not backed up because the image rebuilds it.
 
@@ -249,7 +274,7 @@ $C run --rm --no-deps backup restore 20261007T033000Z
 $C up -d
 ```
 
-The restore replaces the accounts and feedback databases (rebuilt from the dumps) and the two SQLite files. Databases missing from the backup are left alone. To restore from a copy kept off the machine, first copy the directory back into the volume: `$C cp ./xmage-backup-20261007 backup:/backups/20261007T033000Z`.
+The restore replaces the accounts and feedback databases (rebuilt from the dumps) and the SQLite files. Databases missing from the backup are left alone. To restore from a copy kept off the machine, first copy the directory back into the volume: `$C cp ./xmage-backup-20261007 backup:/backups/20261007T033000Z`.
 
 ## Upgrade
 

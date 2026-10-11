@@ -270,3 +270,41 @@
 }
 
 .numbersTight { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+
+/* Settings: one row per setting, its explanation beside the control */
+.settings { list-style: none; margin: 0; padding: 0; display: grid; }
+.setting {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--ink-ghost);
+}
+.setting > .error, .setting > .quiet { grid-column: 1 / -1; }
+.settingText { display: grid; gap: 2px; min-width: 0; }
+.settingLabel { font-weight: 600; color: var(--ink-strong); }
+.settingInput {
+  min-height: 34px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--ink-faint);
+  border-radius: var(--radius-control);
+  background: var(--mat-800);
+  color: var(--ink-strong);
+  font: inherit;
+}
+input.settingInput { inline-size: 7ch; font-variant-numeric: tabular-nums; }
+.maintenance {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-inline-start: 3px solid var(--decision);
+  background: var(--mat-800);
+}
+.maintenance p { margin: 0; }
+.maintenance blockquote { margin: 0; color: var(--ink-soft); }
+.backupBad { color: var(--danger-text); }
+
+@media (max-width: 640px) {
+  .setting { grid-template-columns: minmax(0, 1fr); }
+}

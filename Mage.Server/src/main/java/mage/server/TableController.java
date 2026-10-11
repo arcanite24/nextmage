@@ -568,6 +568,26 @@ public class TableController {
         }
     }
 
+    /**
+     * Staff watching from the admin console: any running game, whatever its spectator and tournament settings, but
+     * never one the staff member plays in.
+     *
+     * @return the game, or null when there is none to watch
+     */
+    public UUID watchTableAsStaff(UUID userId) {
+        if (table.getState() != TableState.DUELING || match == null || match.getGame() == null || userPlayerMap.get(userId) != null) {
+            return null;
+        }
+        Optional<User> user = managerFactory.userManager().getUser(userId);
+        if (!user.isPresent()) {
+            return null;
+        }
+        UUID gameId = match.getGame().getId();
+        StaffWatch.grant(userId, gameId);
+        user.get().ccWatchGame(table.getId(), table.getParentTableId(), gameId);
+        return gameId;
+    }
+
     private Optional<Player> createPlayer(String name, PlayerType playerType, int skill) {
         Optional<Player> playerOpt;
         if (options == null) {

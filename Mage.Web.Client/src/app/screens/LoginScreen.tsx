@@ -83,6 +83,8 @@ export function LoginScreen() {
 
   const accounts = !!info?.accounts;
   const contributors = info?.access === 'allowlist';
+  const inviteOnly = info?.registration === 'invite';
+  const maintenanceAt = info?.maintenanceAt ?? 0;
   const busy = session.phase === 'signingIn' || dealing;
   const name = userName.trim();
   const nameError = name && !/^[A-Za-z0-9_]{3,14}$/.test(name) ? t('login.nameRule') : null;
@@ -216,6 +218,8 @@ export function LoginScreen() {
         <h2 id="seat-title" className={styles.seatLabel}>{t(MODE_TITLES[mode === 'sit' && accounts ? 'signIn' : mode])}</h2>
         {info?.notice && <p className={styles.serverNotice}>{info.notice}</p>}
         {contributors && mode === 'sit' && <p className={styles.notice}>{t('login.contributors')}</p>}
+        {inviteOnly && !invite && mode === 'register' && <p className={styles.notice}>{t('login.inviteOnly')}</p>}
+        {maintenanceAt > 0 && <p className={styles.notice} role="status">{t('shell.maintenanceHint')}{info?.maintenanceMessage ? ` ${info.maintenanceMessage}` : ''}</p>}
         {invite && mode === 'register' && (
           <p className={inviteCheck?.valid === false ? styles.error : styles.notice} role="status">
             {inviteCheck === null ? t('login.invite.checking') : inviteCheck.valid ? t('login.invite.valid') : inviteCheck.reason}
@@ -350,7 +354,7 @@ export function LoginScreen() {
         {mode === 'sit' && accounts && (
           <div className={styles.accountLinks}>
             <button type="button" className={styles.linkButton} onClick={() => switchMode('register')}>{t('login.createAccount')}</button>
-            {contributors && <button type="button" className={styles.linkButton} onClick={() => switchMode('ask')}>{t('login.ask')}</button>}
+            {(contributors || inviteOnly) && <button type="button" className={styles.linkButton} onClick={() => switchMode('ask')}>{t('login.ask')}</button>}
             {info?.mail
               ? <button type="button" className={styles.linkButton} onClick={() => switchMode('forgot')}>{t('login.forgot')}</button>
               : <span className={styles.quiet}>{t('login.forgotAskAdmin')}</span>}

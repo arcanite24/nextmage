@@ -95,6 +95,15 @@ export interface AuditEntry {
     target?: string;
 }
 
+export interface BackupRun {
+    at?: number;
+    lastOkAt?: number;
+    name?: string;
+    ok?: boolean;
+    problem?: string;
+    size?: string;
+}
+
 export interface BasicLandSetInfo extends ExpansionSetInfo {
     hasSnowBasics?: boolean;
 }
@@ -749,12 +758,29 @@ export interface ClientError {
     context?: string;
     message?: string;
     path?: string;
-    receivedAt?: number;
-    repeats?: number;
     source?: string;
     stack?: string;
     userAgent?: string;
-    userName?: string;
+}
+
+export interface ClientErrorGroup {
+    appVersion?: string;
+    context?: string;
+    count?: number;
+    fingerprint?: string;
+    firstSeen?: number;
+    id?: number;
+    lastSeen?: number;
+    lastUser?: string;
+    message?: string;
+    path?: string;
+    regressed?: boolean;
+    resolved?: boolean;
+    resolvedAt?: number;
+    resolvedBy?: string;
+    source?: string;
+    stack?: string;
+    userAgent?: string;
 }
 
 export interface CombatGroupView extends Serializable {
@@ -1069,6 +1095,14 @@ export interface MageVersion extends Serializable, Comparable<MageVersion> {
     releaseInfo?: string;
 }
 
+export interface MaintenancePlan {
+    announcedAt?: number;
+    by?: string;
+    message?: string;
+    restartWhenIdle?: boolean;
+    startsAt?: number;
+}
+
 export interface ManaPoolView extends Serializable {
     black?: number;
     blue?: number;
@@ -1272,13 +1306,33 @@ export interface ServerInfo {
     deckSync?: boolean;
     github?: boolean;
     mail?: boolean;
+    maintenanceAt?: number;
+    maintenanceMessage?: string;
     maxPasswordLength?: number;
     maxUserNameLength?: number;
     minPasswordLength?: number;
     minUserNameLength?: number;
     notice?: string;
+    registration?: string;
     serverName?: string;
     testMode?: boolean;
+}
+
+export interface ServerSetting {
+    changed?: boolean;
+    changedAt?: number;
+    changedBy?: string;
+    configValue?: string;
+    locked?: string;
+    name?: string;
+    value?: string;
+}
+
+export interface ServerSettings {
+    discordLobby?: boolean;
+    discordStaff?: boolean;
+    maintenance?: MaintenancePlan;
+    settings?: ServerSetting[];
 }
 
 export interface ServerState extends Serializable {
@@ -1295,9 +1349,12 @@ export interface ServerState extends Serializable {
 
 export interface ServerStats {
     activeGames?: number;
+    backup?: BackupRun;
     bridge?: BridgeSnapshot;
+    commit?: string;
     heapMax?: number;
     heapUsed?: number;
+    maintenance?: MaintenancePlan;
     now?: number;
     processCpu?: number;
     processors?: number;
@@ -1306,6 +1363,7 @@ export interface ServerStats {
     threads?: number;
     uptimeMillis?: number;
     usersOnline?: number;
+    version?: string;
 }
 
 export interface SimpleCardView extends Serializable, SelectableObjectView {
