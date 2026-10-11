@@ -8,6 +8,7 @@ import { useSocial } from '../stores/social';
 import { IconButton } from '../ui/Button';
 import { PromptText } from '../ui/PromptText';
 import styles from './ChatPanel.module.css';
+import { PUBLIC_ORIGIN } from '../brand';
 
 export interface ChatPanelProps {
   /** names the box offers for "/w" completion */
@@ -179,7 +180,7 @@ function Line({ line, me, onWhisper }: { line: ChatLine; me: string; onWhisper(n
         ? <button type="button" className={styles.who} onClick={() => onWhisper(other)} title={`Whisper to ${other}`}>{other}</button>
         : <span className={styles.who}>{other || 'You'}</span>}
       <span className={styles.text}>
-        {splitInviteLinks(line.text, window.location.origin).map((part, index) => (part.kind === 'invite'
+        {splitInviteLinks(line.text, PUBLIC_ORIGIN).map((part, index) => (part.kind === 'invite'
           ? <Link key={index} className={styles.invite} to={part.path}>Join the table</Link>
           : <span key={index}>{part.text}</span>))}
       </span>

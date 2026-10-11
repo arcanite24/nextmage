@@ -13,6 +13,7 @@ import { Avatar, Flag } from './Avatar';
 import { ChatPanel } from './ChatPanel';
 import shell from '../AppShell.module.css';
 import styles from './LobbyDrawer.module.css';
+import { PUBLIC_ORIGIN } from '../brand';
 
 /** The lobby: the main room's chat and the players online, beside whatever screen is open. */
 export function LobbyDrawer() {
@@ -152,7 +153,7 @@ function PlayerRow({ user, me, myTables }: { user: UsersView; me: string; myTabl
 
   const invite = (table: TableView) => {
     if (!table.tableId) return;
-    const link = inviteLink(window.location.origin, table.tableId);
+    const link = inviteLink(PUBLIC_ORIGIN, table.tableId);
     void useLobby.getState().send(`/w ${name} Join my table ${table.tableName ?? ''}: ${link}`)
       .then(() => notify('Invite sent', `${name} got a link to ${table.tableName}.`))
       .catch(() => notify("Couldn't send the invite", 'The lobby chat is not connected.', 'error'));
