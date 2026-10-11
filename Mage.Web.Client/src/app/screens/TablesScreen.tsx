@@ -22,6 +22,7 @@ import { useSocial } from '../stores/social';
 import { joinTable } from './joinTable';
 import { TableAdvancedFields } from './TableAdvancedFields';
 import styles from './TablesScreen.module.css';
+import { PUBLIC_ORIGIN } from '../brand';
 
 const FREEFORM = 'Constructed - Freeform';
 
@@ -202,7 +203,7 @@ function MyTable({ table }: { table: TableView }) {
   const ready = table.tableState === 'READY_TO_START';
   const copyInvite = () => {
     if (!table.tableId) return;
-    const link = inviteLink(window.location.origin, table.tableId);
+    const link = inviteLink(PUBLIC_ORIGIN, table.tableId);
     navigator.clipboard.writeText(link)
       .then(() => notify('Invite link copied', table.passworded ? 'Send it to a friend, with the table password.' : 'Send it to a friend: it opens this table.'))
       .catch(() => notify('Invite link', link));
