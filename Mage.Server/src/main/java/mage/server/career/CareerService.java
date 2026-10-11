@@ -135,10 +135,14 @@ public final class CareerService {
         return INSTANCE;
     }
 
-    /** the server switch: Career runs only with accounts, and can be turned off */
+    /** the server switch: Career runs only with accounts, and can be turned off (for good from the environment) */
     public static boolean enabled(boolean accounts) {
+        return accounts && !offByEnvironment() && mage.server.admin.RuntimeSettings.get().careerOn();
+    }
+
+    public static boolean offByEnvironment() {
         String setting = System.getProperty("xmage.career", System.getenv("XMAGE_CAREER"));
-        return accounts && !"off".equalsIgnoreCase(setting == null ? "" : setting.trim());
+        return "off".equalsIgnoreCase(setting == null ? "" : setting.trim());
     }
 
     /** for tests: resolve cards without the card database (null puts the database back) */

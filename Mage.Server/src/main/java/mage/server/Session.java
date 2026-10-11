@@ -10,6 +10,7 @@ import mage.players.net.UserGroup;
 import mage.remote.CustomThreadPool;
 import mage.server.admin.AccessPolicy;
 import mage.server.admin.Invite;
+import mage.server.admin.RuntimeSettings;
 import mage.server.game.GamesRoom;
 import mage.server.managers.ConfigSettings;
 import mage.server.managers.ManagerFactory;
@@ -41,6 +42,7 @@ public class Session {
     private static final Pattern digitsPattern = Pattern.compile("[0-9]");
 
     public static final String REGISTRATION_DISABLED_MESSAGE = "Registration has been disabled on the server. You can use any name and empty password to login.";
+    static final String REGISTRATION_CLOSED = "New accounts need an invite link on this server right now. Ask someone who plays here for one.";
 
     // Connection and reconnection logic:
     // - server allows only one user intance (user name for search, userId for memory/db store)
@@ -233,7 +235,16 @@ public class Session {
         AccessPolicy access = AccessPolicy.get();
         boolean hasInvite = inviteCode != null && !inviteCode.trim().isEmpty();
         if (!hasInvite) {
-            return access.refusal(true, userName, email);
+            String refusal = access.refusal(true, userName, email);
+            if (refusal != null || RuntimeSettings.get().registrationOpen() || access.isOwner(userName)) {
+                return refusal;
+            }
+            try {
+                return access.store().isListed(userName, email) ? null : REGISTRATION_CLOSED;
+            } catch (SQLException e) {
+                logger.error("Allowlist can't be read; refusing to register " + userName, e);
+                return REGISTRATION_CLOSED;
+            }
         }
         long now = System.currentTimeMillis();
         try {

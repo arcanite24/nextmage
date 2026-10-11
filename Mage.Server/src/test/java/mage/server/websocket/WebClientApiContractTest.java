@@ -75,7 +75,9 @@ public class WebClientApiContractTest {
             "adminToggleActivateUser", "adminTableRemove", "adminSendBroadcastMessage", // Moderation, for staff on player sessions too
             "staffMe", "adminStaff", "adminStaffGrant", "adminStaffRevoke", // staff roles (api/StaffRolesTest)
             "adminAccounts", "adminAccount", "adminResetCode", "adminAccountExport", "adminDeleteAccount", "adminFeedback",
-            "adminFeedbackMark", "sendFeedback" // accounts and feedback (api/AccountsApiTest)
+            "adminFeedbackMark", "sendFeedback", // accounts and feedback (api/AccountsApiTest)
+            "adminTableWatch", "adminClientErrorResolve", "adminSettings", "adminSetSetting", "adminMaintenance",
+            "adminMaintenanceCancel", "adminDiscordTest" // watching, client errors, settings and maintenance (M15)
     ));
 
     static {

@@ -207,6 +207,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('adminToggleActivateUser', SESSION, userName),
     adminTableRemove: (tableId: UUID, reason?: string | null) =>
       rpc.call('adminTableRemove', SESSION, tableId, reason),
+    adminTableWatch: (tableId: UUID) =>
+      rpc.call('adminTableWatch', SESSION, tableId),
     adminSendBroadcastMessage: (message: string) =>
       rpc.call('adminSendBroadcastMessage', SESSION, message),
     adminServerStats: () =>
@@ -215,8 +217,10 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('adminGetReports', openOnly),
     adminCloseReport: (reportId: number, resolution: string) =>
       rpc.call('adminCloseReport', reportId, resolution),
-    adminClientErrors: () =>
-      rpc.call('adminClientErrors'),
+    adminClientErrors: (includeResolved?: boolean | null) =>
+      rpc.call('adminClientErrors', includeResolved),
+    adminClientErrorResolve: (id: number, resolved?: boolean | null) =>
+      rpc.call('adminClientErrorResolve', id, resolved),
     testEndGame: (tableId: UUID) =>
       rpc.call('testEndGame', SESSION, tableId),
     testConcedeMatch: (tableId: UUID, losingPlayerIndex?: number | null) =>
@@ -273,6 +277,16 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('adminFeedback', status),
     adminFeedbackMark: (id: number, status: string, note?: string | null) =>
       rpc.call('adminFeedbackMark', id, status, note),
+    adminSettings: () =>
+      rpc.call('adminSettings'),
+    adminSetSetting: (name: string, value: string, reason?: string | null) =>
+      rpc.call('adminSetSetting', name, value, reason),
+    adminMaintenance: (minutes: number, message?: string | null, restartWhenIdle?: boolean | null) =>
+      rpc.call('adminMaintenance', minutes, message, restartWhenIdle),
+    adminMaintenanceCancel: () =>
+      rpc.call('adminMaintenanceCancel'),
+    adminDiscordTest: (channel: string) =>
+      rpc.call('adminDiscordTest', channel),
     serverInfo: () =>
       rpc.call('serverInfo'),
     deckSyncList: () =>

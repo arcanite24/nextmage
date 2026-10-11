@@ -3,6 +3,7 @@ package mage.server.websocket.api;
 import com.google.gson.JsonElement;
 import mage.server.Main;
 import mage.server.admin.AccessPolicy;
+import mage.server.admin.RuntimeSettings;
 import mage.server.decks.DeckStore;
 import mage.server.decks.DeckSyncEntry;
 import mage.server.managers.ConfigSettings;
@@ -56,6 +57,11 @@ final class AccountApi {
         public String notice;
         /** players can sign in with GitHub (githubStart) */
         public boolean github;
+        /** open, or invite: new accounts need an invite link (or a place on the allowlist) */
+        public String registration;
+        /** when planned maintenance starts (epoch ms), or 0; no new tables can start meanwhile */
+        public long maintenanceAt;
+        public String maintenanceMessage;
     }
 
     static List<RpcMethod> methods(ApiContext ctx) {
@@ -148,13 +154,20 @@ final class AccountApi {
             info.maxPasswordLength = config.getMaxPasswordLength();
         }
         info.deckSync = info.accounts;
+        mage.server.Maintenance.MaintenancePlan maintenance = mage.server.Maintenance.get().plan();
+        if (maintenance != null) {
+            info.maintenanceAt = maintenance.startsAt;
+            info.maintenanceMessage = maintenance.message;
+        }
         info.career = mage.server.career.CareerService.enabled(info.accounts);
         try {
             AccessPolicy access = AccessPolicy.get();
             info.access = info.accounts ? access.mode() : AccessPolicy.OPEN;
             info.notice = access.notice();
             info.github = info.accounts && mage.server.admin.GithubAuth.get().isEnabled();
+            info.registration = RuntimeSettings.get().registrationOpen() ? "open" : "invite";
         } catch (IllegalStateException e) {
+            info.registration = "open";
             info.access = AccessPolicy.OPEN;
             info.notice = "";
         }

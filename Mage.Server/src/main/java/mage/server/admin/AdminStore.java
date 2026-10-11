@@ -47,6 +47,7 @@ public final class AdminStore {
     private final Dao<GithubLink, Long> githubLinks;
     private final Dao<StaffMember, String> staff;
     private final Dao<FeedbackEntry, Long> feedback;
+    private final Dao<ClientErrorGroup, Long> clientErrors;
 
     public AdminStore(String jdbcUrl) throws SQLException {
         ConnectionSource source = new JdbcConnectionSource(jdbcUrl);
@@ -58,6 +59,7 @@ public final class AdminStore {
         TableUtils.createTableIfNotExists(source, GithubLink.class);
         TableUtils.createTableIfNotExists(source, StaffMember.class);
         TableUtils.createTableIfNotExists(source, FeedbackEntry.class);
+        TableUtils.createTableIfNotExists(source, ClientErrorGroup.class);
         audit = DaoManager.createDao(source, AuditEntry.class);
         settings = DaoManager.createDao(source, AdminSetting.class);
         allowlist = DaoManager.createDao(source, AllowEntry.class);
@@ -66,6 +68,7 @@ public final class AdminStore {
         githubLinks = DaoManager.createDao(source, GithubLink.class);
         staff = DaoManager.createDao(source, StaffMember.class);
         feedback = DaoManager.createDao(source, FeedbackEntry.class);
+        clientErrors = DaoManager.createDao(source, ClientErrorGroup.class);
     }
 
     public static AdminStore get() {
@@ -159,6 +162,75 @@ public final class AdminStore {
     /** false when the account wasn't staff */
     public synchronized boolean revokeStaff(String userName) throws SQLException {
         return !isBlank(userName) && staff.deleteById(userName.trim().toLowerCase(Locale.ROOT)) > 0;
+    }
+
+    // --- client errors ----------------------------------------------------------------------------
+
+    /** kinds of error kept at a time; the ones seen longest ago go first */
+    public static final int MAX_CLIENT_ERRORS = 500;
+
+    /**
+     * Counts one report into its group, which takes the report's details as the latest; a resolved group opens again.
+     *
+     * @return the group, and whether it is new (count 1) or came back (regressed)
+     */
+    public synchronized ClientErrorGroup recordClientError(ClientErrorGroup report, long now) throws SQLException {
+        ClientErrorGroup group = clientErrors.queryBuilder().where().eq("fingerprint", new SelectArg(report.fingerprint)).queryForFirst();
+        if (group == null) {
+            report.count = 1;
+            report.firstSeen = now;
+            report.lastSeen = now;
+            clientErrors.create(report);
+            if (clientErrors.countOf() > MAX_CLIENT_ERRORS) {
+                ClientErrorGroup oldest = clientErrors.queryBuilder().orderBy("lastSeen", true).limit(1L).queryForFirst();
+                if (oldest != null && oldest.id != report.id) {
+                    clientErrors.delete(oldest);
+                }
+            }
+            return report;
+        }
+        group.count++;
+        group.lastSeen = now;
+        group.message = report.message;
+        group.path = report.path;
+        group.stack = report.stack;
+        group.appVersion = report.appVersion;
+        group.userAgent = report.userAgent;
+        group.context = report.context;
+        group.lastUser = report.lastUser;
+        if (group.resolved) {
+            group.resolved = false;
+            group.regressed = true;
+        }
+        clientErrors.update(group);
+        return group;
+    }
+
+    /** Seen most recently first. */
+    public synchronized List<ClientErrorGroup> clientErrors(boolean includeResolved, int limit) throws SQLException {
+        QueryBuilder<ClientErrorGroup, Long> query = clientErrors.queryBuilder().orderBy("lastSeen", false).limit((long) clamp(limit, 1, 500));
+        if (!includeResolved) {
+            query.where().eq("resolved", false);
+        }
+        return query.query();
+    }
+
+    /**
+     * Marks a kind of error fixed (or, with {@code resolved} false, open again).
+     */
+    public synchronized ClientErrorGroup resolveClientError(long id, boolean resolved, String by, long now) throws SQLException {
+        ClientErrorGroup group = clientErrors.queryForId(id);
+        if (group == null) {
+            throw new IllegalArgumentException("There is no client error " + id);
+        }
+        group.resolved = resolved;
+        group.resolvedBy = resolved ? by : null;
+        group.resolvedAt = resolved ? now : 0;
+        if (resolved) {
+            group.regressed = false;
+        }
+        clientErrors.update(group);
+        return group;
     }
 
     // --- feedback ---------------------------------------------------------------------------------

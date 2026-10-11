@@ -10,8 +10,10 @@
 #   authorized_user.h2.sql.gz, feedback.h2.sql.gz   H2 SQL dumps (accounts, feedback)
 #   user_stats.db, table_record.db                  SQLite copies (player stats, finished tables)
 #   web_decks.db, web_reports.db, career.db         SQLite copies (synced decks, player reports, Career progress)
+#   web_admin.db                                    SQLite copy (/admin: access, staff, audit log, settings)
 # H2 dumps are taken online: AUTO_SERVER lets this process join the running server's database.
 # SQLite copies use the online backup API. The newest $BACKUP_KEEP (default 14) backups are kept.
+# Every run writes db/backup-status.json, which the server reads for /admin and its staff alerts.
 set -euo pipefail
 
 DB_DIR=${XMAGE_DB_DIR:-/opt/xmage/db}
@@ -19,7 +21,8 @@ BACKUP_DIR=${BACKUP_DIR:-/backups}
 BACKUP_AT=${BACKUP_AT:-03:30}
 BACKUP_KEEP=${BACKUP_KEEP:-14}
 H2_DBS=(authorized_user.h2 feedback.h2)
-SQLITE_DBS=(user_stats.db table_record.db web_decks.db web_reports.db career.db)
+SQLITE_DBS=(user_stats.db table_record.db web_decks.db web_reports.db career.db web_admin.db)
+STATUS=$DB_DIR/backup-status.json
 
 h2_jar() {
   local jars=(/opt/xmage/lib/h2-*.jar)
@@ -29,10 +32,22 @@ h2_jar() {
 
 log() { echo "$(date -u +%FT%TZ) xmage-backup: $*"; }
 
+# write_status ok|failed NAME [SIZE]: the last run, and the last good one (kept from the previous status)
+write_status() {
+  local ok=$1 name=$2 size=${3:-} now last_ok
+  now=$(date -u +%s)
+  last_ok=$(sed -n 's/.*"lastOkAt":\([0-9]*\).*/\1/p' "$STATUS" 2>/dev/null || true)
+  [[ $ok == ok ]] && last_ok=$now
+  printf '{"at":%s,"ok":%s,"name":"%s","size":"%s","lastOkAt":%s}\n' \
+    "$now" "$([[ $ok == ok ]] && echo true || echo false)" "$name" "$size" "${last_ok:-0}" > "$STATUS.tmp" \
+    && mv "$STATUS.tmp" "$STATUS" || log "can't write $STATUS"
+}
+
 backup_once() {
-  local name tmp h2
+  local name tmp h2 size
   name=$(date -u +%Y%m%dT%H%M%SZ)
   tmp=$BACKUP_DIR/.partial-$name
+  trap 'write_status failed "$name"' ERR
   h2=$(h2_jar)
   mkdir -p "$tmp"
   for db in "${H2_DBS[@]}"; do
@@ -47,7 +62,10 @@ backup_once() {
     sqlite3 -cmd ".timeout 30000" "$DB_DIR/$db" ".backup '$tmp/$db'"
   done
   mv "$tmp" "$BACKUP_DIR/$name"
-  log "backup $name done ($(du -sh "$BACKUP_DIR/$name" | cut -f1))"
+  size=$(du -sh "$BACKUP_DIR/$name" | cut -f1)
+  log "backup $name done ($size)"
+  trap - ERR
+  write_status ok "$name" "$size"
   prune
 }
 

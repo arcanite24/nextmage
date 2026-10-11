@@ -419,6 +419,11 @@
                                 <class>mage.server.decks.DeckStore$DeckPutResult</class>
                                 <class>mage.server.moderation.PlayerReport</class>
                                 <class>mage.server.moderation.ClientErrors$ClientError</class>
+                                <class>mage.server.admin.ClientErrorGroup</class>
+                                <class>mage.server.websocket.api.SettingsApi$ServerSetting</class>
+                                <class>mage.server.websocket.api.SettingsApi$ServerSettings</class>
+                                <class>mage.server.Maintenance$MaintenancePlan</class>
+                                <class>mage.server.BackupStatus$BackupRun</class>
                                 <class>mage.server.admin.AuditEntry</class>
                                 <class>mage.server.admin.AllowEntry</class>
                                 <class>mage.server.admin.Invite</class>

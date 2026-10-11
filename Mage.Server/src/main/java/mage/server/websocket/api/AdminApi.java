@@ -7,8 +7,9 @@ import mage.server.Main;
 import mage.server.Moderation;
 import mage.server.Session;
 import mage.server.admin.AccessPolicy;
+import mage.server.admin.AdminStore;
+import mage.server.admin.ClientErrorGroup;
 import mage.server.admin.StaffRole;
-import mage.server.moderation.ClientErrors;
 import mage.server.moderation.ReportStore;
 import mage.server.websocket.BridgeMetrics;
 import mage.server.websocket.rpc.RpcCall;
@@ -134,6 +135,24 @@ final class AdminApi {
                             return removed;
                         }),
 
+                RpcMethod.named("adminTableWatch")
+                        .session(0)
+                        .params(of("sessionId", STRING), of("tableId", mage.server.websocket.rpc.RpcParam.Type.UUID))
+                        .returns("string")
+                        .doc("Staff (moderator): watch any running game from your own player session, whatever its spectator "
+                                + "settings; the game opens through the usual watch callback. Returns the game id, or null when there "
+                                + "is no running game or you play in it.")
+                        .handler(call -> {
+                            String actor = Staff.require(ctx, call, StaffRole.MODERATOR);
+                            String sessionId = call.string(0);
+                            UUID tableId = call.uuid(1);
+                            UUID gameId = AccessApi.store(() -> moderation(ctx).watchTable(sessionId, tableId));
+                            if (gameId != null) {
+                                Staff.audit(actor, "table.watch", tableId.toString(), "game " + gameId, null);
+                            }
+                            return gameId == null ? null : gameId.toString();
+                        }),
+
                 RpcMethod.named("adminSendBroadcastMessage")
                         .session(0)
                         .params(of("sessionId", STRING), of("message", STRING))
@@ -183,11 +202,28 @@ final class AdminApi {
                         }),
 
                 RpcMethod.named("adminClientErrors")
-                        .returns("ClientError[]")
-                        .doc("Staff (moderator): the latest crash reports from web clients, newest first.")
+                        .params(optional("includeResolved", BOOLEAN))
+                        .returns("ClientErrorGroup[]")
+                        .doc("Staff (moderator): crash reports from web clients, one row per kind of error with how often it "
+                                + "happened, seen most recently first; resolved ones only when asked for.")
                         .handler(call -> {
                             Staff.require(ctx, call, StaffRole.MODERATOR);
-                            return ClientErrors.get().recent(200);
+                            boolean includeResolved = call.optBool(0, false);
+                            return AccessApi.store(() -> AdminStore.get().clientErrors(includeResolved, 200));
+                        }),
+
+                RpcMethod.named("adminClientErrorResolve")
+                        .params(of("id", INT), optional("resolved", BOOLEAN))
+                        .returns("ClientErrorGroup")
+                        .doc("Staff (moderator): mark a kind of client error fixed (or, with resolved false, open again). "
+                                + "It opens again by itself when it happens again.")
+                        .handler(call -> {
+                            String actor = Staff.require(ctx, call, StaffRole.MODERATOR);
+                            long id = AccountApi.longValue(call, 0);
+                            boolean resolved = call.optBool(1, true);
+                            ClientErrorGroup group = AccessApi.store(() -> AdminStore.get().resolveClientError(id, resolved, actor, System.currentTimeMillis()));
+                            Staff.audit(actor, resolved ? "clientError.resolve" : "clientError.reopen", String.valueOf(id), group.message, null);
+                            return group;
                         }),
 
                 RpcMethod.named("testEndGame")

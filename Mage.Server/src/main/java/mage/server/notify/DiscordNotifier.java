@@ -7,6 +7,7 @@ import mage.game.Table;
 import mage.game.match.MatchPlayer;
 import mage.game.tournament.Tournament;
 import mage.players.PlayerType;
+import mage.server.admin.RuntimeSettings;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -143,7 +144,7 @@ public final class DiscordNotifier {
 
     /** A table was created in the main lobby room (seats are still empty; their types are known). */
     public void tableOpened(Table table, String password) {
-        if (!isEnabled()) {
+        if (!isEnabled() || !on(RuntimeSettings.DISCORD_TABLES)) {
             return;
         }
         int humans = humanSeats(table.getSeats());
@@ -157,7 +158,7 @@ public final class DiscordNotifier {
 
     /** An event (tournament) started with {@code humanPlayers} people in it. */
     public void eventStarted(Table table, Tournament tournament, String password, int humanPlayers) {
-        if (!isEnabled() || !announced(humanPlayers, password)) {
+        if (!isEnabled() || !on(RuntimeSettings.DISCORD_EVENTS) || !announced(humanPlayers, password)) {
             return;
         }
         submit(eventStartedMessage(table.getName(), table.getGameType(), table.getDeckType(), table.getControllerName(),
@@ -166,7 +167,7 @@ public final class DiscordNotifier {
 
     /** A standalone match started (its first game): players seated, cards dealt. */
     public void matchStarted(Table table, String password, int humanPlayers, Collection<MatchPlayer> players) {
-        if (!isEnabled() || table.isTournamentSubTable() || !announced(humanPlayers, password)) {
+        if (!isEnabled() || !on(RuntimeSettings.DISCORD_MATCHES) || table.isTournamentSubTable() || !announced(humanPlayers, password)) {
             return;
         }
         List<String> names = new ArrayList<>();
@@ -178,7 +179,7 @@ public final class DiscordNotifier {
 
     /** Someone asked to be let in to a contributors-only server; staff decide in /admin. */
     public void accessRequested(String name, String note) {
-        if (!isEnabled()) {
+        if (!isEnabled() || !on(RuntimeSettings.DISCORD_STAFF)) {
             return;
         }
         submit(accessRequestedMessage(name, note, link("/admin")));
@@ -186,7 +187,7 @@ public final class DiscordNotifier {
 
     /** A player reported another; staff look at it in /admin. */
     public void reportFiled(String reporter, String reported, String reason) {
-        if (!isEnabled()) {
+        if (!isEnabled() || !on(RuntimeSettings.DISCORD_STAFF)) {
             return;
         }
         submit(staffMessage("Report: " + escape(reporter) + " reported " + escape(reported), reason, link("/admin")));
@@ -194,10 +195,37 @@ public final class DiscordNotifier {
 
     /** A change only the owner makes: staff roles. */
     public void staffChanged(String actor, String change) {
-        if (!isEnabled()) {
+        if (!isEnabled() || !on(RuntimeSettings.DISCORD_STAFF)) {
             return;
         }
         submit(staffMessage("Staff: " + escape(actor) + " " + escape(change), null, link("/admin")));
+    }
+
+    /** News for staff that has no event of its own (maintenance plans, backup trouble). */
+    public void staffNews(String text) {
+        if (!isEnabled() || !on(RuntimeSettings.DISCORD_STAFF)) {
+            return;
+        }
+        submit(staffMessage(escape(text), null, link("/admin")));
+    }
+
+    /**
+     * Posts a test message now, past the switches and the queue, so staff see at once whether the webhook works.
+     *
+     * @return the HTTP status Discord answered with
+     * @throws IOException when Discord can't be reached
+     * @throws IllegalStateException when no webhook is set
+     */
+    public int postTest(String text) throws IOException {
+        if (!isEnabled()) {
+            throw new IllegalStateException("No webhook is set for this channel");
+        }
+        return sender.post(staffMessage(escape(text), null, link("/admin")));
+    }
+
+    /** a kind of post staff can turn off in /admin; on when the admin database can't say */
+    private static boolean on(String kind) {
+        return RuntimeSettings.get().discord(kind);
     }
 
     // --- rules ------------------------------------------------------------------------------------

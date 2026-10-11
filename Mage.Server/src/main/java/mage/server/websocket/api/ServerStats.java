@@ -1,5 +1,8 @@
 package mage.server.websocket.api;
 
+import mage.server.BackupStatus;
+import mage.server.Health;
+import mage.server.Maintenance;
 import mage.server.managers.ManagerFactory;
 import mage.server.websocket.BridgeMetrics;
 
@@ -13,6 +16,9 @@ import java.lang.management.OperatingSystemMXBean;
 public class ServerStats {
 
     public long now;
+    public String version;
+    /** the git commit the server was built from, or null when unknown */
+    public String commit;
     public long uptimeMillis;
     public int usersOnline;
     public int tables;
@@ -26,10 +32,16 @@ public class ServerStats {
     public int processors;
     public int threads;
     public BridgeMetrics.BridgeSnapshot bridge;
+    /** the nightly backup's last run; null when this server has no backup service */
+    public BackupStatus.BackupRun backup;
+    /** planned maintenance, or null */
+    public Maintenance.MaintenancePlan maintenance;
 
     static ServerStats collect(ManagerFactory managers) {
         ServerStats stats = new ServerStats();
         stats.now = System.currentTimeMillis();
+        stats.version = Health.version();
+        stats.commit = Health.commit();
         stats.uptimeMillis = ManagementFactory.getRuntimeMXBean().getUptime();
         stats.usersOnline = managers.userManager().getUsers().size();
         stats.tables = managers.tableManager().getTables().size();
@@ -44,6 +56,8 @@ public class ServerStats {
                 ? ((com.sun.management.OperatingSystemMXBean) os).getProcessCpuLoad() : -1;
         stats.threads = ManagementFactory.getThreadMXBean().getThreadCount();
         stats.bridge = BridgeMetrics.get().snapshot();
+        stats.backup = BackupStatus.read();
+        stats.maintenance = Maintenance.get().plan();
         return stats;
     }
 }
