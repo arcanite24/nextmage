@@ -11,13 +11,17 @@ import com.getcapacitor.BridgeActivity;
 
 /**
  * The Playmat web client in a native shell: full screen (the system bars come back on a swipe and hide again), the
- * screen kept awake through a game, and the WebView tuned for a page that animates a lot.
+ * screen kept awake through a game, card pictures kept on the device, and the WebView tuned for a page that animates
+ * a lot.
  */
 public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(PictureCachePlugin.class);
         super.onCreate(savedInstanceState);
+        // card pictures come from the device's own store (PictureCache) before the network
+        getBridge().setWebViewClient(new PlaymatWebViewClient(getBridge()));
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         WebView webView = getBridge().getWebView();

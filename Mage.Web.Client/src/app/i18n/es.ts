@@ -235,6 +235,9 @@ const es: Catalog = {
   'settings.motion': 'Movimiento de las cartas',
   'settings.paintedArt': 'Arte pintado',
   'settings.paintedArt.detail': 'Imágenes generadas con IA para los iconos, avatares, escudos, fundas y estampados de tapete de Carrera. Desactivado, se muestran las versiones dibujadas sencillas.',
+  'settings.pictureStore': 'Imágenes de cartas en este dispositivo',
+  'settings.pictureStore.detail': '{count} imágenes, {size} MB. Se guardan para que las partidas abran sin esperar a la red.',
+  'settings.pictureStore.clear': 'Borrar',
   'settings.motion.detail': 'Las cartas vuelan entre zonas y se asientan en el tapete. El ajuste de movimiento reducido de tu sistema siempre manda.',
 
   'settings.alerts.intro': 'Mientras {app} está en una pestaña de fondo, el título de la pestaña cuenta lo que te espera.',
