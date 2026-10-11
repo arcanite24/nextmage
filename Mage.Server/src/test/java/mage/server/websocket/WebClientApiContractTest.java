@@ -67,7 +67,10 @@ public class WebClientApiContractTest {
             "careerGauntletPlay", "careerGauntletAbandon", "careerLimited", "careerLimitedStart", "careerLimitedPick",
             "careerLimitedDeck", "careerLimitedPlay", "careerLimitedAbandon", // career modes (career/CareerModesTest)
             "authRegister", "authSendTokenToEmail", "authResetPassword", // session and AccountService, with readable errors
-            "authRememberLogin", "authForgetLogin" // remembered devices in the account database
+            "authRememberLogin", "authForgetLogin", // remembered devices in the account database
+            "adminAudit", "adminAccess", "adminAccessPreview", "adminSetAccessMode", "adminAllowAdd", "adminAllowRemovePreview",
+            "adminAllowRemove", "adminInviteCreate", "adminInviteRevoke", "adminAccessDecide", "adminSetNotice", "inviteCheck",
+            "accessRequest", "githubStart", "githubFinish" // access policy and admin store (admin/AccessPolicyTest, AccessGateTest)
     ));
 
     static {
@@ -91,8 +94,12 @@ public class WebClientApiContractTest {
     @BeforeEach
     void setUp() {
         sessions = new FakeSessions();
-        dispatcher = WebClientApi.createDispatcher(new ApiContext(proxyServer(), null, sessions, ADMIN_PASSWORD));
+        dispatcher = WebClientApi.createDispatcher(new ApiContext(proxyServer(), null, sessions, ADMIN_PASSWORD)
+                .withStaff(sessionId -> everyoneIsStaff ? Optional.of("staff") : Optional.empty()));
     }
+
+    /** whether the staff check accepts the test's sessions */
+    private boolean everyoneIsStaff = true;
 
     private MageServer proxyServer() {
         return (MageServer) Proxy.newProxyInstance(
@@ -137,6 +144,21 @@ public class WebClientApiContractTest {
                                 .doesNotContain("client-chosen-session");
                     }
                 }));
+    }
+
+    @Test
+    void adminCallsOfPlayersFailAndNeverReachTheServer() throws Exception {
+        everyoneIsStaff = false;
+        for (RpcMethod method : dispatcher.getMethods()) {
+            if (!method.getName().startsWith("admin")) {
+                continue;
+            }
+            FakeConnection connection = new FakeConnection();
+            login(connection);
+            assertThatThrownBy(() -> dispatcher.dispatch(method.getName(), sampleParams(method, "x"), connection))
+                    .as(method.getName()).hasMessageContaining("Staff only");
+            assertThat(serverCalls).as("server calls of " + method.getName()).isEmpty();
+        }
     }
 
     @Test

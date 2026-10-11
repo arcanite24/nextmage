@@ -7,6 +7,52 @@ export interface AbilityPickerView extends Serializable {
     message?: string;
 }
 
+export interface AccessOverview {
+    accounts?: boolean;
+    allowlist?: AllowEntry[];
+    github?: boolean;
+    githubPeople?: number;
+    githubProblem?: string;
+    githubRepo?: string;
+    githubSyncedAt?: number;
+    invites?: Invite[];
+    mail?: boolean;
+    mode?: string;
+    notice?: string;
+    owner?: string;
+    requests?: AccessRequest[];
+}
+
+export interface AccessRequest {
+    createdAt?: number;
+    decidedAt?: number;
+    decidedBy?: string;
+    email?: string;
+    id?: number;
+    name?: string;
+    note?: string;
+    status?: string;
+}
+
+export interface AllowEntry {
+    addedAt?: number;
+    addedBy?: string;
+    email?: string;
+    id?: number;
+    name?: string;
+    note?: string;
+}
+
+export interface AuditEntry {
+    action?: string;
+    actor?: string;
+    at?: number;
+    detail?: string;
+    id?: number;
+    reason?: string;
+    target?: string;
+}
+
 export interface BasicLandSetInfo extends ExpansionSetInfo {
     hasSnowBasics?: boolean;
 }
@@ -898,6 +944,13 @@ export interface GameView extends Serializable {
     watchedHands?: { [index: string]: { [index: string]: SimpleCardView } };
 }
 
+export interface GithubSignInResult {
+    nameProblem?: string;
+    rememberToken?: string;
+    suggestedName?: string;
+    userName?: string;
+}
+
 export interface ImportedDeck {
     author?: string;
     commanders?: DeckCardInfo[];
@@ -913,6 +966,24 @@ export interface ImportedDeck {
     side?: DeckCardInfo[];
     site?: string;
     url?: string;
+}
+
+export interface Invite {
+    code?: string;
+    createdAt?: number;
+    createdBy?: string;
+    expiresAt?: number;
+    maxUses?: number;
+    note?: string;
+    revoked?: boolean;
+    usedBy?: string;
+    uses?: number;
+}
+
+export interface InviteCheck {
+    expiresAt?: number;
+    reason?: string;
+    valid?: boolean;
 }
 
 export interface LargeMessage {
@@ -1139,14 +1210,17 @@ export interface Serializable {
 }
 
 export interface ServerInfo {
+    access?: string;
     accounts?: boolean;
     career?: boolean;
     deckSync?: boolean;
+    github?: boolean;
     mail?: boolean;
     maxPasswordLength?: number;
     maxUserNameLength?: number;
     minPasswordLength?: number;
     minUserNameLength?: number;
+    notice?: string;
     serverName?: string;
     testMode?: boolean;
 }

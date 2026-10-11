@@ -29,8 +29,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('authRememberLogin', SESSION),
     authForgetLogin: (userName: string, rememberToken: string) =>
       rpc.call('authForgetLogin', userName, rememberToken),
-    authRegister: (userName: string, password: string, email: string) =>
-      rpc.call('authRegister', SESSION, userName, password, email),
+    authRegister: (userName: string, password: string, email: string, inviteCode?: string | null) =>
+      rpc.call('authRegister', SESSION, userName, password, email, inviteCode),
     authSendTokenToEmail: (email: string) =>
       rpc.call('authSendTokenToEmail', SESSION, email),
     authResetPassword: (email: string, authToken: string, password: string) =>
@@ -221,6 +221,36 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('testEndGame', SESSION, tableId),
     testConcedeMatch: (tableId: UUID, losingPlayerIndex?: number | null) =>
       rpc.call('testConcedeMatch', SESSION, tableId, losingPlayerIndex),
+    adminAudit: (actor?: string | null, action?: string | null, target?: string | null, before?: number | null) =>
+      rpc.call('adminAudit', actor, action, target, before),
+    adminAccess: () =>
+      rpc.call('adminAccess'),
+    adminAccessPreview: (mode: string) =>
+      rpc.call('adminAccessPreview', mode),
+    adminSetAccessMode: (mode: string, reason: string) =>
+      rpc.call('adminSetAccessMode', mode, reason),
+    adminAllowAdd: (nameOrEmail: string, note?: string | null) =>
+      rpc.call('adminAllowAdd', nameOrEmail, note),
+    adminAllowRemovePreview: (entryId: number) =>
+      rpc.call('adminAllowRemovePreview', entryId),
+    adminAllowRemove: (entryId: number, reason: string) =>
+      rpc.call('adminAllowRemove', entryId, reason),
+    adminInviteCreate: (note?: string | null, maxUses?: number | null, days?: number | null) =>
+      rpc.call('adminInviteCreate', note, maxUses, days),
+    adminInviteRevoke: (code: string) =>
+      rpc.call('adminInviteRevoke', code),
+    adminAccessDecide: (requestId: number, approve: boolean) =>
+      rpc.call('adminAccessDecide', requestId, approve),
+    adminSetNotice: (notice: string) =>
+      rpc.call('adminSetNotice', notice),
+    inviteCheck: (code: string) =>
+      rpc.call('inviteCheck', code),
+    githubStart: () =>
+      rpc.call('githubStart'),
+    githubFinish: (state: string, code: string, userName?: string | null) =>
+      rpc.call('githubFinish', state, code, userName),
+    accessRequest: (userName: string, email: string, note?: string | null) =>
+      rpc.call('accessRequest', userName, email, note),
     serverInfo: () =>
       rpc.call('serverInfo'),
     deckSyncList: () =>

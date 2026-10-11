@@ -10,6 +10,8 @@ import { APP_NAME } from '../brand';
 import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
 import { Field } from '../ui/Field';
+import { AccessPage } from './AccessPage';
+import { AuditPage } from './AuditPage';
 import { describeAge, formatBytes, formatDuration, MUTE_CHOICES } from './adminFormat';
 import styles from './AdminScreen.module.css';
 
@@ -85,16 +87,20 @@ function Console({ api }: { api: AdminApi }) {
         <Tabs.Trigger value="overview" className={styles.tab}>Overview</Tabs.Trigger>
         <Tabs.Trigger value="players" className={styles.tab}>Players</Tabs.Trigger>
         <Tabs.Trigger value="tables" className={styles.tab}>Tables</Tabs.Trigger>
+        <Tabs.Trigger value="access" className={styles.tab}>Access</Tabs.Trigger>
         <Tabs.Trigger value="reports" className={styles.tab}>Reports</Tabs.Trigger>
         <Tabs.Trigger value="errors" className={styles.tab}>Client errors</Tabs.Trigger>
         <Tabs.Trigger value="broadcast" className={styles.tab}>Broadcast</Tabs.Trigger>
+        <Tabs.Trigger value="audit" className={styles.tab}>Audit</Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="overview" className={styles.panel}><Overview api={api} /></Tabs.Content>
       <Tabs.Content value="players" className={styles.panel}><Players api={api} /></Tabs.Content>
       <Tabs.Content value="tables" className={styles.panel}><TablesPanel api={api} /></Tabs.Content>
+      <Tabs.Content value="access" className={styles.panel}><AccessPage api={api} /></Tabs.Content>
       <Tabs.Content value="reports" className={styles.panel}><Reports api={api} /></Tabs.Content>
       <Tabs.Content value="errors" className={styles.panel}><ClientErrors api={api} /></Tabs.Content>
       <Tabs.Content value="broadcast" className={styles.panel}><Broadcast api={api} /></Tabs.Content>
+      <Tabs.Content value="audit" className={styles.panel}><AuditPage api={api} /></Tabs.Content>
     </Tabs.Root>
   );
 }

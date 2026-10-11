@@ -20,7 +20,7 @@ export function useServerState() {
     queryKey: ['serverState'],
     queryFn: () => api.getServerState(),
     enabled: signedIn,
-    staleTime: Infinity,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -58,13 +58,13 @@ export function refreshTables(): void {
   setTimeout(() => void queryClient.invalidateQueries({ queryKey: ['tables'] }), TABLE_LIST_PERIOD_MS + 500);
 }
 
-/** What this server offers (accounts, deck sync, Career); asked once. */
+/** What this server offers (accounts, deck sync, Career) and its notice; asked again after five minutes, so a new notice shows up. */
 export function useServerInfo() {
   const signedIn = useSession((state) => state.phase === 'signedIn');
   return useQuery({
     queryKey: ['serverInfo'],
     queryFn: () => api.serverInfo().catch(() => null),
     enabled: signedIn,
-    staleTime: Infinity,
+    staleTime: 5 * 60_000,
   });
 }

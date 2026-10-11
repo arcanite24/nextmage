@@ -8,6 +8,8 @@ import mage.interfaces.callback.ClientCallbacksQueue;
 import mage.players.net.UserData;
 import mage.players.net.UserGroup;
 import mage.remote.CustomThreadPool;
+import mage.server.admin.AccessPolicy;
+import mage.server.admin.Invite;
 import mage.server.game.GamesRoom;
 import mage.server.managers.ConfigSettings;
 import mage.server.managers.ManagerFactory;
@@ -19,6 +21,7 @@ import org.jboss.remoting.callback.*;
 import org.jboss.util.threadpool.BlockingMode;
 import org.jboss.remoting.Client;
 
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -129,6 +132,14 @@ public class Session {
     }
 
     public String registerUser(String userName, String password, String email) {
+        return registerUser(userName, password, email, null);
+    }
+
+    /**
+     * @param inviteCode an invite link's code: lets the account in to a contributors-only server and puts it on the
+     *                   allowlist
+     */
+    public String registerUser(String userName, String password, String email, String inviteCode) {
         if (!managerFactory.configSettings().isAuthenticationActivated()) {
             String returnMessage = REGISTRATION_DISABLED_MESSAGE;
             sendErrorMessageToClient(returnMessage);
@@ -162,6 +173,13 @@ public class Session {
 
             // email
             returnMessage = validateEmail(email);
+            if (returnMessage != null) {
+                sendErrorMessageToClient(returnMessage);
+                return returnMessage;
+            }
+
+            // a contributors-only server: listed already, or an invite that still works
+            returnMessage = admitNewAccount(userName, email, inviteCode);
             if (returnMessage != null) {
                 sendErrorMessageToClient(returnMessage);
                 return returnMessage;
@@ -208,6 +226,32 @@ public class Session {
         }
     }
 
+    /**
+     * Null when the new account may be created; an invite is used up here and its account allowlisted.
+     */
+    private static String admitNewAccount(String userName, String email, String inviteCode) {
+        AccessPolicy access = AccessPolicy.get();
+        boolean hasInvite = inviteCode != null && !inviteCode.trim().isEmpty();
+        if (!hasInvite) {
+            return access.refusal(true, userName, email);
+        }
+        long now = System.currentTimeMillis();
+        try {
+            Invite invite = access.store().invite(inviteCode.trim());
+            if (invite == null || !access.store().redeemInvite(invite.code, userName, now)) {
+                return access.refusal(true, userName, email) == null ? null
+                        : "That invite link has expired, was used up or was revoked. Ask whoever sent it for a new one.";
+            }
+            String note = invite.note == null || invite.note.isEmpty() ? "invited" : "invited: " + invite.note;
+            access.store().allow(userName, note, "invite", now);
+            access.store().audit(userName, "access.invite.use", userName, "invite " + inviteCode.trim(), null, now);
+            return null;
+        } catch (SQLException e) {
+            logger.error("Invite can't be checked", e);
+            return "The invite can't be checked right now. Try again in a minute.";
+        }
+    }
+
     private String validateUserNameLength(String userName) {
         ConfigSettings config = managerFactory.configSettings();
         if (userName.length() < config.getMinUserNameLength()) {
@@ -226,7 +270,7 @@ public class Session {
     }
 
     private String validateUserName(String userName) {
-        if (userName.equals(User.ADMIN_NAME)) {
+        if (userName.trim().equalsIgnoreCase(User.ADMIN_NAME)) {
             return "User name already in use";
         }
 
@@ -305,6 +349,11 @@ public class Session {
             return errorMessage;
         }
 
+        // the admin console's name: nobody signs in as it (with accounts off, a name is all it takes)
+        if (User.ADMIN_NAME.equalsIgnoreCase(userName.trim())) {
+            return "User name already in use";
+        }
+
         // check auth/anon
         errorMessage = connectUserHandling(userName, password, restoreSessionId);
         return errorMessage;
@@ -361,6 +410,11 @@ public class Session {
                             -> user.setLockedUntil(null)
                     );
                 }
+            }
+            // a contributors-only server: also stops remembered devices and restored sessions of people taken off the list
+            String refused = AccessPolicy.get().refusal(true, authorizedUser.getName(), authorizedUser.email);
+            if (refused != null) {
+                return refused;
             }
         }
 

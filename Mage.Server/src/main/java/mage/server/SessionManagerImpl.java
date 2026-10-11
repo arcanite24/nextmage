@@ -166,14 +166,14 @@ public class SessionManagerImpl implements SessionManager {
     public boolean checkAdminAccess(String sessionId) {
         Session session = sessions.get(sessionId);
         if (session == null) {
-            logger.error("Wrong admin access with unknown session: " + sessionId, new Throwable());
+            logger.warn("Admin call refused for an unknown session");
         } else if (!session.isAdmin()) {
             String info = String.format("sessionId %s for userId %s at %s",
                     session.getId(),
                     session.getUserId(),
                     session.getHost()
             );
-            logger.error("Wrong admin access with user session: " + info, new Throwable());
+            logger.warn("Admin call refused for " + info);
         }
         return session != null && session.isAdmin();
     }

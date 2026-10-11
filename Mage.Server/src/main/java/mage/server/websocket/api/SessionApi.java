@@ -131,13 +131,16 @@ final class SessionApi {
 
                 RpcMethod.named("authRegister")
                         .establishes(0)
-                        .params(of("sessionId", STRING), of("userName", STRING), of("password", STRING), of("email", STRING))
+                        .params(of("sessionId", STRING), of("userName", STRING), of("password", STRING), of("email", STRING),
+                                optional("inviteCode", STRING))
                         .doc("Register a new account (servers with authentication enabled). With a password it becomes the "
-                                + "account's password; without one the server emails a generated password. Fails with the reason.")
+                                + "account's password; without one the server emails a generated password. On a contributors-only "
+                                + "server the name or email must be on the allowlist, or inviteCode an invite that still works "
+                                + "(which puts the account on the list). Fails with the reason.")
                         .handler(call -> {
                             Session session = ctx.managers.sessionManager().getSession(call.string(0))
                                     .orElseThrow(() -> RpcException.notAuthorized("No session"));
-                            String problem = session.registerUser(call.string(1), call.string(2), call.string(3));
+                            String problem = session.registerUser(call.string(1), call.string(2), call.string(3), call.optString(4, null));
                             if (problem != null) {
                                 throw RpcException.invalidParams(problem);
                             }

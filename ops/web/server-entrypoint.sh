@@ -22,7 +22,7 @@ from_file() {
     eval "$1=\$(cat \"\$file\")"
   fi
 }
-for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY XMAGE_DISCORD_WEBHOOK; do
+for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY XMAGE_DISCORD_WEBHOOK XMAGE_GITHUB_CLIENT_SECRET XMAGE_GITHUB_TOKEN; do
   from_file "$secret"
 done
 
@@ -106,6 +106,23 @@ is_uint "$REPLAY_DAYS" || die "XMAGE_REPLAY_DAYS must be a whole number (got '$R
 REPLAY_MAX=${XMAGE_REPLAY_MAX:-300}
 is_uint "$REPLAY_MAX" || die "XMAGE_REPLAY_MAX must be a whole number (got '$REPLAY_MAX')"
 
+# --- access (contributors server) -------------------------------------------------------------
+# XMAGE_ACCESS=allowlist starts the server closed: only the owner, staff and the people on the
+# allowlist get in. It is read on the very first boot only; after that /admin switches it.
+ACCESS=${XMAGE_ACCESS:-open}
+case "$ACCESS" in
+  open|allowlist) ;;
+  *) die "XMAGE_ACCESS must be open or allowlist (got '$ACCESS')" ;;
+esac
+if [ "$ACCESS" = allowlist ] && [ "${XMAGE_AUTH:-false}" != true ]; then
+  die "XMAGE_ACCESS=allowlist needs XMAGE_AUTH=true: without accounts anyone can sign in with any name"
+fi
+# names and emails, comma separated, or @/path/to/file with one per line (# starts a comment)
+ALLOWLIST=${XMAGE_ALLOWLIST:-}
+case "$ALLOWLIST" in
+  @*) [ -r "${ALLOWLIST#@}" ] || die "XMAGE_ALLOWLIST file ${ALLOWLIST#@} can't be read" ;;
+esac
+
 # --- JVM ----------------------------------------------------------------------------------------
 # Arguments go through a private @argfile so the admin password does not show up in `ps`.
 umask 077
@@ -129,6 +146,20 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
   if [ -n "${XMAGE_PUBLIC_URL:-}" ]; then
     printf '"-Dxmage.publicUrl=%s"\n' "$(printf '%s' "$XMAGE_PUBLIC_URL" | sed 's/[\\"]/\\&/g')"
   fi
+  printf '"-Dxmage.access=%s"\n' "$ACCESS"
+  if [ -n "${XMAGE_OWNER:-}" ]; then
+    printf '"-Dxmage.owner=%s"\n' "$(printf '%s' "$XMAGE_OWNER" | sed 's/[\\"]/\\&/g')"
+  fi
+  if [ -n "$ALLOWLIST" ]; then
+    printf '"-Dxmage.allowlist=%s"\n' "$(printf '%s' "$ALLOWLIST" | sed 's/[\\"]/\\&/g')"
+  fi
+  # sign in with GitHub, and a repository's people let in to a contributors server; the secret and token stay out of ps
+  for pair in XMAGE_GITHUB_CLIENT_ID:clientId XMAGE_GITHUB_CLIENT_SECRET:clientSecret XMAGE_GITHUB_REPO:repo XMAGE_GITHUB_TOKEN:token; do
+    eval "val=\${${pair%%:*}:-}"
+    if [ -n "$val" ]; then
+      printf '"-Dxmage.github.%s=%s"\n' "${pair#*:}" "$(printf '%s' "$val" | sed 's/[\\"]/\\&/g')"
+    fi
+  done
   if [ -n "${XMAGE_TRUSTED_PROXIES:-}" ]; then
     echo "-Dxmage.web.trustedProxies=$XMAGE_TRUSTED_PROXIES"
   fi

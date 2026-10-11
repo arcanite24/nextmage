@@ -46,10 +46,13 @@ import { gzipSync } from 'node:zlib';
 // keyword effects on permanents, the pack showcase and peek, the card picker filter); the pictures themselves are in
 // public/ and not counted, measured 438.2 kB
 // app raised 2026-10-11 to 443 kB for the card back picker (its 17 choices named in English and Spanish), measured 442.1 kB
+// entry raised 2026-10-11 from 69 kB and app from 443 kB for M12 (contributors server): sign-in learned invite links,
+// Ask for access, Sign in with GitHub and the server notice (the sign-in screen is in the entry), and the generated RPC
+// client gained 15 methods; the admin Access and Audit pages are lazy. Measured entry 69.9 kB, app 448.1 kB
 const BUDGET_KB = {
-  entry: 69,
+  entry: 71,
   initial: 212,
-  app: 443,
+  app: 450,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;
