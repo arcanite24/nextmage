@@ -36,6 +36,8 @@ test.describe('app accessibility', () => {
     await page.getByRole('heading', { level: 1 }).waitFor();
     expect(await serious(page), 'About').toEqual([]);
     await page.goto('/admin');
+    // staff use their own session; the admin password is a break-glass sign-in behind a disclosure
+    await page.getByText('Console sign-in').click();
     await page.getByLabel('Admin password').waitFor();
     expect(await serious(page), 'Admin sign-in').toEqual([]);
   });
