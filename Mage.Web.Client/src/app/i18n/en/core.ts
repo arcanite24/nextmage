@@ -16,6 +16,7 @@ export default {
   'shell.settings': 'Settings',
   'shell.account': 'Account: {name}',
   'shell.profile': 'Profile',
+  'shell.admin': 'Admin',
   'shell.about': 'About and credits',
   'shell.signOut': 'Sign out',
 

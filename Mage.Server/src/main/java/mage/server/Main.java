@@ -111,6 +111,7 @@ public final class Main {
         }
         if (System.getProperty(adminPasswordProp) != null) {
             adminPassword = SystemUtil.sanitize(System.getProperty(adminPasswordProp));
+            System.clearProperty(adminPasswordProp); // nothing else in the server needs to read it
         }
         if (System.getProperty(detailsModeProp) != null) {
             detailsMode = Boolean.parseBoolean(System.getProperty(detailsModeProp));

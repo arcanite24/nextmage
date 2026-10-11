@@ -19,6 +19,7 @@ const es: Catalog = {
   'shell.settings': 'Ajustes',
   'shell.account': 'Cuenta: {name}',
   'shell.profile': 'Perfil',
+  'shell.admin': 'Administración',
   'shell.about': 'Acerca de y créditos',
   'shell.signOut': 'Cerrar sesión',
 

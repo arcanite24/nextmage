@@ -131,7 +131,10 @@ public class MageServerImpl implements MageServer {
             if (version.compareTo(Main.getVersion()) != 0) {
                 throw new MageException("Wrong client version " + version + ", expecting version " + Main.getVersion());
             }
-            if (!adminPassword.equals(this.adminPassword)) {
+            // no admin password: no console. Compared in constant time so the reply's timing says nothing.
+            if (this.adminPassword == null || this.adminPassword.isEmpty() || adminPassword == null
+                    || !java.security.MessageDigest.isEqual(adminPassword.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    this.adminPassword.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
                 Thread.sleep(3000);
                 throw new MageException("Wrong password");
             }

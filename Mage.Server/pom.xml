@@ -424,6 +424,9 @@
                                 <class>mage.server.admin.Invite</class>
                                 <class>mage.server.admin.AccessRequest</class>
                                 <class>mage.server.websocket.api.AccessApi$AccessOverview</class>
+                                <class>mage.server.admin.StaffMember</class>
+                                <class>mage.server.websocket.api.StaffApi$StaffMe</class>
+                                <class>mage.server.websocket.api.StaffApi$StaffList</class>
                                 <class>mage.server.websocket.api.AccessApi$InviteCheck</class>
                                 <class>mage.server.admin.GithubSignIn$GithubSignInResult</class>
                                 <class>mage.server.websocket.api.CareerApi$CareerState</class>

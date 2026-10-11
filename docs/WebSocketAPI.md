@@ -216,19 +216,19 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `sendDraftCardPick` | `draftId: UUID`, `sessionId: string`, `cardId: UUID`, `hiddenCards?: UUID[]` | `DraftPickView \| null` | session | Pick a card from the current booster. |
 | `sendDraftCardMark` | `draftId: UUID`, `sessionId: string`, `cardId?: UUID` | `boolean` | session | Mark (or unmark with null) the card to auto-pick when the timer runs out. |
 | `draftSetBoosterLoaded` | `draftId: UUID`, `sessionId: string` | `boolean` | session | Tell the server the booster is on screen, so the pick timer may start. |
-| `adminGetUsers` | `sessionId: string` | `UserView[]` | session | Admin: all connected users. |
-| `adminDisconnectUser` | `sessionId: string`, `userSessionId: string` | `boolean` | session | Admin: disconnect a user. |
-| `adminEndUserSession` | `sessionId: string`, `userSessionId: string` | `boolean` | session | Admin: end a user's session and remove them from tables. |
-| `adminMuteUser` | `sessionId: string`, `userName: string`, `durationMinutes: number` | `boolean` | session | Admin: mute a user in chats. |
-| `adminLockUser` | `sessionId: string`, `userName: string`, `durationMinutes: number` | `boolean` | session | Admin: lock a user out. |
-| `adminActivateUser` | `sessionId: string`, `userName: string`, `active: boolean` | `boolean` | session | Admin: activate or deactivate an account. |
-| `adminToggleActivateUser` | `sessionId: string`, `userName: string` | `boolean` | session | Admin: toggle an account's active state. |
-| `adminTableRemove` | `sessionId: string`, `tableId: UUID` | `boolean` | session | Admin: remove any table. |
-| `adminSendBroadcastMessage` | `sessionId: string`, `message: string` | `boolean` | session | Admin: message every connected user. |
-| `adminServerStats` | - | `ServerStats` | session | Admin: load and traffic: users, tables, games, memory, CPU, and the size of messages sent to web clients (with the heaviest callbacks and every one over 256 KB). |
-| `adminGetReports` | `openOnly?: boolean` | `PlayerReport[]` | session | Admin: player reports, newest first; only the open ones unless openOnly is false. |
-| `adminCloseReport` | `reportId: number`, `resolution: string` | `boolean` | session | Admin: close a report with a note about what was done. False when it was closed already. |
-| `adminClientErrors` | - | `ClientError[]` | session | Admin: the latest crash reports from web clients, newest first. |
+| `adminGetUsers` | `sessionId: string` | `UserView[]` | session | Staff (moderator): all connected users. |
+| `adminDisconnectUser` | `sessionId: string`, `userSessionId: string`, `reason?: string` | `boolean` | session | Staff (moderator): sign a player's session out. |
+| `adminEndUserSession` | `sessionId: string`, `userSessionId: string`, `reason?: string` | `boolean` | session | Staff (moderator): end a player's session; they leave their tables. |
+| `adminMuteUser` | `sessionId: string`, `userName: string`, `durationMinutes: number`, `reason?: string` | `boolean` | session | Staff (moderator): mute a player in chats, online or not; 0 minutes lifts the mute. |
+| `adminLockUser` | `sessionId: string`, `userName: string`, `durationMinutes: number`, `reason?: string` | `boolean` | session | Staff (admin): lock an account out, online or not; 0 minutes unlocks it. |
+| `adminActivateUser` | `sessionId: string`, `userName: string`, `active: boolean`, `reason?: string` | `boolean` | session | Staff (admin): activate or deactivate an account. |
+| `adminToggleActivateUser` | `sessionId: string`, `userName: string` | `boolean` | session | Staff (admin): toggle an online player's active state. |
+| `adminTableRemove` | `sessionId: string`, `tableId: UUID`, `reason?: string` | `boolean` | session | Staff (admin): remove any table. False when it was gone already. |
+| `adminSendBroadcastMessage` | `sessionId: string`, `message: string` | `boolean` | session | Staff (admin): message every connected player; a message starting with "warn" shows in red. |
+| `adminServerStats` | - | `ServerStats` | session | Staff (moderator): load and traffic: users, tables, games, memory, CPU, and the size of messages sent to web clients (with the heaviest callbacks and every one over 256 KB). |
+| `adminGetReports` | `openOnly?: boolean` | `PlayerReport[]` | session | Staff (moderator): player reports, newest first; only the open ones unless openOnly is false. |
+| `adminCloseReport` | `reportId: number`, `resolution: string` | `boolean` | session | Staff (moderator): close a report with a note about what was done. False when it was closed already. |
+| `adminClientErrors` | - | `ClientError[]` | session | Staff (moderator): the latest crash reports from web clients, newest first. |
 | `testEndGame` | `sessionId: string`, `tableId: UUID` | `boolean` | session | Test mode only: end the running game of a table you own. |
 | `testConcedeMatch` | `sessionId: string`, `tableId: UUID`, `losingPlayerIndex?: number` | `boolean` | session | Test mode only: make one player of a table you own concede the match. |
 | `adminAudit` | `actor?: string`, `action?: string`, `target?: string`, `before?: number` | `AuditEntry[]` | session | Staff: the audit log, newest first, 100 at a time. action matches a family ("access" covers "access.mode"); before is the id to page back from. |
@@ -246,6 +246,10 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `githubStart` | - | `string` | public | Sign in with GitHub: the GitHub page to send the player to. GitHub sends them back to /auth/github?code=...&state=..., for githubFinish. Fails when it isn't set up. |
 | `githubFinish` | `state: string`, `code: string`, `userName?: string` | `GithubSignInResult` | public | Sign in with GitHub, back from GitHub: the account to sign in to with its rememberToken (connectUser's), or a suggestedName when a new account needs a name (call again with userName). On a contributors server, the repository's people and allowlisted emails get in. |
 | `accessRequest` | `userName: string`, `email: string`, `note?: string` | `boolean` | public | Ask to be let in to a contributors-only server: staff see it in /admin. 3 an hour from one address. Callable before login. |
+| `staffMe` | - | `StaffMe` | session | The calling session's staff role, or a null role for players. |
+| `adminStaff` | - | `StaffList` | session | Staff (owner): who has a staff role. |
+| `adminStaffGrant` | `userName: string`, `role: string`, `reason?: string` | `StaffMember` | session | Staff (owner): give an account a role (moderator, admin or owner), or change it. |
+| `adminStaffRevoke` | `userName: string`, `reason?: string` | `boolean` | session | Staff (owner): take an account's role away. False when it had none. |
 | `serverInfo` | - | `ServerInfo` | public | Whether the server has accounts and mail, and its name and password rules. Callable before login. |
 | `deckSyncList` | - | `DeckSyncEntry[]` | session | Every deck kept on the server for the signed-in account, without the deck data, deleted ones included (as tombstones, for 90 days). Only on servers with accounts. |
 | `deckSyncGet` | `deckId: string` | `DeckSyncEntry \| null` | session | One deck of the signed-in account with its data, or null when there is none. |

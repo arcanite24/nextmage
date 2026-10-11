@@ -6,6 +6,7 @@ import mage.server.DisconnectReason;
 import mage.server.Session;
 import mage.server.User;
 import mage.server.admin.AccessPolicy;
+import mage.server.admin.StaffRole;
 import mage.server.admin.AccessRequest;
 import mage.server.admin.AdminStore;
 import mage.server.admin.AllowEntry;
@@ -98,7 +99,7 @@ final class AccessApi {
                         .doc("Staff: the audit log, newest first, 100 at a time. action matches a family (\"access\" covers "
                                 + "\"access.mode\"); before is the id to page back from.")
                         .handler(call -> {
-                            Staff.require(ctx, call);
+                            Staff.require(ctx, call, StaffRole.MODERATOR);
                             long before = call.has(3) ? AccountApi.longValue(call, 3) : 0;
                             return store(() -> AccessPolicy.get().store().auditLog(call.optString(0, null), call.optString(1, null),
                                     call.optString(2, null), before, 100));
@@ -108,7 +109,7 @@ final class AccessApi {
                         .returns("AccessOverview")
                         .doc("Staff: the access mode, notice, allowlist, invites and access requests.")
                         .handler(call -> {
-                            Staff.require(ctx, call);
+                            Staff.require(ctx, call, StaffRole.ADMIN);
                             return overview(ctx);
                         }),
 
@@ -117,7 +118,7 @@ final class AccessApi {
                         .returns("string[]")
                         .doc("Staff: who is online now and would be signed out by switching to this mode (open or allowlist).")
                         .handler(call -> {
-                            Staff.require(ctx, call);
+                            Staff.require(ctx, call, StaffRole.ADMIN);
                             return names(modeOutsiders(ctx, parseMode(call.string(0))));
                         }),
 
@@ -127,7 +128,7 @@ final class AccessApi {
                         .doc("Staff: switch between open and allowlist. Switching to allowlist signs out whoever isn't on it; "
                                 + "returns their names. Needs accounts on the server.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
                             String mode = parseMode(call.string(0));
                             if (AccessPolicy.ALLOWLIST.equals(mode) && !accounts(ctx)) {
                                 throw RpcException.invalidParams("An allowlist needs accounts: without them anyone can sign in "
@@ -147,7 +148,7 @@ final class AccessApi {
                         .returns("AllowEntry")
                         .doc("Staff: allow an account name, or an email address (any account registered with it).")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
                             AllowEntry entry = store(() -> AccessPolicy.get().store().allow(call.string(0), call.optString(1, ""),
                                     actor, System.currentTimeMillis()));
                             Staff.audit(actor, "access.allow", who(entry), entry.note, null);
@@ -159,7 +160,7 @@ final class AccessApi {
                         .returns("string[]")
                         .doc("Staff: who is online now and would be signed out by taking this entry off the allowlist.")
                         .handler(call -> {
-                            Staff.require(ctx, call);
+                            Staff.require(ctx, call, StaffRole.ADMIN);
                             AllowEntry entry = entry(call);
                             return names(entryOutsiders(ctx, entry));
                         }),
@@ -169,7 +170,7 @@ final class AccessApi {
                         .returns("string[]")
                         .doc("Staff: take an entry off the allowlist; whoever it let in is signed out. Returns their names.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
                             String reason = requireReason(call, 1);
                             AllowEntry entry = entry(call);
                             List<User> outsiders = entryOutsiders(ctx, entry);
@@ -185,7 +186,7 @@ final class AccessApi {
                                 + "1 use and 7 days unless asked otherwise (at most " + AdminStore.MAX_INVITE_USES + " uses and "
                                 + AdminStore.MAX_INVITE_DAYS + " days).")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
                             Invite invite = store(() -> AccessPolicy.get().store().createInvite(call.optString(0, ""),
                                     call.optInteger(1, 1), call.optInteger(2, 7), actor, System.currentTimeMillis()));
                             Staff.audit(actor, "access.invite.create", invite.code, invite.maxUses + " uses"
@@ -198,7 +199,7 @@ final class AccessApi {
                         .returns("boolean")
                         .doc("Staff: stop an invite link from working. False when it was revoked already or doesn't exist.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
                             boolean revoked = store(() -> AccessPolicy.get().store().revokeInvite(call.string(0)));
                             if (revoked) {
                                 Staff.audit(actor, "access.invite.revoke", call.string(0), null, null);
@@ -219,7 +220,7 @@ final class AccessApi {
                         .doc("Staff: the notice shown on sign-in and Home, e.g. \"builds from master, data may be reset\". "
                                 + "Empty clears it. At most " + AccessPolicy.MAX_NOTICE + " characters.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
                             store(() -> {
                                 AccessPolicy.get().setNotice(call.string(0), actor, System.currentTimeMillis());
                                 return null;
@@ -384,7 +385,7 @@ final class AccessApi {
     // --- requests and invites ---------------------------------------------------------------------
 
     private static Object decide(ApiContext ctx, RpcCall call) throws RpcException {
-        String actor = Staff.require(ctx, call);
+        String actor = Staff.require(ctx, call, StaffRole.ADMIN);
         long id = AccountApi.longValue(call, 0);
         boolean approve = call.bool(1);
         long now = System.currentTimeMillis();
@@ -445,7 +446,7 @@ final class AccessApi {
         AccessRequest request = store(() -> AccessPolicy.get().store().requestAccess(call.string(0), call.string(1),
                 call.optString(2, ""), now));
         if (request.createdAt == now) {
-            DiscordNotifier.instance().accessRequested(request.name, request.note);
+            DiscordNotifier.staff().accessRequested(request.name, request.note);
         }
         return true;
     }

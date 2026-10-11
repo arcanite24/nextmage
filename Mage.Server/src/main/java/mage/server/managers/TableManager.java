@@ -52,6 +52,11 @@ public interface TableManager {
 
     boolean removeTable(UUID userId, UUID tableId);
 
+    /**
+     * Staff removing any table: its players leave and its chat closes. False when there is no such table.
+     */
+    boolean removeTableByStaff(UUID tableId);
+
     void leaveTable(UUID userId, UUID tableId);
 
     Optional<UUID> getChatId(UUID tableId);

@@ -215,15 +215,22 @@ public class TableManagerImpl implements TableManager {
     public boolean removeTable(UUID userId, UUID tableId) {
         if (isTableOwner(tableId, userId) || managerFactory.userManager().isAdmin(userId)) {
             logger.debug("Table remove request - userId: " + userId + " tableId: " + tableId);
-            TableController tableController = controllers.get(tableId);
-            if (tableController != null) {
-                tableController.leaveTableAll();
-                managerFactory.chatManager().destroyChatSession(tableController.getChatId());
-                removeTable(tableId);
-            }
+            removeTableByStaff(tableId);
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean removeTableByStaff(UUID tableId) {
+        TableController tableController = controllers.get(tableId);
+        if (tableController == null) {
+            return false;
+        }
+        tableController.leaveTableAll();
+        managerFactory.chatManager().destroyChatSession(tableController.getChatId());
+        removeTable(tableId);
+        return true;
     }
 
     @Override

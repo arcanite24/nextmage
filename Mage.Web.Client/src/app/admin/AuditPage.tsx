@@ -16,6 +16,7 @@ const FAMILIES = [
   { value: 'table', label: 'Tables' },
   { value: 'report', label: 'Reports' },
   { value: 'broadcast', label: 'Broadcasts' },
+  { value: 'staff', label: 'Staff roles' },
 ];
 
 /** Every staff action: who did what to whom, and why. */

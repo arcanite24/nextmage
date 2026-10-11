@@ -4,7 +4,10 @@ import mage.game.Game;
 import mage.game.Table;
 import mage.game.match.Match;
 import mage.server.Main;
+import mage.server.Moderation;
 import mage.server.Session;
+import mage.server.admin.AccessPolicy;
+import mage.server.admin.StaffRole;
 import mage.server.moderation.ClientErrors;
 import mage.server.moderation.ReportStore;
 import mage.server.websocket.BridgeMetrics;
@@ -41,115 +44,126 @@ final class AdminApi {
                         .session(0)
                         .params(of("sessionId", STRING))
                         .returns("UserView[]")
-                        .doc("Admin: all connected users.")
+                        .doc("Staff (moderator): all connected users.")
                         .handler(call -> {
-                            Staff.require(ctx, call);
-                            return ctx.server.adminGetUsers(call.string(0));
+                            Staff.require(ctx, call, StaffRole.MODERATOR);
+                            return moderation(ctx).users();
                         }),
 
                 RpcMethod.named("adminDisconnectUser")
                         .session(0)
-                        .params(of("sessionId", STRING), of("userSessionId", STRING))
-                        .doc("Admin: disconnect a user.")
-                        .handler(call -> {
-                            String actor = Staff.require(ctx, call);
-                            ctx.server.adminDisconnectUser(call.string(0), call.string(1));
-                            Staff.audit(actor, "user.disconnect", sessionUser(ctx, call.string(1)), null, null);
-                            return true;
-                        }),
+                        .params(of("sessionId", STRING), of("userSessionId", STRING), optional("reason", STRING))
+                        .doc("Staff (moderator): sign a player's session out.")
+                        .handler(call -> disconnect(ctx, call, "user.disconnect")),
 
                 RpcMethod.named("adminEndUserSession")
                         .session(0)
-                        .params(of("sessionId", STRING), of("userSessionId", STRING))
-                        .doc("Admin: end a user's session and remove them from tables.")
-                        .handler(call -> {
-                            String actor = Staff.require(ctx, call);
-                            ctx.server.adminEndUserSession(call.string(0), call.string(1));
-                            Staff.audit(actor, "user.endsession", sessionUser(ctx, call.string(1)), null, null);
-                            return true;
-                        }),
+                        .params(of("sessionId", STRING), of("userSessionId", STRING), optional("reason", STRING))
+                        .doc("Staff (moderator): end a player's session; they leave their tables.")
+                        .handler(call -> disconnect(ctx, call, "user.endsession")),
 
                 RpcMethod.named("adminMuteUser")
                         .session(0)
-                        .params(of("sessionId", STRING), of("userName", STRING), of("durationMinutes", INT))
-                        .doc("Admin: mute a user in chats.")
+                        .params(of("sessionId", STRING), of("userName", STRING), of("durationMinutes", INT), optional("reason", STRING))
+                        .doc("Staff (moderator): mute a player in chats, online or not; 0 minutes lifts the mute.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
-                            ctx.server.adminMuteUser(call.string(0), call.string(1), call.integer(2));
-                            Staff.audit(actor, "user.mute", call.string(1), call.integer(2) + " min", null);
+                            String actor = Staff.require(ctx, call, StaffRole.MODERATOR);
+                            int minutes = minutes(call, 2);
+                            AccessApi.store(() -> moderation(ctx).mute(call.string(1), minutes));
+                            Staff.audit(actor, minutes == 0 ? "user.unmute" : "user.mute", call.string(1), minutes == 0 ? null : minutes + " min", reason(call, 3));
                             return true;
                         }),
 
                 RpcMethod.named("adminLockUser")
                         .session(0)
-                        .params(of("sessionId", STRING), of("userName", STRING), of("durationMinutes", INT))
-                        .doc("Admin: lock a user out.")
+                        .params(of("sessionId", STRING), of("userName", STRING), of("durationMinutes", INT), optional("reason", STRING))
+                        .doc("Staff (admin): lock an account out, online or not; 0 minutes unlocks it.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
-                            ctx.server.adminLockUser(call.string(0), call.string(1), call.integer(2));
-                            Staff.audit(actor, "user.lock", call.string(1), call.integer(2) + " min", null);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
+                            int minutes = minutes(call, 2);
+                            refuseStaffTarget(ctx, actor, call.string(1));
+                            AccessApi.store(() -> moderation(ctx).lock(call.string(1), minutes));
+                            Staff.audit(actor, minutes == 0 ? "user.unlock" : "user.lock", call.string(1), minutes == 0 ? null : minutes + " min", reason(call, 3));
                             return true;
                         }),
 
                 RpcMethod.named("adminActivateUser")
                         .session(0)
-                        .params(of("sessionId", STRING), of("userName", STRING), of("active", BOOLEAN))
-                        .doc("Admin: activate or deactivate an account.")
+                        .params(of("sessionId", STRING), of("userName", STRING), of("active", BOOLEAN), optional("reason", STRING))
+                        .doc("Staff (admin): activate or deactivate an account.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
-                            ctx.server.adminActivateUser(call.string(0), call.string(1), call.bool(2));
-                            Staff.audit(actor, "user.activate", call.string(1), call.bool(2) ? "active" : "inactive", null);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
+                            if (!call.bool(2)) {
+                                refuseStaffTarget(ctx, actor, call.string(1));
+                            }
+                            AccessApi.store(() -> {
+                                moderation(ctx).setActive(call.string(1), call.bool(2));
+                                return null;
+                            });
+                            Staff.audit(actor, "user.activate", call.string(1), call.bool(2) ? "active" : "inactive", reason(call, 3));
                             return true;
                         }),
 
                 RpcMethod.named("adminToggleActivateUser")
                         .session(0)
                         .params(of("sessionId", STRING), of("userName", STRING))
-                        .doc("Admin: toggle an account's active state.")
+                        .doc("Staff (admin): toggle an online player's active state.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
-                            ctx.server.adminToggleActivateUser(call.string(0), call.string(1));
-                            Staff.audit(actor, "user.toggleactive", call.string(1), null, null);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
+                            String name = call.string(1);
+                            boolean active = !ctx.managers.userManager().getUserByName(name).map(mage.server.User::isActive)
+                                    .orElseThrow(() -> RpcException.invalidParams("Nobody named " + name + " is online"));
+                            if (!active) {
+                                refuseStaffTarget(ctx, actor, call.string(1));
+                            }
+                            moderation(ctx).setActive(call.string(1), active);
+                            Staff.audit(actor, "user.activate", call.string(1), active ? "active" : "inactive", null);
                             return true;
                         }),
 
                 RpcMethod.named("adminTableRemove")
                         .session(0)
-                        .params(of("sessionId", STRING), of("tableId", mage.server.websocket.rpc.RpcParam.Type.UUID))
-                        .doc("Admin: remove any table.")
+                        .params(of("sessionId", STRING), of("tableId", mage.server.websocket.rpc.RpcParam.Type.UUID), optional("reason", STRING))
+                        .doc("Staff (admin): remove any table. False when it was gone already.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
-                            ctx.server.adminTableRemove(call.string(0), call.uuid(1));
-                            Staff.audit(actor, "table.remove", call.string(1), null, null);
-                            return true;
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
+                            boolean removed = moderation(ctx).removeTable(call.uuid(1));
+                            if (removed) {
+                                Staff.audit(actor, "table.remove", call.string(1), null, reason(call, 2));
+                            }
+                            return removed;
                         }),
 
                 RpcMethod.named("adminSendBroadcastMessage")
                         .session(0)
                         .params(of("sessionId", STRING), of("message", STRING))
-                        .doc("Admin: message every connected user.")
+                        .doc("Staff (admin): message every connected player; a message starting with \"warn\" shows in red.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
-                            ctx.server.adminSendBroadcastMessage(call.string(0), call.string(1));
-                            Staff.audit(actor, "broadcast", null, call.string(1), null);
+                            String actor = Staff.require(ctx, call, StaffRole.ADMIN);
+                            String message = call.string(1).trim();
+                            if (message.isEmpty() || message.length() > 500) {
+                                throw RpcException.invalidParams("A broadcast is 1 to 500 characters");
+                            }
+                            moderation(ctx).broadcast(message);
+                            Staff.audit(actor, "broadcast", null, message, null);
                             return true;
                         }),
 
                 RpcMethod.named("adminServerStats")
                         .returns("ServerStats")
-                        .doc("Admin: load and traffic: users, tables, games, memory, CPU, and the size of messages sent to web clients "
+                        .doc("Staff (moderator): load and traffic: users, tables, games, memory, CPU, and the size of messages sent to web clients "
                                 + "(with the heaviest callbacks and every one over " + BridgeMetrics.LARGE_CHARS / 1024 + " KB).")
                         .handler(call -> {
-                            Staff.require(ctx, call);
+                            Staff.require(ctx, call, StaffRole.MODERATOR);
                             return ServerStats.collect(ctx.managers);
                         }),
 
                 RpcMethod.named("adminGetReports")
                         .params(optional("openOnly", BOOLEAN))
                         .returns("PlayerReport[]")
-                        .doc("Admin: player reports, newest first; only the open ones unless openOnly is false.")
+                        .doc("Staff (moderator): player reports, newest first; only the open ones unless openOnly is false.")
                         .handler(call -> {
-                            Staff.require(ctx, call);
+                            Staff.require(ctx, call, StaffRole.MODERATOR);
                             boolean openOnly = call.optBool(0, true);
                             return AccountApi.decks(() -> ReportStore.get().list(openOnly, 200));
                         }),
@@ -157,9 +171,9 @@ final class AdminApi {
                 RpcMethod.named("adminCloseReport")
                         .params(of("reportId", INT), of("resolution", STRING))
                         .returns("boolean")
-                        .doc("Admin: close a report with a note about what was done. False when it was closed already.")
+                        .doc("Staff (moderator): close a report with a note about what was done. False when it was closed already.")
                         .handler(call -> {
-                            String actor = Staff.require(ctx, call);
+                            String actor = Staff.require(ctx, call, StaffRole.MODERATOR);
                             long id = AccountApi.longValue(call, 0);
                             boolean closed = AccountApi.decks(() -> ReportStore.get().close(id, call.string(1), System.currentTimeMillis()));
                             if (closed) {
@@ -170,9 +184,9 @@ final class AdminApi {
 
                 RpcMethod.named("adminClientErrors")
                         .returns("ClientError[]")
-                        .doc("Admin: the latest crash reports from web clients, newest first.")
+                        .doc("Staff (moderator): the latest crash reports from web clients, newest first.")
                         .handler(call -> {
-                            Staff.require(ctx, call);
+                            Staff.require(ctx, call, StaffRole.MODERATOR);
                             return ClientErrors.get().recent(200);
                         }),
 
@@ -195,6 +209,48 @@ final class AdminApi {
         return methods;
     }
 
+
+    /** a year, so a typo can't lock someone out for a century */
+    static final int MAX_MINUTES = 525_600;
+
+    private static Moderation moderation(ApiContext ctx) {
+        return new Moderation(ctx.managers);
+    }
+
+    private static int minutes(RpcCall call, int index) throws RpcException {
+        int minutes = call.integer(index);
+        if (minutes < 0 || minutes > MAX_MINUTES) {
+            throw RpcException.invalidParams("0 to " + MAX_MINUTES + " minutes");
+        }
+        return minutes;
+    }
+
+    private static String reason(RpcCall call, int index) throws RpcException {
+        String reason = call.optString(index, "").trim();
+        return reason.isEmpty() ? null : reason;
+    }
+
+    /** staff can't lock or deactivate the owner, or anyone above their own role */
+    private static void refuseStaffTarget(ApiContext ctx, String actor, String userName) throws RpcException {
+        StaffRole target = AccessPolicy.get().roleOf(userName);
+        if (target == null || Staff.CONSOLE.equals(actor)) {
+            return;
+        }
+        StaffRole own = AccessPolicy.get().roleOf(actor);
+        if (target == StaffRole.OWNER || own == null || !own.atLeast(target)) {
+            throw RpcException.notAuthorized(userName + " is " + target.id() + "; that needs someone above them");
+        }
+    }
+
+    private static Object disconnect(ApiContext ctx, RpcCall call, String action) throws RpcException {
+        String actor = Staff.require(ctx, call, StaffRole.MODERATOR);
+        String target = sessionUser(ctx, call.string(1));
+        if (!moderation(ctx).disconnect(call.string(1))) {
+            return false;
+        }
+        Staff.audit(actor, action, target, null, reason(call, 2));
+        return true;
+    }
 
     /** the name behind a session, for the audit log */
     private static String sessionUser(ApiContext ctx, String sessionId) {

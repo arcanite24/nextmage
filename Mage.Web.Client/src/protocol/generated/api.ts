@@ -193,20 +193,20 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('draftSetBoosterLoaded', draftId, SESSION),
     adminGetUsers: () =>
       rpc.call('adminGetUsers', SESSION),
-    adminDisconnectUser: (userSessionId: string) =>
-      rpc.call('adminDisconnectUser', SESSION, userSessionId),
-    adminEndUserSession: (userSessionId: string) =>
-      rpc.call('adminEndUserSession', SESSION, userSessionId),
-    adminMuteUser: (userName: string, durationMinutes: number) =>
-      rpc.call('adminMuteUser', SESSION, userName, durationMinutes),
-    adminLockUser: (userName: string, durationMinutes: number) =>
-      rpc.call('adminLockUser', SESSION, userName, durationMinutes),
-    adminActivateUser: (userName: string, active: boolean) =>
-      rpc.call('adminActivateUser', SESSION, userName, active),
+    adminDisconnectUser: (userSessionId: string, reason?: string | null) =>
+      rpc.call('adminDisconnectUser', SESSION, userSessionId, reason),
+    adminEndUserSession: (userSessionId: string, reason?: string | null) =>
+      rpc.call('adminEndUserSession', SESSION, userSessionId, reason),
+    adminMuteUser: (userName: string, durationMinutes: number, reason?: string | null) =>
+      rpc.call('adminMuteUser', SESSION, userName, durationMinutes, reason),
+    adminLockUser: (userName: string, durationMinutes: number, reason?: string | null) =>
+      rpc.call('adminLockUser', SESSION, userName, durationMinutes, reason),
+    adminActivateUser: (userName: string, active: boolean, reason?: string | null) =>
+      rpc.call('adminActivateUser', SESSION, userName, active, reason),
     adminToggleActivateUser: (userName: string) =>
       rpc.call('adminToggleActivateUser', SESSION, userName),
-    adminTableRemove: (tableId: UUID) =>
-      rpc.call('adminTableRemove', SESSION, tableId),
+    adminTableRemove: (tableId: UUID, reason?: string | null) =>
+      rpc.call('adminTableRemove', SESSION, tableId, reason),
     adminSendBroadcastMessage: (message: string) =>
       rpc.call('adminSendBroadcastMessage', SESSION, message),
     adminServerStats: () =>
@@ -251,6 +251,14 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('githubFinish', state, code, userName),
     accessRequest: (userName: string, email: string, note?: string | null) =>
       rpc.call('accessRequest', userName, email, note),
+    staffMe: () =>
+      rpc.call('staffMe'),
+    adminStaff: () =>
+      rpc.call('adminStaff'),
+    adminStaffGrant: (userName: string, role: string, reason?: string | null) =>
+      rpc.call('adminStaffGrant', userName, role, reason),
+    adminStaffRevoke: (userName: string, reason?: string | null) =>
+      rpc.call('adminStaffRevoke', userName, reason),
     serverInfo: () =>
       rpc.call('serverInfo'),
     deckSyncList: () =>

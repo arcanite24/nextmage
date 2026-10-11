@@ -1277,6 +1277,25 @@ export interface StackAbilityView extends CardView {
     sourceCard?: CardView;
 }
 
+export interface StaffList {
+    accounts?: boolean;
+    members?: StaffMember[];
+    owner?: string;
+}
+
+export interface StaffMe {
+    actor?: string;
+    role?: string;
+}
+
+export interface StaffMember {
+    grantedAt?: number;
+    grantedBy?: string;
+    key?: string;
+    name?: string;
+    role?: string;
+}
+
 export interface TableClientMessage extends Serializable {
     currentTableId?: string;
     deck?: DeckView;
