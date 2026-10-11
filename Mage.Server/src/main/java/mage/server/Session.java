@@ -78,6 +78,7 @@ public class Session {
     private final AtomicInteger messageId = new AtomicInteger(0);
     private final Date timeConnected;
     private boolean isAdmin = false;
+    private volatile String rememberedUserName; // see trustRememberedLogin
     private final AsynchInvokerCallbackHandler callbackHandler;
     private boolean valid = true;
 
@@ -309,6 +310,13 @@ public class Session {
         return errorMessage;
     }
 
+    /**
+     * The next login as this user needs no password: the web bridge checked a remembered device's token for it.
+     */
+    public void trustRememberedLogin(String userName) {
+        this.rememberedUserName = userName;
+    }
+
     public boolean isLocked() {
         return lock.isLocked();
     }
@@ -319,6 +327,9 @@ public class Session {
      */
     public String connectUserHandling(String userName, String password, String restoreSessionId) {
         this.isAdmin = false;
+        // a remembered device's token, checked by the web bridge just before this login: good for this login only
+        boolean remembered = userName != null && userName.equals(rememberedUserName);
+        rememberedUserName = null;
 
         // find auth user
         AuthorizedUser authorizedUser = null;
@@ -334,7 +345,7 @@ public class Session {
                     && managerFactory.userManager().getUserByName(userName)
                     .map(user -> restoreSessionId.equals(user.getRestoreSessionId()))
                     .orElse(false);
-            if (!Main.isTestMode() && !restoring && !authorizedUser.doCredentialsMatch(userName, password)) {
+            if (!Main.isTestMode() && !restoring && !remembered && !authorizedUser.doCredentialsMatch(userName, password)) {
                 return errorMsg;
             }
 

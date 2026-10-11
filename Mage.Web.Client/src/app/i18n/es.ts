@@ -49,6 +49,7 @@ const es: Catalog = {
   'login.codeHint': 'Seis dígitos. Sirve durante 30 minutos y cinco intentos.',
   'login.password': 'Contraseña',
   'login.newPassword': 'Contraseña nueva',
+  'login.remember': 'Mantener la sesión iniciada en este dispositivo',
   'login.needsPassword': 'Este servidor pide contraseña',
   'login.server.online': 'En línea',
   'login.server.offline': 'Sin respuesta',

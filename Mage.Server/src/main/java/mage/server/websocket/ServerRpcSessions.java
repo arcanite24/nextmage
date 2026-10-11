@@ -1,5 +1,6 @@
 package mage.server.websocket;
 
+import mage.server.AuthorizedUserRepository;
 import mage.server.DisconnectReason;
 import mage.server.User;
 import mage.server.managers.ManagerFactory;
@@ -50,6 +51,29 @@ final class ServerRpcSessions implements RpcSessions {
                 .flatMap(session -> managers.userManager().getUser(session.getUserId()))
                 .map(User::getRestoreSessionId)
                 .filter(token -> !token.isEmpty());
+    }
+
+    @Override
+    public Optional<String> rememberLogin(String sessionId) {
+        if (!managers.configSettings().isAuthenticationActivated()) {
+            return Optional.empty();
+        }
+        return userName(sessionId).map(name -> AuthorizedUserRepository.getInstance().rememberLogin(name));
+    }
+
+    @Override
+    public void trustRememberedLogin(String sessionId, String userName, String token) {
+        if (managers.configSettings().isAuthenticationActivated()
+                && AuthorizedUserRepository.getInstance().isRememberedLogin(userName, token)) {
+            managers.sessionManager().getSession(sessionId).ifPresent(session -> session.trustRememberedLogin(userName));
+        }
+    }
+
+    @Override
+    public void forgetLogin(String userName, String token) {
+        if (managers.configSettings().isAuthenticationActivated()) {
+            AuthorizedUserRepository.getInstance().forgetLogin(userName, token);
+        }
     }
 
     @Override

@@ -29,6 +29,23 @@ public interface RpcSessions {
     Optional<String> restoreToken(String sessionId);
 
     /**
+     * "Keep me signed in": remembers this device for the session's account.
+     *
+     * @return the token connectUser accepts instead of the password, empty without a logged in account (anonymous servers)
+     */
+    Optional<String> rememberLogin(String sessionId);
+
+    /**
+     * Lets the session's next login as this user skip the password when the token is one of the user's remembered devices.
+     */
+    void trustRememberedLogin(String sessionId, String userName, String token);
+
+    /**
+     * Forgets a remembered device (signing out on it).
+     */
+    void forgetLogin(String userName, String token);
+
+    /**
      * @return whether the session's user has joined the chat
      */
     boolean isChatMember(String sessionId, UUID chatId);
