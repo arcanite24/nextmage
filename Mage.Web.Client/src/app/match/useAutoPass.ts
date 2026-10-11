@@ -24,9 +24,10 @@ export function useAutoPass(session: GameSession, state: GameSessionState, enabl
   const autoSkipCombat = useSettings((store) => store.settings.autoSkipCombat);
   const abilitiesOnTheirTurn = useSettings((store) => store.settings.abilitiesOnTheirTurn);
   const combatStops = useSettings((store) => store.settings.combatStops);
+  const beginCombatStop = useSettings((store) => !!store.settings.stops.yourTurn?.beforeCombat);
   const fullControl = useSettings((store) => store.fullControl);
   const answer = enabled && state.mode === 'play' && !state.awaitingServer && !state.gameOver
-    ? autoAnswer(state.view, state.prompt, { autoPass, autoSkipCombat, abilitiesOnTheirTurn, fullControl, combatStops })
+    ? autoAnswer(state.view, state.prompt, { autoPass, autoSkipCombat, abilitiesOnTheirTurn, fullControl, combatStops, beginCombatStop })
     : null;
 
   useEffect(() => {

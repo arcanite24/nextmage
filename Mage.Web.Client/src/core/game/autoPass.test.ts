@@ -109,4 +109,30 @@ describe('full control and combat stops', () => {
     expect(full.opponentTurn).toEqual(full.yourTurn);
     expect(full).toMatchObject({ stopOnDeclareAttackers: true, stopOnStackNewObjects: true, stopOnDeclareBlockersWithZeroPermanents: true });
   });
+
+  it('with auto-pass on, the server also stops at your beginning of combat so the client can see Vehicles', () => {
+    const own = { yourTurn: { beforeCombat: false, main1: true }, opponentTurn: { beforeCombat: false } };
+    const stops = serverStops(own, false, true);
+    expect(stops.yourTurn).toEqual({ beforeCombat: true, main1: true });
+    expect(stops.opponentTurn).toEqual({ beforeCombat: false });
+    expect(serverStops(own, false, false)).toBe(own);
+  });
+});
+
+describe('beginning of combat on your turn', () => {
+  const combat = (objects: NonNullable<GameView['canPlayObjects']>['objects']): GameView =>
+    ({ ...view(objects), activePlayerId: 'me', step: 'BEGIN_COMBAT' });
+  const crew = { other: [{ value: 'Crew 1 <i>(Tap any number of creatures you control...' }] };
+
+  it('stops with a Vehicle to crew (Greasefang returned it) or a land to animate', () => {
+    expect(autoAnswer(combat({ vehicle: crew }), priority, on)).toBeNull();
+    expect(autoAnswer(combat({ land: { other: [{ value: '{1}{G}: Until end of turn, Treetop Village becomes a 3/3...' }] } }), priority, on)).toBeNull();
+  });
+  it('passes the stop the player did not ask for when only spells or other abilities are available', () => {
+    expect(autoAnswer(combat({ bolt: { basicCastAbilities: record }, map: { other: [{ value: '{T}, Sacrifice: search...' }] } }), priority, on)).toBe('pass');
+  });
+  it("keeps the player's own stop and anything on the stack", () => {
+    expect(autoAnswer(combat({ bolt: { basicCastAbilities: record } }), priority, { ...on, beginCombatStop: true })).toBeNull();
+    expect(autoAnswer({ ...combat({ bolt: { basicCastAbilities: record } }), stack: { trigger: {} } } as GameView, priority, on)).toBeNull();
+  });
 });
