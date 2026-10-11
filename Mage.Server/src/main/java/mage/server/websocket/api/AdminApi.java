@@ -42,14 +42,19 @@ final class AdminApi {
                         .params(of("sessionId", STRING))
                         .returns("UserView[]")
                         .doc("Admin: all connected users.")
-                        .handler(call -> ctx.server.adminGetUsers(call.string(0))),
+                        .handler(call -> {
+                            Staff.require(ctx, call);
+                            return ctx.server.adminGetUsers(call.string(0));
+                        }),
 
                 RpcMethod.named("adminDisconnectUser")
                         .session(0)
                         .params(of("sessionId", STRING), of("userSessionId", STRING))
                         .doc("Admin: disconnect a user.")
                         .handler(call -> {
+                            String actor = Staff.require(ctx, call);
                             ctx.server.adminDisconnectUser(call.string(0), call.string(1));
+                            Staff.audit(actor, "user.disconnect", sessionUser(ctx, call.string(1)), null, null);
                             return true;
                         }),
 
@@ -58,7 +63,9 @@ final class AdminApi {
                         .params(of("sessionId", STRING), of("userSessionId", STRING))
                         .doc("Admin: end a user's session and remove them from tables.")
                         .handler(call -> {
+                            String actor = Staff.require(ctx, call);
                             ctx.server.adminEndUserSession(call.string(0), call.string(1));
+                            Staff.audit(actor, "user.endsession", sessionUser(ctx, call.string(1)), null, null);
                             return true;
                         }),
 
@@ -67,7 +74,9 @@ final class AdminApi {
                         .params(of("sessionId", STRING), of("userName", STRING), of("durationMinutes", INT))
                         .doc("Admin: mute a user in chats.")
                         .handler(call -> {
+                            String actor = Staff.require(ctx, call);
                             ctx.server.adminMuteUser(call.string(0), call.string(1), call.integer(2));
+                            Staff.audit(actor, "user.mute", call.string(1), call.integer(2) + " min", null);
                             return true;
                         }),
 
@@ -76,7 +85,9 @@ final class AdminApi {
                         .params(of("sessionId", STRING), of("userName", STRING), of("durationMinutes", INT))
                         .doc("Admin: lock a user out.")
                         .handler(call -> {
+                            String actor = Staff.require(ctx, call);
                             ctx.server.adminLockUser(call.string(0), call.string(1), call.integer(2));
+                            Staff.audit(actor, "user.lock", call.string(1), call.integer(2) + " min", null);
                             return true;
                         }),
 
@@ -85,7 +96,9 @@ final class AdminApi {
                         .params(of("sessionId", STRING), of("userName", STRING), of("active", BOOLEAN))
                         .doc("Admin: activate or deactivate an account.")
                         .handler(call -> {
+                            String actor = Staff.require(ctx, call);
                             ctx.server.adminActivateUser(call.string(0), call.string(1), call.bool(2));
+                            Staff.audit(actor, "user.activate", call.string(1), call.bool(2) ? "active" : "inactive", null);
                             return true;
                         }),
 
@@ -94,7 +107,9 @@ final class AdminApi {
                         .params(of("sessionId", STRING), of("userName", STRING))
                         .doc("Admin: toggle an account's active state.")
                         .handler(call -> {
+                            String actor = Staff.require(ctx, call);
                             ctx.server.adminToggleActivateUser(call.string(0), call.string(1));
+                            Staff.audit(actor, "user.toggleactive", call.string(1), null, null);
                             return true;
                         }),
 
@@ -103,7 +118,9 @@ final class AdminApi {
                         .params(of("sessionId", STRING), of("tableId", mage.server.websocket.rpc.RpcParam.Type.UUID))
                         .doc("Admin: remove any table.")
                         .handler(call -> {
+                            String actor = Staff.require(ctx, call);
                             ctx.server.adminTableRemove(call.string(0), call.uuid(1));
+                            Staff.audit(actor, "table.remove", call.string(1), null, null);
                             return true;
                         }),
 
@@ -112,7 +129,9 @@ final class AdminApi {
                         .params(of("sessionId", STRING), of("message", STRING))
                         .doc("Admin: message every connected user.")
                         .handler(call -> {
+                            String actor = Staff.require(ctx, call);
                             ctx.server.adminSendBroadcastMessage(call.string(0), call.string(1));
+                            Staff.audit(actor, "broadcast", null, call.string(1), null);
                             return true;
                         }),
 
@@ -121,7 +140,7 @@ final class AdminApi {
                         .doc("Admin: load and traffic: users, tables, games, memory, CPU, and the size of messages sent to web clients "
                                 + "(with the heaviest callbacks and every one over " + BridgeMetrics.LARGE_CHARS / 1024 + " KB).")
                         .handler(call -> {
-                            requireAdmin(ctx, call);
+                            Staff.require(ctx, call);
                             return ServerStats.collect(ctx.managers);
                         }),
 
@@ -130,7 +149,7 @@ final class AdminApi {
                         .returns("PlayerReport[]")
                         .doc("Admin: player reports, newest first; only the open ones unless openOnly is false.")
                         .handler(call -> {
-                            requireAdmin(ctx, call);
+                            Staff.require(ctx, call);
                             boolean openOnly = call.optBool(0, true);
                             return AccountApi.decks(() -> ReportStore.get().list(openOnly, 200));
                         }),
@@ -140,16 +159,20 @@ final class AdminApi {
                         .returns("boolean")
                         .doc("Admin: close a report with a note about what was done. False when it was closed already.")
                         .handler(call -> {
-                            requireAdmin(ctx, call);
+                            String actor = Staff.require(ctx, call);
                             long id = AccountApi.longValue(call, 0);
-                            return AccountApi.decks(() -> ReportStore.get().close(id, call.string(1), System.currentTimeMillis()));
+                            boolean closed = AccountApi.decks(() -> ReportStore.get().close(id, call.string(1), System.currentTimeMillis()));
+                            if (closed) {
+                                Staff.audit(actor, "report.close", "report " + id, call.string(1), null);
+                            }
+                            return closed;
                         }),
 
                 RpcMethod.named("adminClientErrors")
                         .returns("ClientError[]")
                         .doc("Admin: the latest crash reports from web clients, newest first.")
                         .handler(call -> {
-                            requireAdmin(ctx, call);
+                            Staff.require(ctx, call);
                             return ClientErrors.get().recent(200);
                         }),
 
@@ -172,10 +195,10 @@ final class AdminApi {
         return methods;
     }
 
-    private static void requireAdmin(ApiContext ctx, RpcCall call) throws RpcException {
-        if (ctx.managers == null || !ctx.managers.sessionManager().checkAdminAccess(call.sessionId())) {
-            throw RpcException.notAuthorized("Admin only");
-        }
+
+    /** the name behind a session, for the audit log */
+    private static String sessionUser(ApiContext ctx, String sessionId) {
+        return ctx.sessions.userName(sessionId).orElse("session " + sessionId);
     }
 
     private static UUID ownedTestTable(ApiContext ctx, RpcCall call) throws RpcException {

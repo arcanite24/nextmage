@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../brand';
 import { api, rpc } from '../connection';
 import { useT, type MessageKey } from '../i18n';
-import type { ServerInfo } from '../../protocol/generated/views';
+import type { InviteCheck, ServerInfo } from '../../protocol/generated/views';
 import type { StarterDeck } from '../stores/decks';
 import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
@@ -16,7 +16,7 @@ import { checkPassword } from './accountRules';
 import styles from './LoginScreen.module.css';
 
 type ServerStatus = 'checking' | 'online' | 'offline';
-type Mode = 'sit' | 'register' | 'forgot' | 'reset';
+type Mode = 'sit' | 'register' | 'forgot' | 'reset' | 'ask' | 'githubName';
 
 const MODE_TITLES: Record<Mode | 'signIn', MessageKey> = {
   sit: 'login.title.sit',
@@ -24,6 +24,8 @@ const MODE_TITLES: Record<Mode | 'signIn', MessageKey> = {
   register: 'login.title.register',
   forgot: 'login.title.reset',
   reset: 'login.title.reset',
+  ask: 'login.title.ask',
+  githubName: 'login.title.github',
 };
 
 const PASSWORD_PROBLEMS: Record<NonNullable<ReturnType<typeof checkPassword>>, MessageKey> = {
@@ -45,6 +47,12 @@ export function LoginScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
+  // an invite link (/join?invite=...): registration that lets the account in to a contributors-only server
+  const query = new URLSearchParams(location.search);
+  const invite = query.get('invite') ?? '';
+  // back from GitHub (/auth/github?code=...&state=...)
+  const backFromGithub = location.pathname === '/auth/github';
+  const github = backFromGithub ? { code: query.get('code') ?? '', state: query.get('state') ?? '' } : null;
   // game links go stale across sign-ins; anything else is worth returning to, unless the server restarted under it
   const [restarted] = useState(session.expired);
   const destination = !restarted && from && !from.startsWith('/game/') && from !== '/login' ? from : '/';
@@ -56,22 +64,25 @@ export function LoginScreen() {
   const [editServer, setEditServer] = useState(false);
   const [dealing, setDealing] = useState(false);
   const [refused, setRefused] = useState(0);
-  const [mode, setMode] = useState<Mode>('sit');
+  const [mode, setMode] = useState<Mode>(invite ? 'register' : 'sit');
+  const [note, setNote] = useState('');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const { status, info } = useServerStatus(serverUrl);
+  const inviteCheck = useInviteCheck(invite, status === 'online');
   const art = useRotatingArt();
   const resumed = useRef(false);
 
   useEffect(() => {
-    if (resumed.current) return;
+    if (resumed.current || invite || backFromGithub) return;
     resumed.current = true;
     void session.resume().then((ok) => ok && navigate(destination, { replace: true }));
-  }, [session, navigate, destination]);
+  }, [session, navigate, destination, invite, backFromGithub]);
 
   const accounts = !!info?.accounts;
+  const contributors = info?.access === 'allowlist';
   const busy = session.phase === 'signingIn' || dealing;
   const name = userName.trim();
   const nameError = name && !/^[A-Za-z0-9_]{3,14}$/.test(name) ? t('login.nameRule') : null;
@@ -82,8 +93,11 @@ export function LoginScreen() {
   const canSubmit = mode === 'sit' ? !!name && !nameError && (!accounts || !!password)
     : mode === 'register' ? !!name && !nameError && !!email.trim() && !!password && !passwordError
       : mode === 'forgot' ? !!email.trim()
-        : code.length === 6 && !!password && !passwordError;
+        : mode === 'ask' ? !!name && !nameError && !!email.trim()
+          : mode === 'githubName' ? !!name && !nameError
+          : code.length === 6 && !!password && !passwordError;
   const submitLabel = t(mode === 'register' ? 'login.submit.register' : mode === 'forgot' ? 'login.submit.forgot' : mode === 'reset' ? 'login.submit.reset'
+    : mode === 'ask' ? 'login.submit.ask' : mode === 'githubName' ? 'login.submit.github'
     : busy ? 'login.submit.busy' : accounts ? 'login.submit.signIn' : 'login.submit.sit');
 
   function switchMode(next: Mode) {
@@ -91,6 +105,45 @@ export function LoginScreen() {
     setNotice(null);
     setPassword('');
     useSession.setState({ error: null });
+  }
+
+  // back from GitHub: sign in to the account it names, or pick a name for a new one first
+  const githubDone = useRef(false);
+  useEffect(() => {
+    if (!github || status !== 'online' || githubDone.current) return;
+    githubDone.current = true;
+    void finishGithub(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the server answers
+  }, [status]);
+
+  async function finishGithub(chosen: string | null) {
+    if (!github) return;
+    setWorking(true);
+    try {
+      const result = await api.githubFinish(github.state, github.code, chosen);
+      if (result.userName && result.rememberToken) {
+        if (await session.signInWithToken(serverUrl.trim(), result.userName, result.rememberToken)) seated();
+        return;
+      }
+      setMode('githubName');
+      if (result.suggestedName && !chosen) setUserName(result.suggestedName);
+      useSession.setState({ error: result.nameProblem ?? (chosen ? null : t('login.github.nameTaken')) });
+    } catch (error) {
+      useSession.setState({ error: error instanceof Error ? error.message : String(error) });
+      setMode('sit');
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function startGithub() {
+    setWorking(true);
+    try {
+      window.location.assign(await api.githubStart());
+    } catch (error) {
+      useSession.setState({ error: error instanceof Error ? error.message : String(error) });
+      setWorking(false);
+    }
   }
 
   function seated() {
@@ -111,8 +164,20 @@ export function LoginScreen() {
     setWorking(true);
     try {
       if (mode === 'register') {
-        if (await session.register(url, name, email.trim(), password, remember)) seated();
+        if (await session.register(url, name, email.trim(), password, remember, invite)) seated();
         else setRefused((count) => count + 1);
+      } else if (mode === 'githubName' && github) {
+        await finishGithub(name);
+      } else if (mode === 'ask') {
+        try {
+          if (rpc.getStatus() !== 'open' || rpc.getUrl() !== url) await rpc.connect(url);
+          await api.accessRequest(name, email.trim(), note.trim() || null);
+          switchMode('sit');
+          setNotice(t('login.asked', { email: email.trim() }));
+        } catch (error) {
+          useSession.setState({ error: error instanceof Error ? error.message : String(error) });
+          setRefused((count) => count + 1);
+        }
       } else if (mode === 'forgot') {
         if (await session.requestPasswordReset(url, email.trim())) {
           setMode('reset');
@@ -149,8 +214,15 @@ export function LoginScreen() {
 
       <form key={refused} className={[styles.seat, refused > 0 ? styles.refused : ''].join(' ')} onSubmit={submit} aria-labelledby="seat-title">
         <h2 id="seat-title" className={styles.seatLabel}>{t(MODE_TITLES[mode === 'sit' && accounts ? 'signIn' : mode])}</h2>
+        {info?.notice && <p className={styles.serverNotice}>{info.notice}</p>}
+        {contributors && mode === 'sit' && <p className={styles.notice}>{t('login.contributors')}</p>}
+        {invite && mode === 'register' && (
+          <p className={inviteCheck?.valid === false ? styles.error : styles.notice} role="status">
+            {inviteCheck === null ? t('login.invite.checking') : inviteCheck.valid ? t('login.invite.valid') : inviteCheck.reason}
+          </p>
+        )}
 
-        {(mode === 'sit' || mode === 'register') && (
+        {(mode === 'sit' || mode === 'register' || mode === 'ask' || mode === 'githubName') && (
           <>
             <SeatPlate name={name && !nameError ? name : ''} placeholder={t('login.yourName')} />
             <Field
@@ -166,7 +238,7 @@ export function LoginScreen() {
           </>
         )}
 
-        {(mode === 'register' || mode === 'forgot' || mode === 'reset') && (
+        {(mode === 'register' || mode === 'forgot' || mode === 'reset' || mode === 'ask') && (
           <Field
             label={t('login.email')}
             type="email"
@@ -174,9 +246,19 @@ export function LoginScreen() {
             autoComplete="email"
             autoFocus={mode === 'forgot'}
             onChange={(event) => setEmail(event.target.value)}
-            hint={mode === 'register' ? t('login.emailHint') : undefined}
+            hint={mode === 'register' ? t('login.emailHint') : mode === 'ask' ? t('login.askEmailHint') : undefined}
             required
             readOnly={mode === 'reset'}
+          />
+        )}
+
+        {mode === 'ask' && (
+          <Field
+            label={t('login.askNote')}
+            value={note}
+            maxLength={500}
+            onChange={(event) => setNote(event.target.value)}
+            hint={t('login.askNoteHint')}
           />
         )}
 
@@ -259,9 +341,16 @@ export function LoginScreen() {
           {submitLabel}
         </Button>
 
+        {mode === 'sit' && accounts && info?.github && (
+          <Button type="button" variant="quiet" icon={<GithubMark />} onClick={startGithub} busy={working}>
+            {t('login.github')}
+          </Button>
+        )}
+
         {mode === 'sit' && accounts && (
           <div className={styles.accountLinks}>
             <button type="button" className={styles.linkButton} onClick={() => switchMode('register')}>{t('login.createAccount')}</button>
+            {contributors && <button type="button" className={styles.linkButton} onClick={() => switchMode('ask')}>{t('login.ask')}</button>}
             {info?.mail
               ? <button type="button" className={styles.linkButton} onClick={() => switchMode('forgot')}>{t('login.forgot')}</button>
               : <span className={styles.quiet}>{t('login.forgotAskAdmin')}</span>}
@@ -277,6 +366,15 @@ export function LoginScreen() {
 
       <Deck dealing={dealing} />
     </div>
+  );
+}
+
+/** GitHub's mark (Octicons, MIT), for Sign in with GitHub. */
+function GithubMark() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
   );
 }
 
@@ -370,6 +468,23 @@ function useServerStatus(url: string): { status: ServerStatus; info: ServerInfo 
     };
   }, [url, backOnline]);
   return result?.url === url ? { status: result.status, info: result.info } : { status: 'checking', info: null };
+}
+
+/** Whether the invite link still works: null while it is being checked (or the server isn't reached yet). */
+function useInviteCheck(code: string, online: boolean): InviteCheck | null {
+  const [result, setResult] = useState<InviteCheck | null>(null);
+  useEffect(() => {
+    if (!code || !online) return;
+    let cancelled = false;
+    api.inviteCheck(code)
+      .then((check) => !cancelled && setResult(check))
+      // an older server without invites: let registration say what is wrong
+      .catch(() => !cancelled && setResult({ valid: true }));
+    return () => {
+      cancelled = true;
+    };
+  }, [code, online]);
+  return result;
 }
 
 /** Art printed into the mat, changing every few seconds: the starter decks' covers. */

@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'vitest';
-import { describeAge, formatBytes, formatDuration } from './adminFormat';
+import { describe, expect, it, test } from 'vitest';
+import { describeAge, formatBytes, formatDuration, inviteLink, inviteState } from './adminFormat';
 
 describe('admin formatting', () => {
   test('bytes', () => {
@@ -14,5 +14,19 @@ describe('admin formatting', () => {
     expect(formatDuration(50 * 3_600_000)).toBe('2 days 2 h');
     expect(describeAge(1000, 20_000)).toBe('just now');
     expect(describeAge(0, 20_000)).toBe('');
+  });
+});
+
+describe('invites', () => {
+  const now = 1_000_000;
+  it('says why a link stopped working', () => {
+    expect(inviteState({ uses: 0, maxUses: 1, expiresAt: now + 1 }, now)).toBe('active');
+    expect(inviteState({ uses: 1, maxUses: 1, expiresAt: now + 1 }, now)).toBe('used up');
+    expect(inviteState({ uses: 0, maxUses: 1, expiresAt: now }, now)).toBe('expired');
+    expect(inviteState({ revoked: true, uses: 0, maxUses: 1, expiresAt: now + 1 }, now)).toBe('revoked');
+  });
+
+  it('builds the join link', () => {
+    expect(inviteLink('a-b_c', 'https://play.example.com/')).toBe('https://play.example.com/join?invite=a-b_c');
   });
 });

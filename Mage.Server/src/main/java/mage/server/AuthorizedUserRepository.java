@@ -34,7 +34,7 @@ public class AuthorizedUserRepository {
     private static final long DB_VERSION = 2;
     private static final RandomNumberGenerator rng = new SecureRandomNumberGenerator();
 
-    private static final AuthorizedUserRepository instance;
+    private static volatile AuthorizedUserRepository instance;
     static {
         instance = new AuthorizedUserRepository(DatabaseUtils.prepareH2Connection(DatabaseUtils.DB_NAME_USERS, false));
     }
@@ -65,6 +65,11 @@ public class AuthorizedUserRepository {
 
     public static AuthorizedUserRepository getInstance() {
         return instance;
+    }
+
+    /** For tests: the repository every server class sees. */
+    public static void use(AuthorizedUserRepository repository) {
+        instance = repository;
     }
 
     public void add(final String userName, final String password, final String email) {

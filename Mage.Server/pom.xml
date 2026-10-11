@@ -419,6 +419,13 @@
                                 <class>mage.server.decks.DeckStore$DeckPutResult</class>
                                 <class>mage.server.moderation.PlayerReport</class>
                                 <class>mage.server.moderation.ClientErrors$ClientError</class>
+                                <class>mage.server.admin.AuditEntry</class>
+                                <class>mage.server.admin.AllowEntry</class>
+                                <class>mage.server.admin.Invite</class>
+                                <class>mage.server.admin.AccessRequest</class>
+                                <class>mage.server.websocket.api.AccessApi$AccessOverview</class>
+                                <class>mage.server.websocket.api.AccessApi$InviteCheck</class>
+                                <class>mage.server.admin.GithubSignIn$GithubSignInResult</class>
                                 <class>mage.server.websocket.api.CareerApi$CareerState</class>
                                 <class>mage.server.websocket.api.CareerApi$CareerMatch</class>
                                 <class>mage.server.career.CareerContent$CareerStarter</class>

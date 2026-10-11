@@ -2,6 +2,7 @@ package mage.server.websocket.api;
 
 import com.google.gson.JsonElement;
 import mage.server.Main;
+import mage.server.admin.AccessPolicy;
 import mage.server.decks.DeckStore;
 import mage.server.decks.DeckSyncEntry;
 import mage.server.managers.ConfigSettings;
@@ -48,6 +49,12 @@ final class AccountApi {
         public boolean deckSync;
         /** the optional single-player Career is offered (accounts on, and not switched off) */
         public boolean career;
+        /** open, or allowlist: a contributors server, where only listed or invited accounts get in */
+        public String access;
+        /** what staff want everyone to know, shown on sign-in and Home; empty when there is nothing */
+        public String notice;
+        /** players can sign in with GitHub (githubStart) */
+        public boolean github;
     }
 
     static List<RpcMethod> methods(ApiContext ctx) {
@@ -140,6 +147,15 @@ final class AccountApi {
         }
         info.deckSync = info.accounts;
         info.career = mage.server.career.CareerService.enabled(info.accounts);
+        try {
+            AccessPolicy access = AccessPolicy.get();
+            info.access = info.accounts ? access.mode() : AccessPolicy.OPEN;
+            info.notice = access.notice();
+            info.github = info.accounts && mage.server.admin.GithubAuth.get().isEnabled();
+        } catch (IllegalStateException e) {
+            info.access = AccessPolicy.OPEN;
+            info.notice = "";
+        }
         return info;
     }
 

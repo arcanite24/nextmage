@@ -28,3 +28,23 @@ export function describeAge(at: number, now: number): string {
   if (seconds < 60) return 'just now';
   return `${formatDuration(seconds * 1000)} ago`;
 }
+
+export type InviteState = 'active' | 'used up' | 'expired' | 'revoked';
+
+/** Whether an invite link still works, and if not, why. */
+export function inviteState(invite: { revoked?: boolean; uses?: number; maxUses?: number; expiresAt?: number }, now: number): InviteState {
+  if (invite.revoked) return 'revoked';
+  if ((invite.uses ?? 0) >= (invite.maxUses ?? 0)) return 'used up';
+  if (now >= (invite.expiresAt ?? 0)) return 'expired';
+  return 'active';
+}
+
+/** The link to send: it opens registration with the invite filled in. */
+export function inviteLink(code: string, origin: string): string {
+  return `${origin.replace(/\/+$/, '')}/join?invite=${encodeURIComponent(code)}`;
+}
+
+export function formatDate(at: number): string {
+  if (!at) return '';
+  return new Date(at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}

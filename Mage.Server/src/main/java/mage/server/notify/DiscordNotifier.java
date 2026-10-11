@@ -155,6 +155,14 @@ public final class DiscordNotifier {
         submit(matchStartedMessage(table.getName(), table.getGameType(), table.getDeckType(), names));
     }
 
+    /** Someone asked to be let in to a contributors-only server; staff decide in /admin. */
+    public void accessRequested(String name, String note) {
+        if (!isEnabled()) {
+            return;
+        }
+        submit(accessRequestedMessage(name, note, link("/admin")));
+    }
+
     // --- rules ------------------------------------------------------------------------------------
 
     /** The announcement rule: at least two people, and no password. */
@@ -222,6 +230,15 @@ public final class DiscordNotifier {
         fields.add(field("Format", format));
         fields.add(field("Game", gameType));
         embed.add("fields", fields);
+        return payload(content, embed);
+    }
+
+    static String accessRequestedMessage(String name, String note, String link) {
+        String content = "Access request from **" + escape(name) + "**" + (link == null ? "" : " Decide: " + link);
+        JsonObject embed = embed("Access request: " + escape(name), link);
+        if (note != null && !note.trim().isEmpty()) {
+            embed.addProperty("description", limit(escape(note), 4096));
+        }
         return payload(content, embed);
     }
 

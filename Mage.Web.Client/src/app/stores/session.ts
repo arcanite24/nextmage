@@ -47,7 +47,10 @@ export interface SessionState {
   /** with remember, an account stays signed in on this device ("keep me signed in") until it signs out */
   signIn(serverUrl: string, userName: string, password: string, remember?: boolean): Promise<boolean>;
   /** creates an account with the chosen password and signs in with it */
-  register(serverUrl: string, userName: string, email: string, password: string, remember?: boolean): Promise<boolean>;
+  /** inviteCode: an invite link's code, which lets the account in to a contributors-only server */
+  register(serverUrl: string, userName: string, email: string, password: string, remember?: boolean, inviteCode?: string): Promise<boolean>;
+  /** signs in with a remembered-device token the server gave this device (after Sign in with GitHub) */
+  signInWithToken(serverUrl: string, userName: string, token: string): Promise<boolean>;
   /** emails a reset code to the account with this address (the server doesn't say whether there is one) */
   requestPasswordReset(serverUrl: string, email: string): Promise<boolean>;
   resetPassword(serverUrl: string, email: string, code: string, password: string): Promise<boolean>;
@@ -176,11 +179,18 @@ export const useSession = create<SessionState>((set, get) => ({
     return ok;
   },
 
-  async register(serverUrl, userName, email, password, remember = false) {
+  async signInWithToken(serverUrl, userName, token) {
+    writeJson<RememberedDevice | null>(REMEMBER_KEY, { serverUrl, userName, token });
+    // an account: a reload signs back in with the token, never as a passwordless guest
+    writeJson<RememberedLogin>(LOGIN_KEY, { serverUrl, userName, passwordless: false, account: true });
+    return get().signIn(serverUrl, userName, '');
+  },
+
+  async register(serverUrl, userName, email, password, remember = false, inviteCode) {
     set({ phase: 'signingIn', error: null, serverUrl, userName });
     try {
       await connectTo(serverUrl);
-      await api.authRegister(userName, password, email);
+      await api.authRegister(userName, password, email, inviteCode || null);
     } catch (error) {
       set({ phase: 'signedOut', error: describeError(error) });
       return false;

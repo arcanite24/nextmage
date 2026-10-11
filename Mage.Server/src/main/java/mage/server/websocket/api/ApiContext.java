@@ -7,6 +7,9 @@ import mage.server.websocket.service.CardSearchService;
 import mage.server.websocket.service.DeckValidationService;
 import mage.server.websocket.service.deckimport.DeckImportService;
 
+import java.util.Optional;
+import java.util.function.Function;
+
 /**
  * Web client bridge: dependencies shared by the RPC method groups.
  */
@@ -23,6 +26,10 @@ public final class ApiContext {
      * Server admin password; admin login over the bridge is disabled when it is empty.
      */
     final String adminPassword;
+    /**
+     * Who is staff: the session's actor name for the audit log, or empty. Null: the server's own sessions decide.
+     */
+    Function<String, Optional<String>> staff;
 
     public ApiContext(MageServer server, ManagerFactory managers, RpcSessions sessions) {
         this(server, managers, sessions, "");
@@ -33,5 +40,11 @@ public final class ApiContext {
         this.managers = managers;
         this.sessions = sessions;
         this.adminPassword = adminPassword == null ? "" : adminPassword;
+    }
+
+    /** For tests without a server: decides who is staff instead of the server's sessions. */
+    public ApiContext withStaff(Function<String, Optional<String>> staff) {
+        this.staff = staff;
+        return this;
     }
 }

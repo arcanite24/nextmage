@@ -77,6 +77,10 @@ if (import.meta.env.PROD && !NATIVE_APP && 'serviceWorker' in navigator) {
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginScreen /> },
+  // an invite link to a contributors-only server: registration with the invite filled in
+  { path: '/join', element: <LoginScreen /> },
+  // back from Sign in with GitHub
+  { path: '/auth/github', element: <LoginScreen /> },
   // credits and legal notices, readable before signing in
   { path: '/about', lazy: () => import('./screens/AboutScreen').then((m) => ({ Component: m.AboutScreen })) },
   { path: '/admin', lazy: () => import('./admin/AdminScreen').then((m) => ({ Component: m.AdminScreen })) },

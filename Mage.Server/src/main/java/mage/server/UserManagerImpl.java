@@ -141,9 +141,11 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     public boolean isAdmin(UUID userId) {
+        // the admin console's session, never a name: with accounts off anyone could sign in as "Admin"
         return getUser(userId)
-                .filter(u -> u.getName().equals(User.ADMIN_NAME))
-                .isPresent();
+                .flatMap(u -> managerFactory.sessionManager().getSession(u.getSessionId()))
+                .map(Session::isAdmin)
+                .orElse(false);
     }
 
     @Override

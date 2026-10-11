@@ -41,7 +41,10 @@ export function HomeScreen() {
   const firstGameDone = useCoach((state) => state.firstGameDone);
   const skipFirstGame = useCoach((state) => state.finish);
   // Career is offered by servers with accounts; it is opt-in, and its screen explains it first
-  const career = useServerInfo().data?.career === true;
+  const serverInfo = useServerInfo().data;
+  const career = serverInfo?.career === true;
+  // what staff want everyone to know, e.g. that a contributors server's data may be reset
+  const notice = serverInfo?.notice?.trim();
   const { dragging, dropProps } = useImportDrop();
   useImportPaste();
 
@@ -107,6 +110,7 @@ export function HomeScreen() {
 
       <section className={styles.mat} style={{ '--sleeve': sleeve } as CSSProperties}>
         <MatPrint card={selected?.cover ?? null} />
+        {notice && <p className={styles.serverNotice} role="note" aria-label={t('home.notice')}>{notice}</p>}
         <div className={styles.deckTitle}>
           <h1 className={styles.deckName}>{selected?.name ?? t('home.chooseDeck')}</h1>
           <p className={styles.deckNote}>{selected?.fromStarter ? t('decks.fromStarter', { count: selected.cardCount }) : selected?.note ?? ' '}</p>
