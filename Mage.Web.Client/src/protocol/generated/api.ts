@@ -19,12 +19,16 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('ping', SESSION, pingInfo),
     setCapabilities: (capabilities: string[]) =>
       rpc.call('setCapabilities', capabilities),
-    connectUser: (userName: string, password: string, restoreSessionId?: string | null, clientVersion?: string | null, userIdStr?: string | null) =>
-      rpc.call('connectUser', userName, password, SESSION, restoreSessionId, clientVersion, userIdStr),
+    connectUser: (userName: string, password: string, restoreSessionId?: string | null, clientVersion?: string | null, userIdStr?: string | null, rememberToken?: string | null) =>
+      rpc.call('connectUser', userName, password, SESSION, restoreSessionId, clientVersion, userIdStr, rememberToken),
     connectAdmin: (password: string) =>
       rpc.call('connectAdmin', password, SESSION),
     sessionGetRestoreToken: () =>
       rpc.call('sessionGetRestoreToken', SESSION),
+    authRememberLogin: () =>
+      rpc.call('authRememberLogin', SESSION),
+    authForgetLogin: (userName: string, rememberToken: string) =>
+      rpc.call('authForgetLogin', userName, rememberToken),
     authRegister: (userName: string, password: string, email: string) =>
       rpc.call('authRegister', SESSION, userName, password, email),
     authSendTokenToEmail: (email: string) =>

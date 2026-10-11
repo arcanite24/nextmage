@@ -17,6 +17,14 @@ interface RememberedLogin {
 
 const LOGIN_KEY = 'playmat.login';
 const RESTORE_KEY = 'playmat.restore';
+const REMEMBER_KEY = 'playmat.remember';
+
+/** "Keep me signed in": the server's token for this device, which signs the account in without its password. */
+interface RememberedDevice {
+  serverUrl: string;
+  userName: string;
+  token: string;
+}
 
 /** Server-issued token that hands our user (and its tables) back to a later connection. */
 interface RememberedRestore {
@@ -36,14 +44,15 @@ export interface SessionState {
   error: string | null;
   /** the server restarted (or forgot this session) while we were signed in: the sign-in screen says so */
   expired: boolean;
-  signIn(serverUrl: string, userName: string, password: string): Promise<boolean>;
+  /** with remember, an account stays signed in on this device ("keep me signed in") until it signs out */
+  signIn(serverUrl: string, userName: string, password: string, remember?: boolean): Promise<boolean>;
   /** creates an account with the chosen password and signs in with it */
-  register(serverUrl: string, userName: string, email: string, password: string): Promise<boolean>;
+  register(serverUrl: string, userName: string, email: string, password: string, remember?: boolean): Promise<boolean>;
   /** emails a reset code to the account with this address (the server doesn't say whether there is one) */
   requestPasswordReset(serverUrl: string, email: string): Promise<boolean>;
   resetPassword(serverUrl: string, email: string, code: string, password: string): Promise<boolean>;
   signOut(keepGames?: boolean): Promise<void>;
-  /** after a reload: sign the remembered player back in when the server needs no password */
+  /** after a reload: sign the remembered player back in when the server needs no password or the device is remembered */
   resume(): Promise<boolean>;
 }
 
@@ -61,6 +70,37 @@ async function rememberRestoreToken(serverUrl: string, userName: string): Promis
   } catch {
     // older server without restore tokens: reconnects fall back to the server's same-address rule
   }
+}
+
+/** This device's "keep me signed in" token for the player on this server, '' when there is none. */
+function rememberToken(serverUrl: string, userName: string): string {
+  const saved = readJson<RememberedDevice | null>(REMEMBER_KEY, null);
+  return saved && saved.serverUrl === serverUrl && saved.userName === userName ? saved.token : '';
+}
+
+async function rememberDevice(serverUrl: string, userName: string): Promise<void> {
+  try {
+    const token = await api.authRememberLogin();
+    writeJson<RememberedDevice | null>(REMEMBER_KEY, token ? { serverUrl, userName, token } : null);
+  } catch {
+    // a server without accounts (or an older one) has nothing to remember
+  }
+}
+
+/** Signs this device out for good: the server stops accepting its token. */
+async function forgetDevice(serverUrl: string, userName: string): Promise<void> {
+  const token = rememberToken(serverUrl, userName);
+  writeJson<RememberedDevice | null>(REMEMBER_KEY, null);
+  try {
+    if (token) await api.authForgetLogin(userName, token);
+  } catch {
+    // unreachable server: the token runs out unused
+  }
+}
+
+/** Logs in; a remembered device's token stands in for an empty password. */
+function connectUser(userName: string, password: string, restore: string, device: string): Promise<boolean> {
+  return device ? api.connectUser(userName, password, restore, null, null, device) : api.connectUser(userName, password, restore);
 }
 
 function describeError(error: unknown): string {
@@ -94,17 +134,23 @@ export const useSession = create<SessionState>((set, get) => ({
   error: null,
   expired: false,
 
-  async signIn(serverUrl, userName, password) {
+  async signIn(serverUrl, userName, password, remember = false) {
     set({ phase: 'signingIn', error: null, expired: false, serverUrl, userName });
     try {
       await connectTo(serverUrl);
-      const ok = await api.connectUser(userName, password, restoreToken(serverUrl, userName));
+      const device = password ? '' : rememberToken(serverUrl, userName);
+      const ok = await connectUser(userName, password, restoreToken(serverUrl, userName), device);
       if (!ok) {
+        // a remembered device the server turned away (signed out elsewhere, password changed): ask for the password
+        if (device) writeJson<RememberedDevice | null>(REMEMBER_KEY, null);
         set({ phase: 'signedOut', error: 'The server refused the login. Check your name and password.' });
         return false;
       }
       sessionPassword = password;
       await rememberRestoreToken(serverUrl, userName);
+      // typing the password decides it again: remembered from now on, or this device forgotten
+      if (password && remember) await rememberDevice(serverUrl, userName);
+      else if (password) await forgetDevice(serverUrl, userName);
       const roomId = await api.serverGetMainRoomId();
       // an account signed back in with the restore token stays an account
       const before = readJson<RememberedLogin | null>(LOGIN_KEY, null);
@@ -121,14 +167,16 @@ export const useSession = create<SessionState>((set, get) => ({
   async resume() {
     const login = readJson<RememberedLogin | null>(LOGIN_KEY, null);
     if (!login || get().phase !== 'signedOut') return false;
-    // an account needs its password again unless the server still holds the user for our restore token
-    if (!login.passwordless && !(login.account && restoreToken(login.serverUrl, login.userName))) return false;
+    // an account needs its password again unless this device is remembered or the server still holds the user for
+    // our restore token
+    const known = rememberToken(login.serverUrl, login.userName) || restoreToken(login.serverUrl, login.userName);
+    if (!login.passwordless && !(login.account && known)) return false;
     const ok = await get().signIn(login.serverUrl, login.userName, '');
     if (!ok) set({ error: null });
     return ok;
   },
 
-  async register(serverUrl, userName, email, password) {
+  async register(serverUrl, userName, email, password, remember = false) {
     set({ phase: 'signingIn', error: null, serverUrl, userName });
     try {
       await connectTo(serverUrl);
@@ -138,7 +186,7 @@ export const useSession = create<SessionState>((set, get) => ({
       return false;
     }
     set({ phase: 'signedOut' });
-    return get().signIn(serverUrl, userName, password);
+    return get().signIn(serverUrl, userName, password, remember);
   },
 
   async requestPasswordReset(serverUrl, email) {
@@ -172,6 +220,8 @@ export const useSession = create<SessionState>((set, get) => ({
       // leaving anyway
     }
     sessionPassword = '';
+    // signing out means this device asks for the password next time
+    await forgetDevice(get().serverUrl, get().userName);
     // leaving for good gives the tables up, so the token (and the games to rejoin) are of no use any more
     if (!keepGames) {
       writeJson<RememberedRestore | null>(RESTORE_KEY, null);
@@ -212,7 +262,8 @@ rpc.onStatus((connection) => {
   void (async () => {
     try {
       // refused: an account the server no longer holds for our token (it restarted) wants its password again
-      if (!await api.connectUser(state.userName, sessionPassword, restoreToken(state.serverUrl, state.userName))) return expire();
+      const device = sessionPassword ? '' : rememberToken(state.serverUrl, state.userName);
+      if (!await connectUser(state.userName, sessionPassword, restoreToken(state.serverUrl, state.userName), device)) return expire();
       await rememberRestoreToken(state.serverUrl, state.userName);
       const roomId = await api.serverGetMainRoomId();
       // the main room is made when the server starts: a new one means a new server, without our tables

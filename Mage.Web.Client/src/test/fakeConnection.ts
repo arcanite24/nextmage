@@ -59,6 +59,8 @@ export function createFakeConnection() {
   const calls: Record<string, ReturnType<typeof vi.fn>> = {
     connectUser: vi.fn(async () => true),
     sessionGetRestoreToken: vi.fn(async () => 'token-1'),
+    authRememberLogin: vi.fn(async () => 'device-1'),
+    authForgetLogin: vi.fn(async () => true),
     serverGetMainRoomId: vi.fn(async () => 'room-1'),
     disconnectSession: vi.fn(async () => undefined),
   };

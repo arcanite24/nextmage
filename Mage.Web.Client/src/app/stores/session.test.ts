@@ -180,4 +180,56 @@ describe('session store', () => {
     expect(await useSession.getState().resume()).toBe(false);
     expect(useSession.getState().error).toBeNull();
   });
+
+  describe('keep me signed in', () => {
+    function deviceSaved() {
+      return JSON.parse(localStorage.getItem('playmat.remember') ?? 'null');
+    }
+
+    test('a password sign-in with remember keeps the device token, and a reload signs in with it', async () => {
+      const first = await load();
+      expect(await first.useSession.getState().signIn(SERVER, 'alice', 'secret', true)).toBe(true);
+      expect(first.fake.api.authRememberLogin).toHaveBeenCalled();
+      expect(deviceSaved()).toEqual({ serverUrl: SERVER, userName: 'alice', token: 'device-1' });
+
+      // a reload after the server forgot us: no restore token left, only the device
+      localStorage.removeItem('playmat.restore');
+      freshModules();
+      const second = await load();
+      expect(await second.useSession.getState().resume()).toBe(true);
+      expect(second.fake.api.connectUser).toHaveBeenCalledWith('alice', '', '', null, null, 'device-1');
+      expect(second.useSession.getState().phase).toBe('signedIn');
+    });
+
+    test('without remember an account still needs its password after the server forgets it', async () => {
+      const first = await load();
+      await first.useSession.getState().signIn(SERVER, 'alice', 'secret', false);
+      expect(first.fake.api.authRememberLogin).not.toHaveBeenCalled();
+      expect(deviceSaved()).toBeNull();
+
+      localStorage.removeItem('playmat.restore');
+      freshModules();
+      const second = await load();
+      expect(await second.useSession.getState().resume()).toBe(false);
+      expect(second.fake.api.connectUser).not.toHaveBeenCalled();
+    });
+
+    test('signing out forgets the device on the server too', async () => {
+      const { useSession, fake } = await load();
+      await useSession.getState().signIn(SERVER, 'alice', 'secret', true);
+      await useSession.getState().signOut();
+      expect(fake.api.authForgetLogin).toHaveBeenCalledWith('alice', 'device-1');
+      expect(deviceSaved()).toBeNull();
+    });
+
+    test('a device token the server turns away is dropped', async () => {
+      localStorage.setItem('playmat.login', JSON.stringify({ serverUrl: SERVER, userName: 'alice', account: true }));
+      localStorage.setItem('playmat.remember', JSON.stringify({ serverUrl: SERVER, userName: 'alice', token: 'revoked' }));
+      const { useSession, fake } = await load();
+      fake.api.connectUser.mockResolvedValueOnce(false);
+      expect(await useSession.getState().resume()).toBe(false);
+      expect(deviceSaved()).toBeNull();
+      expect(useSession.getState().error).toBeNull();
+    });
+  });
 });
