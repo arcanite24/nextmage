@@ -2,7 +2,7 @@
 
 Merge `magefree/mage` master into the fork once a month. Small merges keep conflicts small.
 
-Remotes: `origin` is magefree/mage (upstream, read-only for us: never push there or open PRs or issues on it). `fork` is arcanite24/nextmage (PRs go here).
+Remotes: `origin` is magefree/mage (upstream, read-only for us: never push there or open PRs or issues on it). `fork` is arcanite24/playmat (PRs go here).
 
 ## Recipe
 
@@ -26,7 +26,7 @@ mvn $M -pl Mage.Server test -Dtest='mage/server/websocket/**/*Test' \
 
 `WebClientApiDocsTest` fails if the merge changed the generated web protocol. Then regenerate with `mvn -pl Mage.Server test -Dtest=WebClientApiDocsTest -Dxmage.updateWebApiDocs=true`, commit the regenerated `Mage.Web.Client/src/protocol/generated`, and run `npm run typecheck` in `Mage.Web.Client`.
 
-Push the branch to `fork` and open a PR against `master` on arcanite24/nextmage.
+Push the branch to `fork` and open a PR against `master` on arcanite24/playmat.
 
 ## Conflict policy
 

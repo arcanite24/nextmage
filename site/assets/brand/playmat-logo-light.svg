@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 484 128" width="484" height="128" role="img" aria-label="Playmat">
+  <title>Playmat</title>
+  <g transform="scale(1.0)">
+    <defs>
+      <linearGradient id="pm-felt" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#1c2d27"/>
+        <stop offset="1" stop-color="#0f1714"/>
+      </linearGradient>
+      <radialGradient id="pm-light" cx="0.32" cy="0.22" r="0.9">
+        <stop offset="0" stop-color="#e9e4d6" stop-opacity="0.10"/>
+        <stop offset="0.6" stop-color="#e9e4d6" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect x="2" y="2" width="124" height="124" rx="28" fill="url(#pm-felt)"/>
+    <rect x="2" y="2" width="124" height="124" rx="28" fill="url(#pm-light)"/>
+    <rect x="2.75" y="2.75" width="122.5" height="122.5" rx="27.25" fill="none" stroke="#070c0a" stroke-opacity="0.6" stroke-width="1.5"/>
+    <rect x="11" y="11" width="106" height="106" rx="20" fill="none" stroke="#d4ccb6" stroke-opacity="0.55"
+          stroke-width="2" stroke-dasharray="5.2 4.4" stroke-linecap="round"/>
+    <g stroke="#e9e4d6" stroke-width="5" stroke-linejoin="round" transform="translate(5.5 1.5)">
+      <rect x="27" y="38" width="38" height="54" rx="6" fill="#0f1714" transform="rotate(-17 46 65)"/>
+      <rect x="39" y="34" width="38" height="54" rx="6" fill="#0f1714" transform="rotate(-6 58 61)"/>
+      <g transform="rotate(8 70 59)">
+        <rect x="50" y="30" width="40" height="58" rx="6" fill="#142019"/>
+        <path d="M74 36.5 L83.5 36.5 L83.5 46 Z" fill="#f0b13d" stroke="#f0b13d" stroke-width="2"/>
+      </g>
+    </g>
+  </g>
+  <g fill="#142019" transform="translate(158 33.00)">
+    <path transform="translate(0.00 62.00) scale(0.08857 -0.08857)" d="M458 481Q458 418 434.5 370.5Q411 323 368.0 297.0Q325 271 269 271H204Q199 271 199 266V12Q199 7 195.5 3.5Q192 0 187 0H45Q40 0 36.5 3.5Q33 7 33 12V688Q33 693 36.5 696.5Q40 700 45 700H261Q319 700 363.5 672.5Q408 645 433.0 595.0Q458 545 458 481ZM292 477Q292 516 275.5 537.0Q259 558 232 558H204Q199 558 199 553V404Q199 399 204 399H232Q259 399 275.5 419.5Q292 440 292 477Z"/>
+    <path transform="translate(46.06 62.00) scale(0.08857 -0.08857)" d="M35 12V688Q35 693 38.5 696.5Q42 700 47 700H189Q194 700 197.5 696.5Q201 693 201 688V147Q201 142 206 142H410Q415 142 418.5 138.5Q422 135 422 130V12Q422 7 418.5 3.5Q415 0 410 0H47Q42 0 38.5 3.5Q35 7 35 12Z"/>
+    <path transform="translate(85.47 62.00) scale(0.08857 -0.08857)" d="M325 11 312 98Q312 103 306 103H198Q192 103 192 98L180 11Q179 0 167 0H25Q12 0 15 13L160 689Q162 700 173 700H336Q347 700 349 689L493 13L494 9Q494 0 483 0H338Q326 0 325 11ZM218 231H285Q289 231 289 236L253 464Q252 468 250.0 468.0Q248 468 247 464L214 236Q214 231 218 231Z"/>
+    <path transform="translate(131.88 62.00) scale(0.08857 -0.08857)" d="M162 14V260L161 266L21 686Q20 688 20 691Q20 700 30 700H180Q190 700 193 689L243 469Q244 465 246.0 465.0Q248 465 249 469L299 689Q302 700 312 700H462Q468 700 470.5 696.5Q473 693 471 686L329 266L328 260V14Q328 9 324.5 5.5Q321 2 316 2H174Q169 2 165.5 5.5Q162 9 162 14Z"/>
+    <path transform="translate(178.83 62.00) scale(0.08857 -0.08857)" d="M376 700H515Q520 700 523.5 696.5Q527 693 527 688V12Q527 7 523.5 3.5Q520 0 515 0H373Q368 0 364.5 3.5Q361 7 361 12V441Q361 445 359.0 445.5Q357 446 355 443L285 321Q281 313 279 313Q277 313 272 321L202 443Q200 446 198.0 446.0Q196 446 196 442V12Q196 7 192.5 3.5Q189 0 184 0H42Q37 0 33.5 3.5Q30 7 30 12V688Q30 693 33.5 696.5Q37 700 42 700H182Q192 700 197 692L277 547Q280 543 283 547L361 692Q365 700 376 700Z"/>
+    <path transform="translate(232.32 62.00) scale(0.08857 -0.08857)" d="M325 11 312 98Q312 103 306 103H198Q192 103 192 98L180 11Q179 0 167 0H25Q12 0 15 13L160 689Q162 700 173 700H336Q347 700 349 689L493 13L494 9Q494 0 483 0H338Q326 0 325 11ZM218 231H285Q289 231 289 236L253 464Q252 468 250.0 468.0Q248 468 247 464L214 236Q214 231 218 231Z"/>
+    <path transform="translate(278.73 62.00) scale(0.08857 -0.08857)" d="M464 688V570Q464 565 460.5 561.5Q457 558 452 558H328Q323 558 323 553V12Q323 7 319.5 3.5Q316 0 311 0H169Q164 0 160.5 3.5Q157 7 157 12V553Q157 558 152 558H33Q28 558 24.5 561.5Q21 565 21 570V688Q21 693 24.5 696.5Q28 700 33 700H452Q457 700 460.5 696.5Q464 693 464 688Z"/>
+  </g>
+</svg>
