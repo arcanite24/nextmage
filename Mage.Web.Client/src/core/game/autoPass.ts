@@ -100,15 +100,16 @@ export function autoAnswer(view: GameView | null | undefined, prompt: Prompt | n
   switch (prompt.kind) {
     case 'priority':
     {
+      const myTurn = !!view.myPlayerId && view.activePlayerId === view.myPlayerId;
+      // a stop the player did not ask for (core/game/stops), auto-pass on or off: only a Vehicle to crew or a land
+      // to animate keeps it
+      if (myTurn && view.step === 'BEGIN_COMBAT' && !settings.beginCombatStop && Object.keys(view.stack ?? {}).length === 0) {
+        return attackEnablers(view).length === 0 ? 'pass' : null;
+      }
       if (!settings.autoPass) return null;
       if (combatStopHere(view, settings.combatStops)) return null;
       // like Arena: when no creature attacks, the rest of combat goes by even with instants in hand
       if (settings.autoSkipCombat && noCombat(view)) return 'pass';
-      const myTurn = !!view.myPlayerId && view.activePlayerId === view.myPlayerId;
-      // a stop the player did not ask for (core/game/stops): only a Vehicle to crew or a land to animate keeps it
-      if (myTurn && view.step === 'BEGIN_COMBAT' && !settings.beginCombatStop && Object.keys(view.stack ?? {}).length === 0) {
-        return attackEnablers(view).length === 0 ? 'pass' : null;
-      }
       return meaningfulPlays(view, myTurn || settings.abilitiesOnTheirTurn).length === 0 ? 'pass' : null;
     }
     // the server stops listing creatures once they are declared: with everything chosen the list is empty too, and

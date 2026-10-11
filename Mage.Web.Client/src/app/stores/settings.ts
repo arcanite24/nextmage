@@ -148,7 +148,7 @@ export function toUserData(settings: PlaySettings, fullControl = false): UserDat
     groupId: 0,
     avatarId: settings.avatarId,
     allowRequestShowHandCards: settings.allowHandRequests,
-    userSkipPrioritySteps: serverStops(settings.stops, fullControl, settings.autoPass),
+    userSkipPrioritySteps: serverStops(settings.stops, fullControl),
     flagName: `${settings.flag || 'world'}.png`,
     askMoveToGraveOrder: false,
     manaPoolAutomatic: settings.autoPayMana,
@@ -187,9 +187,11 @@ export const useSettings = create<SettingsState>((set, get) => ({
   },
 }));
 
-// the server forgets preferences with the session: send them after every login
+// the server forgets preferences with the session: send them after every login, the silent one after a dropped
+// connection included (a tablet waking up). Without them the server plays by its defaults, which skip the beginning
+// of combat: a Vehicle Greasefang returns could not be crewed.
 useSession.subscribe((state, previous) => {
-  if (state.phase === 'signedIn' && (previous.phase !== 'signedIn' || state.roomId !== previous.roomId)) {
+  if (state.phase === 'signedIn' && state.loginCount !== previous.loginCount) {
     void useSettings.getState().syncToServer();
   }
 });
