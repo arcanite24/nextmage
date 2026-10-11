@@ -8,6 +8,8 @@ import { useT, type MessageKey } from '../i18n';
 import { Button } from '../ui/Button';
 import { DeckBox } from '../ui/DeckBox';
 import { MatPrint } from '../ui/MatPrint';
+import { storeCards } from '../ui/imageCache';
+import { DEVICE_PICTURES } from '../nativePictures';
 import { AiSettingsDialog } from './AiSettingsDialog';
 import { useImportDrop, useImportPaste } from '../decks/import/useImportShortcuts';
 import { openImport } from '../stores/importSheet';
@@ -46,6 +48,15 @@ export function HomeScreen() {
   useEffect(() => {
     if (!decks.loaded) void decks.refresh();
   }, [decks]);
+
+  // the Android app keeps the chosen deck's pictures on the device, so its next game opens without the network
+  const selectedId = selected?.id;
+  useEffect(() => {
+    if (!DEVICE_PICTURES || !selectedId) return;
+    void useDecks.getState().loadList(selectedId)
+      .then((deck) => storeCards([...deck.cards, ...deck.sideboard].map((card) => ({ name: card.cardName, setCode: card.setCode ?? undefined, cardNumber: card.cardNumber ?? undefined }))))
+      .catch(() => undefined);
+  }, [selectedId]);
 
   function start() {
     if (!selected) return;

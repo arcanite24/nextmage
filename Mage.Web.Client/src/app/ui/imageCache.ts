@@ -1,5 +1,6 @@
 import { imageResolver } from '../../core/images/useCardImage';
 import type { CardImageRef, ImageSize } from '../../core/images/imageLinks';
+import { DEVICE_PICTURES, storePictures } from '../nativePictures';
 
 /**
  * Card pictures already downloaded and decoded in this session. A card face whose picture is here shows it on its
@@ -39,25 +40,46 @@ export function warmImage(src: string): Promise<void> {
   return done;
 }
 
+/** Every size the app shows a card at: the device's picture store keeps them all (board, zoom, deck boxes). */
+const STORED_SIZES: ImageSize[] = ['small', 'normal', 'large', 'art_crop'];
+
 /**
  * Warm every picture of these cards at the sizes the match shows (board and zoom). Links that are still being looked
- * up are warmed as soon as the resolver learns them.
+ * up are warmed as soon as the resolver learns them. In the Android app every size is also stored on the device.
  */
 export function warmCards(cards: Iterable<CardImageRef>, sizes: ImageSize[] = ['normal', 'large']) {
+  watchLinks(cards, sizes, (src) => void warmImage(src));
+}
+
+/**
+ * Keep these cards' pictures on the device (the Android app) without decoding them now: a deck the player is
+ * looking at, likely to be played next. Nothing happens on the web.
+ */
+export function storeCards(cards: Iterable<CardImageRef>) {
+  if (DEVICE_PICTURES) watchLinks(cards, [], () => undefined);
+}
+
+/** Calls `onLink` with each card's link at each size as the resolver learns them; device storage rides along. */
+function watchLinks(cards: Iterable<CardImageRef>, sizes: ImageSize[], onLink: (src: string) => void) {
   const resolver = imageResolver();
   const list = [...cards];
   resolver.prefetch(list);
   const remaining = new Set(list);
+  const wanted = DEVICE_PICTURES ? [...new Set([...sizes, ...STORED_SIZES])] : sizes;
   const tryWarm = () => {
+    const store: string[] = [];
     for (const card of remaining) {
       let resolved = true;
-      for (const size of sizes) {
+      for (const size of wanted) {
         const src = resolver.resolve(card, 'front', size);
-        if (typeof src === 'string') void warmImage(src);
-        else if (src === null) resolved = false;
+        if (typeof src === 'string') {
+          if (sizes.includes(size)) onLink(src);
+          if (DEVICE_PICTURES) store.push(src);
+        } else if (src === null) resolved = false;
       }
       if (resolved) remaining.delete(card);
     }
+    storePictures(store);
     return remaining.size === 0;
   };
   if (tryWarm()) return;

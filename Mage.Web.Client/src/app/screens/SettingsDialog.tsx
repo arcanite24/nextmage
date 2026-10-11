@@ -11,7 +11,8 @@ import { notificationsSupported, requestNotifications } from '../stores/attentio
 import { useAutoAnswers } from '../stores/autoAnswers';
 import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
-import { APP_NAME } from '../brand';
+import { APP_NAME, PUBLIC_ORIGIN } from '../brand';
+import { clearPictureStore, DEVICE_PICTURES, pictureStoreStats } from '../nativePictures';
 import { formatNumber, LOCALES, registerMessages, useT, type LocalePreference, type MessageKey, type Translate } from '../i18n';
 import messages from '../i18n/en/settings';
 import { browserLocale } from '../i18n/locales';
@@ -125,6 +126,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
         <Tabs.Content value="display" className={styles.panel}>
           <Row label={t('settings.motion')} detail={t('settings.motion.detail')}>{toggle('animations')}</Row>
           <Row label={t('settings.paintedArt')} detail={t('settings.paintedArt.detail')}>{toggle('paintedArt')}</Row>
+          {DEVICE_PICTURES && <PictureStoreRow />}
         </Tabs.Content>
 
         <Tabs.Content value="playmat" className={styles.panel}>
@@ -295,7 +297,7 @@ function Bookmarklet() {
       .replace(/^\s*\/\/.*$/gm, '')
       .replace(/\n\s+/g, '\n')
       .trim()
-      .replaceAll('__PLAYMAT_ORIGIN__', window.location.origin)
+      .replaceAll('__PLAYMAT_ORIGIN__', PUBLIC_ORIGIN)
       .replaceAll('__APP_NAME__', APP_NAME.replace(/[\\'"]/g, ''));
     link.current?.setAttribute('href', `javascript:${encodeURIComponent(code)}`);
   }, []);
@@ -413,6 +415,36 @@ function PlaymatSettings() {
         {problem && <p className={styles.rowDetail} role="alert">{problem}</p>}
       </form>
     </>
+  );
+}
+
+/** The Android app's stored card pictures: how much room they take, and a way to free it. */
+function PictureStoreRow() {
+  const t = useT();
+  const stats = useQuery({ queryKey: ['pictureStore'], queryFn: pictureStoreStats });
+  const [clearing, setClearing] = useState(false);
+  const megabytes = Math.round((stats.data?.bytes ?? 0) / (1024 * 1024));
+  return (
+    <Row
+      label={t('settings.pictureStore')}
+      detail={stats.data ? t('settings.pictureStore.detail', { count: formatNumber(stats.data.files), size: formatNumber(megabytes) }) : undefined}
+    >
+      <Button
+        variant="print"
+        size="sm"
+        busy={clearing}
+        disabled={!stats.data?.files}
+        onClick={() => {
+          setClearing(true);
+          void clearPictureStore().finally(() => {
+            setClearing(false);
+            void stats.refetch();
+          });
+        }}
+      >
+        {t('settings.pictureStore.clear')}
+      </Button>
+    </Row>
   );
 }
 

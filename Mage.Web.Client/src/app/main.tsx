@@ -24,6 +24,7 @@ import './stores/lobby';
 import './stores/settings';
 import './stores/social';
 import './stores/toasts';
+import { NATIVE_APP } from './brand';
 
 /** Screens that need a signed-in player; also opens games when the server starts them. */
 function SignedIn() {
@@ -69,8 +70,8 @@ setReporter(serverReporter(
   { path: () => window.location.pathname, userAgent: navigator.userAgent, appVersion: import.meta.env.VITE_APP_VERSION },
 ));
 
-// installable app with an offline shell; the dev server has no service worker
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// installable app with an offline shell; the dev server has no service worker, and the Android app ships its shell
+if (import.meta.env.PROD && !NATIVE_APP && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => void import('./pwa').then((m) => m.registerServiceWorker()));
 }
 
