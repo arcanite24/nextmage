@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Playmat · Magic in your browser, on your own server</title>
-  <meta name="description" content="Playmat is a free, open-source, Arena-style client for the XMage rules engine: every card, any format, against friends or the AI, on a server you host yourself.">
+  <title>Playmat · a fan-made web client for XMage</title>
+  <meta name="description" content="Playmat is a fan-made, open-source web client for XMage, the Magic: The Gathering rules engine. Play against friends or the AI on a server you run yourself.">
   <meta name="theme-color" content="#0b120f">
   <link rel="icon" href="assets/brand/playmat-mark.svg" type="image/svg+xml">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Playmat · Magic in your browser, on your own server">
-  <meta property="og:description" content="An Arena-style client for the XMage rules engine: every card, any format, against friends or the AI. Free and self-hosted.">
+  <meta property="og:title" content="Playmat · a fan-made web client for XMage">
+  <meta property="og:description" content="A hobby project: a browser client for XMage, styled after MTG Arena, for playing with friends on your own server.">
   <meta property="og:url" content="https://arcanite24.github.io/playmat/">
   <meta property="og:image" content="https://arcanite24.github.io/playmat/assets/og.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -28,10 +28,10 @@
       </a>
       <nav aria-label="Sections">
         <ul class="nav">
-          <li><a href="#play">Play</a></li>
+          <li><a href="#play">Playing</a></li>
           <li><a href="#career">Career</a></li>
-          <li><a href="#host">Host</a></li>
-          <li><a class="btn btn-print btn-sm" href="https://github.com/arcanite24/playmat">GitHub</a></li>
+          <li><a href="#host">Running it</a></li>
+          <li><a href="https://github.com/arcanite24/playmat">GitHub</a></li>
         </ul>
       </nav>
     </div>
@@ -40,13 +40,12 @@
   <main id="main">
     <section class="hero">
       <div class="wrap hero-copy">
-        <h1>Magic in your browser, on&nbsp;your own server.</h1>
-        <p class="lede">Playmat is an Arena-style client for the XMage rules engine. Play any of its 32,000+ cards in any
-          format against your friends or the AI, and host the whole table yourself. Free and MIT licensed.</p>
-        <div class="actions">
-          <a class="btn btn-decision" href="#host">Host your table</a>
-          <a class="btn btn-print" href="https://github.com/arcanite24/playmat">View on GitHub</a>
-        </div>
+        <h1>A fan-made web client for&nbsp;XMage.</h1>
+        <p class="lede">Playmat is a hobby project: a browser client for <a href="https://github.com/magefree/mage">XMage</a>,
+          the open-source Magic: The Gathering rules engine, styled after MTG Arena. You play against friends or XMage's
+          AI on a server you run yourself. It's free, MIT licensed, and not affiliated with Wizards of the Coast.</p>
+        <p class="status">It's a work in progress with rough edges. Bug reports and pull requests are welcome on
+          <a href="https://github.com/arcanite24/playmat">GitHub</a>.</p>
       </div>
       <div class="wrap">
         <figure class="hero-shot shot">
@@ -60,14 +59,15 @@
     <section id="play" class="feature">
       <div class="wrap feature-row">
         <div class="feature-copy">
-          <h2>One click from intent to play.</h2>
-          <p>Pick a deck and press Play. You're in a game against the AI in seconds, or send a friend an invite link and
-            sit down together. Nobody has to learn a table system first.</p>
+          <h2>Playing</h2>
+          <p>Pick a deck and press Play to start a game against the AI, or send a friend an invite link to play each
+            other.</p>
           <ul class="ticks">
             <li>Attack arrows, a visible stack and priority you can read at a glance</li>
-            <li>Smart auto-pass with stops you choose, and keyboard shortcuts</li>
+            <li>Auto-pass with the stops you choose, and keyboard shortcuts</li>
             <li>Practice mode: a goldfish opponent and any card into your hand or onto the battlefield</li>
             <li>Spectating, match history and replays of finished games</li>
+            <li>Visible keyboard focus, reduced motion respected, and no state shown by colour alone</li>
           </ul>
         </div>
         <figure class="shot">
@@ -80,11 +80,11 @@
     <section id="decks" class="feature">
       <div class="wrap feature-row flip">
         <div class="feature-copy">
-          <h2>Bring the decks you already have.</h2>
-          <p>Paste a link from Archidekt, Moxfield or another deck site, drop a list or a <code>.dck</code> file, and
-            it's on your shelf. Starter decks are waiting from the first sign-in, Commander ones included.</p>
+          <h2>Decks</h2>
+          <p>Decks come in from a link (Archidekt, Moxfield and other sites), a pasted list or a <code>.dck</code> file.
+            Every new account gets a set of starter decks, Commander ones included.</p>
           <ul class="ticks">
-            <li>Full card search by name, type, rules text, colour, cost, rarity and set</li>
+            <li>Card search by name, type, rules text, colour, cost, rarity and set</li>
             <li>Format checks, a mana curve and colour counts as you build</li>
             <li>Booster draft, sealed, Jumpstart and constructed events, with AI players in empty seats</li>
           </ul>
@@ -99,9 +99,9 @@
     <section id="career" class="career">
       <div class="wrap">
         <div class="career-head">
-          <h2>A journey for one player, with a whole card pool to earn.</h2>
-          <p>Start with a starter deck and a hundred coins. Win duels, open packs, fill your collection and graduate from
-            every format's school.</p>
+          <h2>Career mode</h2>
+          <p>An optional single-player mode. You start with a starter deck and a hundred coins, win games against the AI,
+            open packs to build a collection, and work through a school for each format.</p>
         </div>
 
         <div class="career-shots">
@@ -154,7 +154,7 @@
             <img src="assets/art/ach-graduate-9.webp" width="192" height="192" loading="lazy" alt="Achievement: graduate of every school">
             <img src="assets/art/ach-wins-250.webp" width="192" height="192" loading="lazy" alt="Achievement: 250 wins">
           </div>
-          <p class="gallery-note">61 achievements, boss portraits, school crests and sleeves, all painted for Playmat.</p>
+          <p class="gallery-note">The Career art (boss portraits, format crests, achievement icons and sleeves) is AI-generated for the project in one letterpress style.</p>
         </div>
       </div>
     </section>
@@ -166,9 +166,9 @@
                alt="The same game on a tablet in portrait: the board stacks vertically with the turn tracker across the middle.">
         </figure>
         <div class="feature-copy">
-          <h2>The same table on a tablet.</h2>
-          <p>The table reflows from a wide monitor down to a tablet in portrait. Install it as a web app, or build the
-            Android app, which keeps every card picture it has shown on the device for the next game.</p>
+          <h2>Tablets and Android</h2>
+          <p>The table reflows from a wide monitor down to a tablet in portrait. It installs as a web app, and there's
+            an Android app built from the same code that keeps card pictures on the device.</p>
           <ul class="ticks">
             <li>Any modern desktop browser</li>
             <li>Tablets in landscape and portrait, fullscreen when installed</li>
@@ -181,14 +181,14 @@
 
     <section class="more">
       <div class="wrap">
-        <h2 class="center">And everything XMage already does.</h2>
+        <h2 class="center">From XMage</h2>
+        <p class="center more-intro">Playmat is a new client, not a new engine. All of this comes from XMage:</p>
         <dl class="also">
           <div><dt>Multiplayer</dt><dd>Commander, Brawl, Oathbreaker and free-for-all games for up to ten players.</dd></div>
           <div><dt>Tournaments</dt><dd>Swiss or elimination events with drafting, sealed pools and sideboarding.</dd></div>
           <div><dt>Lobby</dt><dd>Chat, players online, profiles and a table browser to join or watch any game.</dd></div>
-          <div><dt>Rules on the server</dt><dd>Every rule and every hidden card is enforced server-side. A client can't cheat.</dd></div>
+          <div><dt>Rules on the server</dt><dd>Rules and hidden cards are handled on the server, so a client can't cheat.</dd></div>
           <div><dt>Accounts</dt><dd>Optional sign-up with passwords, ratings, moderation and admin tools for public servers.</dd></div>
-          <div><dt>Accessible</dt><dd>Visible focus, reduced motion respected, and state never shown by colour alone.</dd></div>
         </dl>
       </div>
     </section>
@@ -196,9 +196,9 @@
     <section id="host" class="host">
       <div class="wrap host-row">
         <div class="host-copy">
-          <h2>Host it on any machine with Docker.</h2>
-          <p>One Docker Compose stack runs everything. Point a domain at the machine, set a few values and start it.
-            Players open the site and sign in; nobody installs anything.</p>
+          <h2>Running it</h2>
+          <p>Playmat is meant to be self-hosted. Someone in your group runs the server with Docker Compose, on a home
+            machine for a LAN or on one with a domain, and everyone else opens the site in a browser.</p>
           <dl class="stack">
             <div><dt>xmage</dt><dd>the game server and its WebSocket bridge</dd></div>
             <div><dt>web</dt><dd>Caddy: automatic HTTPS, security headers, rate limits</dd></div>
@@ -207,7 +207,7 @@
           </dl>
           <p class="small">Also covered: private LAN servers with no domain, running behind another reverse proxy, Discord
             notifications for new tables, and capacity numbers.
-            <a href="https://github.com/arcanite24/playmat/blob/master/ops/web/README.md">Read the deployment guide</a>.</p>
+            See the <a href="https://github.com/arcanite24/playmat/blob/master/ops/web/README.md">deployment guide</a>.</p>
         </div>
         <div class="terminal" role="region" aria-label="Commands to start a server">
 <pre><code><span class="c"># get the code</span>
@@ -227,10 +227,10 @@ docker compose -f ops/web/docker-compose.yml up -d --build</code></pre>
       <div class="wrap xmage-box zone">
         <img src="assets/brand/playmat-mark.svg" width="72" height="72" alt="">
         <div>
-          <h2>Built on XMage.</h2>
-          <p>The rules engine, tens of thousands of card implementations and the AI are the work of the XMage project and
-            its contributors since 2010. Playmat merges XMage every month, so new sets and fixes arrive here too.
-            Card pictures and data come from Scryfall.</p>
+          <h2>Credits</h2>
+          <p>The rules engine, the card implementations and the AI are the work of the XMage project and its
+            contributors since 2010; Playmat merges XMage regularly to pick up new sets and fixes. Card pictures and data
+            come from Scryfall. Magic: The Gathering belongs to Wizards of the Coast.</p>
           <p><a href="https://github.com/magefree/mage">XMage on GitHub</a> · <a href="https://scryfall.com">Scryfall</a></p>
         </div>
       </div>

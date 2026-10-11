@@ -6,13 +6,13 @@
 </p>
 
 <p align="center">
-  <b>Magic in your browser, on your own server.</b><br>
-  An Arena-style client for the XMage rules engine: every card, any format, against your friends or the AI.
+  A fan-made web client for <a href="https://github.com/magefree/mage">XMage</a>, the open-source Magic: The Gathering
+  rules engine. A hobby project, not affiliated with Wizards of the Coast.
 </p>
 
 <p align="center">
   <a href="https://arcanite24.github.io/playmat/">Website</a> ·
-  <a href="#host-your-own-table">Host a server</a> ·
+  <a href="#running-a-server">Run a server</a> ·
   <a href="#run-it-locally">Run it locally</a> ·
   <a href="docs/WebSocketAPI.md">WebSocket API</a>
 </p>
@@ -27,31 +27,30 @@
 
 ## What it is
 
-[XMage](https://github.com/magefree/mage) has the most complete open-source rules engine for Magic: over 32,000 cards,
-every format, AI opponents, drafts and tournaments. Its desktop client still looks and plays like 2010.
+Playmat is a fork of [XMage](https://github.com/magefree/mage), the open-source Magic rules engine with its cards, AI
+opponents, drafts and tournaments. It adds a WebSocket bridge to the server and a browser client styled after MTG
+Arena, so a group of friends can play on a server one of them runs. The engine stays XMage, merged from upstream
+regularly, so the cards it supports work here too.
 
-Playmat is a fork of XMage. It adds a WebSocket bridge to the server and a new browser client built around how people
-play today: Arena-style interaction with its own look, a printed neoprene mat with ivory ink and one amber button for
-the decision in front of you. The engine stays XMage, merged from upstream every month, so every card it supports
-works here.
+It's a work in progress with rough edges. Bug reports and pull requests are welcome.
 
 ## Features
 
-- **One click to a game.** Pick a deck and play the AI, or send a friend an invite link. Practice mode gives you a
+- **Playing.** Pick a deck and play the AI, or send a friend an invite link. Practice mode gives you a
   goldfish opponent and tools to put any card in hand or on the battlefield.
-- **A board you can read mid-combat.** Attack arrows, a visible stack, clear priority and smart auto-pass with stops
-  you control, and keyboard shortcuts for passing and answering.
-- **Bring your decks.** A deck builder with full card search, and an import sheet that takes a link from Archidekt,
+- **The board.** Attack arrows, a visible stack, priority shown on the table, auto-pass with the stops you choose, and
+  keyboard shortcuts for passing and answering.
+- **Decks.** A deck builder with card search, and an import sheet that takes a link from Archidekt,
   Moxfield and other deck sites, a pasted list or a `.dck` file. Starter decks are there from the first sign-in,
   Commander ones included.
 - **Events.** Booster draft, sealed, Jumpstart and constructed tournaments. Empty seats fill with AI players.
-- **Career.** A single-player journey: five colour campaigns with a boss at the end of each, an Academy with a school
+- **Career.** An optional single-player mode: five colour campaigns with a boss at the end of each, an Academy with a school
   for every format, puzzles, a gauntlet, sealed and draft runs, a weekly challenge, booster packs to open, a collection
-  to craft into and 61 achievements, all with painted art.
+  to craft into and achievements, illustrated with AI-generated art.
 - **Social.** Lobby chat, players online, profiles, a table browser, spectating, match history and replays.
-- **Everywhere you play.** Desktop browsers, tablets, an installable web app and an Android app that keeps card
+- **Devices.** Desktop browsers, tablets, an installable web app and an Android app that keeps card
   pictures on the device. English and Spanish.
-- **Yours to host.** One Docker Compose stack: the server, Caddy with automatic HTTPS, a Scryfall picture cache,
+- **Hosting.** One Docker Compose stack: the server, Caddy with automatic HTTPS, a Scryfall picture cache,
   nightly backups and Discord notifications.
 
 <table>
@@ -65,7 +64,7 @@ works here.
   </tr>
 </table>
 
-## Host your own table
+## Running a server
 
 You need Docker and a machine your players can reach.
 

@@ -3,7 +3,6 @@
   --decision: #f0b13d;
   --decision-strong: #ffc65a;
   --decision-ink: #1d1406;
-  --decision-glow: rgb(240 177 61 / 0.35);
   --ink: #e9e4d6;
   --ink-strong: #f6f2e8;
   --ink-soft: rgb(233 228 214 / 0.78);
@@ -88,7 +87,7 @@ h1, h2, h3 {
   text-wrap: balance;
 }
 
-h1 { font-size: clamp(2.75rem, 7vw, 5.6rem); }
+h1 { font-size: clamp(2.4rem, 5.6vw, 4.4rem); }
 h2 { font-size: clamp(2rem, 4.2vw, 3.25rem); }
 h3 { font-size: 1.35rem; font-weight: 700; letter-spacing: 0.04em; }
 
@@ -110,39 +109,6 @@ p { margin: 0; text-wrap: pretty; }
 }
 .skip:focus { top: 12px; }
 
-/* ---------- buttons ---------- */
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 52px;
-  padding: 0 26px;
-  border-radius: var(--radius-control);
-  font: 700 1.2rem/1 var(--font-print);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms linear;
-}
-
-.btn-decision {
-  background: linear-gradient(180deg, var(--decision-strong), var(--decision));
-  color: var(--decision-ink);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), inset 0 -2px 0 rgb(0 0 0 / 0.18), 0 0 0 1px rgb(0 0 0 / 0.35), 0 10px 24px -8px rgb(0 0 0 / 0.6);
-}
-.btn-decision:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 0 0 1px rgb(0 0 0 / 0.35), 0 0 0 6px var(--decision-glow), 0 14px 30px -8px rgb(0 0 0 / 0.6); }
-
-.btn-print {
-  background: rgb(233 228 214 / 0.04);
-  color: var(--ink);
-  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
-}
-.btn-print:hover { background: rgb(233 228 214 / 0.09); box-shadow: inset 0 0 0 1.5px var(--ink-soft); }
-
-.btn-sm { height: 36px; padding: 0 14px; font-size: 1rem; }
-
 /* ---------- header ---------- */
 
 .top {
@@ -157,14 +123,14 @@ p { margin: 0; text-wrap: pretty; }
 .brand img { height: 40px; width: auto; }
 
 .nav { display: flex; align-items: center; gap: 28px; list-style: none; margin: 0; padding: 0; }
-.nav a:not(.btn) {
+.nav a {
   font: 700 1rem/1 var(--font-print);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-dim);
   text-decoration: none;
 }
-.nav a:not(.btn):hover { color: var(--ink-strong); }
+.nav a:hover { color: var(--ink-strong); }
 
 /* ---------- hero ---------- */
 
@@ -172,9 +138,9 @@ p { margin: 0; text-wrap: pretty; }
 .hero-copy { text-align: center; display: grid; justify-items: center; gap: 22px; }
 .hero h1 { max-width: 22ch; }
 .lede { max-width: 62ch; font-size: 1.2rem; color: var(--ink-soft); }
-.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 6px; }
+.status { max-width: 62ch; color: var(--ink-dim); font-size: 0.98rem; }
 
-.hero .hero-shot { margin-top: 56px; }
+.hero .hero-shot { margin-top: 48px; }
 
 /* ---------- screenshots ---------- */
 
@@ -215,17 +181,14 @@ p { margin: 0; text-wrap: pretty; }
 .feature-copy > p { color: var(--ink-soft); font-size: 1.08rem; }
 
 .ticks { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 10px; }
-.ticks li { position: relative; padding-left: 28px; color: var(--ink-soft); }
+.ticks li { position: relative; padding-left: 22px; color: var(--ink-soft); }
 .ticks li::before {
   content: '';
   position: absolute;
   left: 2px;
-  top: 0.5em;
-  width: 12px;
-  height: 7px;
-  border-left: 2px solid var(--decision);
-  border-bottom: 2px solid var(--decision);
-  transform: rotate(-45deg);
+  top: 0.78em;
+  width: 10px;
+  border-top: 1.5px dashed var(--thread);
 }
 
 .tablet-row { grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); }
@@ -277,7 +240,8 @@ p { margin: 0; text-wrap: pretty; }
 /* ---------- more ---------- */
 
 .more { padding: 112px 0 0; }
-.also { max-width: 880px; margin-inline: auto; margin-top: 48px; border-top: 1.5px dashed var(--thread); }
+.more-intro { color: var(--ink-soft); margin-top: 14px; }
+.also { max-width: 880px; margin-inline: auto; margin-top: 36px; border-top: 1.5px dashed var(--thread); }
 .also > div { grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); padding: 20px 0; }
 
 /* ---------- host ---------- */
@@ -336,7 +300,6 @@ p { margin: 0; text-wrap: pretty; }
   .nav li:not(:last-child) { display: none; }
   .brand img { height: 32px; }
   .hero { padding-top: 56px; }
-  .btn { height: 48px; padding: 0 20px; font-size: 1.08rem; }
   .modes > div, .also > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .feature, .more, .host, .xmage { padding-top: 72px; }
   .career { margin-top: 80px; padding: 72px 0; }
@@ -346,5 +309,4 @@ p { margin: 0; text-wrap: pretty; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .btn { transition: none; }
 }
