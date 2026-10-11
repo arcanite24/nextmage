@@ -8,6 +8,7 @@
 const SCRYFALL_ORIGINS: readonly (readonly [origin: string, path: string])[] = [
   ['https://api.scryfall.com/', 'api/'],
   ['https://cards.scryfall.io/', 'cards/'],
+  ['https://backs.scryfall.io/', 'backs/'],
 ];
 
 /** The proxy prefix of this build (VITE_IMAGE_PROXY, e.g. "/img"), or undefined to talk to Scryfall directly. */
@@ -17,7 +18,7 @@ export function configuredImageProxy(): string | undefined {
 }
 
 /**
- * The link to use for a Scryfall API or CDN link: `${proxy}/api/...` or `${proxy}/cards/...` when a proxy is set,
+ * The link to use for a Scryfall API or CDN link: `${proxy}/api/...`, `${proxy}/cards/...` or `${proxy}/backs/...` when a proxy is set,
  * the link itself otherwise. Links to anything else (and malformed ones) come back unchanged.
  */
 export function proxiedScryfallUrl(url: string, proxy: string | undefined): string {

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
+import { CARD_BACKS } from '../ui/cardBack';
 import { CAREER_SLEEVES } from '../ui/sleeveArt';
 import type { ArtKind, RewardArt } from './careerArt';
 import { SCHOOL_CRESTS } from './careerModesModel';
@@ -31,5 +32,11 @@ describe('painted art', () => {
     expect(['W', 'U', 'B', 'R', 'G', 'C', 'M'].filter((id) => !spec('crest').includes(id))).toEqual([]);
     expect(['W', 'U', 'B', 'R', 'G', 'C'].flatMap((letter) => [letter, `${letter}-boss`]).filter((id) => !spec('portrait').includes(id))).toEqual([]);
     expect(REWARDS.filter((id) => !spec('reward').includes(id))).toEqual([]);
+  });
+
+  test('every card back has its spec item and picture', () => {
+    const backs: string[] = read('art/specs/cardback.json').items.map((item: { id: string }) => item.id);
+    expect([...CARD_BACKS].sort()).toEqual([...backs].sort());
+    expect(backs.filter((id) => !existsSync(new URL(`public/card-back/${id}.webp`, client)))).toEqual([]);
   });
 });

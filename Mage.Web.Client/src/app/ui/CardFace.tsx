@@ -6,6 +6,7 @@ import type { CardFace as Face, CardImageRef, ImageSize } from '../../core/image
 import type { CardType, SubType } from '../../protocol/generated/views';
 import { useT } from '../i18n';
 import { ManaCost } from './ManaCost';
+import { cardBackOf } from './cardBack';
 import { sleeveBackOf } from './sleeveArt';
 import { useSettings } from '../stores/settings';
 import styles from './CardFace.module.css';
@@ -92,10 +93,11 @@ export function CardFace({ card, face = 'front', size = 'normal', sleeve, hidden
   );
 }
 
-/** The back: a Career sleeve's painted back (unless painted art is off), or our own printed weave. */
+/** The back: a Career sleeve's painted back, the chosen back (Playmat's or the classic one), or the printed weave (see cardBackOf). */
 function CardBack({ sleeve, label }: { sleeve: string | undefined; label: string }) {
-  const painted = useSettings((state) => state.settings.paintedArt);
-  const art = painted ? sleeveBackOf(sleeve) : null;
+  const paintedArt = useSettings((state) => state.settings.paintedArt);
+  const back = useSettings((state) => state.settings.cardBack);
+  const art = cardBackOf(sleeveBackOf(sleeve), { paintedArt, back });
   return (
     <div
       className={styles.back}

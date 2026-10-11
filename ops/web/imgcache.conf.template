@@ -3,6 +3,7 @@
 # ${IMGCACHE_*} variables from the environment (docker-compose.yml gives every one a default).
 #
 #   /img/cards/...  -> https://cards.scryfall.io/...   card pictures, cached 30 days
+#   /img/backs/...  -> https://backs.scryfall.io/...   card backs (the classic back setting), cached 30 days
 #   /img/api/...    -> https://api.scryfall.com/...    GET lookups (and image redirects), cached 24 hours
 #   POST /img/api/cards/collection                      batch lookups, cached 24 hours keyed on the request body
 #
@@ -78,15 +79,15 @@ server {
         return 200 "ok\n";
     }
 
-    # card pictures from the CDN (no rate limit upstream)
-    location /img/cards/ {
+    # card pictures and card backs from the CDNs (no rate limit upstream)
+    location ~ ^/img/(cards|backs)/ {
         limit_except GET { deny all; }
-        # (every set before the rewrite: "break" ends the rewrite directives)
-        set $scryfall_cdn cards.scryfall.io;
-        set $imgcache_host cards.scryfall.io;
+        # (every set before the rewrite: "break" ends the rewrite directives, and replaces $1)
+        set $scryfall_cdn $1.scryfall.io;
+        set $imgcache_host $1.scryfall.io;
         set $imgcache_accept "*/*";
         # a variable in proxy_pass re-resolves the name; the rewritten URI is passed (re-escaped) as is
-        rewrite ^/img/cards/(.*)$ /$1 break;
+        rewrite ^/img/[a-z]+/(.*)$ /$1 break;
         proxy_pass https://$scryfall_cdn;
         proxy_ssl_server_name on;
         proxy_ssl_name $scryfall_cdn;

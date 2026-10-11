@@ -97,7 +97,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `BACKUP_KEEP` | `14` | Number of backups to keep. |
 | `TZ` | `UTC` | Time zone for `BACKUP_AT`. |
 | `WS_RATE_LIMIT` / `WS_RATE_WINDOW` | `30` / `1m` | New game connections (`/ws` requests) Caddy lets one client address open per window. Over it: `429` with `Retry-After`. |
-| `IMG_API_RATE_LIMIT` / `IMG_API_RATE_WINDOW` | `300` / `1m` | Scryfall lookups (`/img/api/*`) per client address per window. Pictures (`/img/cards/*`) are not limited. |
+| `IMG_API_RATE_LIMIT` / `IMG_API_RATE_WINDOW` | `300` / `1m` | Scryfall lookups (`/img/api/*`) per client address per window. Pictures (`/img/cards/*`, `/img/backs/*`) are not limited. |
 | `IMGCACHE_IMAGES_MAX_SIZE` | `20g` | Disk cap of the picture cache. The least recently used files go first. |
 | `IMGCACHE_API_MAX_SIZE` | `1g` | Disk cap of the lookup cache. |
 | `IMGCACHE_API_RATE` / `IMGCACHE_API_BURST` | `10r/s` / `20` | Requests per second the image cache sends to `api.scryfall.com` for the whole site (cache misses only), and how many more may queue before it answers `429`. |
@@ -217,6 +217,7 @@ each picture and lookup leaves the box once instead of once per player:
 | Path | Upstream | Cached for |
 |---|---|---|
 | `/img/cards/...` | `https://cards.scryfall.io/...` (pictures) | 30 days (404s: 1 day) |
+| `/img/backs/...` | `https://backs.scryfall.io/...` (the classic card back setting) | 30 days (404s: 1 day) |
 | `/img/api/...` (GET) | `https://api.scryfall.com/...` (per-card image links, which redirect to `/img/cards/...`) | 24 hours (404s: 1 hour) |
 | `/img/api/cards/collection` (POST) | batch lookups of up to 75 printings, keyed on the request body | 24 hours |
 

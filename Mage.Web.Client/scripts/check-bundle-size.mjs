@@ -45,10 +45,11 @@ import { gzipSync } from 'node:zlib';
 // app raised 2026-10-09 from 438 kB for the painted art (the Art component and its fallbacks, the painted-art setting,
 // keyword effects on permanents, the pack showcase and peek, the card picker filter); the pictures themselves are in
 // public/ and not counted, measured 438.2 kB
+// app raised 2026-10-11 to 443 kB for the card back picker (its 17 choices named in English and Spanish), measured 442.1 kB
 const BUDGET_KB = {
   entry: 69,
   initial: 212,
-  app: 442,
+  app: 443,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

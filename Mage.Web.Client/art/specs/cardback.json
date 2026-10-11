@@ -1,0 +1,82 @@
+{
+  "$comment": "Playmat's card backs (CARD_BACKS in src/app/ui/cardBack.ts): the player picks one in Settings > Playmat; it shows on every hidden card that has no Career sleeve back. Brown like a classic card back, so a hidden card never melts into the green cloth. After drawing, run `python3 art/fit_cards.py public/card-back/*.webp` to fit each back to the full card.",
+  "out": "public/card-back",
+  "grid": {
+    "cols": 4,
+    "rows": 2,
+    "canvas": "landscape"
+  },
+  "size": "360x504",
+  "pad": 0.0,
+  "anchors": [
+    "refs/sleeve/anchor.png"
+  ],
+  "style": "Card backs: one upright card back per cell, front view, perfectly flat and symmetrical (mirror-symmetric left to right, and top to bottom where the design allows, since the back is seen upside down across the table), all the same 5:7 rectangle with slightly rounded corners and straight edges; nothing sticks out past the card's edge. The whole card is ONE flat solid field of warm dark leather-brown accent ink #5a3a22 (printed like a solid letterpress block, with its speckle), with every design element printed in ivory ink on it. Each cell is a DIFFERENT design from one family of card backs for the same game: it must read as a premium, quiet, original card back, never as any existing trading card game's back, so no oval frame around a logo, no five coloured dots, no banner with a word. Each card fills about 90% of its cell's height.",
+  "spare": "a card back with a thin ivory border and one small ivory diamond in the centre",
+  "items": [
+    {
+      "id": "stitch-hand",
+      "subject": "a dashed ivory stitched border inset from the edge, like sewn playmat edging, and in the centre a small fan of three blank cards"
+    },
+    {
+      "id": "rosette",
+      "subject": "a double thin ivory border, and in the centre a large symmetrical rosette of overlapping petals with a carved hollow heart"
+    },
+    {
+      "id": "woven",
+      "subject": "the whole field covered in a fine woven basket-weave texture of ivory lines, with a plain dark oval-free diamond window in the centre holding a single small card silhouette"
+    },
+    {
+      "id": "stitched-rings",
+      "subject": "three concentric dashed ivory stitched rings in the centre around a four-pointed spark, with a thin solid border"
+    },
+    {
+      "id": "sunburst",
+      "subject": "art deco: fine ivory rays bursting from the centre to every edge, a small solid ivory circle at the centre, a stepped deco border"
+    },
+    {
+      "id": "deck-stack",
+      "subject": "a thin border, and in the centre a neat stack of cards seen square-on, tied with a ribbon knotted in a bow"
+    },
+    {
+      "id": "rings-five",
+      "subject": "a thin border, and in the centre five interlocking hollow rings arranged in a circle, all ivory, forming a knot"
+    },
+    {
+      "id": "die-laurel",
+      "subject": "a thin border, and in the centre a twenty-sided die seen face-on inside an open laurel wreath, the die's faces carved as lines with no numbers"
+    },
+    {
+      "id": "quiet",
+      "subject": "minimal: a double thin ivory border with small square corner ornaments, and a single small ivory diamond in the centre, almost all of the card left as plain green field"
+    },
+    {
+      "id": "damask",
+      "subject": "the whole field tiled with a small repeating ivory damask pattern of diamonds and fleurons, inside a thin plain border, no centre emblem"
+    },
+    {
+      "id": "world-tree",
+      "subject": "a thin border, and in the centre a tree whose branches above and roots below mirror each other into a circle"
+    },
+    {
+      "id": "moon-peaks",
+      "subject": "a thin border, and in the centre a crescent moon over a row of three mountain peaks, mirrored as a reflection below as if in a still lake"
+    },
+    {
+      "id": "labyrinth",
+      "subject": "a thin border, and in the centre a square labyrinth maze pattern of ivory lines with a small solid square at its heart"
+    },
+    {
+      "id": "orrery",
+      "subject": "a thin border, and in the centre a celestial orrery: a small sun with three crossing elliptical orbit rings, each with a small planet, and a few scattered stars on the field"
+    },
+    {
+      "id": "knotwork",
+      "subject": "a wide ornamental interlaced knotwork border running all around the card, and a plain empty green centre"
+    },
+    {
+      "id": "lantern",
+      "subject": "a thin border, and in the centre a hanging lantern with a carved flame inside, mirrored by its hook above and tassel below"
+    }
+  ]
+}
