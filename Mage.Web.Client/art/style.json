@@ -1,6 +1,8 @@
 {
   "$comment": "The house style every generated asset shares. generate.mjs puts `global` into every prompt and passes `anchors` (plus the type's own anchors) as reference images, so a new batch of any type matches what's already in the app.",
-  "global": "Hand-painted fantasy game art in the style of a premium digital card game: rich but restrained painterly rendering, crisp readable silhouettes, warm antique gold metal with soft specular highlights, deep jewel-tone accents (emerald, ruby, sapphire, amethyst), aged parchment and dark leather as secondary materials. One soft warm key light from the upper left, a faint cool rim light, gentle ambient occlusion. Cohesive, slightly desaturated palette that sits on a dark green-black table. No text, letters, numbers, runes that read as text, signatures, logos or watermarks.",
+  "global": "LETTERPRESS print, like a metal-type or photopolymer plate pressed onto a dark playmat: every subject is a bold, flat, graphic pictogram printed in ivory ink (#e9e4d6), with inner detail carved out as knocked-out negative space (the dark ground showing through as transparency) rather than drawn in another colour. Crisp but slightly irregular edges with the ink squash of a press, a fine speckle where the ink coverage is uneven, solid areas with no gradients. Front or flat side view, no perspective shading, no light, no shadows, no gloss, no bevels, no metal or gem rendering. A second ink is used only when this set's style allows one, printed as a flat solid area with the same speckle, never mixed or shaded. Material and colour words in a subject describe what the thing is (a gold hilt, a ruby drop), not how to colour it: carve them as shapes in ivory. Confident, simple shapes that read at 32 pixels. No text, letters, numbers, runes that read as text, signatures, logos or watermarks.",
   "background": "#1b2a24",
-  "anchors": ["refs/house/anchor.png"]
+  "anchors": [
+    "refs/house/anchor.png"
+  ]
 }

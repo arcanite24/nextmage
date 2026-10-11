@@ -15,6 +15,10 @@
  * --force or --only says otherwise; spare cells (a grid not filled by items) get the spec's `spare` subject and are
  * thrown away. Grids are kept in art/.grids (git-ignored) with what was asked, so any of them can be re-cut.
  *
+ * The house style is letterpress: ivory ink pictograms, with one flat accent ink only where colour means something
+ * (rarity, mana, a sleeve's dye). A single-ink type names its `ink` in the spec, so a grid that comes back on the
+ * flat magenta key instead of transparency is keyed exactly (no pink fringe in the carved lines).
+ *
  * Needs the Codex CLI signed in with image generation (ART_MODEL, default gpt-5.6-sol), python3 with Pillow,
  * numpy and scipy.
  */
@@ -107,6 +111,7 @@ async function slice(spec, grid) {
     grid, '--cols', String(cols), '--rows', String(rows), '--ids', batch.ids.join(','), '--out', join(CLIENT, spec.out),
     '--size', spec.size, '--pad', String(spec.pad ?? 0.06), '--align', spec.align ?? 'center',
     '--bg', '#ff00ff', '--sheet', grid.replace(/\.png$/, '.sheet.jpg'),
+    ...(spec.ink ? ['--ink', spec.ink] : []),
   ]);
 }
 
