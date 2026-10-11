@@ -11,11 +11,17 @@ interface PictureCachePlugin {
   clear(): Promise<void>;
 }
 
-let plugin: Promise<PictureCachePlugin> | null = null;
+/**
+ * The plugin, boxed: Capacitor's plugin object answers every property as a native method, `then` included, so a
+ * promise resolved with it would call PictureCache.then() on the device and reject.
+ */
+let plugin: Promise<{ cache: PictureCachePlugin }> | null = null;
 
-function pictureCache(): Promise<PictureCachePlugin> {
-  plugin ??= import('@capacitor/core').then(({ registerPlugin }) => registerPlugin<PictureCachePlugin>('PictureCache'));
-  return plugin;
+/** Runs `call` with the plugin; the plugin itself never resolves a promise (see above). */
+async function withPictureCache<T>(call: (cache: PictureCachePlugin) => Promise<T>): Promise<T> {
+  plugin ??= import('@capacitor/core').then(({ registerPlugin }) => ({ cache: registerPlugin<PictureCachePlugin>('PictureCache') }));
+  const { cache } = await plugin;
+  return call(cache);
 }
 
 const queued = new Set<string>();
@@ -36,17 +42,17 @@ export function storePictures(urls: Iterable<string>): void {
     const batch = [...queued];
     queued.clear();
     for (const url of batch) sent.add(url);
-    void pictureCache().then((cache) => cache.prefetch({ urls: batch })).catch(() => undefined);
+    void withPictureCache((cache) => cache.prefetch({ urls: batch })).catch(() => undefined);
   }, 100);
 }
 
 export async function pictureStoreStats(): Promise<{ files: number; bytes: number } | null> {
   if (!NATIVE_APP) return null;
-  return (await pictureCache()).stats();
+  return withPictureCache((cache) => cache.stats());
 }
 
 export async function clearPictureStore(): Promise<void> {
   if (!NATIVE_APP) return;
   sent.clear();
-  await (await pictureCache()).clear();
+  await withPictureCache((cache) => cache.clear());
 }
