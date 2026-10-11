@@ -1,87 +1,124 @@
-# XMage — Magic, Another Game Engine
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/playmat-logo.svg">
+    <img alt="Playmat" src="brand/playmat-logo-light.svg" width="440">
+  </picture>
+</p>
 
-[![Build Status](https://github.com/magefree/mage/actions/workflows/maven.yml/badge.svg)](https://github.com/magefree/mage/actions/workflows/maven.yml)
-[![Latest release](https://img.shields.io/github/v/release/magefree/mage)](https://github.com/magefree/mage/releases/)
-[![Commits since latest release](https://img.shields.io/github/commits-since/magefree/mage/latest)](https://github.com/magefree/mage/commits/)
+<p align="center">
+  <b>Magic in your browser, on your own server.</b><br>
+  An Arena-style client for the XMage rules engine: every card, any format, against your friends or the AI.
+</p>
 
-XMage is a full rules-enforcement engine for playing Magic against other players or computer AI,
-online or on your own server. It supports over **32 000** unique cards and more than 91 000 reprints across official sets, plus custom sets like Star Wars.
+<p align="center">
+  <a href="https://arcanite24.github.io/playmat/">Website</a> ·
+  <a href="#host-your-own-table">Host a server</a> ·
+  <a href="#run-it-locally">Run it locally</a> ·
+  <a href="docs/WebSocketAPI.md">WebSocket API</a>
+</p>
 
-Local server supports a [special test mode](https://github.com/magefree/mage/wiki/Development-Testing-Tools) for testing combos and other game situations with pre-defined conditions.
+<p align="center">
+  <a href="https://github.com/arcanite24/playmat/actions/workflows/web-client.yml"><img alt="Web client" src="https://github.com/arcanite24/playmat/actions/workflows/web-client.yml/badge.svg"></a>
+  <a href="LICENSE.txt"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-f0b13d"></a>
+  <img alt="Built on XMage" src="https://img.shields.io/badge/engine-XMage-3a5a51">
+</p>
 
-There are public servers where you can play XMage against other players.
-You can also host your own server to play against the AI and/or your friends — including fully offline, with no internet connection required.
+![A game against the AI in Playmat](site/assets/screens/match.webp)
 
-XMage community and resources:
-* [Official XMage support and feature request on github](https://github.com/magefree/mage/issues);
-* [Reddit XMage group](https://www.reddit.com/r/XMage/);
-* [Reddit XMage discord channel](https://discord.gg/Pqf42yn);
-* [Latest news](https://jaydi85.github.io/xmage-web-news/news.html);
-* [Latest releases](https://github.com/magefree/mage/releases);
-* [Project documentation](https://github.com/magefree/mage/wiki).
+## What it is
 
-Official public server with released version:
-* https://xmage.today/
+[XMage](https://github.com/magefree/mage) has the most complete open-source rules engine for Magic: over 32,000 cards,
+every format, AI opponents, drafts and tournaments. Its desktop client still looks and plays like 2010.
 
-Other servers and status:
-* https://xmage.today/servers/ (temporarily out of service)
+Playmat is a fork of XMage. It adds a WebSocket bridge to the server and a new browser client built around how people
+play today: Arena-style interaction with its own look, a printed neoprene mat with ivory ink and one amber button for
+the decision in front of you. The engine stays XMage, merged from upstream every month, so every card it supports
+works here.
 
 ## Features
 
-* The most tested open-source rules enforcement engine: ~9000 unit tests, ~80% coverage;
-* Cross-platform support: Windows, Linux, MacOS;
-* Two-player duels or multiplayer games (Commander and others) with up to 10 players;
-* Drafts, tournaments and single games with sideboarding supported;
-* Smart and fast AI opponents for both games and draft/deck-building;
-* Cheat-proof by design: all rules and hidden information are enforced server-side — clients never see or act on data they're not authorized to;
-* Deck editor (support deck import from multiple apps and services);
-* Players rating system (Glicko);
-* Supports dozens of formats and game modes like Commander, Oathbreaker, Cube, Tiny Leaders, Super Standard, Historic Standard and more;
-* Single matches or tournaments supported (elimination or swiss type handling), which can be played with up to 16 players;
+- **One click to a game.** Pick a deck and play the AI, or send a friend an invite link. Practice mode gives you a
+  goldfish opponent and tools to put any card in hand or on the battlefield.
+- **A board you can read mid-combat.** Attack arrows, a visible stack, clear priority and smart auto-pass with stops
+  you control, and keyboard shortcuts for passing and answering.
+- **Bring your decks.** A deck builder with full card search, and an import sheet that takes a link from Archidekt,
+  Moxfield and other deck sites, a pasted list or a `.dck` file. Starter decks are there from the first sign-in,
+  Commander ones included.
+- **Events.** Booster draft, sealed, Jumpstart and constructed tournaments. Empty seats fill with AI players.
+- **Career.** A single-player journey: five colour campaigns with a boss at the end of each, an Academy with a school
+  for every format, puzzles, a gauntlet, sealed and draft runs, a weekly challenge, booster packs to open, a collection
+  to craft into and 61 achievements, all with painted art.
+- **Social.** Lobby chat, players online, profiles, a table browser, spectating, match history and replays.
+- **Everywhere you play.** Desktop browsers, tablets, an installable web app and an Android app that keeps card
+  pictures on the device. English and Spanish.
+- **Yours to host.** One Docker Compose stack: the server, Caddy with automatic HTTPS, a Scryfall picture cache,
+  nightly backups and Discord notifications.
 
-## Bug report / feature request
+<table>
+  <tr>
+    <td><img alt="Home: pick a deck and play" src="site/assets/screens/home.webp"></td>
+    <td><img alt="The deck builder" src="site/assets/screens/deck-builder.webp"></td>
+  </tr>
+  <tr>
+    <td><img alt="Career hub" src="site/assets/screens/career.webp"></td>
+    <td><img alt="Opening a booster pack" src="site/assets/screens/pack.webp"></td>
+  </tr>
+</table>
 
-The best way to report bug or feature request is [github's issues page](https://github.com/magefree/mage/issues).
+## Host your own table
 
-## Installation / running
+You need Docker and a machine your players can reach.
 
-* Download files and follow install instructions on https://xmage.today/
-* You need to have [Java version 8 or later](https://java.com/) to run launcher;
-* Recommended folder to unpack/install: `D:\games\xmage` (don't use Program Files or Download folders);
-* If you want to play with AI opponents then must run "server" app via the launcher and connect to it via localhost;
+```bash
+cp ops/web/.env.example ops/web/.env      # set DOMAIN, XMAGE_ADMIN_PASSWORD, XMAGE_AUTH
+docker compose -f ops/web/docker-compose.yml up -d --build
+```
 
-[Wiki page](https://github.com/magefree/mage/wiki) contains detailed information about private or public server setup, developer onboarding and other useful things
+Players open `https://<your domain>` and sign in. The first build compiles the card database, which takes a while.
+[ops/web/README.md](ops/web/README.md) covers private LAN servers, running behind another reverse proxy, every setting,
+accounts and moderation, Discord notifications, backups and capacity.
 
-## Troubleshooting / FAQ
+## Run it locally
 
-Github issues page contain [popular problems and fixes](https://github.com/magefree/mage/issues?q=is%3Aissue+label%3AFAQ+):
-* [Any: program freezes on startup (white/blue/black screen)](https://github.com/magefree/mage/issues/4461#issuecomment-361108597);
-* [Any: can't download images or it stops after some time](https://www.reddit.com/r/XMage/comments/agmcjf/new_xmage_release_with_ravnica_allegiance_rna/);
-* [Any: can't run client, could not open ...jvm.cfg](https://github.com/magefree/mage/issues/1272#issuecomment-529789018);
-* [Any: no texts or small buttons in launcher](https://github.com/magefree/mage/issues/4126);
-* [Windows: ugly cards, buttons or other GUI drawing artifacts](https://github.com/magefree/mage/issues/4626#issuecomment-374640070);
-* [Windows: pixilated images, icons and texts](https://github.com/magefree/mage/issues/12768#issuecomment-2347125602);
-* [MacOS: can't open launcher](https://www.reddit.com/r/XMage/comments/1u2ezx6/comment/or38wjd/);
-* [MacOS: can't run on M1/M2](https://github.com/magefree/mage/issues/8406#issuecomment-1011720728);
-* [MacOS: client freezes in GUI (on connect dialog, on new match)](https://github.com/magefree/mage/issues/4920#issuecomment-517944308);
-* [Linux: run on non-standard OS or hardware like Raspberry Pi](https://github.com/magefree/mage/issues/11611#issuecomment-1879385151);
-* [Linux: ugly GUI and drawing artifacts](https://github.com/magefree/mage/issues/11611#issuecomment-1879396921);
+Requirements: JDK 17 or later, Maven, and the Node.js version in [`Mage.Web.Client/.nvmrc`](Mage.Web.Client/.nvmrc).
 
-## Performance tweaks
+```bash
+# 1. build the server (a few minutes the first time)
+mvn -T 1C -pl '!Mage.Client,!Mage.Server.Console,!Mage.Tests,!Mage.Verify,!Mage.Reports' install -DskipTests
 
-The main way to increase performance or fix micro-freezes -- increase max memory usage by special java flag:
-1. Run launcher -> Settings -> Java tab -> Client java options text field;
-2. Add or change existing flag to ` -Xmx3000m` or another value based on your free memory stats (recommended settings: 2000m for 1080p desktop, 3000m for 4k desktop). It's useless to give 5+ GB memory;
-3. If you play many AI games then it's recommended to change Server java options with same value too;
+# 2. start it: the WebSocket bridge listens on ws://localhost:17172
+cd Mage.Server/release
+mvn -f ../../pom.xml -pl Mage.Server -Dexec.mainClass=mage.server.Main exec:java
 
-## Development
+# 3. in another terminal, start the client on http://localhost:5173
+cd Mage.Web.Client
+npm ci
+npm run dev
+```
 
-Full project documentation and instructions for developers can be found in [wiki pages](https://github.com/magefree/mage/wiki/).
+Sign in with any name. The client's own guide, [Mage.Web.Client/README.md](Mage.Web.Client/README.md), covers its
+architecture, tests and the Android build (`npm run android`).
 
-First steps for XMage's developers:
-* [Setting up your Development Environment](https://github.com/magefree/mage/wiki/Setting-up-your-Development-Environment)
-* [Development Testing Tools](https://github.com/magefree/mage/wiki/Development-Testing-Tools)
-* [Development Workflow](https://github.com/magefree/mage/wiki/Development-Workflow)
-* [Development HOWTO Guides](https://github.com/magefree/mage/wiki/Development-HOWTO-Guides)
+## Repository map
 
-[Torch icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/torch)
+| Path | What lives there |
+|---|---|
+| [`Mage.Web.Client`](Mage.Web.Client) | The Playmat client: React 19, TypeScript, Vite. Product brief in [PRODUCT.md](Mage.Web.Client/PRODUCT.md), design system in [DESIGN.md](Mage.Web.Client/DESIGN.md). |
+| [`Mage.Server`](Mage.Server) | XMage's server, plus the JSON-RPC WebSocket bridge and Career services (`src/main/java/mage/server/websocket`, `.../career`). |
+| [`ops/web`](ops/web) | The Docker Compose deployment kit. |
+| [`docs`](docs) | The WebSocket API, data models and the upstream merge recipe. |
+| [`brand`](brand) | The Playmat logo, generated from the app's typeface by `build_logo.py`. |
+| [`site`](site) | The project website, published to GitHub Pages. |
+| Everything else | XMage: the rules engine, card implementations, AI, tests and the original desktop client. |
+
+## Credits
+
+Playmat stands on XMage and the many people who have built it since 2010: the rules engine, tens of thousands of card
+implementations and the AI are their work. Card and rules bugs usually live in the engine; XMage's
+[issue tracker](https://github.com/magefree/mage/issues) and [wiki](https://github.com/magefree/mage/wiki) are the
+places for those. Card pictures and data come from [Scryfall](https://scryfall.com).
+
+Released under the [MIT License](LICENSE.txt), like XMage.
+
+Playmat is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions
+of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
