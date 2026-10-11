@@ -148,7 +148,7 @@ export function toUserData(settings: PlaySettings, fullControl = false): UserDat
     groupId: 0,
     avatarId: settings.avatarId,
     allowRequestShowHandCards: settings.allowHandRequests,
-    userSkipPrioritySteps: serverStops(settings.stops, fullControl),
+    userSkipPrioritySteps: serverStops(settings.stops, fullControl, settings.autoPass),
     flagName: `${settings.flag || 'world'}.png`,
     askMoveToGraveOrder: false,
     manaPoolAutomatic: settings.autoPayMana,
