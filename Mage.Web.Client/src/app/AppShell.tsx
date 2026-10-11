@@ -1,8 +1,10 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { IdCard, Info, LogOut, Settings, WifiOff } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { IdCard, Info, LogOut, Settings, ShieldCheck, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { NavLink, Outlet, useMatch, useNavigate } from 'react-router-dom';
 import { APP_NAME } from './brand';
+import { api } from './connection';
 import { useT, type MessageKey } from './i18n';
 import { Avatar } from './social/Avatar';
 import { LobbyButton } from './social/LobbyButton';
@@ -66,6 +68,8 @@ export function AppShell() {
   // Career is a game mode: its screens fill the mat under their own header
   const immersive = useMatch('/career/*') !== null;
   const t = useT();
+  // staff get Admin in the account menu; the role is checked again on every admin action
+  const staff = useQuery({ queryKey: ['staffMe', userName], queryFn: () => api.staffMe(), enabled: connection === 'open', staleTime: 5 * 60_000 });
 
   return (
     <div className={[styles.mat, immersive ? styles.immersive : ''].join(' ')}>
@@ -110,6 +114,11 @@ export function AppShell() {
                   <DropdownMenu.Item className={styles.menuItem} onSelect={() => setSettingsOpen(true)}>
                     <Settings size={16} aria-hidden="true" /> {t('shell.settings')}
                   </DropdownMenu.Item>
+                  {staff.data?.role && (
+                    <DropdownMenu.Item className={styles.menuItem} onSelect={() => navigate('/admin')}>
+                      <ShieldCheck size={16} aria-hidden="true" /> {t('shell.admin')}
+                    </DropdownMenu.Item>
+                  )}
                   <DropdownMenu.Item className={styles.menuItem} onSelect={() => navigate('/about')}>
                     <Info size={16} aria-hidden="true" /> {t('shell.about')}
                   </DropdownMenu.Item>

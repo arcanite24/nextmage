@@ -70,7 +70,10 @@ public class WebClientApiContractTest {
             "authRememberLogin", "authForgetLogin", // remembered devices in the account database
             "adminAudit", "adminAccess", "adminAccessPreview", "adminSetAccessMode", "adminAllowAdd", "adminAllowRemovePreview",
             "adminAllowRemove", "adminInviteCreate", "adminInviteRevoke", "adminAccessDecide", "adminSetNotice", "inviteCheck",
-            "accessRequest", "githubStart", "githubFinish" // access policy and admin store (admin/AccessPolicyTest, AccessGateTest)
+            "accessRequest", "githubStart", "githubFinish", // access policy and admin store (admin/AccessPolicyTest, AccessGateTest)
+            "adminGetUsers", "adminDisconnectUser", "adminEndUserSession", "adminMuteUser", "adminLockUser", "adminActivateUser",
+            "adminToggleActivateUser", "adminTableRemove", "adminSendBroadcastMessage", // Moderation, for staff on player sessions too
+            "staffMe", "adminStaff", "adminStaffGrant", "adminStaffRevoke" // staff roles (api/StaffRolesTest)
     ));
 
     static {

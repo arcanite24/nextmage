@@ -48,3 +48,12 @@ export function formatDate(at: number): string {
   if (!at) return '';
   return new Date(at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 }
+
+export type StaffRole = 'moderator' | 'admin' | 'owner';
+
+const RANK: Record<StaffRole, number> = { moderator: 1, admin: 2, owner: 3 };
+
+/** Each role can do what the ones below it can. */
+export function atLeast(role: StaffRole | null | undefined, least: StaffRole): boolean {
+  return !!role && (RANK[role] ?? 0) >= RANK[least];
+}

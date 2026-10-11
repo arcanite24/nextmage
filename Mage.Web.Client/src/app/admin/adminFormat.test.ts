@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from 'vitest';
-import { describeAge, formatBytes, formatDuration, inviteLink, inviteState } from './adminFormat';
+import { atLeast, describeAge, formatBytes, formatDuration, inviteLink, inviteState } from './adminFormat';
 
 describe('admin formatting', () => {
   test('bytes', () => {
@@ -28,5 +28,11 @@ describe('invites', () => {
 
   it('builds the join link', () => {
     expect(inviteLink('a-b_c', 'https://play.example.com/')).toBe('https://play.example.com/join?invite=a-b_c');
+  });
+  test('staff roles rank', () => {
+    expect(atLeast('owner', 'admin')).toBe(true);
+    expect(atLeast('admin', 'admin')).toBe(true);
+    expect(atLeast('moderator', 'admin')).toBe(false);
+    expect(atLeast(null, 'moderator')).toBe(false);
   });
 });

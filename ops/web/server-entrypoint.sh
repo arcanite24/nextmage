@@ -22,7 +22,7 @@ from_file() {
     eval "$1=\$(cat \"\$file\")"
   fi
 }
-for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY XMAGE_DISCORD_WEBHOOK XMAGE_GITHUB_CLIENT_SECRET XMAGE_GITHUB_TOKEN; do
+for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY XMAGE_DISCORD_WEBHOOK XMAGE_DISCORD_STAFF_WEBHOOK XMAGE_GITHUB_CLIENT_SECRET XMAGE_GITHUB_TOKEN; do
   from_file "$secret"
 done
 
@@ -143,6 +143,9 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
   if [ -n "${XMAGE_DISCORD_WEBHOOK:-}" ]; then
     printf '"-Dxmage.discordWebhook=%s"\n' "$(printf '%s' "$XMAGE_DISCORD_WEBHOOK" | sed 's/[\\"]/\\&/g')"
   fi
+  if [ -n "${XMAGE_DISCORD_STAFF_WEBHOOK:-}" ]; then
+    printf '"-Dxmage.discordStaffWebhook=%s"\n' "$(printf '%s' "$XMAGE_DISCORD_STAFF_WEBHOOK" | sed 's/[\\"]/\\&/g')"
+  fi
   if [ -n "${XMAGE_PUBLIC_URL:-}" ]; then
     printf '"-Dxmage.publicUrl=%s"\n' "$(printf '%s' "$XMAGE_PUBLIC_URL" | sed 's/[\\"]/\\&/g')"
   fi
@@ -169,6 +172,8 @@ umask 022
 [ -n "${XMAGE_ADMIN_PASSWORD:-}" ] || echo "xmage-server: XMAGE_ADMIN_PASSWORD is not set; admin login is disabled"
 
 cd "$APP"
+# the JVM reads the argfile at start; remove it soon after so the password isn't left on disk
+( sleep 20; rm -f "$args" ) &
 # XMAGE_JAVA_OPTS: extra JVM flags, split on spaces
 # shellcheck disable=SC2086
 exec java @"$args" ${XMAGE_JAVA_OPTS:-} -jar lib/mage-server-*.jar

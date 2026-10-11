@@ -167,6 +167,21 @@ public final class AccessPolicy {
         return !owner.isEmpty() && userName != null && owner.equalsIgnoreCase(userName.trim());
     }
 
+    /**
+     * The account's staff role: the owner's is always owner. Null for players, and when the role can't be read.
+     */
+    public StaffRole roleOf(String userName) {
+        if (isOwner(userName)) {
+            return StaffRole.OWNER;
+        }
+        try {
+            return store.staffRole(userName);
+        } catch (SQLException e) {
+            logger.error("Staff list can't be read", e);
+            return null;
+        }
+    }
+
     public String notice() {
         return notice == null ? "" : notice;
     }
@@ -193,7 +208,7 @@ public final class AccessPolicy {
             return true;
         }
         try {
-            return store.isListed(userName, email) || isRepoPerson(userName);
+            return store.isListed(userName, email) || store.staffRole(userName) != null || isRepoPerson(userName);
         } catch (SQLException e) {
             logger.error("Allowlist can't be read; refusing " + userName, e);
             return false;

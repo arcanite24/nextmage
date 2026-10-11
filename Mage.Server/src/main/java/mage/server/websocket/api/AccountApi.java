@@ -6,6 +6,7 @@ import mage.server.admin.AccessPolicy;
 import mage.server.decks.DeckStore;
 import mage.server.decks.DeckSyncEntry;
 import mage.server.managers.ConfigSettings;
+import mage.server.notify.DiscordNotifier;
 import mage.server.moderation.ClientErrors;
 import mage.server.moderation.PlayerReport;
 import mage.server.moderation.ReportStore;
@@ -115,6 +116,7 @@ final class AccountApi {
                                     .orElseThrow(() -> RpcException.notAuthorized("Sign in to report a player"));
                             PlayerReport report = decks(() -> ReportStore.get().file(reporter, call.string(0), call.string(1),
                                     call.string(2), call.optString(3, null), System.currentTimeMillis()));
+                            DiscordNotifier.staff().reportFiled(reporter, call.string(0), call.string(1));
                             return report.id;
                         }),
 

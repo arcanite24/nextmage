@@ -1,46 +1,102 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Ban, LogOut, MicOff, Power, ShieldCheck, Trash2 } from 'lucide-react';
+import { ArrowLeft, Ban, KeyRound, LogOut, Mic, MicOff, Power, ShieldCheck, Trash2, Unlock } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { createApi } from '../../protocol/generated/api';
 import type { ClientError, PlayerReport, ServerStats, TableView, UserView } from '../../protocol/generated/views';
 import { RpcClient } from '../../core/rpc/RpcClient';
 import { APP_NAME } from '../brand';
+import { api as appApi } from '../connection';
 import { useSession } from '../stores/session';
 import { Button } from '../ui/Button';
 import { Field } from '../ui/Field';
 import { AccessPage } from './AccessPage';
 import { AuditPage } from './AuditPage';
-import { describeAge, formatBytes, formatDuration, MUTE_CHOICES } from './adminFormat';
+import { ConfirmAction } from './ConfirmAction';
+import { StaffPage } from './StaffPage';
+import { atLeast, describeAge, formatBytes, formatDuration, MUTE_CHOICES, type StaffRole } from './adminFormat';
 import styles from './AdminScreen.module.css';
 
-type AdminApi = ReturnType<typeof createApi>;
+export type AdminApi = ReturnType<typeof createApi>;
+
+interface StaffSession {
+  api: AdminApi;
+  role: StaffRole;
+  /** the name the audit log records */
+  actor: string;
+}
 
 /**
- * The server's admin console: who is on, what is running, reports and crash reports, and the levers (mute, lock,
- * disconnect, remove a table, broadcast). It signs in on a connection of its own with the server's admin password,
- * so an admin can stay seated as a player in another tab.
+ * The server's admin console. Staff open it on their own signed-in session (Admin in the account menu) and see the
+ * sections their role allows. The shared admin password is a break-glass key: Console sign-in opens a connection of
+ * its own as an owner, for when nobody with a role can sign in.
  */
 export function AdminScreen() {
-  const [admin, setAdmin] = useState<{ api: AdminApi; rpc: RpcClient } | null>(null);
-  useEffect(() => () => admin?.rpc.disconnect(), [admin]);
+  const phase = useSession((state) => state.phase);
+  const userName = useSession((state) => state.userName);
+  const client = useQueryClient();
+  const [console_, setConsole] = useState<{ api: AdminApi; rpc: RpcClient } | null>(null);
+  const [dropped, setDropped] = useState(false);
+  useEffect(() => () => console_?.rpc.disconnect(), [console_]);
+  // opened from a bookmark: come back on this device's remembered sign-in
+  useEffect(() => {
+    if (useSession.getState().phase === 'signedOut') void useSession.getState().resume();
+  }, []);
+  const me = useQuery({
+    queryKey: ['staffMe', userName],
+    queryFn: () => appApi.staffMe(),
+    enabled: phase === 'signedIn',
+    staleTime: 60_000,
+  });
+
+  function endConsole() {
+    setConsole(null);
+    client.removeQueries({ queryKey: ['admin'] });
+    // the console may have changed our own role
+    void client.invalidateQueries({ queryKey: ['staffMe'] });
+  }
+
+  const staff: StaffSession | null = console_
+    ? { api: console_.api, role: 'owner', actor: 'console' }
+    : phase === 'signedIn' && me.data?.role ? { api: appApi, role: me.data.role as StaffRole, actor: me.data.actor ?? userName } : null;
+
   return (
     <main className={styles.page}>
       <header className={styles.head}>
         <Link to="/" className={styles.back}><ArrowLeft size={16} aria-hidden="true" /> {APP_NAME}</Link>
         <h1 className={styles.title}>Server admin</h1>
-        {admin && (
-          <Button size="sm" variant="quiet" icon={<LogOut size={15} />} onClick={() => setAdmin(null)}>Sign out</Button>
+        {staff && <span className={styles.who}>{staff.actor} · {staff.role}</span>}
+        {console_ && (
+          <Button size="sm" variant="quiet" icon={<LogOut size={15} />} onClick={endConsole}>Leave console</Button>
         )}
       </header>
-      {admin ? <Console api={admin.api} /> : <AdminSignIn onSignedIn={setAdmin} />}
+      {staff
+        ? <Console key={staff.actor} staff={staff} />
+        : (
+          <div className={styles.signIn}>
+            {phase === 'signingIn' || me.isLoading ? <p className={styles.quiet}>Checking your role…</p>
+              : phase !== 'signedIn' ? <p className={styles.lede}>Sign in with your staff account, then open Admin from the account menu. <Link to="/login" state={{ from: '/admin' }}>Sign in</Link></p>
+                : <p className={styles.lede}>{userName} has no staff role on this server. The owner gives roles from Admin, Staff.</p>}
+            {me.error && <p className={styles.error}>{String(me.error)}</p>}
+            {dropped && <p className={styles.error} role="alert">The console connection dropped. Sign in again.</p>}
+            <ConsoleSignIn onSignedIn={(next) => {
+              setDropped(false);
+              next.rpc.onSessionStart(() => {
+                // a new connection is a new session without the console: the password isn't kept to sign in again
+                setDropped(true);
+                endConsole();
+              });
+              setConsole(next);
+            }} />
+          </div>
+        )}
     </main>
   );
 }
 
-function AdminSignIn({ onSignedIn }: { onSignedIn(admin: { api: AdminApi; rpc: RpcClient }): void }) {
-  const [serverUrl, setServerUrl] = useState(useSession.getState().serverUrl);
+function ConsoleSignIn({ onSignedIn }: { onSignedIn(admin: { api: AdminApi; rpc: RpcClient }): void }) {
+  const serverUrl = useSession((state) => state.serverUrl);
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -52,13 +108,10 @@ function AdminSignIn({ onSignedIn }: { onSignedIn(admin: { api: AdminApi; rpc: R
     const rpc = new RpcClient();
     const api = createApi(rpc);
     try {
-      await rpc.connect(serverUrl.trim());
+      await rpc.connect(serverUrl);
       const ok = await api.connectAdmin(password);
       if (!ok) throw new Error('The server refused the admin password.');
-      // a dropped connection comes back as a new session: sign in again with the password kept in memory
-      rpc.onSessionStart(() => {
-        api.connectAdmin(password).catch(() => undefined);
-      });
+      setPassword('');
       onSignedIn({ api, rpc });
     } catch (caught) {
       rpc.disconnect();
@@ -69,37 +122,57 @@ function AdminSignIn({ onSignedIn }: { onSignedIn(admin: { api: AdminApi; rpc: R
   }
 
   return (
-    <form className={styles.signIn} onSubmit={submit}>
-      <p className={styles.lede}>Sign in with the server's admin password (XMAGE_ADMIN_PASSWORD). Wrong passwords slow further tries down.</p>
-      <Field label="Server address" value={serverUrl} onChange={(event) => setServerUrl(event.target.value)} spellCheck={false} />
-      <Field label="Admin password" type="password" value={password} autoComplete="current-password" autoFocus
-        onChange={(event) => setPassword(event.target.value)} required />
-      {error && <p className={styles.error} role="alert">{error}</p>}
-      <Button type="submit" variant="decision" busy={busy} disabled={!password}>Sign in</Button>
-    </form>
+    <details className={styles.breakGlass}>
+      <summary><KeyRound size={15} aria-hidden="true" /> Console sign-in</summary>
+      <form className={styles.signIn} onSubmit={submit}>
+        <p className={styles.quiet}>For when no owner can sign in: the server's admin password (XMAGE_ADMIN_PASSWORD) opens the console as an owner on its own connection. Wrong passwords slow further tries down.</p>
+        <Field label="Admin password" type="password" value={password} autoComplete="current-password"
+          onChange={(event) => setPassword(event.target.value)} required />
+        {error && <p className={styles.error} role="alert">{error}</p>}
+        <Button type="submit" variant="decision" busy={busy} disabled={!password}>Open the console</Button>
+      </form>
+    </details>
   );
 }
 
-function Console({ api }: { api: AdminApi }) {
+const SECTIONS: { id: string; label: string; role: StaffRole }[] = [
+  { id: 'overview', label: 'Overview', role: 'moderator' },
+  { id: 'players', label: 'Players', role: 'moderator' },
+  { id: 'reports', label: 'Reports', role: 'moderator' },
+  { id: 'tables', label: 'Tables', role: 'admin' },
+  { id: 'broadcast', label: 'Broadcast', role: 'admin' },
+  { id: 'access', label: 'Access', role: 'admin' },
+  { id: 'staff', label: 'Staff', role: 'owner' },
+  { id: 'errors', label: 'Client errors', role: 'moderator' },
+  { id: 'audit', label: 'Audit', role: 'moderator' },
+];
+
+function Console({ staff }: { staff: StaffSession }) {
+  const { api, role } = staff;
+  const sections = SECTIONS.filter((section) => atLeast(role, section.role));
+  const fromHash = window.location.hash.slice(1);
+  const [section, setSection] = useState(sections.some((s) => s.id === fromHash) ? fromHash : 'overview');
+  function choose(next: string) {
+    setSection(next);
+    window.history.replaceState(null, '', `#${next}`);
+  }
   return (
-    <Tabs.Root defaultValue="overview" className={styles.tabs}>
-      <Tabs.List className={styles.tabList} aria-label="Admin sections">
-        <Tabs.Trigger value="overview" className={styles.tab}>Overview</Tabs.Trigger>
-        <Tabs.Trigger value="players" className={styles.tab}>Players</Tabs.Trigger>
-        <Tabs.Trigger value="tables" className={styles.tab}>Tables</Tabs.Trigger>
-        <Tabs.Trigger value="access" className={styles.tab}>Access</Tabs.Trigger>
-        <Tabs.Trigger value="reports" className={styles.tab}>Reports</Tabs.Trigger>
-        <Tabs.Trigger value="errors" className={styles.tab}>Client errors</Tabs.Trigger>
-        <Tabs.Trigger value="broadcast" className={styles.tab}>Broadcast</Tabs.Trigger>
-        <Tabs.Trigger value="audit" className={styles.tab}>Audit</Tabs.Trigger>
+    <Tabs.Root value={section} onValueChange={choose} orientation="vertical" className={styles.console}>
+      <Tabs.List className={styles.sideNav} aria-label="Admin sections">
+        {sections.map((s) => <Tabs.Trigger key={s.id} value={s.id} className={styles.navItem}>{s.label}</Tabs.Trigger>)}
       </Tabs.List>
       <Tabs.Content value="overview" className={styles.panel}><Overview api={api} /></Tabs.Content>
-      <Tabs.Content value="players" className={styles.panel}><Players api={api} /></Tabs.Content>
-      <Tabs.Content value="tables" className={styles.panel}><TablesPanel api={api} /></Tabs.Content>
-      <Tabs.Content value="access" className={styles.panel}><AccessPage api={api} /></Tabs.Content>
-      <Tabs.Content value="reports" className={styles.panel}><Reports api={api} /></Tabs.Content>
+      <Tabs.Content value="players" className={styles.panel}><Players api={api} role={role} /></Tabs.Content>
+      <Tabs.Content value="reports" className={styles.panel}><Reports api={api} role={role} /></Tabs.Content>
+      {atLeast(role, 'admin') && (
+        <>
+          <Tabs.Content value="tables" className={styles.panel}><TablesPanel api={api} /></Tabs.Content>
+          <Tabs.Content value="broadcast" className={styles.panel}><Broadcast api={api} /></Tabs.Content>
+          <Tabs.Content value="access" className={styles.panel}><AccessPage api={api} /></Tabs.Content>
+        </>
+      )}
+      {atLeast(role, 'owner') && <Tabs.Content value="staff" className={styles.panel}><StaffPage api={api} actor={staff.actor} /></Tabs.Content>}
       <Tabs.Content value="errors" className={styles.panel}><ClientErrors api={api} /></Tabs.Content>
-      <Tabs.Content value="broadcast" className={styles.panel}><Broadcast api={api} /></Tabs.Content>
       <Tabs.Content value="audit" className={styles.panel}><AuditPage api={api} /></Tabs.Content>
     </Tabs.Root>
   );
@@ -188,76 +261,122 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-function Players({ api }: { api: AdminApi }) {
+type PlayerAction = { kind: 'lock' | 'deactivate' | 'disconnect'; name: string; sessionId?: string };
+
+function Players({ api, role }: { api: AdminApi; role: StaffRole }) {
   const client = useQueryClient();
   const users = useQuery({ queryKey: ['admin', 'users'], queryFn: () => api.adminGetUsers(), refetchInterval: 5_000 });
   const [filter, setFilter] = useState('');
   const [minutes, setMinutes] = useState(MUTE_CHOICES[1].minutes);
+  const [pending, setPending] = useState<PlayerAction | null>(null);
+  const admin = atLeast(role, 'admin');
   const act = useMutation({
     mutationFn: (work: () => Promise<unknown>) => work(),
     onSettled: () => client.invalidateQueries({ queryKey: ['admin', 'users'] }),
   });
   const list = (users.data ?? []).filter((user: UserView) => !filter || user.userName?.toLowerCase().includes(filter.toLowerCase()));
   const now = users.dataUpdatedAt;
+  const choice = MUTE_CHOICES.find((c) => c.minutes === minutes)?.label ?? `${minutes} minutes`;
+
+  async function confirm(reason: string) {
+    if (!pending) return;
+    if (pending.kind === 'lock') await api.adminLockUser(pending.name, minutes, reason);
+    else if (pending.kind === 'deactivate') await api.adminActivateUser(pending.name, false, reason);
+    else await api.adminDisconnectUser(pending.sessionId!, reason);
+    setPending(null);
+    await client.invalidateQueries({ queryKey: ['admin', 'users'] });
+  }
+
   return (
     <div className={styles.block}>
       <div className={styles.toolbar}>
         <Field label="Find a player" value={filter} onChange={(event) => setFilter(event.target.value)} />
         <label className={styles.select}>
-          <span>Mute or lock for</span>
+          <span>{admin ? 'Mute or lock for' : 'Mute for'}</span>
           <select value={minutes} onChange={(event) => setMinutes(Number(event.target.value))}>
-            {MUTE_CHOICES.map((choice) => <option key={choice.minutes} value={choice.minutes}>{choice.label}</option>)}
+            {MUTE_CHOICES.map((c) => <option key={c.minutes} value={c.minutes}>{c.label}</option>)}
           </select>
         </label>
       </div>
+      {pending && (
+        <ConfirmAction
+          title={pending.kind === 'lock' ? `Lock ${pending.name} out` : pending.kind === 'deactivate' ? `Deactivate ${pending.name}` : `Sign ${pending.name} out`}
+          what={pending.kind === 'lock' ? `${pending.name} is signed out and can't sign in for ${choice}.`
+            : pending.kind === 'deactivate' ? `${pending.name} is signed out and can't sign in until the account is activated again.`
+              : `${pending.name} is signed out now and can sign in again straight away.`}
+          confirmLabel={pending.kind === 'lock' ? 'Lock out' : pending.kind === 'deactivate' ? 'Deactivate' : 'Sign out'}
+          onConfirm={confirm}
+          onCancel={() => setPending(null)}
+        />
+      )}
       {act.error && <p className={styles.error}>{String(act.error)}</p>}
       <table className={styles.table}>
         <thead><tr><th>Player</th><th>Address</th><th>Status</th><th>Playing</th><th>Online for</th><th><span className="visually-hidden">Actions</span></th></tr></thead>
         <tbody>
-          {list.map((user) => {
+          {list.map((user, index) => {
             const name = user.userName ?? '';
-            const muted = user.muteChatUntil && user.muteChatUntil > now;
+            const muted = !!user.muteChatUntil && user.muteChatUntil > now;
             return (
-              <tr key={user.sessionId || name}>
+              // a player who just left keeps a row without a session for a while, next to their new one
+              <tr key={user.sessionId || `${name}-${index}`}>
                 <td>{name}{muted && <span className={styles.tag}>muted</span>}</td>
                 <td>{user.host}</td>
                 <td>{user.userState}</td>
                 <td className={styles.clip}>{user.gameInfo}</td>
                 <td>{user.timeConnected ? formatDuration(now - user.timeConnected) : ''}</td>
                 <td className={styles.actions}>
-                  <Button size="sm" variant="quiet" icon={<MicOff size={14} />} title={`Mute ${name}`}
-                    onClick={() => act.mutate(() => api.adminMuteUser(name, minutes))}>Mute</Button>
-                  <Button size="sm" variant="quiet" icon={<Ban size={14} />} title={`Lock ${name} out (accounts only)`}
-                    onClick={() => act.mutate(() => api.adminLockUser(name, minutes))}>Lock</Button>
-                  <Button size="sm" variant="quiet" icon={<Power size={14} />} title={`Deactivate ${name}'s account`}
-                    onClick={() => window.confirm(`Deactivate ${name}? They can't sign in until you activate the account again.`) && act.mutate(() => api.adminActivateUser(name, false))}>Deactivate</Button>
-                  <Button size="sm" variant="danger" icon={<LogOut size={14} />} title={`Disconnect ${name}`} disabled={!user.sessionId}
-                    onClick={() => act.mutate(() => api.adminDisconnectUser(user.sessionId!))}>Disconnect</Button>
+                  {muted
+                    ? <Button size="sm" variant="quiet" icon={<Mic size={14} />} title={`Let ${name} chat again`}
+                      onClick={() => act.mutate(() => api.adminMuteUser(name, 0))}>Unmute</Button>
+                    : <Button size="sm" variant="quiet" icon={<MicOff size={14} />} title={`Mute ${name} for ${choice}`}
+                      onClick={() => act.mutate(() => api.adminMuteUser(name, minutes))}>Mute</Button>}
+                  {admin && (
+                    <>
+                      <Button size="sm" variant="quiet" icon={<Ban size={14} />} title={`Lock ${name} out for ${choice}`}
+                        onClick={() => setPending({ kind: 'lock', name })}>Lock</Button>
+                      <Button size="sm" variant="quiet" icon={<Power size={14} />} title={`Deactivate ${name}'s account`}
+                        onClick={() => setPending({ kind: 'deactivate', name })}>Deactivate</Button>
+                    </>
+                  )}
+                  <Button size="sm" variant="danger" icon={<LogOut size={14} />} title={`Sign ${name} out`} disabled={!user.sessionId}
+                    onClick={() => setPending({ kind: 'disconnect', name, sessionId: user.sessionId })}>Sign out</Button>
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      <ReactivateForm api={api} />
+      {admin && <AccountForm api={api} />}
     </div>
   );
 }
 
-function ReactivateForm({ api }: { api: AdminApi }) {
+/** Undoing a lock or a deactivation for a player who is offline. */
+function AccountForm({ api }: { api: AdminApi }) {
   const [name, setName] = useState('');
   const [note, setNote] = useState<string | null>(null);
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    await api.adminActivateUser(name.trim(), true);
-    setNote(`${name.trim()} can sign in again.`);
-    setName('');
+  const [error, setError] = useState<string | null>(null);
+  async function run(work: () => Promise<unknown>, done: string) {
+    setError(null);
+    try {
+      await work();
+      setNote(done);
+      setName('');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
+    }
   }
+  const who = name.trim();
   return (
-    <form className={styles.inline} onSubmit={submit}>
-      <Field label="Activate an account" value={name} onChange={(event) => setName(event.target.value)} hint="Undoes Deactivate for a player who is offline." />
-      <Button type="submit" size="sm" icon={<ShieldCheck size={15} />} disabled={!name.trim()}>Activate</Button>
+    <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); void run(() => api.adminActivateUser(who, true), `${who} can sign in again.`); }}>
+      <Field label="An account by name" value={name} placeholder="someone offline" onChange={(event) => setName(event.target.value)} />
+      <Button type="submit" size="sm" icon={<ShieldCheck size={15} />} disabled={!who}>Activate</Button>
+      <Button type="button" size="sm" icon={<Unlock size={15} />} disabled={!who}
+        onClick={() => void run(() => api.adminLockUser(who, 0), `${who} is unlocked.`)}>Unlock</Button>
+      <Button type="button" size="sm" icon={<Mic size={15} />} disabled={!who}
+        onClick={() => void run(() => api.adminMuteUser(who, 0), `${who} can chat again.`)}>Unmute</Button>
       {note && <span className={styles.quiet} role="status">{note}</span>}
+      {error && <span className={styles.error} role="alert">{error}</span>}
     </form>
   );
 }
@@ -271,33 +390,41 @@ function TablesPanel({ api }: { api: AdminApi }) {
     enabled: !!room.data,
     refetchInterval: 5_000,
   });
-  const remove = useMutation({
-    mutationFn: (tableId: string) => api.adminTableRemove(tableId),
-    onSettled: () => client.invalidateQueries({ queryKey: ['admin', 'tables'] }),
-  });
+  const [pending, setPending] = useState<TableView | null>(null);
+  async function remove(reason: string) {
+    await api.adminTableRemove(pending!.tableId!, reason);
+    setPending(null);
+    await client.invalidateQueries({ queryKey: ['admin', 'tables'] });
+  }
   return (
-    <table className={styles.table}>
-      <thead><tr><th>Table</th><th>Host</th><th>Game</th><th>State</th><th>Seats</th><th><span className="visually-hidden">Actions</span></th></tr></thead>
-      <tbody>
-        {(tables.data ?? []).map((table: TableView) => (
-          <tr key={table.tableId}>
-            <td>{table.tableName}</td>
-            <td>{table.controllerName}</td>
-            <td>{table.gameType} · {table.deckType}</td>
-            <td>{table.tableStateText ?? table.tableState}</td>
-            <td className={styles.clip}>{table.seatsInfo}</td>
-            <td className={styles.actions}>
-              <Button size="sm" variant="danger" icon={<Trash2 size={14} />}
-                onClick={() => window.confirm(`Remove "${table.tableName}"? Its players lose the game.`) && remove.mutate(table.tableId!)}>Remove</Button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className={styles.block}>
+      {pending && (
+        <ConfirmAction title={`Remove “${pending.tableName}”`} what={`The table closes and its players lose the game: ${pending.seatsInfo || 'no one seated'}.`}
+          confirmLabel="Remove" onConfirm={remove} onCancel={() => setPending(null)} />
+      )}
+      {tables.data?.length === 0 && <p className={styles.quiet}>No tables are open.</p>}
+      <table className={styles.table}>
+        <thead><tr><th>Table</th><th>Host</th><th>Game</th><th>State</th><th>Seats</th><th><span className="visually-hidden">Actions</span></th></tr></thead>
+        <tbody>
+          {(tables.data ?? []).map((table: TableView) => (
+            <tr key={table.tableId}>
+              <td>{table.tableName}</td>
+              <td>{table.controllerName}</td>
+              <td>{table.gameType} · {table.deckType}</td>
+              <td>{table.tableStateText ?? table.tableState}</td>
+              <td className={styles.clip}>{table.seatsInfo}</td>
+              <td className={styles.actions}>
+                <Button size="sm" variant="danger" icon={<Trash2 size={14} />} onClick={() => setPending(table)}>Remove</Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-function Reports({ api }: { api: AdminApi }) {
+function Reports({ api, role }: { api: AdminApi; role: StaffRole }) {
   const client = useQueryClient();
   const [openOnly, setOpenOnly] = useState(true);
   const reports = useQuery({ queryKey: ['admin', 'reports', openOnly], queryFn: () => api.adminGetReports(openOnly), refetchInterval: 15_000 });
@@ -319,7 +446,7 @@ function Reports({ api }: { api: AdminApi }) {
             {report.details && <blockquote>{report.details}</blockquote>}
             {report.gameId && <p className={styles.quiet}>Game {report.gameId}</p>}
             {report.open
-              ? <CloseReport api={api} report={report} onClose={(resolution) => close.mutate({ id: report.id!, resolution })} />
+              ? <CloseReport api={api} role={role} report={report} onClose={(resolution) => close.mutate({ id: report.id!, resolution })} />
               : <p className={styles.quiet}>Closed: {report.resolution || 'no note'}</p>}
           </li>
         ))}
@@ -328,19 +455,29 @@ function Reports({ api }: { api: AdminApi }) {
   );
 }
 
-function CloseReport({ api, report, onClose }: { api: AdminApi; report: PlayerReport; onClose(resolution: string): void }) {
+function CloseReport({ api, role, report, onClose }: { api: AdminApi; role: StaffRole; report: PlayerReport; onClose(resolution: string): void }) {
   const [note, setNote] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const name = report.reported ?? '';
+  const why = `report ${report.id}: ${report.reason}`;
   async function act(work: () => Promise<unknown>, done: string) {
-    await work();
-    onClose(note.trim() ? `${done}. ${note.trim()}` : done);
+    setError(null);
+    try {
+      await work();
+      onClose(note.trim() ? `${done}. ${note.trim()}` : done);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
+    }
   }
   return (
     <div className={styles.inline}>
       <Field label="Note" value={note} onChange={(event) => setNote(event.target.value)} />
-      <Button size="sm" onClick={() => act(() => api.adminMuteUser(name, 24 * 60), 'Muted for a day')}>Mute a day</Button>
-      <Button size="sm" onClick={() => act(() => api.adminLockUser(name, 7 * 24 * 60), 'Locked out for a week')}>Lock a week</Button>
+      <Button size="sm" onClick={() => act(() => api.adminMuteUser(name, 24 * 60, why), 'Muted for a day')}>Mute a day</Button>
+      {atLeast(role, 'admin') && (
+        <Button size="sm" onClick={() => act(() => api.adminLockUser(name, 7 * 24 * 60, why), 'Locked out for a week')}>Lock a week</Button>
+      )}
       <Button size="sm" variant="quiet" onClick={() => onClose(note.trim() || 'No action')}>Close, no action</Button>
+      {error && <span className={styles.error} role="alert">{error}</span>}
     </div>
   );
 }

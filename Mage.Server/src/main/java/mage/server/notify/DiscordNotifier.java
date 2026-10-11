@@ -50,6 +50,8 @@ public final class DiscordNotifier {
 
     public static final String WEBHOOK_PROP = "xmage.discordWebhook";
     public static final String PUBLIC_URL_PROP = "xmage.publicUrl";
+    /** staff news (access requests, reports, staff changes) goes here when set, to keep it out of a public channel */
+    public static final String STAFF_WEBHOOK_PROP = "xmage.discordStaffWebhook";
 
     static final int RATE_LIMIT = 30;
     static final long RATE_WINDOW_MS = 60_000;
@@ -65,6 +67,7 @@ public final class DiscordNotifier {
     }
 
     private static volatile DiscordNotifier instance;
+    private static volatile DiscordNotifier staffInstance;
 
     private final Sender sender;
     private final String publicUrl;
@@ -86,7 +89,7 @@ public final class DiscordNotifier {
             synchronized (DiscordNotifier.class) {
                 result = instance;
                 if (result == null) {
-                    result = fromSystemProperties();
+                    result = fromSystemProperties(WEBHOOK_PROP);
                     instance = result;
                 }
             }
@@ -94,23 +97,41 @@ public final class DiscordNotifier {
         return result;
     }
 
-    private static DiscordNotifier fromSystemProperties() {
-        String webhook = System.getProperty(WEBHOOK_PROP, "").trim();
+    /**
+     * The staff channel's notifier: {@code xmage.discordStaffWebhook}, or the lobby's webhook when there is no staff
+     * one (which was where access requests went before staff had their own channel).
+     */
+    public static DiscordNotifier staff() {
+        DiscordNotifier result = staffInstance;
+        if (result == null) {
+            synchronized (DiscordNotifier.class) {
+                result = staffInstance;
+                if (result == null) {
+                    result = System.getProperty(STAFF_WEBHOOK_PROP, "").trim().isEmpty() ? instance() : fromSystemProperties(STAFF_WEBHOOK_PROP);
+                    staffInstance = result;
+                }
+            }
+        }
+        return result;
+    }
+
+    private static DiscordNotifier fromSystemProperties(String prop) {
+        String webhook = System.getProperty(prop, "").trim();
         String publicUrl = System.getProperty(PUBLIC_URL_PROP, "").trim();
         if (webhook.isEmpty()) {
             return new DiscordNotifier(null, publicUrl, null, System::currentTimeMillis);
         }
         if (!webhook.startsWith("https://") && !webhook.startsWith("http://")) {
-            logger.warn("Discord notifications off: " + WEBHOOK_PROP + " is not an http(s) address");
+            logger.warn("Discord notifications off: " + prop + " is not an http(s) address");
             return new DiscordNotifier(null, publicUrl, null, System::currentTimeMillis);
         }
         ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(QUEUE_CAPACITY), runnable -> {
-            Thread thread = new Thread(runnable, "XMAGE discord webhook");
+            Thread thread = new Thread(runnable, "XMAGE discord webhook " + prop);
             thread.setDaemon(true);
             return thread;
         });
-        logger.info("Discord notifications on" + (publicUrl.isEmpty() ? " (no " + PUBLIC_URL_PROP + ", so no join links)" : ""));
+        logger.info("Discord notifications on (" + prop + ")" + (publicUrl.isEmpty() ? " (no " + PUBLIC_URL_PROP + ", so no join links)" : ""));
         return new DiscordNotifier(json -> httpPost(webhook, json), publicUrl, executor, System::currentTimeMillis);
     }
 
@@ -161,6 +182,22 @@ public final class DiscordNotifier {
             return;
         }
         submit(accessRequestedMessage(name, note, link("/admin")));
+    }
+
+    /** A player reported another; staff look at it in /admin. */
+    public void reportFiled(String reporter, String reported, String reason) {
+        if (!isEnabled()) {
+            return;
+        }
+        submit(staffMessage("Report: " + escape(reporter) + " reported " + escape(reported), reason, link("/admin")));
+    }
+
+    /** A change only the owner makes: staff roles. */
+    public void staffChanged(String actor, String change) {
+        if (!isEnabled()) {
+            return;
+        }
+        submit(staffMessage("Staff: " + escape(actor) + " " + escape(change), null, link("/admin")));
     }
 
     // --- rules ------------------------------------------------------------------------------------
@@ -240,6 +277,14 @@ public final class DiscordNotifier {
             embed.addProperty("description", limit(escape(note), 4096));
         }
         return payload(content, embed);
+    }
+
+    static String staffMessage(String title, String text, String link) {
+        JsonObject embed = embed(title, link);
+        if (text != null && !text.trim().isEmpty()) {
+            embed.addProperty("description", limit(escape(text), 4096));
+        }
+        return payload(title + (link == null ? "" : " " + link), embed);
     }
 
     private static JsonObject embed(String title, String link) {

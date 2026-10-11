@@ -85,4 +85,20 @@ public class AuthorizedUser {
     public String getEmail() {
         return this.email;
     }
+
+    public boolean isActive() {
+        return this.active;
+    }
+
+    public Date getLockedUntil() {
+        return this.lockedUntil;
+    }
+
+    public Date getChatLockedUntil() {
+        return this.chatLockedUntil;
+    }
+
+    public Date getLastConnection() {
+        return this.lastConnection;
+    }
 }

@@ -90,6 +90,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_MAILGUN_API_KEY`, `XMAGE_MAILGUN_DOMAIN` | empty | Mailgun account for registration and password-reset mail. |
 | `XMAGE_MAIL_SMTP_HOST`, `XMAGE_MAIL_SMTP_PORT`, `XMAGE_MAIL_USER`, `XMAGE_MAIL_PASSWORD`, `XMAGE_MAIL_FROM` | empty | SMTP instead of Mailgun. The server uses SMTP when `XMAGE_MAIL_USER` is set. |
 | `XMAGE_DISCORD_WEBHOOK` | empty | Discord webhook address (`-Dxmage.discordWebhook`). Set: public tables, events starting and matches starting are posted to that channel (see [Discord notifications](#discord-notifications)). A secret: anyone with it can post to the channel. |
+| `XMAGE_DISCORD_STAFF_WEBHOOK` | empty | A second webhook for staff news: access requests, player reports and staff role changes (`-Dxmage.discordStaffWebhook`). Empty: those go to `XMAGE_DISCORD_WEBHOOK`. A secret. |
 | `XMAGE_CAREER` | `on` | `off` turns the optional single-player Career off. It needs accounts either way: without them nobody's collection would be safe. Progress is kept in `career.db`. |
 | `XMAGE_ACCESS` | `open` | Who may play (`-Dxmage.access`): `open`, or `allowlist` for a contributors server. Read on the first boot only, then switched in `/admin`. `allowlist` needs `XMAGE_AUTH=true`. See [Contributors server](#contributors-server). |
 | `XMAGE_OWNER` | empty | The owner's account name (`-Dxmage.owner`), always let in. |
@@ -107,7 +108,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `IMGCACHE_API_MAX_SIZE` | `1g` | Disk cap of the lookup cache. |
 | `IMGCACHE_API_RATE` / `IMGCACHE_API_BURST` | `10r/s` / `20` | Requests per second the image cache sends to `api.scryfall.com` for the whole site (cache misses only), and how many more may queue before it answers `429`. |
 
-Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE`, `XMAGE_MAILGUN_API_KEY_FILE`, `XMAGE_DISCORD_WEBHOOK_FILE`, `XMAGE_GITHUB_CLIENT_SECRET_FILE` and `XMAGE_GITHUB_TOKEN_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password and the webhook address don't show up in `ps`.
+Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE`, `XMAGE_MAILGUN_API_KEY_FILE`, `XMAGE_DISCORD_WEBHOOK_FILE`, `XMAGE_DISCORD_STAFF_WEBHOOK_FILE`, `XMAGE_GITHUB_CLIENT_SECRET_FILE` and `XMAGE_GITHUB_TOKEN_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password and the webhook address don't show up in `ps`.
 
 Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a message that names the variable.
 
@@ -137,7 +138,7 @@ The mode and the starting list are read on the very first boot only (they live i
 - switch between open and allowlist. Switching to allowlist lists who would be signed out first, and asks for a reason.
 - add people by account name or by email (any account registered with that address), with a note such as a GitHub handle. Taking someone off signs them out.
 - make invite links (`https://DOMAIN/join?invite=...`) with a number of uses and an expiry. An invite registers the account and puts it on the list. Invites can be revoked.
-- approve or decline requests. Without an invite, people ask from the sign-in screen with a name, an email and a note, three times an hour per address at most. Each request is posted to Discord when `XMAGE_DISCORD_WEBHOOK` is set. Approving allowlists the email address and, when mail is set up, tells the person.
+- approve or decline requests. Without an invite, people ask from the sign-in screen with a name, an email and a note, three times an hour per address at most. Each request is posted to the staff Discord channel (`XMAGE_DISCORD_STAFF_WEBHOOK`, or `XMAGE_DISCORD_WEBHOOK` without one). Approving allowlists the email address and, when mail is set up, tells the person.
 - set a notice shown on sign-in and Home, such as "builds from master, data may be reset".
 
 With Sign in with GitHub set up (`XMAGE_GITHUB_CLIENT_ID` and `XMAGE_GITHUB_CLIENT_SECRET`, an OAuth app made at github.com/settings/developers with the callback URL `https://DOMAIN/auth/github`), players can sign in with their GitHub account instead of a password. The first time, the server makes them an account named after their GitHub login (or one they pick when that name is taken), with their verified GitHub email; an existing account with that email is used instead. With `XMAGE_GITHUB_REPO` set too, the repository's people are let in without being listed. The Access tab shows when that list was last fetched.
@@ -145,6 +146,22 @@ With Sign in with GitHub set up (`XMAGE_GITHUB_CLIENT_ID` and `XMAGE_GITHUB_CLIE
 The owner and the admin console are always let in. The check runs at registration, sign-in, on a remembered device and on a restored session. Every change is in the console's Audit tab.
 
 To run a contributors server next to an open one on the same host, give it its own Compose project and ports, for example `docker compose -p playmat-dev -f ops/web/docker-compose.yml --env-file ops/web/.env.dev up -d` with a different `DOMAIN`, `HTTP_PORT`/`HTTPS_PORT`, `XMAGE_SUBNET` and `CADDY_IP`. The volumes are named after the project, so the two servers don't share accounts or data.
+
+## Staff
+
+Staff sign in with their own player accounts and find **Admin** in the account menu. Each account has a role, and each role can do what the ones below it can:
+
+| Role | Can |
+|---|---|
+| moderator | see who is online, mute and sign players out, work through reports, read the audit log, server stats and client errors |
+| admin | also lock and deactivate accounts, remove tables, broadcast, and run Access (mode, allowlist, invites, requests, notice) |
+| owner | also give and take staff roles |
+
+`XMAGE_OWNER` is always an owner and can't be changed from the console; give roles from the console's Staff tab. Roles need accounts (`XMAGE_AUTH=true`). A role is checked on every action, so taking it away works at once. Staff are always let in on a contributors server.
+
+The shared admin password (`XMAGE_ADMIN_PASSWORD`) still opens the console as an owner, for when no owner can sign in: use **Console sign-in** at the bottom of `/admin`. It is a break-glass key; once staff have roles, it can be left unset. Admin sign-in is refused when no password is set, and the password file the entrypoint writes for the JVM is deleted 20 seconds after start.
+
+Every staff action that changes something is in the Audit tab, with the staff member's name and the reason they gave.
 
 ## Discord notifications
 

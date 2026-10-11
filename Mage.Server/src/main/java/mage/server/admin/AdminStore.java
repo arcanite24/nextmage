@@ -44,6 +44,7 @@ public final class AdminStore {
     private final Dao<Invite, String> invites;
     private final Dao<AccessRequest, Long> requests;
     private final Dao<GithubLink, Long> githubLinks;
+    private final Dao<StaffMember, String> staff;
 
     public AdminStore(String jdbcUrl) throws SQLException {
         ConnectionSource source = new JdbcConnectionSource(jdbcUrl);
@@ -53,12 +54,14 @@ public final class AdminStore {
         TableUtils.createTableIfNotExists(source, Invite.class);
         TableUtils.createTableIfNotExists(source, AccessRequest.class);
         TableUtils.createTableIfNotExists(source, GithubLink.class);
+        TableUtils.createTableIfNotExists(source, StaffMember.class);
         audit = DaoManager.createDao(source, AuditEntry.class);
         settings = DaoManager.createDao(source, AdminSetting.class);
         allowlist = DaoManager.createDao(source, AllowEntry.class);
         invites = DaoManager.createDao(source, Invite.class);
         requests = DaoManager.createDao(source, AccessRequest.class);
         githubLinks = DaoManager.createDao(source, GithubLink.class);
+        staff = DaoManager.createDao(source, StaffMember.class);
     }
 
     public static AdminStore get() {
@@ -121,6 +124,37 @@ public final class AdminStore {
             where.and().lt("id", before);
         }
         return query.query();
+    }
+
+    // --- staff ------------------------------------------------------------------------------------
+
+    public synchronized List<StaffMember> staff() throws SQLException {
+        return staff.queryBuilder().orderBy("name", true).query();
+    }
+
+    /** the account's role, or null when it isn't staff */
+    public synchronized StaffRole staffRole(String userName) throws SQLException {
+        if (isBlank(userName)) {
+            return null;
+        }
+        StaffMember member = staff.queryForId(userName.trim().toLowerCase(Locale.ROOT));
+        return member == null ? null : StaffRole.parse(member.role);
+    }
+
+    public synchronized StaffMember grantStaff(String userName, StaffRole role, String by, long now) throws SQLException {
+        StaffMember member = new StaffMember();
+        member.key = userName.trim().toLowerCase(Locale.ROOT);
+        member.name = userName.trim();
+        member.role = role.id();
+        member.grantedBy = by;
+        member.grantedAt = now;
+        staff.createOrUpdate(member);
+        return member;
+    }
+
+    /** false when the account wasn't staff */
+    public synchronized boolean revokeStaff(String userName) throws SQLException {
+        return !isBlank(userName) && staff.deleteById(userName.trim().toLowerCase(Locale.ROOT)) > 0;
     }
 
     // --- settings ---------------------------------------------------------------------------------
