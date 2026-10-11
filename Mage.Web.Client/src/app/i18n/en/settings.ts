@@ -57,6 +57,9 @@ export default {
   'settings.motion': 'Card motion',
   'settings.paintedArt': 'Painted art',
   'settings.paintedArt.detail': 'AI-generated pictures for Career icons, avatars, crests, sleeves and playmat prints. Off, the simple drawn versions show instead.',
+  'settings.pictureStore': 'Card pictures on this device',
+  'settings.pictureStore.detail': '{count} pictures, {size} MB. Kept so games open without waiting on the network.',
+  'settings.pictureStore.clear': 'Clear',
   'settings.motion.detail': "Cards fly between zones and settle on the mat. Your system's reduced-motion setting always wins.",
 
   'settings.alerts.intro': 'While {app} is in a background tab, the tab title counts what waits for you.',
