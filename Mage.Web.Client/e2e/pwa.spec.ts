@@ -13,7 +13,7 @@ test.describe('app: installable, with an offline shell', () => {
     const href = await page.locator('link[rel="manifest"]').getAttribute('href');
     expect(href).toBe('/manifest.webmanifest');
     const manifest = await (await request.get(href!)).json();
-    expect(manifest).toMatchObject({ start_url: '/', scope: '/', display: 'standalone' });
+    expect(manifest).toMatchObject({ start_url: '/', scope: '/', display: 'fullscreen' });
     expect(manifest.name).toBeTruthy();
     expect(manifest.icons).toEqual(expect.arrayContaining([
       expect.objectContaining({ sizes: '192x192' }),
