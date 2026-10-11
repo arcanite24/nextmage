@@ -58,7 +58,7 @@ server {
     proxy_set_header X-Forwarded-Host "";
     proxy_set_header X-Forwarded-Proto "";
     # Scryfall asks for a descriptive User-Agent and an Accept header on every request
-    proxy_set_header User-Agent "PlaymatXMageImageCache/1.0 (+https://github.com/arcanite24/nextmage)";
+    proxy_set_header User-Agent "PlaymatXMageImageCache/1.0 (+https://github.com/arcanite24/playmat)";
     proxy_set_header Accept $imgcache_accept;
     # cache one uncompressed copy; Caddy compresses for the browser
     proxy_set_header Accept-Encoding "";
