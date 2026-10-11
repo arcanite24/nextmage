@@ -12,6 +12,22 @@
   inset: 0;
 }
 
+/* the print pressed into one flat canvas (printPress): the usual way, cheap for the compositor */
+.pressed {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* a new print settles into register: one layer moving, not three blended ones */
+.fresh {
+  animation: register-press var(--dur-print) var(--ease-place) both;
+}
+
+/* the live separations below print a picture the canvas can't read (no CORS) */
+
 .layer {
   position: absolute;
   inset: -2%;
@@ -61,6 +77,10 @@
   mix-blend-mode: multiply;
 }
 
+@keyframes register-press {
+  from { opacity: 0.25; transform: translate(-8px, 6px); }
+}
+
 @keyframes register-a {
   from { opacity: 0; transform: translate(-14px, 8px); }
 }
@@ -76,7 +96,8 @@
 @media (prefers-reduced-motion: reduce) {
   .shadowInk,
   .lightInk,
-  .keyInk {
+  .keyInk,
+  .fresh {
     animation-name: fade-in;
   }
 
