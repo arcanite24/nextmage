@@ -11,7 +11,7 @@ import { notificationsSupported, requestNotifications } from '../stores/attentio
 import { useAutoAnswers } from '../stores/autoAnswers';
 import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
-import { APP_NAME } from '../brand';
+import { APP_NAME, PUBLIC_ORIGIN } from '../brand';
 import { formatNumber, LOCALES, registerMessages, useT, type LocalePreference, type MessageKey, type Translate } from '../i18n';
 import messages from '../i18n/en/settings';
 import { browserLocale } from '../i18n/locales';
@@ -295,7 +295,7 @@ function Bookmarklet() {
       .replace(/^\s*\/\/.*$/gm, '')
       .replace(/\n\s+/g, '\n')
       .trim()
-      .replaceAll('__PLAYMAT_ORIGIN__', window.location.origin)
+      .replaceAll('__PLAYMAT_ORIGIN__', PUBLIC_ORIGIN)
       .replaceAll('__APP_NAME__', APP_NAME.replace(/[\\'"]/g, ''));
     link.current?.setAttribute('href', `javascript:${encodeURIComponent(code)}`);
   }, []);

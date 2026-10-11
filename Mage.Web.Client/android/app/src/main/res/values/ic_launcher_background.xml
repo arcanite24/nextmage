@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- the maskable icon's mat green (public/icon-maskable-512.png) -->
+    <color name="ic_launcher_background">#16231E</color>
+    <!-- the page background, mat-800 in src/app/styles/tokens.css -->
+    <color name="mat">#0F1714</color>
+</resources>

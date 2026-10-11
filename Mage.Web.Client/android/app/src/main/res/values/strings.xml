@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Playmat</string>
+    <string name="title_activity_main">Playmat</string>
+    <string name="package_name">club.multivac.playmat</string>
+    <string name="custom_url_scheme">club.multivac.playmat</string>
+</resources>

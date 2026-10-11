@@ -69,6 +69,16 @@
 
 	# card pictures and Scryfall lookups, cached by the imgcache service (nginx)
 	handle /img/* {
+		# the Android app (served from https://localhost) looks pictures up cross-origin; Scryfall's own API is
+		# open to every origin too. Set after the proxy, replacing any copy Scryfall's response carried.
+		header {
+			>Access-Control-Allow-Origin "*"
+			Access-Control-Allow-Methods "GET, POST, OPTIONS"
+			Access-Control-Allow-Headers "Content-Type"
+			Access-Control-Max-Age "86400"
+		}
+		@preflight method OPTIONS
+		respond @preflight 204
 		reverse_proxy imgcache:8080
 	}
 
