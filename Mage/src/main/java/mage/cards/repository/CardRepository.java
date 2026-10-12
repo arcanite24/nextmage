@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +47,12 @@ public enum CardRepository {
 
     // raised whenever the cards table can have changed (cards added, db reopened), so callers can drop their caches
     private final AtomicLong contentChanges = new AtomicLong();
+
+    // preferred printing by card name (findPreferredCoreExpansionCard without a preferred set): decks that only name
+    // their cards ask for it for every card, and finding it reads every printing's set (Mountain has hundreds)
+    private static final int PREFERRED_CACHE_MAX = 10000;
+    private final Map<String, Optional<CardInfo>> preferredByName = new ConcurrentHashMap<>();
+    private volatile long preferredCacheChanges = -1;
 
     // store names lists like all cards, lands, etc (it's static data and can be calculated one time only)
     private static final Map<String, Set<String>> namesQueryCache = new HashMap<>();
@@ -368,6 +375,43 @@ public enum CardRepository {
         return findCard(setCode, cardNumber, true);
     }
 
+    /**
+     * Set code and card number ({@link #setAndNumberKey}) of every card in the database, read in one query: the
+     * startup scan checks each implemented card against it instead of querying them one by one.
+     */
+    public Set<String> getSetAndNumberKeys() {
+        Set<String> keys = new HashSet<>();
+        try {
+            QueryBuilder<CardInfo, Object> qb = cardsDao.queryBuilder();
+            qb.selectColumns("setCode", "cardNumber");
+            try (GenericRawResults<String[]> rows = cardsDao.queryRaw(qb.prepareStatementString())) {
+                for (String[] row : rows) {
+                    keys.add(setAndNumberKey(row[0], row[1]));
+                }
+            }
+        } catch (Exception e) {
+            Logger.getLogger(CardRepository.class).error("Error reading card numbers from DB: " + e, e);
+        }
+        return keys;
+    }
+
+    /** the database compares text ignoring case (IGNORECASE=TRUE), and so do these keys */
+    public static String setAndNumberKey(String setCode, String cardNumber) {
+        return (setCode + '\t' + cardNumber).toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Number of card rows (night sides included), counted by the database.
+     */
+    public long countCards() {
+        try {
+            return cardsDao.countOf();
+        } catch (SQLException e) {
+            Logger.getLogger(CardRepository.class).error("Error counting cards in DB: " + e, e);
+            return 0;
+        }
+    }
+
     public CardInfo findCard(String setCode, String cardNumber, boolean ignoreNightCards) {
         try {
             QueryBuilder<CardInfo, Object> queryBuilder = cardsDao.queryBuilder();
@@ -447,6 +491,20 @@ public enum CardRepository {
     }
 
     public CardInfo findPreferredCoreExpansionCard(String name, String preferredSetCode) {
+        if (name != null && (preferredSetCode == null || preferredSetCode.isEmpty())) {
+            long changes = contentChanges.get();
+            if (preferredCacheChanges != changes || preferredByName.size() > PREFERRED_CACHE_MAX) {
+                preferredByName.clear();
+                preferredCacheChanges = changes;
+            }
+            Optional<CardInfo> cached = preferredByName.get(name);
+            if (cached != null) {
+                return cached.orElse(null);
+            }
+            CardInfo found = findPreferredOrLatestCard(findCards(name), "");
+            preferredByName.put(name, Optional.ofNullable(found));
+            return found;
+        }
         List<CardInfo> cards;
         cards = findCards(name);
 

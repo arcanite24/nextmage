@@ -8,6 +8,7 @@ import mage.game.Game;
 import mage.game.Table;
 import mage.interfaces.callback.ClientCallback;
 import mage.interfaces.callback.ClientCallbackMethod;
+import mage.players.PlayableObjectsList;
 import mage.players.Player;
 import mage.server.User;
 import mage.server.managers.ManagerFactory;
@@ -29,6 +30,9 @@ public class GameSessionPlayer extends GameSessionWatcher {
     private static final Logger logger = Logger.getLogger(GameSessionPlayer.class);
 
     private final UserManager userManager;
+    // the last playable highlights and the game they were worked out for (see prepareGameView)
+    private String playableKey;
+    private PlayableObjectsList playable;
     private final UUID playerId;
 
     private final ExecutorService callExecutor;
@@ -212,7 +216,7 @@ public class GameSessionPlayer extends GameSessionWatcher {
         }
 
         // full processing for player
-        GameView gameView = prepareGameView(game, playerId, userId);
+        GameView gameView = prepareGameView(game, playerId, userId, this);
         attachEvents(gameView, playerId);
 
         if (GameView.ENABLE_GAME_VIEW_CACHE) {
@@ -231,6 +235,14 @@ public class GameSessionPlayer extends GameSessionWatcher {
      * @return
      */
     public static GameView prepareGameView(Game game, UUID playerId, UUID userId) {
+        return prepareGameView(game, playerId, userId, null);
+    }
+
+    /**
+     * @param session remembers the last playable highlights: a priority stop sends the player its view twice (the
+     *                update, then the question), and working out what is playable copies the game twice each time
+     */
+    private static GameView prepareGameView(Game game, UUID playerId, UUID userId, GameSessionPlayer session) {
         // game copy do not help with ConcurrentModificationException so ignore it
         Game sourceGame = game;
         GameView gameView = new GameView(sourceGame.getState(), sourceGame, playerId, null);
@@ -240,7 +252,17 @@ public class GameSessionPlayer extends GameSessionWatcher {
         Player priorityPlayer = sourceGame.getPlayer(sourceGame.getPriorityPlayerId());
         Player controllingPlayer = priorityPlayer == null ? null : sourceGame.getPlayer(priorityPlayer.getTurnControlledBy());
         if (controllingPlayer != null && player == controllingPlayer) {
-            gameView.setCanPlayObjects(priorityPlayer.getPlayableObjects(sourceGame, Zone.ALL));
+            String key = session == null ? null : GameChangeKey.of(sourceGame) + '|' + priorityPlayer.getId();
+            if (key != null && key.equals(session.playableKey)) {
+                gameView.setCanPlayObjects(session.playable);
+            } else {
+                PlayableObjectsList playable = priorityPlayer.getPlayableObjects(sourceGame, Zone.ALL);
+                gameView.setCanPlayObjects(playable);
+                if (session != null) {
+                    session.playableKey = key;
+                    session.playable = playable;
+                }
+            }
         }
 
         processControlledPlayers(sourceGame, player, gameView);

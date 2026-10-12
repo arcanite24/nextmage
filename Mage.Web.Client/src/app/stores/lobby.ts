@@ -3,6 +3,7 @@ import { api, events } from '../connection';
 import { stripMarkup } from '../../core/game/prompt';
 import type { ChatMessage, UsersView } from '../../protocol/generated/views';
 import { attention } from './attention';
+import { useGames } from './games';
 import { useSession } from './session';
 import { isFriend, isIgnored, useSocial } from './social';
 import { notify } from './toasts';
@@ -70,6 +71,8 @@ export const useLobby = create<LobbyState>((set, get) => ({
     set((state) => ({ messages: [...state.messages, local].slice(-MAX_LINES) }));
   },
   setOpen(open, tab) {
+    // the list isn't polled during a game; opening the drawer brings it up to date
+    if (open && !get().open && playing()) void get().refreshUsers();
     set((state) => ({ open, tab: tab ?? state.tab, unread: open ? 0 : state.unread }));
   },
   whisper(name) {
@@ -137,6 +140,11 @@ events.on('CHATMESSAGE', (message, event) => {
 
 let poll: ReturnType<typeof setInterval> | null = null;
 
+/** in a game as a player: who is online can wait, so the server answers the game first */
+export function playing(): boolean {
+  return Object.values(useGames.getState().sessions).some((session) => session.store.getState().mode === 'play');
+}
+
 function stopPolling(): void {
   if (poll) clearInterval(poll);
   poll = null;
@@ -164,6 +172,8 @@ useSession.subscribe((state, previous) => {
   void useLobby.getState().refreshUsers();
   stopPolling();
   poll = setInterval(() => {
-    if (useSession.getState().connection === 'open') void useLobby.getState().refreshUsers();
+    if (useSession.getState().connection !== 'open') return;
+    if (playing() && !useLobby.getState().open) return;
+    void useLobby.getState().refreshUsers();
   }, PRESENCE_POLL_MS);
 });

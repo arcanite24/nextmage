@@ -72,7 +72,11 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_REPLAYS` | `true` | Record finished games with at least one human player for the web client's replays (`-Dxmage.replays`). |
 | `XMAGE_REPLAY_DAYS` | `30` | Replays older than this many days are deleted. |
 | `XMAGE_REPLAY_MAX` | `300` | At most this many replays are kept; the oldest go first. A replay is gzipped, about 10 kB per turn (a six-turn duel was 59 kB), so 300 replays usually take tens of megabytes. |
-| `XMAGE_MEMORY` | `2g` | Java heap. |
+| `XMAGE_MEMORY` | sized to the machine | Java heap, e.g. `2g`. Empty: `XMAGE_HEAP_PERCENT` of the memory the container sees (its limit, else the host's), between 256 MB and 1 GB. The server logs the size it chose at start. |
+| `XMAGE_HEAP_PERCENT` | `40` | Share of the machine's memory the heap gets when `XMAGE_MEMORY` is empty. The rest is the JVM's own memory (classes, threads, code; about 400 MB) and the system's. |
+| `XMAGE_GC` | `auto` | Garbage collector: `serial` on one or two CPUs (less CPU per game there), else `g1`, which hands unused memory back while the server idles. Or `serial`, `g1`, `parallel`. |
+| `XMAGE_METASPACE` | `512m` | Cap on the JVM's class memory (`-XX:MaxMetaspaceSize`). The card classes take about 260 MB. |
+| `XMAGE_CDS` | `true` | `false` stops using the class archive recorded when the image was built (it makes starts faster and shares class memory). |
 | `XMAGE_MAX_GAME_THREADS` | `4` | `maxGameThreads`: games that run at the same time. |
 | `XMAGE_MAX_AI_OPPONENTS` | `4` | `maxAiOpponents`: AI players in use at once (draft bots don't count). |
 | `XMAGE_MAX_SECONDS_IDLE` | `600` (shipped) | `maxSecondsIdle`: an idle player concedes after this many seconds. |
@@ -80,6 +84,11 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_SERVER_NAME` | `mage-server` | `serverName`, shown to desktop clients. |
 | `XMAGE_SERVER_ADDRESS` | `0.0.0.0` | `serverAddress`. Only matters for desktop clients. |
 | `XMAGE_PORT` | `17171` | `port`: the desktop client port. It isn't published by default. |
+| `XMAGE_MONTE_CARLO` | `true` | `false` takes the Monte Carlo AI off the server (and out of the web client's AI choices). It keeps every core busy for its whole think time. |
+| `XMAGE_AI_THREADS` | `5`, or the CPUs when fewer | AI searches running at once for all AI players (`-Dxmage.ai.threads`). A search waiting for a thread doesn't lose think time. |
+| `XMAGE_AI_NODE_SCALE` | `1` | Scales every AI skill's search budget (`-Dxmage.ai.nodeScale`), e.g. `0.5` on a slow server: faster turns, slightly weaker play. |
+| `XMAGE_DB_CACHE` | an eighth of the heap, 16–150 MB | Card database cache in MB (`-Dxmage.db.cacheSizeKB`). It lives in the heap. |
+| `XMAGE_DESKTOP` | `true` | `false` leaves the desktop protocol off (`-Dxmage.remoting=false`): web clients only, with fewer threads and less memory. |
 | `XMAGE_SECONDARY_PORT` | `-1` (shipped) | `secondaryBindPort` for the desktop protocol. |
 | `XMAGE_TRUSTED_PROXIES` | `CADDY_IP` | IPs and CIDR ranges, comma separated, whose `X-Forwarded-For` / `X-Real-IP` the bridge believes (`-Dxmage.web.trustedProxies`). The default is Caddy's fixed address on the Compose network, so no other container can claim a client address. Without it, every player appears to come from Caddy's address, and per-address login limits would hit everyone at once. |
 | `XMAGE_SUBNET` | `10.89.17.0/24` | Subnet of the stack's Compose network. Change it if it overlaps another Docker network on the host (`docker network inspect`). |
@@ -112,7 +121,21 @@ Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSW
 
 Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a message that names the variable.
 
-**Why these defaults.** They target a small box, 2 vCPU and 4 GB RAM. Every running game and every AI opponent takes CPU, and AI turns can spike it, so 4 games and 4 AI players at once keep the server responsive. Raise them together with `XMAGE_MEMORY` on bigger hardware.
+**Why these defaults.** They target a small box, 2 vCPU and 2–4 GB RAM. Every running game and every AI opponent takes CPU, and AI turns can spike it, so 4 games and 4 AI players at once keep the server responsive. The heap follows the machine's memory on its own. Raise the game and AI limits on bigger hardware.
+
+### Small VPS (1 vCPU, 1 GB)
+
+The server runs a group's evening on a 1 vCPU / 1 GB VPS. Start from the preset, which lowers the limits to what one CPU keeps responsive and shrinks the picture cache to fit a small disk:
+
+```bash
+cat ops/web/small-vps.env >> ops/web/.env
+```
+
+- The image ships its card database and a class archive, so the first start takes seconds and no memory goes to building the database.
+- The heap comes out at about 400 MB and the GC at Serial; the server uses about 700 MB in all.
+- Add 1 GB of swap as a cushion (`fallocate -l 1G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile`, plus a line in `/etc/fstab`). The server shouldn't need it, but a Docker build on the same box does.
+- Build the images on another machine and push them, or build with nothing else running. A build needs more than 1 GB.
+- When every game slot is busy, a new game waits for one, and its players are told so in the game chat. The web client's home screen says when the server is full.
 
 ## Accounts and moderation
 

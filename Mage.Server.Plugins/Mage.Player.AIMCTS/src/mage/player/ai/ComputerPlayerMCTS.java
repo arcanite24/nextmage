@@ -36,7 +36,20 @@ public class ComputerPlayerMCTS extends ComputerPlayer {
     private static final Logger logger = Logger.getLogger(ComputerPlayerMCTS.class);
     private int poolSize;
 
-    private ExecutorService threadPoolSimulations = null;
+    /**
+     * One pool for every Monte Carlo player of the server. Each player used to make its own, one thread per core, and
+     * never shut it down: every Monte Carlo game left its threads behind. Idle threads end after a minute.
+     */
+    private static final ThreadPoolExecutor SHARED_POOL = sharedPool();
+
+    private static ThreadPoolExecutor sharedPool() {
+        int threads = Runtime.getRuntime().availableProcessors();
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(threads, threads, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(),
+                new XmageThreadFactory(ThreadUtils.THREAD_PREFIX_AI_SIMULATION_MCTS, true));
+        pool.allowCoreThreadTimeOut(true);
+        return pool;
+    }
 
     public ComputerPlayerMCTS(String name, RangeOfInfluence range, int skill) {
         super(name, range);
@@ -164,19 +177,6 @@ public class ComputerPlayerMCTS extends ComputerPlayer {
 
         if (thinkTime > 0) {
             if (USE_MULTIPLE_THREADS) {
-                if (this.threadPoolSimulations == null) {
-                    // same params as Executors.newFixedThreadPool
-                    // no needs errors check in afterExecute here cause that pool used for FutureTask with result check already
-                    this.threadPoolSimulations = new ThreadPoolExecutor(
-                            poolSize,
-                            poolSize,
-                            0L,
-                            TimeUnit.MILLISECONDS,
-                            new LinkedBlockingQueue<>(),
-                            new XmageThreadFactory(ThreadUtils.THREAD_PREFIX_AI_SIMULATION_MCTS) // TODO: add player/game to thread name?
-                    );
-                }
-
                 List<MCTSExecutor> tasks = new ArrayList<>();
                 for (int i = 0; i < poolSize; i++) {
                     Game sim = createMCTSGame(game);
@@ -187,7 +187,7 @@ public class ComputerPlayerMCTS extends ComputerPlayer {
                 }
 
                 try {
-                    List<Future<Boolean>> runningTasks = threadPoolSimulations.invokeAll(tasks, thinkTime, TimeUnit.SECONDS);
+                    List<Future<Boolean>> runningTasks = SHARED_POOL.invokeAll(tasks, thinkTime, TimeUnit.SECONDS);
                     for (Future<Boolean> runningTask : runningTasks) {
                         runningTask.get();
                     }

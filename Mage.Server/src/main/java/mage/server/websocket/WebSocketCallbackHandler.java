@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 
 /**
  * Web client bridge: pushes server callbacks (game updates, prompts, chat...) to a WebSocket as JSON.
@@ -35,17 +36,49 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
      * The last question of each game this connection has not answered yet, as sent (complete, without a state
      * patch), for {@code gameResync}.
      */
-    private final Map<UUID, String> pendingPrompts = new ConcurrentHashMap<>();
+    private final Map<UUID, Prompt> pendingPrompts = new ConcurrentHashMap<>();
+
+    /**
+     * A question as sent complete. For clients with patches it is kept as its tree (which the game's baseline shares),
+     * and written out only if it has to be sent again, which is rare.
+     */
+    private static final class Prompt {
+        private final JsonObject tree;
+        private String json;
+
+        Prompt(JsonObject tree, String json) {
+            this.tree = tree;
+            this.json = json;
+        }
+
+        synchronized String json() {
+            if (json == null) {
+                json = JsonCodec.GSON.toJson(tree);
+            }
+            return json;
+        }
+
+        JsonObject tree() {
+            return tree != null ? tree : JsonParser.parseString(json).getAsJsonObject();
+        }
+    }
     /** the connection's game states, for clients that take patches; its lock orders encoding and sending */
     private final GameStates states;
+    /** diffs, writes and sends the game messages of clients with patches (see {@link SerialSender}) */
+    private final Executor sender;
 
     public WebSocketCallbackHandler(WebSocket conn) {
         this(conn, new GameStates());
     }
 
     WebSocketCallbackHandler(WebSocket conn, GameStates states) {
+        this(conn, states, SerialSender.DIRECT);
+    }
+
+    WebSocketCallbackHandler(WebSocket conn, GameStates states, Executor sender) {
         this.conn = conn;
         this.states = states;
+        this.sender = sender;
     }
 
     /**
@@ -63,20 +96,20 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
      * @return false when nothing is waiting for an answer from this player
      */
     boolean resendPrompt(UUID gameId) {
-        String json = gameId == null ? null : pendingPrompts.get(gameId);
-        if (json == null || !conn.isOpen()) {
+        Prompt prompt = gameId == null ? null : pendingPrompts.get(gameId);
+        if (prompt == null || !conn.isOpen()) {
             return false;
         }
         synchronized (states) {
             if (!states.isEnabled()) {
-                WebSocketServerImpl.sendText(conn, json);
+                WebSocketServerImpl.sendText(conn, prompt.json());
                 return true;
             }
             // the question's view becomes the client's latest state again
-            JsonObject message = JsonParser.parseString(json).getAsJsonObject();
+            JsonObject message = prompt.tree();
             ClientCallbackMethod method = ClientCallbackMethod.valueOf(message.get("method").getAsString());
             GameStates.Encoded encoded = states.encode(method, gameId, message);
-            sendState(encoded == null ? json : encoded.json, encoded);
+            sendState(encoded == null ? prompt.json() : encoded.json, encoded);
         }
         return true;
     }
@@ -112,12 +145,18 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
         clientCallback.decompressData(); // no-op unless the callback was compressed for a desktop client
         try {
             if (states.isEnabled()) {
-                sendWithState(clientCallback);
+                // the views are read here, on the caller's thread (usually the game's), as they were built; the
+                // tree that comes out belongs to this message alone, so the rest can happen on the sender
+                JsonObject message = serializeTree(clientCallback);
+                ClientCallbackMethod method = clientCallback.getMethod();
+                UUID gameId = clientCallback.getObjectId();
+                int messageId = clientCallback.getMessageId();
+                sender.execute(() -> sendWithState(method, gameId, messageId, message));
                 return;
             }
             String json = serialize(clientCallback);
             BridgeMetrics.get().callback(clientCallback.getMethod().name(), json.length(), clientCallback.getObjectId());
-            remember(clientCallback, json);
+            remember(clientCallback.getMethod(), clientCallback.getObjectId(), new Prompt(null, json));
             WebSocketServerImpl.sendText(conn, json);
         } catch (Exception e) {
             throw new HandleCallbackException("Error sending WebSocket message", e);
@@ -127,18 +166,19 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
     /**
      * For clients that take state patches: game views go out as patches against the last state sent, when smaller.
      */
-    private void sendWithState(ClientCallback clientCallback) {
-        ClientCallbackMethod method = clientCallback.getMethod();
-        JsonObject message = serializeTree(clientCallback);
-        // a question is kept complete: when it is sent again, the client may have moved past this state
-        String prompt = PROMPTS.contains(method) && clientCallback.getObjectId() != null ? JsonCodec.GSON.toJson(message) : null;
+    private void sendWithState(ClientCallbackMethod method, UUID gameId, int messageId, JsonObject message) {
+        if (!conn.isOpen()) {
+            return;
+        }
         synchronized (states) {
             // (null when the client turned patches off meanwhile)
-            GameStates.Encoded encoded = states.isEnabled() ? states.encode(method, clientCallback.getObjectId(), message) : null;
-            String json = encoded == null ? (prompt != null ? prompt : JsonCodec.GSON.toJson(message)) : encoded.json;
-            BridgeMetrics.get().callback(method.name(), json.length(), clientCallback.getObjectId());
-            states.sent(clientCallback.getMessageId());
-            remember(clientCallback, prompt != null ? prompt : json);
+            GameStates.Encoded encoded = states.isEnabled() ? states.encode(method, gameId, message) : null;
+            String json = encoded == null ? JsonCodec.GSON.toJson(message) : encoded.json;
+            BridgeMetrics.get().callback(method.name(), json.length(), gameId);
+            states.sent(messageId);
+            // a question is kept complete (encoding leaves the tree as it is): when it is sent again, the client may
+            // have moved past this state
+            remember(method, gameId, new Prompt(message, encoded == null ? json : null));
             sendState(json, encoded);
         }
     }
@@ -150,14 +190,13 @@ public class WebSocketCallbackHandler implements AsynchInvokerCallbackHandler {
         WebSocketServerImpl.sendText(conn, json);
     }
 
-    private void remember(ClientCallback clientCallback, String json) {
-        UUID gameId = clientCallback.getObjectId();
+    private void remember(ClientCallbackMethod method, UUID gameId, Prompt json) {
         if (gameId == null) {
             return;
         }
-        if (PROMPTS.contains(clientCallback.getMethod())) {
+        if (PROMPTS.contains(method)) {
             pendingPrompts.put(gameId, json);
-        } else if (clientCallback.getMethod() == ClientCallbackMethod.GAME_OVER) {
+        } else if (method == ClientCallbackMethod.GAME_OVER) {
             pendingPrompts.remove(gameId);
         }
     }

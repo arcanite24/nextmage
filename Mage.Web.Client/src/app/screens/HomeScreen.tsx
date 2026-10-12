@@ -14,7 +14,7 @@ import { AiSettingsDialog } from './AiSettingsDialog';
 import { useImportDrop, useImportPaste } from '../decks/import/useImportShortcuts';
 import { openImport } from '../stores/importSheet';
 import { describeAi } from './aiSetup';
-import { useServerInfo } from '../queries';
+import { slotsFull, useGameSlots, useServerInfo } from '../queries';
 import styles from './HomeScreen.module.css';
 
 type Mode = 'ai' | 'practice' | 'friend';
@@ -45,6 +45,8 @@ export function HomeScreen() {
   const career = serverInfo?.career === true;
   // what staff want everyone to know, e.g. that a contributors server's data may be reset
   const notice = serverInfo?.notice?.trim();
+  // a small server runs a few games at once; past that a new game waits for a free slot
+  const full = slotsFull(useGameSlots().data);
   const { dragging, dropProps } = useImportDrop();
   useImportPaste();
 
@@ -153,6 +155,7 @@ export function HomeScreen() {
           )}
           {mode === 'practice' && <p className={styles.modeNote}>{t('home.practiceNote')}</p>}
           {mode === 'friend' && <p className={styles.modeNote}>{t('home.friendNote')}</p>}
+          {full && <p className={styles.modeNote} role="status">{t('home.serverFull')}</p>}
           {play.error && <p className={styles.error} role="alert">{play.error}</p>}
           <div className={styles.playRow}>
             {busy && (

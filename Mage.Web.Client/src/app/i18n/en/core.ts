@@ -98,6 +98,7 @@ export default {
   'home.mode.friend': 'A friend',
   'home.practiceNote': 'Goldfish: an opponent that only plays lands. In the game, Practice tools put any card in your hand or on the battlefield, draw, untap and set your life.',
   'home.change': 'Change',
+  'home.serverFull': 'The server is running as many games as it can right now. A new game starts as soon as another one ends.',
   'home.friendNote': 'You host a table with this deck; your friend joins it from Tables.',
   'home.cancel': 'Cancel',
   'home.shuffling': 'Shuffling',

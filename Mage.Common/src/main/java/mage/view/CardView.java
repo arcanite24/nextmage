@@ -336,10 +336,13 @@ public class CardView extends SimpleCardView {
             this.controllerId = this.ownerId;
         }
 
-        // find real spell characteristics before resolve
-        Card card = sourceCard.copy();
-        if (game != null && card instanceof Spell) {
-            card = ((Spell) card).getSpellAbility().getCharacteristics(game);
+        // find real spell characteristics before resolve; other objects are only read below, so they need no copy
+        Card card = sourceCard;
+        if (card instanceof Spell) {
+            card = sourceCard.copy();
+            if (game != null) {
+                card = ((Spell) card).getSpellAbility().getCharacteristics(game);
+            }
         }
         // use isFaceDown(game) only here to find real status, all other code must use this.faceDown
         this.faceDown = game != null && sourceCard.isFaceDown(game);
@@ -545,7 +548,7 @@ public class CardView extends SimpleCardView {
             this.toughness = Integer.toString(card.getToughness().getValue());
             this.cardTypes = new ArrayList<>(card.getCardType(game));
             this.subTypes = card.getSubtype(game).copy();
-            this.superTypes = card.getSuperType(game);
+            this.superTypes = new ArrayList<>(card.getSuperType(game));
             this.color = card.getColor(game).copy();
             this.flipCard = card.isFlipCard();
 

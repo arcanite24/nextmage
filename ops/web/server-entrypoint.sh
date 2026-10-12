@@ -70,18 +70,31 @@ render XMAGE_MAIL_PASSWORD      mailPassword            ""            any
 render XMAGE_MAIL_FROM          mailFromAddress         ""            any
 render XMAGE_ALLOWED_ORIGINS    websocketAllowedOrigins ""            any
 
+# the Monte Carlo AI keeps every core busy for its whole think time; a small server can leave it out
+MONTE_CARLO=${XMAGE_MONTE_CARLO:-true}
+is_bool "$MONTE_CARLO" || die "XMAGE_MONTE_CARLO must be true or false (got '$MONTE_CARLO')"
+if [ "$MONTE_CARLO" = false ]; then
+  xmlstarlet ed -L -d "/config/playerTypes/playerType[@className='mage.player.ai.ComputerPlayerMCTS']" "$CONFIG"
+fi
+
 if [ "${XMAGE_AUTH:-false}" = true ] && [ -z "${XMAGE_MAILGUN_API_KEY:-}${XMAGE_MAIL_USER:-}" ]; then
   echo "xmage-server: warning: XMAGE_AUTH=true without mail settings; password reset mails cannot be sent" >&2
 fi
 
 # --- databases ----------------------------------------------------------------------------------
 # XMage opens every database under ./db. Only user data should live on the db volume; the card
-# database is a cache that belongs to the image. cards.h2.* in ./db are symlinks into the cards
-# volume, which is wiped whenever the image build changes, so an old card DB never outlives an upgrade.
+# database belongs to the image. cards.h2.* in ./db are symlinks into the cards volume, which gets
+# the image's own card database (built with the image, in cards-prebuilt) whenever the image build
+# changes, so an old card DB never outlives an upgrade and a new one is never built on the server.
 build_id=$(cat "$APP/.build-id")
 if [ "$(cat "$CARDS_DIR/.build-id" 2>/dev/null || true)" != "$build_id" ]; then
-  echo "xmage-server: new image build, the card database will be rebuilt (takes a few minutes)"
   rm -f "$CARDS_DIR"/cards.h2.*
+  if [ -f "$APP/cards-prebuilt/cards.h2.mv.db" ]; then
+    echo "xmage-server: new image build, installing its card database"
+    cp "$APP/cards-prebuilt/cards.h2.mv.db" "$CARDS_DIR/cards.h2.mv.db"
+  else
+    echo "xmage-server: new image build, the card database will be rebuilt (takes a few minutes)"
+  fi
   printf '%s\n' "$build_id" > "$CARDS_DIR/.build-id"
 fi
 for part in mv.db trace.db; do
@@ -106,6 +119,11 @@ is_uint "$REPLAY_DAYS" || die "XMAGE_REPLAY_DAYS must be a whole number (got '$R
 REPLAY_MAX=${XMAGE_REPLAY_MAX:-300}
 is_uint "$REPLAY_MAX" || die "XMAGE_REPLAY_MAX must be a whole number (got '$REPLAY_MAX')"
 
+# --- desktop clients ---------------------------------------------------------------------------
+# The desktop protocol (JBoss Remoting on XMAGE_PORT) costs threads and memory; a web-only server can leave it off.
+DESKTOP=${XMAGE_DESKTOP:-true}
+is_bool "$DESKTOP" || die "XMAGE_DESKTOP must be true or false (got '$DESKTOP')"
+
 # --- access (contributors server) -------------------------------------------------------------
 # XMAGE_ACCESS=allowlist starts the server closed: only the owner, staff and the people on the
 # allowlist get in. It is read on the very first boot only; after that /admin switches it.
@@ -123,15 +141,98 @@ case "$ALLOWLIST" in
   @*) [ -r "${ALLOWLIST#@}" ] || die "XMAGE_ALLOWLIST file ${ALLOWLIST#@} can't be read" ;;
 esac
 
+# --- JVM sizing ---------------------------------------------------------------------------------
+# Sized to the machine the container sees: its memory limit when it has one, else the host's memory;
+# its CPU quota when it has one, else the host's cores.
+machine_mb() {
+  total=$(awk '/^MemTotal:/ {print int($2 / 1024)}' /proc/meminfo)
+  limit=""
+  if [ -r /sys/fs/cgroup/memory.max ]; then limit=$(cat /sys/fs/cgroup/memory.max)
+  elif [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then limit=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)
+  fi
+  case "$limit" in
+    ''|max) echo "$total" ;;
+    *) limit=$((limit / 1048576)); if [ "$limit" -lt "$total" ]; then echo "$limit"; else echo "$total"; fi ;;
+  esac
+}
+machine_cpus() {
+  cpus=$(nproc)
+  quota=""; period=""
+  if [ -r /sys/fs/cgroup/cpu.max ]; then read -r quota period < /sys/fs/cgroup/cpu.max
+  elif [ -r /sys/fs/cgroup/cpu/cpu.cfs_quota_us ]; then
+    quota=$(cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us); period=$(cat /sys/fs/cgroup/cpu/cpu.cfs_period_us)
+  fi
+  if is_uint "$quota" && is_uint "$period" && [ "$period" -gt 0 ]; then
+    limited=$(( (quota + period - 1) / period ))
+    [ "$limited" -lt "$cpus" ] && cpus=$limited
+  fi
+  echo "$cpus"
+}
+MACHINE_MB=$(machine_mb)
+MACHINE_CPUS=$(machine_cpus)
+
+# Heap: XMAGE_MEMORY when set, else XMAGE_HEAP_PERCENT of the machine, between 256 MB and 1 GB.
+# Games hold a few MB each; most of the heap is headroom for the garbage the AI's search makes.
+if [ -n "${XMAGE_MEMORY:-}" ]; then
+  HEAP=$XMAGE_MEMORY
+else
+  pct=${XMAGE_HEAP_PERCENT:-40}
+  is_uint "$pct" || die "XMAGE_HEAP_PERCENT must be a whole number (got '$pct')"
+  heap=$((MACHINE_MB * pct / 100))
+  [ "$heap" -lt 256 ] && heap=256
+  [ "$heap" -gt 1024 ] && heap=1024
+  HEAP=${heap}m
+fi
+# GC: Serial on one or two CPUs (measured about 25% less CPU per game than G1 there), else G1, told to hand
+# memory back to the machine while the server idles.
+GC=${XMAGE_GC:-auto}
+if [ "$GC" = auto ]; then
+  if [ "$MACHINE_CPUS" -le 2 ]; then GC=serial; else GC=g1; fi
+fi
+case "$GC" in
+  serial) GC_FLAGS="-XX:+UseSerialGC" ;;
+  g1) GC_FLAGS="-XX:+UseG1GC -XX:G1PeriodicGCInterval=60000" ;;
+  parallel) GC_FLAGS="-XX:+UseParallelGC" ;;
+  *) die "XMAGE_GC must be auto, serial, g1 or parallel (got '$GC')" ;;
+esac
+# AI searches at once: 5 (the engine's default), fewer on a machine with fewer CPUs
+AI_THREADS=${XMAGE_AI_THREADS:-$([ "$MACHINE_CPUS" -lt 5 ] && echo "$MACHINE_CPUS" || echo 5)}
+is_uint "$AI_THREADS" && [ "$AI_THREADS" -ge 1 ] || die "XMAGE_AI_THREADS must be a whole number from 1 (got '$AI_THREADS')"
+# card database cache (in the heap): an eighth of the heap, 16 to 150 MB; it mostly holds rows read once at startup
+heap_mb() { case "$1" in *[gG]) echo $(( ${1%?} * 1024 )) ;; *[mM]) echo "${1%?}" ;; *[kK]) echo $(( ${1%?} / 1024 )) ;; *) echo $(( $1 / 1048576 )) ;; esac; }
+if [ -n "${XMAGE_DB_CACHE:-}" ]; then
+  DB_CACHE_MB=$XMAGE_DB_CACHE
+else
+  DB_CACHE_MB=$(( $(heap_mb "$HEAP") / 8 ))
+  [ "$DB_CACHE_MB" -lt 16 ] && DB_CACHE_MB=16
+  [ "$DB_CACHE_MB" -gt 150 ] && DB_CACHE_MB=150
+fi
+is_uint "$DB_CACHE_MB" || die "XMAGE_DB_CACHE must be a whole number of MB (got '$DB_CACHE_MB')"
+# glibc gives each busy thread its own malloc arena; capped, the JVM's native memory stays put
+export MALLOC_ARENA_MAX=${MALLOC_ARENA_MAX:-2}
+echo "xmage-server: machine ${MACHINE_MB} MB, ${MACHINE_CPUS} CPU(s): heap $HEAP, $GC GC, card cache ${DB_CACHE_MB} MB, $AI_THREADS AI search thread(s)"
+
 # --- JVM ----------------------------------------------------------------------------------------
 # Arguments go through a private @argfile so the admin password does not show up in `ps`.
 umask 077
 args=$(mktemp /tmp/xmage-jvm.XXXXXX)
 {
-  echo "-Xmx${XMAGE_MEMORY:-2g}"
+  echo "-Xmx$HEAP"
+  for flag in $GC_FLAGS; do echo "$flag"; done
+  echo "-XX:MaxMetaspaceSize=${XMAGE_METASPACE:-512m}"
+  # the class-data archive recorded when the image was built (see Dockerfile.server); the JVM skips it if it doesn't fit
+  if [ "${XMAGE_CDS:-true}" = true ] && [ -f "$APP/xmage.jsa" ]; then
+    echo "-XX:SharedArchiveFile=$APP/xmage.jsa"
+    echo "-Xlog:cds=off"
+    echo "-Xlog:cds+dynamic=off"
+  fi
   echo "-Dxmage.testMode=false"
   echo "-Dlog4j.configuration=file:$APP/config/log4j-docker.properties"
   echo "-Dxmage.replays=$REPLAYS"
+  echo "-Dxmage.remoting=$DESKTOP"
+  echo "-Dxmage.ai.threads=$AI_THREADS"
+  [ -z "${XMAGE_AI_NODE_SCALE:-}" ] || echo "-Dxmage.ai.nodeScale=$XMAGE_AI_NODE_SCALE"
+  echo "-Dxmage.db.cacheSizeKB=$((DB_CACHE_MB * 1024))"
   echo "-Dxmage.replays.dir=$APP/saved/replays"
   echo "-Dxmage.replays.retentionDays=$REPLAY_DAYS"
   echo "-Dxmage.replays.maxCount=$REPLAY_MAX"

@@ -25,6 +25,27 @@ export function useServerState() {
   });
 }
 
+/**
+ * How many games the server runs at once and how many run now, polled while signed in. When every slot is busy a new
+ * game waits for one to free up, which players should know before they start one.
+ */
+export function useGameSlots() {
+  const signedIn = useSession((state) => state.phase === 'signedIn');
+  return useQuery({
+    queryKey: ['gameSlots'],
+    queryFn: () => api.serverInfo().catch(() => null),
+    enabled: signedIn,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    select: (info) => (info ? { running: info.gamesRunning ?? 0, waiting: info.gamesWaiting ?? 0, max: info.maxGames ?? 0 } : null),
+  });
+}
+
+/** Every game slot is taken, so a game started now waits for another to end. */
+export function slotsFull(slots: { running: number; waiting: number; max: number } | null | undefined): boolean {
+  return !!slots && slots.max > 0 && (slots.waiting > 0 || slots.running >= slots.max);
+}
+
 /** The server rebuilds its table list every 2 seconds: a table asked for sooner after a change may not show it yet. */
 export const TABLE_LIST_PERIOD_MS = 2_000;
 

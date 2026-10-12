@@ -101,6 +101,7 @@ const es: Catalog = {
   'home.mode.friend': 'Un amigo',
   'home.practiceNote': 'Goldfish: un rival que solo juega tierras. En la partida, las herramientas de práctica ponen cualquier carta en tu mano o en el campo de batalla, roban, enderezan y fijan tu vida.',
   'home.change': 'Cambiar',
+  'home.serverFull': 'El servidor está jugando todas las partidas que puede ahora mismo. Una partida nueva empieza en cuanto termine otra.',
   'home.friendNote': 'Abres una mesa con este mazo; tu amigo se une desde Mesas.',
   'home.cancel': 'Cancelar',
   'home.shuffling': 'Barajando',

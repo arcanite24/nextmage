@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import mage.game.Game;
 import mage.game.Table;
 import mage.players.Player;
+import mage.server.game.GameChangeKey;
 import mage.server.websocket.rpc.JsonCodec;
 import mage.view.CardsView;
 import mage.view.ChatMessage;
@@ -41,6 +42,8 @@ public final class ReplayRecorder {
     private final UUID watcherId = UUID.randomUUID();
     private Writer out;
     private String lastFrame;
+    /** what the game looked like at the last snapshot, cheaply (see {@link GameChangeKey}) */
+    private String lastKey;
     private boolean finished;
     /** the file couldn't be written */
     private boolean broken;
@@ -83,7 +86,7 @@ public final class ReplayRecorder {
             if (chatId != null) {
                 BY_CHAT.put(chatId, recorder);
             }
-            recorder.frame();
+            recorder.frame(true);
             return recorder;
         } catch (Throwable e) {
             logger.error("Can't record game " + (game == null ? null : game.getId()) + " for replay", e);
@@ -101,26 +104,40 @@ public final class ReplayRecorder {
 
     /** a board snapshot, unless nothing changed since the last one; game thread only */
     public synchronized void frame() {
+        frame(false);
+    }
+
+    private void frame(boolean always) {
         if (!canWrite()) {
             return;
         }
         try {
-            JsonObject event = new JsonObject();
-            event.add("view", JsonCodec.GSON.toJsonTree(new GameView(game.getState(), game, null, watcherId)));
-            JsonObject hands = new JsonObject();
-            for (Player player : game.getPlayers().values()) {
-                if (player.isHuman()) {
-                    hands.add(player.getName(), JsonCodec.GSON.toJsonTree(new CardsView(game, player.getHand().getCards(game), player.getId())));
-                }
-            }
-            event.add("hands", hands);
-            String frame = event.toString();
-            if (frame.equals(lastFrame)) {
+            // building a spectator's view costs far more than this key: skip it while nothing visible has changed
+            String key = GameChangeKey.of(game);
+            if (!always && key.equals(lastKey)) {
                 return;
             }
-            lastFrame = frame;
-            event.addProperty("t", elapsed());
-            write(event);
+            lastKey = key;
+            // written straight to text, {"view":...,"hands":{"name":...},"t":ms}: a JSON tree first would cost as
+            // much again
+            StringBuilder frame = new StringBuilder(32 * 1024).append("{\"view\":");
+            JsonCodec.GSON.toJson(new GameView(game.getState(), game, null, watcherId), frame);
+            frame.append(",\"hands\":{");
+            boolean first = true;
+            for (Player player : game.getPlayers().values()) {
+                if (player.isHuman()) {
+                    frame.append(first ? "" : ",").append(JsonCodec.GSON.toJson(player.getName())).append(':');
+                    JsonCodec.GSON.toJson(new CardsView(game, player.getHand().getCards(game), player.getId()), frame);
+                    first = false;
+                }
+            }
+            frame.append('}');
+            String snapshot = frame.toString();
+            if (snapshot.equals(lastFrame)) {
+                return;
+            }
+            lastFrame = snapshot;
+            write(snapshot + ",\"t\":" + elapsed() + "}");
         } catch (Throwable e) {
             logger.warn("Replay of game " + info.gameId + " missed a snapshot: " + e);
         }
@@ -133,7 +150,7 @@ public final class ReplayRecorder {
         JsonObject event = new JsonObject();
         event.addProperty("t", elapsed());
         event.add("log", JsonCodec.GSON.toJsonTree(message));
-        write(event);
+        write(event.toString());
     }
 
     /** the game is over (or abandoned): the replay becomes available */
@@ -144,7 +161,7 @@ public final class ReplayRecorder {
         if (result != null) {
             info.result = result;
         }
-        frame();
+        frame(true);
         finished = true;
         if (chatId != null) {
             BY_CHAT.remove(chatId, this);
@@ -175,9 +192,9 @@ public final class ReplayRecorder {
         return true;
     }
 
-    private void write(JsonObject event) {
+    private void write(String event) {
         try {
-            out.write(event.toString());
+            out.write(event);
             out.write('\n');
             info.events++;
         } catch (IOException e) {
