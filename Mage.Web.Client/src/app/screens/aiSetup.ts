@@ -14,6 +14,16 @@ export const AI_TYPES: { value: AiType; label: MessageKey; detail: MessageKey }[
   { value: 'COMPUTER_MONTE_CARLO', label: 'ai.type.monteCarlo', detail: 'ai.type.monteCarlo.detail' },
 ];
 
+/** The AI types this server offers (a server can leave the Monte Carlo AI out); all of them until it has said. */
+export function offeredAiTypes(playerTypes: readonly string[] | undefined) {
+  return playerTypes ? AI_TYPES.filter((item) => playerTypes.includes(item.value)) : AI_TYPES;
+}
+
+/** The AI type to seat: the chosen one if the server offers it, else the standard AI. */
+export function seatableAiType(aiType: AiType, playerTypes: readonly string[] | undefined): AiType {
+  return !playerTypes || playerTypes.includes(aiType) ? aiType : 'COMPUTER_MAD';
+}
+
 export function difficultyOf(skill: number) {
   return DIFFICULTIES.reduce((best, item) => (Math.abs(item.skill - skill) < Math.abs(best.skill - skill) ? item : best));
 }

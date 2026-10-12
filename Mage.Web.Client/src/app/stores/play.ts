@@ -7,7 +7,9 @@ import { useSession } from './session';
 import { readJson, writeJson } from './persist';
 import { deckStorage } from '../../core/decks/DeckStorageService';
 import { toWire } from '../decks/deckModel';
-import type { GameTypeView } from '../../protocol/generated/views';
+import type { GameTypeView, ServerState } from '../../protocol/generated/views';
+import { queryClient } from '../queries';
+import { seatableAiType } from '../screens/aiSetup';
 import type { DeckCardLists } from '../../core/decks/types';
 import { formatRules, gameTypesFor, isCommanderFormat } from '../../core/decks/formats';
 import { notify } from './toasts';
@@ -199,7 +201,7 @@ export const usePlay = create<PlayState>((set, get) => ({
         gameType,
         deckType,
         winsNeeded: options.winsNeeded,
-        playerTypes: ['HUMAN', ...rivals.map(() => options.aiType)],
+        playerTypes: ['HUMAN', ...rivals.map(() => seatableAiType(options.aiType, queryClient.getQueryData<ServerState>(['serverState'])?.playerTypes))],
         advanced: { startingLife: options.startingLife },
       }));
       // no table: the server doesn't know us any more (the session store sends us to sign in)

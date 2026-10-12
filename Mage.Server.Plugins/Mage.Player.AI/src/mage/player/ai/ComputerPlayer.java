@@ -66,7 +66,10 @@ public class ComputerPlayer extends PlayerImpl {
     // * use yours CPU cores for best performance
     // TODO: add server config to control max AI threads (with CPU cores by default)
     // TODO: rework AI implementation to use multiple sims calculation instead one by one
-    final static int COMPUTER_MAX_THREADS_FOR_SIMULATIONS = 5;//DebugUtil.AI_ENABLE_DEBUG_MODE ? 1 : 5;
+    // searches running at once for all AI players of the server (-Dxmage.ai.threads, default 5); on a small server
+    // more threads than cores only make every search slower
+    // public: the AI plugins run in their own class loader, where package access to this class fails
+    public final static int COMPUTER_MAX_THREADS_FOR_SIMULATIONS = Math.max(1, Integer.getInteger("xmage.ai.threads", 5));//DebugUtil.AI_ENABLE_DEBUG_MODE ? 1 : 5;
 
 
     // remember picked cards for better draft choices

@@ -2,10 +2,9 @@ package mage.server.replay;
 
 import com.google.gson.JsonObject;
 import mage.game.Game;
-import mage.game.GameState;
-import mage.game.permanent.Permanent;
 import mage.game.Table;
 import mage.players.Player;
+import mage.server.game.GameChangeKey;
 import mage.server.websocket.rpc.JsonCodec;
 import mage.view.CardsView;
 import mage.view.ChatMessage;
@@ -43,7 +42,7 @@ public final class ReplayRecorder {
     private final UUID watcherId = UUID.randomUUID();
     private Writer out;
     private String lastFrame;
-    /** what the game looked like at the last snapshot, cheaply (see {@link #changeKey}) */
+    /** what the game looked like at the last snapshot, cheaply (see {@link GameChangeKey}) */
     private String lastKey;
     private boolean finished;
     /** the file couldn't be written */
@@ -114,7 +113,7 @@ public final class ReplayRecorder {
         }
         try {
             // building a spectator's view costs far more than this key: skip it while nothing visible has changed
-            String key = changeKey();
+            String key = GameChangeKey.of(game);
             if (!always && key.equals(lastKey)) {
                 return;
             }
@@ -142,33 +141,6 @@ public final class ReplayRecorder {
         } catch (Throwable e) {
             logger.warn("Replay of game " + info.gameId + " missed a snapshot: " + e);
         }
-    }
-
-    /**
-     * A cheap summary of what a spectator sees: every change to the game goes through applyEffects (which counts), and
-     * the rest covers what moves without it (mana in pools, priority, taps, zone sizes).
-     */
-    private String changeKey() {
-        GameState state = game.getState();
-        StringBuilder key = new StringBuilder(128)
-                .append(state.getApplyEffectsCounter()).append('|').append(state.getTurnNum())
-                .append('|').append(state.getTurn() == null ? null : state.getTurn().getStep() == null ? null : state.getTurn().getStep().getType())
-                .append('|').append(state.getPriorityPlayerId())
-                .append('|').append(state.getStack().size())
-                .append('|').append(state.getCombat() == null ? 0 : state.getCombat().getAttackers().size());
-        int tapped = 0;
-        int permanents = 0;
-        for (Permanent permanent : state.getBattlefield().getAllPermanents()) {
-            permanents++;
-            tapped += permanent.isTapped() ? 1 : 0;
-        }
-        key.append('|').append(permanents).append('/').append(tapped);
-        for (Player player : state.getPlayers().values()) {
-            key.append('|').append(player.getLife()).append(',').append(player.getHand().size())
-                    .append(',').append(player.getLibrary().size()).append(',').append(player.getGraveyard().size())
-                    .append(',').append(player.getManaPool().count()).append(',').append(player.hasLeft() ? 1 : 0);
-        }
-        return key.toString();
     }
 
     private synchronized void log(ChatMessage message) {

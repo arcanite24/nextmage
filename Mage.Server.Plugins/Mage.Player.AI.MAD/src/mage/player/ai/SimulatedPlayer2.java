@@ -350,7 +350,7 @@ public final class SimulatedPlayer2 extends ComputerPlayer {
         }
         sim.applyEffects();
         SimulationNode2 newNode = new SimulationNode2(parent, sim, depth, playerId);
-        logger.debug("simulating -- node #:" + SimulationNode2.getCount() + " triggered ability option");
+        logger.debug("simulating -- node #:" + newNode.getSearchNodes() + " triggered ability option");
         for (Target target : ability.getTargets()) {
             for (UUID targetId : target.getTargets()) {
                 newNode.getTargets().add(targetId); // save for info only (real targets in newNode.game.stack already)

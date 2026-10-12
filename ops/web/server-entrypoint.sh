@@ -70,6 +70,13 @@ render XMAGE_MAIL_PASSWORD      mailPassword            ""            any
 render XMAGE_MAIL_FROM          mailFromAddress         ""            any
 render XMAGE_ALLOWED_ORIGINS    websocketAllowedOrigins ""            any
 
+# the Monte Carlo AI keeps every core busy for its whole think time; a small server can leave it out
+MONTE_CARLO=${XMAGE_MONTE_CARLO:-true}
+is_bool "$MONTE_CARLO" || die "XMAGE_MONTE_CARLO must be true or false (got '$MONTE_CARLO')"
+if [ "$MONTE_CARLO" = false ]; then
+  xmlstarlet ed -L -d "/config/playerTypes/playerType[@className='mage.player.ai.ComputerPlayerMCTS']" "$CONFIG"
+fi
+
 if [ "${XMAGE_AUTH:-false}" = true ] && [ -z "${XMAGE_MAILGUN_API_KEY:-}${XMAGE_MAIL_USER:-}" ]; then
   echo "xmage-server: warning: XMAGE_AUTH=true without mail settings; password reset mails cannot be sent" >&2
 fi
@@ -188,9 +195,22 @@ case "$GC" in
   parallel) GC_FLAGS="-XX:+UseParallelGC" ;;
   *) die "XMAGE_GC must be auto, serial, g1 or parallel (got '$GC')" ;;
 esac
+# AI searches at once: 5 (the engine's default), fewer on a machine with fewer CPUs
+AI_THREADS=${XMAGE_AI_THREADS:-$([ "$MACHINE_CPUS" -lt 5 ] && echo "$MACHINE_CPUS" || echo 5)}
+is_uint "$AI_THREADS" && [ "$AI_THREADS" -ge 1 ] || die "XMAGE_AI_THREADS must be a whole number from 1 (got '$AI_THREADS')"
+# card database cache (in the heap): an eighth of the heap, 16 to 150 MB; it mostly holds rows read once at startup
+heap_mb() { case "$1" in *[gG]) echo $(( ${1%?} * 1024 )) ;; *[mM]) echo "${1%?}" ;; *[kK]) echo $(( ${1%?} / 1024 )) ;; *) echo $(( $1 / 1048576 )) ;; esac; }
+if [ -n "${XMAGE_DB_CACHE:-}" ]; then
+  DB_CACHE_MB=$XMAGE_DB_CACHE
+else
+  DB_CACHE_MB=$(( $(heap_mb "$HEAP") / 8 ))
+  [ "$DB_CACHE_MB" -lt 16 ] && DB_CACHE_MB=16
+  [ "$DB_CACHE_MB" -gt 150 ] && DB_CACHE_MB=150
+fi
+is_uint "$DB_CACHE_MB" || die "XMAGE_DB_CACHE must be a whole number of MB (got '$DB_CACHE_MB')"
 # glibc gives each busy thread its own malloc arena; capped, the JVM's native memory stays put
 export MALLOC_ARENA_MAX=${MALLOC_ARENA_MAX:-2}
-echo "xmage-server: machine ${MACHINE_MB} MB, ${MACHINE_CPUS} CPU(s): heap $HEAP, $GC GC"
+echo "xmage-server: machine ${MACHINE_MB} MB, ${MACHINE_CPUS} CPU(s): heap $HEAP, $GC GC, card cache ${DB_CACHE_MB} MB, $AI_THREADS AI search thread(s)"
 
 # --- JVM ----------------------------------------------------------------------------------------
 # Arguments go through a private @argfile so the admin password does not show up in `ps`.
@@ -210,6 +230,9 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
   echo "-Dlog4j.configuration=file:$APP/config/log4j-docker.properties"
   echo "-Dxmage.replays=$REPLAYS"
   echo "-Dxmage.remoting=$DESKTOP"
+  echo "-Dxmage.ai.threads=$AI_THREADS"
+  [ -z "${XMAGE_AI_NODE_SCALE:-}" ] || echo "-Dxmage.ai.nodeScale=$XMAGE_AI_NODE_SCALE"
+  echo "-Dxmage.db.cacheSizeKB=$((DB_CACHE_MB * 1024))"
   echo "-Dxmage.replays.dir=$APP/saved/replays"
   echo "-Dxmage.replays.retentionDays=$REPLAY_DAYS"
   echo "-Dxmage.replays.maxCount=$REPLAY_MAX"

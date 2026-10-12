@@ -1111,6 +1111,17 @@ public abstract class GameImpl implements Game {
     public void cleanUp() {
         gameCards.clear();
         meldCards.clear();
+        // a finished game can't roll back or look back any more, and a match keeps its finished games until it ends:
+        // drop the saved copies of the whole game state (one per priority, plus one per turn) and last known information
+        if (!simulation) {
+            gameStates.clear();
+            savedStates.clear();
+            gameStatesRollBack.clear();
+            lki.clear();
+            lkiCardState.clear();
+            lkiExtended.clear();
+            lkiShortLiving.clear();
+        }
     }
 
     @Override

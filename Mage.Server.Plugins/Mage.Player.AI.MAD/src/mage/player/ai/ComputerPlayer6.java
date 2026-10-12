@@ -52,7 +52,13 @@ public class ComputerPlayer6 extends ComputerPlayer {
     // TODO: add and research maxNodes logs, is it good to increase from 5000 to 50000 for better results?
     // TODO: increase maxNodes due AI skill level like max depth?
     private static final int MAX_SIMULATED_NODES_PER_CALC = 5000;
-    private static final int MAX_SIMULATED_NODES_PER_ERROR = 5100; // TODO: debug only, set low value to find big calculations
+    // nodes searched past the budget before it counts as an error (debug check, set low to find big calculations)
+    private static final int MAX_SIMULATED_NODES_OVER_BUDGET = 100;
+    // -Dxmage.ai.nodeScale scales every skill's node budget, e.g. 0.5 on a small server (fewer nodes, faster turns)
+    private static final double NODE_SCALE = nodeScale();
+    // a search waits this long for a free search thread before the AI gives up on it; the wait doesn't count as
+    // think time, so AI players on a busy server don't lose their search to each other's
+    private static final int MAX_SECONDS_WAITING_FOR_A_SEARCH_THREAD = 60;
 
     // same params as Executors.newFixedThreadPool
     // no needs errors check in afterExecute here cause that pool used for FutureTask with result check already
@@ -96,9 +102,27 @@ public class ComputerPlayer6 extends ComputerPlayer {
             maxDepth = skill;
         }
         maxThinkTimeSecs = skill * 3;
-        maxNodes = MAX_SIMULATED_NODES_PER_CALC;
+        maxNodes = maxNodesForSkill(skill);
         rootScoreNoise = rootScoreNoiseForSkill(skill);
         this.actionCache = new HashSet<>();
+    }
+
+    /**
+     * Skills below 4 search as deep as skill 4 but misjudge their options on purpose (see rootScoreNoiseForSkill), so a
+     * full node budget mostly buys them CPU time: they get a smaller one.
+     */
+    static int maxNodesForSkill(int skill) {
+        int nodes = skill <= 2 ? 2000 : skill == 3 ? 3500 : MAX_SIMULATED_NODES_PER_CALC;
+        return Math.max(100, (int) Math.round(nodes * NODE_SCALE));
+    }
+
+    private static double nodeScale() {
+        try {
+            double scale = Double.parseDouble(System.getProperty("xmage.ai.nodeScale", "1"));
+            return scale > 0 && scale <= 10 ? scale : 1;
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 
     /**
@@ -122,6 +146,8 @@ public class ComputerPlayer6 extends ComputerPlayer {
     public ComputerPlayer6(final ComputerPlayer6 player) {
         super(player);
         this.maxDepth = player.maxDepth;
+        this.maxNodes = player.maxNodes;
+        this.maxThinkTimeSecs = player.maxThinkTimeSecs;
         this.rootScoreNoise = player.rootScoreNoise;
         this.currentScore = player.currentScore;
         if (player.combat != null) {
@@ -235,12 +261,12 @@ public class ComputerPlayer6 extends ComputerPlayer {
             return GameStateEvaluator2.evaluate(playerId, game).getTotalScore();
         }
         // Condition to stop deeper simulation
-        if (SimulationNode2.nodeCount > MAX_SIMULATED_NODES_PER_ERROR) {
+        if (node.getSearchNodes() > maxNodes + MAX_SIMULATED_NODES_OVER_BUDGET) {
             // how-to fix: make sure you are disabled debug mode by COMPUTER_DISABLE_TIMEOUT_IN_GAME_SIMULATIONS = false
             throw new IllegalStateException("AI ERROR: too much nodes (possible actions)");
         }
         if (depth <= 0
-                || SimulationNode2.nodeCount > maxNodes
+                || node.getSearchNodes() > maxNodes
                 || game.checkIfGameIsOver()) {
             val = GameStateEvaluator2.evaluate(playerId, game).getTotalScore();
             if (logger.isTraceEnabled()) {
@@ -358,10 +384,10 @@ public class ComputerPlayer6 extends ComputerPlayer {
             if (alpha >= beta) {
                 break;
             }
-            if (SimulationNode2.nodeCount > MAX_SIMULATED_NODES_PER_ERROR) {
+            if (node.getSearchNodes() > maxNodes + MAX_SIMULATED_NODES_OVER_BUDGET) {
                 throw new IllegalStateException("AI ERROR: too much nodes (possible actions)");
             }
-            if (SimulationNode2.nodeCount > maxNodes) {
+            if (node.getSearchNodes() > maxNodes) {
                 break;
             }
             int val = addActions(child, depth - 1, alpha, beta);
@@ -436,7 +462,7 @@ public class ComputerPlayer6 extends ComputerPlayer {
                         SimulationNode2 newNode = new SimulationNode2(node, sim, depth, stackObject.getControllerId());
                         node.children.add(newNode);
                         newNode.getTargets().add(targetId);
-                        logger.trace("Sim search -- node#: " + SimulationNode2.getCount() + " for player: " + sim.getPlayer(stackObject.getControllerId()).getName());
+                        logger.trace("Sim search -- node#: " + newNode.getSearchNodes() + " for player: " + sim.getPlayer(stackObject.getControllerId()).getName());
                     }
                     return;
                 }
@@ -460,7 +486,11 @@ public class ComputerPlayer6 extends ComputerPlayer {
         // TODO: all actions added and calculated one by one,
         //  multithreading do not supported here
         // run new game simulation in parallel thread
-        FutureTask<Integer> task = new FutureTask<>(() -> addActions(root, maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE));
+        CountDownLatch started = new CountDownLatch(1);
+        FutureTask<Integer> task = new FutureTask<>(() -> {
+            started.countDown();
+            return addActions(root, maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE);
+        });
         threadPoolSimulations.execute(task);
         try {
             int maxSeconds = maxThinkTimeSecs;
@@ -468,6 +498,10 @@ public class ComputerPlayer6 extends ComputerPlayer {
                 maxSeconds = 3600;
             }
             logger.debug("maxThink: " + maxSeconds + " seconds ");
+            // the think time starts when the search does, not while it waits for a thread other AI players use
+            if (!started.await(MAX_SECONDS_WAITING_FOR_A_SEARCH_THREAD, TimeUnit.SECONDS)) {
+                throw new TimeoutException("no free search thread");
+            }
             Integer res = task.get(maxSeconds, TimeUnit.SECONDS);
             if (res != null) {
                 return res;
@@ -745,10 +779,10 @@ public class ComputerPlayer6 extends ComputerPlayer {
                 if (alpha >= beta) {
                     break;
                 }
-                if (SimulationNode2.nodeCount > MAX_SIMULATED_NODES_PER_ERROR) {
+                if (node.getSearchNodes() > maxNodes + MAX_SIMULATED_NODES_OVER_BUDGET) {
                     throw new IllegalStateException("AI ERROR: too many nodes (possible actions)");
                 }
-                if (SimulationNode2.nodeCount > maxNodes) {
+                if (node.getSearchNodes() > maxNodes) {
                     logger.debug("Sim Prio -- reached end-state");
                     break;
                 }
@@ -757,7 +791,7 @@ public class ComputerPlayer6 extends ComputerPlayer {
 
         if (depth == maxDepth) {
             // TODO: buggy? Why it ended with depth limit 6 on one Pass action?!
-            logger.info("Sim Prio [" + depth + "] ## Ended due max actions chain depth limit (" + maxDepth + ") -- Nodes calculated: " + SimulationNode2.nodeCount);
+            logger.info("Sim Prio [" + depth + "] ## Ended due max actions chain depth limit (" + maxDepth + ") -- Nodes calculated: " + node.getSearchNodes());
         }
         if (bestNode != null) {
             node.children.clear();
