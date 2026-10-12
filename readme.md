@@ -23,6 +23,11 @@
   <img alt="Built on XMage" src="https://img.shields.io/badge/engine-XMage-3a5a51">
 </p>
 
+<p align="center">
+  <a href="https://discord.gg/SFQKFrTvww"><img alt="Join the Discord" src="https://img.shields.io/badge/Discord-join%20the%20server-5865F2?logo=discord&logoColor=white&style=for-the-badge"></a>
+  <a href="https://ko-fi.com/nerijs"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/Ko--fi-support%20the%20project-FF5E5B?logo=kofi&logoColor=white&style=for-the-badge"></a>
+</p>
+
 ![A game against the AI in Playmat](site/assets/screens/match.webp)
 
 ## What it is
@@ -33,6 +38,9 @@ Arena, so a group of friends can play on a server one of them runs. The engine s
 regularly, so the cards it supports work here too.
 
 It's a work in progress with rough edges. Bug reports and pull requests are welcome.
+
+Come say hi, find a game or report bugs on the [Discord server](https://discord.gg/SFQKFrTvww). If you'd like to help
+keep the server running, you can [support the project on Ko-fi](https://ko-fi.com/nerijs).
 
 ## Features
 
