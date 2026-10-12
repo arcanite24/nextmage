@@ -31,7 +31,7 @@
           <li><a href="#play">Playing</a></li>
           <li><a href="#career">Career</a></li>
           <li><a href="#download">Download</a></li>
-          <li><a href="#host">Running it</a></li>
+          <li><a href="#host">Run a server</a></li>
           <li><a href="https://github.com/arcanite24/playmat">GitHub</a></li>
         </ul>
       </nav>
@@ -43,11 +43,15 @@
       <div class="wrap hero-copy">
         <h1>A fan-made web client for&nbsp;XMage.</h1>
         <p class="lede">Playmat is a hobby project: a browser client for <a href="https://github.com/magefree/mage">XMage</a>,
-          the open-source Magic: The Gathering rules engine, styled after MTG Arena. You play against friends or XMage's
-          AI on a server you run yourself. It's free, MIT licensed, and not affiliated with Wizards of the Coast.</p>
+          the open-source Magic: The Gathering rules engine, styled after MTG Arena. Install it on your computer to play
+          XMage's AI, Career or friends on your Wi-Fi, or run a server for your group. It's free, MIT licensed, and not
+          affiliated with Wizards of the Coast.</p>
         <p class="status">It's a work in progress with rough edges. Bug reports and pull requests are welcome on
           <a href="https://github.com/arcanite24/playmat">GitHub</a>.</p>
-        <a class="btn" href="#download">Download for your computer</a>
+        <div class="cta">
+          <a class="btn btn-big" id="get" href="#download">Download Playmat</a>
+          <p class="cta-note small" id="get-note">Free for Windows, macOS and Linux. <a href="#download">All downloads</a></p>
+        </div>
       </div>
       <div class="wrap">
         <figure class="hero-shot shot">
@@ -199,44 +203,67 @@
       <div class="wrap">
         <div class="download-head">
           <h2>Play on your computer</h2>
-          <p>One download with everything inside, Java included. Install it, open Playmat, and the game opens in your
-            browser. Play the AI or Career on your own, or have friends on the same Wi-Fi join you.</p>
+          <p>One download with everything inside, Java included. Nothing else to install and nothing to set up: open
+            Playmat and the game opens in your browser. Play the AI and Career on your own, or have friends on the
+            same Wi-Fi join you.</p>
         </div>
+
+        <div class="how">
+          <ol class="steps">
+            <li><strong>Install</strong><span>Run the installer, or drag Playmat to Applications on a Mac.</span></li>
+            <li><strong>Open Playmat</strong><span>The first start prepares the card database. That takes a few
+              minutes, once.</span></li>
+            <li><strong>Play</strong><span>The game opens in your browser. Friends on your network join at the
+              address Playmat shows.</span></li>
+          </ol>
+          <figure class="launcher">
+            <img src="assets/screens/launcher.webp" width="575" height="268" loading="lazy"
+                 alt="The Playmat window: Ready to play, a Play button, the address friends on the network can join at, and a Player accounts checkbox.">
+          </figure>
+        </div>
+
         <ul class="downloads">
-          <li class="zone">
+          <li class="zone" id="dl-windows">
             <h3>Windows</h3>
             <a class="btn" href="https://github.com/arcanite24/playmat/releases/latest/download/Playmat-Setup-Windows-x64.exe">Download for Windows</a>
             <p class="small">Windows 10 or 11. Run the installer and press Install. If Windows says it protected your PC,
               choose <em>More info</em> and then <em>Run anyway</em>: Playmat is a free fan project without a paid
-              signing certificate.</p>
+              signing certificate. Or skip that screen by installing from PowerShell:</p>
+            <code class="oneliner">irm https://github.com/arcanite24/playmat/releases/latest/download/install.ps1 | iex</code>
           </li>
-          <li class="zone">
+          <li class="zone" id="dl-mac">
             <h3>macOS</h3>
             <a class="btn" href="https://github.com/arcanite24/playmat/releases/latest/download/Playmat-macOS-arm64.dmg">Apple silicon (M1 and later)</a>
             <a class="btn btn-quiet" href="https://github.com/arcanite24/playmat/releases/latest/download/Playmat-macOS-x64.dmg">Intel Mac</a>
-            <p class="small">Drag Playmat to Applications. The first time, macOS asks you to allow it: open
-              <em>System Settings, Privacy &amp; Security</em> and choose <em>Open Anyway</em>. Or skip that step by
-              installing from the Terminal:</p>
+            <p class="small">Not sure? Apple menu, <em>About This Mac</em>: "Apple M…" is Apple silicon. Drag Playmat to
+              Applications. The first time, macOS asks you to allow it: open <em>System Settings, Privacy &amp;
+              Security</em> and choose <em>Open Anyway</em>. Or skip that step by installing from the Terminal:</p>
             <code class="oneliner">curl -fsSL https://github.com/arcanite24/playmat/releases/latest/download/install.sh | sh</code>
           </li>
-          <li class="zone">
+          <li class="zone" id="dl-linux">
             <h3>Linux</h3>
-            <p class="small">Paste this in a terminal. It installs Playmat in your home folder, adds it to the
-              applications menu and starts it.</p>
+            <p class="small">Paste this in a terminal. It picks x64 or ARM, installs Playmat in your home folder, adds it
+              to the applications menu and starts it.</p>
             <code class="oneliner">curl -fsSL https://github.com/arcanite24/playmat/releases/latest/download/install.sh | sh</code>
             <p class="small">Or download the <a href="https://github.com/arcanite24/playmat/releases/latest">x64 or ARM
               archive</a> and run <code>Playmat/playmat</code>.</p>
           </li>
         </ul>
-        <p class="small center">The first start prepares the card database and takes a few minutes. Card pictures come from
-          Scryfall, so an internet connection helps. All <a href="https://github.com/arcanite24/playmat/releases">releases</a>.</p>
+
+        <ul class="facts">
+          <li>Your accounts, decks and Career progress stay on your computer and are kept when you update.</li>
+          <li>Playmat tells you when a new version is out.</li>
+          <li>Card pictures come from Scryfall, so an internet connection helps.</li>
+        </ul>
+        <p class="small center">Release notes and earlier versions are on the
+          <a href="https://github.com/arcanite24/playmat/releases">releases page</a>.</p>
       </div>
     </section>
 
     <section id="host" class="host">
       <div class="wrap host-row">
         <div class="host-copy">
-          <h2>Running it</h2>
+          <h2>Run a server</h2>
           <p>For a group that plays together from anywhere, someone runs the server with Docker Compose, on a home
             machine for a LAN or on one with a domain, and everyone else opens the site in a browser.</p>
           <dl class="stack">
@@ -285,5 +312,38 @@ docker compose -f ops/web/docker-compose.yml up -d --build</code></pre>
         Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.</p>
     </div>
   </footer>
+
+  <script>
+    // The hero button: the right installer for this computer when that's clear, the download section otherwise.
+    (function () {
+      var get = document.getElementById('get');
+      var note = document.getElementById('get-note');
+      var base = 'https://github.com/arcanite24/playmat/releases/latest/download/';
+      var ua = navigator.userAgent;
+      var platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+      var mobile = /Android|iPhone|iPad|iPod/i.test(ua) || (/Mac/.test(platform) && navigator.maxTouchPoints > 1);
+      if (mobile) return;
+      if (/Win/i.test(platform) || /Windows/.test(ua)) {
+        get.href = base + 'Playmat-Setup-Windows-x64.exe';
+        get.textContent = 'Download for Windows';
+        note.innerHTML = 'Windows 10 or 11, 64-bit. <a href="#download">Other systems and help</a>';
+      } else if (/Mac/i.test(platform)) {
+        get.href = '#dl-mac';
+        get.textContent = 'Download for Mac';
+      } else if (/Linux/i.test(platform)) {
+        get.href = '#dl-linux';
+        get.textContent = 'Download for Linux';
+      }
+    })();
+    // the latest version's number, from GitHub (the page reads fine without it)
+    fetch('https://api.github.com/repos/arcanite24/playmat/releases/latest')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (release) {
+        if (!release || !release.tag_name) return;
+        var note = document.getElementById('get-note');
+        if (note && note.textContent.indexOf('Free for') === 0) note.firstChild.textContent = 'Free for Windows, macOS and Linux. Version ' + release.tag_name.replace(/^v/, '') + '. ';
+      })
+      .catch(function () {});
+  </script>
 </body>
 </html>
