@@ -3618,8 +3618,9 @@ public abstract class PlayerImpl implements Player, Serializable {
      */
     @Override
     public ManaOptions getManaAvailable(Game originalGame) {
-        // workaround to fix a triggers list modification bug (game must be immutable on playable calculations)
-        Game game = originalGame.createSimulationForPlayableCalc();
+        // workaround to fix a triggers list modification bug (game must be immutable on playable calculations);
+        // a game made for a playable calculation already is such a copy (getPlayable makes one), so don't copy it again
+        Game game = originalGame.inCheckPlayableState() ? originalGame : originalGame.createSimulationForPlayableCalc();
 
         ManaOptions availableMana = new ManaOptions();
         availableMana.addMana(manaPool.getMana());

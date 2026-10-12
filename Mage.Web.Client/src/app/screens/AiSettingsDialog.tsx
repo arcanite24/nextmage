@@ -3,7 +3,8 @@ import { isCommanderFormat } from '../../core/decks/formats';
 import { rosterOf, useDecks } from '../stores/decks';
 import { useT } from '../i18n';
 import { DEFAULT_AI_OPTIONS, usePlay } from '../stores/play';
-import { AI_TYPES, DIFFICULTIES, difficultyOf } from './aiSetup';
+import { AI_TYPES, DIFFICULTIES, difficultyOf, offeredAiTypes } from './aiSetup';
+import { useServerState } from '../queries';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import styles from './AiSettingsDialog.module.css';
@@ -42,6 +43,8 @@ export function AiSettingsDialog({ open, onOpenChange }: { open: boolean; onOpen
   const mine = roster.filter((deck) => !deck.starter);
   const difficulty = difficultyOf(options.skill);
   const t = useT();
+  // a server can leave the Monte Carlo AI out
+  const playerTypes = useServerState().data?.playerTypes;
 
   return (
     <Dialog
@@ -95,7 +98,7 @@ export function AiSettingsDialog({ open, onOpenChange }: { open: boolean; onOpen
 
         <section className={styles.row}>
           <h3 className={styles.label}>{t('ai.type')}</h3>
-          <Segmented label={t('ai.type')} value={options.aiType} options={AI_TYPES.map((item) => ({ value: item.value, label: t(item.label) }))} onChange={(aiType) => setOptions({ aiType })} />
+          <Segmented label={t('ai.type')} value={options.aiType} options={offeredAiTypes(playerTypes).map((item) => ({ value: item.value, label: t(item.label) }))} onChange={(aiType) => setOptions({ aiType })} />
           <p className={styles.detail}>{t(AI_TYPES.find((item) => item.value === options.aiType)?.detail ?? 'ai.type.standard.detail')}</p>
         </section>
 

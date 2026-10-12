@@ -91,8 +91,8 @@ public class PlayerView implements Serializable {
                 }
             }
         }
-        if (this.controlled || !player.isHuman()) {
-            // sideboard available for itself or for computer only
+        if (this.controlled) {
+            // sideboard available for itself only (computer sideboards were shown too, at a view per card on every update)
             for (Card card : player.getSideboard().getCards(game)) {
                 sideboard.put(card.getId(), new CardView(card, game, CardUtil.canShowAsControlled(card, createdForPlayerId)));
             }

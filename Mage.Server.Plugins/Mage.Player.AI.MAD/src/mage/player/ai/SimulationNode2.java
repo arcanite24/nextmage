@@ -15,7 +15,11 @@ import mage.game.combat.Combat;
  */
 public class SimulationNode2 implements Serializable {
 
-    protected static int nodeCount;
+    /**
+     * Nodes made so far by the search this node belongs to, shared along the tree. It was a static count once, so
+     * games searching at the same time spent each other's node budget.
+     */
+    protected final int[] searchNodes;
 
     protected Game game;
     protected int gameValue; // game state hash to monitor changes
@@ -35,7 +39,8 @@ public class SimulationNode2 implements Serializable {
         this.depth = depth;
         this.playerId = playerId;
         game.setCustomData(this);
-        nodeCount++;
+        this.searchNodes = parent == null ? new int[1] : parent.searchNodes;
+        this.searchNodes[0]++;
     }
 
     public SimulationNode2(SimulationNode2 parent, Game game, List<Ability> abilities, int depth, UUID playerId) {
@@ -49,12 +54,11 @@ public class SimulationNode2 implements Serializable {
         abilities.add(ability);
     }
 
-    public static void resetCount() {
-        nodeCount = 0;
-    }
-
-    public static int getCount() {
-        return nodeCount;
+    /**
+     * Nodes made so far by this node's search.
+     */
+    public int getSearchNodes() {
+        return searchNodes[0];
     }
 
     public Game getGame() {

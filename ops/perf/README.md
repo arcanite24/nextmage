@@ -99,3 +99,20 @@ State patches diff the trees the bridge already built (the last state is kept as
 | Live heap per held game | 3.25 MB | 3.75 MB (the state kept as a tree) |
 
 Playable highlighting (two game copies per view) is now the largest cost after the AI; M18 takes it on.
+
+### M18: the card database, playable highlighting, the AI's budgets, views and engine trims (12 Oct 2026)
+
+Startup checks the card classes against one query of every set and number instead of a lookup per card, and the card database's cache follows the heap (`XMAGE_DB_CACHE`, else an eighth of the heap, 16–150 MB). The image ships its card database compacted (290 to 53 MB). Playable highlighting is computed once per game change and priority player, and mana checks reuse the copy the check already made. Each AI search counts its own nodes, and the budget follows the skill (2,000 nodes at skills 1–2, 3,500 at 3, 5,000 above; `XMAGE_AI_NODE_SCALE`). A search no longer starts when the player has nothing but mana abilities to play. The search threads follow the machine (`XMAGE_AI_THREADS`). The Monte Carlo AI shares one pool and can be left off (`XMAGE_MONTE_CARLO=false`), and the client then offers only the standard AI. Card views no longer copy the card, and computer sideboards are no longer sent to every viewer. A finished game drops its rollback states and last-known information. Watcher copies look up their class once, mana costs share their payment options until one changes, and card states aren't built just to be thrown away.
+
+| Measure (`-Xmx2g`) | Before | After |
+|---|---|---|
+| Human game: CPU seconds per game | 3.51 | 1.44 |
+| Human game: building views (with playables) | 1.24 CPU-s per game | 0.38 CPU-s per game |
+| Human game: peak RSS | 2,399 MB | 1,367 MB |
+| AI vs AI: CPU seconds per game | 0.98 | 0.52 |
+| Live heap at idle | 155 MB | 59 MB (49 MB with a 16 MB card cache) |
+| Live heap per held game | 3.75 MB | 2.81 MB |
+| Live heap kept after 16 games end | 20 MB | 5 MB |
+| Warm start | 5.9 s | 4.4 s |
+
+Writing the views out as JSON trees (`serializeTree`, about 0.37 CPU-s per human game) is now the largest cost after the AI.

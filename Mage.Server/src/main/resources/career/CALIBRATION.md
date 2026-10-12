@@ -112,6 +112,23 @@ think time, which these board states never use up. Tier 3 also had a weak deck: 
 With 36 games, one opponent's score has a standard error of about 8 points; for a whole tier (144 games) it's
 about 4 points.
 
+## AI search budgets (2026-10-12)
+
+The AI's node budget now follows its skill: 2,000 nodes at skills 1–2, 3,500 at skill 3, and 5,000 (as before) above.
+A search also no longer starts when the player has nothing but mana abilities to play. Only tier 1 (skill 1)
+plays with a smaller budget, so it was rerun (24 games per opponent, 96 games, 0 engine errors):
+
+| opponent | tier | skill | W-L-D | starter score |
+|---|---|---|---|---|
+| wren | 1 | 1 | 15-7-2 | 67% |
+| odo | 1 | 1 | 18-5-1 | 77% |
+| pip | 1 | 1 | 14-10-0 | 58% |
+| marisol | 1 | 1 | 15-9-0 | 63% |
+| **Tier 1** | | | 62-31-3 | **66%** (68% before) |
+
+That is within the run's standard error (about 5 points), so the tiers stand. The 96 games took 88 seconds,
+under a second a game.
+
 ## The schools (2026-10-09)
 
 The academy's one-on-one duels were measured with the schools mode: each node's loaner played by the reference AI

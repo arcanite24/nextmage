@@ -1,6 +1,7 @@
 package mage.player.ai;
 
 import mage.abilities.Ability;
+import mage.abilities.ActivatedAbility;
 import mage.constants.RangeOfInfluence;
 import mage.game.Game;
 import mage.player.ai.score.GameStateEvaluator2;
@@ -112,10 +113,13 @@ public class ComputerPlayer7 extends ComputerPlayer6 {
 
     protected void calculateActions(Game game) {
         if (!getNextAction(game)) {
+            if (!hasActionsToSearch(game)) {
+                // nothing but mana abilities to use: passing is the only choice, no need to copy the game and search
+                return;
+            }
             currentScore = GameStateEvaluator2.evaluate(playerId, game).getTotalScore();
             Game sim = createSimulation(game);
-            SimulationNode2.resetCount();
-            root = new SimulationNode2(null, sim, maxDepth, playerId);
+            root = new SimulationNode2(null, sim, maxDepth, playerId); // a new search, with its own node count
             addActionsTimed(); // TODO: root can be null again after addActionsTimed O_o need to research (it's a CPU AI problem?)
             if (root != null && root.children != null && !root.children.isEmpty()) {
                 logger.trace("After add actions timed: root.children.size = " + root.children.size());
@@ -148,6 +152,19 @@ public class ComputerPlayer7 extends ComputerPlayer6 {
         } else {
             logger.debug("Next Action exists!");
         }
+    }
+
+    /**
+     * Whether the AI could do anything but pass: a spell or a non-mana ability it can use now. The search would find
+     * the same, at the price of copying the game.
+     */
+    private boolean hasActionsToSearch(Game game) {
+        for (ActivatedAbility ability : getPlayable(game, true)) {
+            if (!ability.isManaAbility()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
