@@ -18,9 +18,6 @@
   #define OutputDir "."
 #endif
 
-#define Launcher "{app}\runtime\bin\javaw.exe"
-#define LauncherArgs "-jar ""{app}\app\playmat-launcher.jar"""
-
 [Setup]
 AppId={{6F1C3B7E-4D2A-4F7B-9C55-1E0B6A8D2F31}
 AppName=Playmat
@@ -78,11 +75,11 @@ Type: filesandordirs; Name: "{app}\runtime"
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\Playmat"; Filename: "{#Launcher}"; Parameters: "{#LauncherArgs}"; WorkingDir: "{app}"; IconFilename: "{app}\playmat.ico"; Comment: "Play Magic against the AI or with friends"
-Name: "{autodesktop}\Playmat"; Filename: "{#Launcher}"; Parameters: "{#LauncherArgs}"; WorkingDir: "{app}"; IconFilename: "{app}\playmat.ico"; Comment: "Play Magic against the AI or with friends"
+Name: "{autoprograms}\Playmat"; Filename: "{app}\runtime\bin\javaw.exe"; Parameters: "-jar ""{app}\app\playmat-launcher.jar"""; WorkingDir: "{app}"; IconFilename: "{app}\playmat.ico"; Comment: "Play Magic against the AI or with friends"
+Name: "{autodesktop}\Playmat"; Filename: "{app}\runtime\bin\javaw.exe"; Parameters: "-jar ""{app}\app\playmat-launcher.jar"""; WorkingDir: "{app}"; IconFilename: "{app}\playmat.ico"; Comment: "Play Magic against the AI or with friends"
 
 [Run]
-Filename: "{#Launcher}"; Parameters: "{#LauncherArgs}"; WorkingDir: "{app}"; Description: "{cm:LaunchNow}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\runtime\bin\javaw.exe"; Parameters: "-jar ""{app}\app\playmat-launcher.jar"""; WorkingDir: "{app}"; Description: "{cm:LaunchNow}"; Flags: nowait postinstall skipifsilent
 
 [Code]
 // Stops a running Playmat (its window and its game server both run on the bundled javaw.exe) so its files can be
