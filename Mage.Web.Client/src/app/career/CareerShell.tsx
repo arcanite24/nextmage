@@ -21,7 +21,7 @@ import { useMenuNav } from './menuNav';
 import { useCountUp, useStill } from './motion';
 import { Art } from './Art';
 import { usePaintedArt, wildcardArt } from './careerArt';
-import { titleLabel } from './progressModel';
+import { safeBack, titleLabel } from './progressModel';
 import motion from './motion.module.css';
 import styles from './CareerShell.module.css';
 
@@ -39,7 +39,11 @@ export function CareerShell() {
   const state = useCareerState();
   const profile = state.data?.profile;
   const art = useCareerScene((scene) => scene.art);
-  const { title, back } = screenOf(location.pathname);
+  const screen = screenOf(location.pathname);
+  const { title } = screen;
+  // the rewards screen steps back where its Continue goes (a mode's game returns to that mode)
+  const rewardsBack = location.pathname.startsWith('/career/rewards') ? new URLSearchParams(location.search).get('back') : null;
+  const back = rewardsBack ? safeBack(rewardsBack) : screen.back;
   const hub = location.pathname.replace(/\/+$/, '') === '/career';
   const playing = usePlay((play) => play.phase !== 'idle');
   const main = useRef<HTMLDivElement>(null);

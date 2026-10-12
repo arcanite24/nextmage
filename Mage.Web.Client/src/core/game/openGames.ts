@@ -14,6 +14,8 @@ export interface OpenGameRecord {
   parentTableId: string | null;
   /** epoch ms */
   openedAt: number;
+  /** where leaving the game goes (a Career match's rewards, then Career); null or missing for the usual way back */
+  returnPath?: string | null;
 }
 
 /** open games per server and user name */
@@ -30,6 +32,10 @@ export function ownerKey(serverUrl: string, userName: string): string {
 export function rememberGame(book: OpenGamesBook, owner: string, record: OpenGameRecord): OpenGamesBook {
   const others = (book[owner] ?? []).filter((game) => game.gameId !== record.gameId);
   return { ...book, [owner]: [...others, record].slice(-MAX_GAMES_PER_OWNER) };
+}
+
+export function rememberedGame(book: OpenGamesBook, owner: string, gameId: string): OpenGameRecord | null {
+  return (book[owner] ?? []).find((game) => game.gameId === gameId) ?? null;
 }
 
 export function forgetGame(book: OpenGamesBook, owner: string, gameId: string): OpenGamesBook {

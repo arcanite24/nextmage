@@ -233,28 +233,30 @@
   display: none;
 }
 
-/* flying: the card floats, its shadow left on the mat below */
+/* flying: the card hovers well clear of the mat (--lift, set from the card's size) and bobs; its shadow stays on the
+   mat below, smaller and softer the higher it goes */
 .floating {
+  transform: translateY(calc(var(--lift, 10px) * -1));
   animation: kw-float 3.6s ease-in-out infinite;
 }
 
 @keyframes kw-float {
   0%,
   100% {
-    transform: translateY(-5px);
+    transform: translateY(calc(var(--lift, 10px) * -1));
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(calc(var(--lift, 10px) * -1.6));
   }
 }
 
 .flightShadow {
   position: absolute;
-  inset: 8% 6% 0;
+  inset: 6% 4% -2%;
   border-radius: 8px;
-  background: rgb(0 0 0 / 0.55);
-  filter: blur(7px);
-  transform: translateY(6px);
+  background: rgb(0 0 0 / 0.6);
+  filter: blur(8px);
+  transform: translateY(calc(var(--lift, 10px) * 0.4));
   animation: kw-shadow 3.6s ease-in-out infinite;
   pointer-events: none;
 }
@@ -262,13 +264,84 @@
 @keyframes kw-shadow {
   0%,
   100% {
-    opacity: 0.7;
-    transform: translateY(6px) scale(0.98);
+    opacity: 0.75;
+    transform: translateY(calc(var(--lift, 10px) * 0.4)) scale(0.97);
   }
   50% {
     opacity: 0.45;
-    transform: translateY(8px) scale(0.92);
+    transform: translateY(calc(var(--lift, 10px) * 0.55)) scale(0.9);
   }
+}
+
+/* summoning sick: the creature dozes until it can act; its picture dims and greys a little and z's drift up off it */
+.asleep > :last-child {
+  filter: saturate(0.55) brightness(0.8);
+  transition: filter var(--dur-quick) linear;
+}
+
+.sleep {
+  position: absolute;
+  top: -6%;
+  left: 24%;
+  width: 50%;
+  height: 34%;
+  pointer-events: none;
+  font-family: var(--font-print);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  color: var(--ink-strong);
+  text-shadow: 0 0 2px var(--mat-900), 0 0 2px var(--mat-900), 0 1px 4px rgb(0 0 0 / 0.7);
+  font-size: clamp(16px, calc(var(--lift, 10px) * 1.6), 28px);
+}
+
+.sleep > span {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  opacity: 0;
+  animation: kw-doze 3.3s ease-out infinite;
+}
+
+.sleep > span:nth-child(2) {
+  font-size: 1.25em;
+  animation-delay: 1.1s;
+}
+
+.sleep > span:nth-child(3) {
+  font-size: 1.55em;
+  animation-delay: 2.2s;
+}
+
+@keyframes kw-doze {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-8deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(1.6em, -2.2em) rotate(10deg);
+  }
+}
+
+/* held still, the z's sit in a rising row */
+.sleep[data-still] > span {
+  animation: none;
+  opacity: 1;
+}
+
+.sleep[data-still] > span:nth-child(2) {
+  transform: translate(0.7em, -0.7em);
+}
+
+.sleep[data-still] > span:nth-child(3) {
+  transform: translate(1.4em, -1.5em);
 }
 
 /* deathtouch: black-green smoke curling off the edges; infect: the same, poison green */
@@ -453,7 +526,11 @@
 }
 
 .body[data-still].floating {
-  transform: translateY(-6px);
+  transform: translateY(calc(var(--lift, 10px) * -1.2));
+}
+
+.flightShadow[data-still] {
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -466,6 +543,19 @@
   }
 
   .floating {
-    transform: translateY(-6px);
+    transform: translateY(calc(var(--lift, 10px) * -1.2));
+  }
+
+  .sleep > span {
+    animation: none;
+    opacity: 1;
+  }
+
+  .sleep > span:nth-child(2) {
+    transform: translate(0.7em, -0.7em);
+  }
+
+  .sleep > span:nth-child(3) {
+    transform: translate(1.4em, -1.5em);
   }
 }

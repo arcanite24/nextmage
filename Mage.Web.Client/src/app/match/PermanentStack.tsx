@@ -1,5 +1,5 @@
 import {
-  Anvil, ArrowUpToLine, Castle, Eye, EyeOff, Feather, FlaskConical, Footprints, HeartPulse, Hourglass, Shield, ShieldCheck,
+  Anvil, ArrowUpToLine, Castle, Eye, EyeOff, Feather, FlaskConical, Footprints, HeartPulse, Shield, ShieldCheck,
   ShieldHalf, Skull, Sword, Swords, Users, Zap, type LucideIcon,
 } from 'lucide-react';
 import { memo, useMemo, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
@@ -179,6 +179,9 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
   const counters = (permanent.counters ?? []).filter((counter) => (counter.count ?? 0) > 0);
   const isCreature = (permanent.cardTypes ?? []).includes('CREATURE');
   const loyalty = permanent.loyalty || permanent.defense;
+  // summoning sick: it can't attack or tap yet, so it dozes (the server's flag ignores haste; a hasty creature is awake)
+  const asleep = isCreature && !!permanent.summoningSickness && !keywords.some((mark) => mark.name === 'Haste');
+  const flying = effects.includes('float');
   const advance = isAttacking ? forward * height * 0.16 : isBlocking ? forward * height * 0.1 : 0;
 
   const style: CSSProperties = {
@@ -189,6 +192,8 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
     top,
     zIndex: depth + 1,
     transform: `translateY(${advance}px) rotate(${tapped ? 90 : 0}deg)`,
+    // how high a flier hovers grows with the card, so it reads at every board size
+    ['--lift' as string]: `${Math.max(8, Math.round(height * 0.08))}px`,
   };
 
   return (
@@ -204,7 +209,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
       style={style}
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
-      aria-label={describe(permanent, { tapped, isAttacking, isBlocking, isSelected, keywords: keywords.map((mark) => (mark.gained ? `${mark.name.toLowerCase()} (gained)` : mark.name.toLowerCase())) }) + (isClickable && targeting && !isSelected ? ', can be targeted' : '')}
+      aria-label={describe(permanent, { tapped, asleep, isAttacking, isBlocking, isSelected, keywords: keywords.map((mark) => (mark.gained ? `${mark.name.toLowerCase()} (gained)` : mark.name.toLowerCase())) }) + (isClickable && targeting && !isSelected ? ', can be targeted' : '')}
       aria-pressed={isClickable ? isSelected : undefined}
       onClick={() => {
         if (suppressClick.current) {
@@ -227,19 +232,22 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
       onPointerLeave={() => setZoom(null)}
       data-object-id={id}
     >
-      {effects.includes('float') && <span className={styles.flightShadow} aria-hidden="true" />}
-      <div className={[styles.body, effects.includes('float') ? styles.floating : ''].join(' ')} data-still={motion ? undefined : ''}>
+      {flying && <span className={styles.flightShadow} data-still={motion ? undefined : ''} aria-hidden="true" />}
+      <div className={[styles.body, flying ? styles.floating : '', asleep ? styles.asleep : ''].join(' ')} data-still={motion ? undefined : ''}>
         {effects.map((effect) => <span key={effect} className={[styles.fx, styles[FX_CLASS[effect]]].join(' ')} aria-hidden="true" />)}
         <CardFace card={permanent} sleeve={sleeve} size={width > 140 ? 'normal' : 'small'} />
       </div>
 
       <div className={styles.marks} style={{ transform: tapped ? 'rotate(-90deg)' : undefined }}>
-        {permanent.summoningSickness && isCreature && (
-          <span className={styles.mark} title="Summoning sick"><Hourglass size={13} aria-hidden="true" /></span>
-        )}
         {isAttacking && <span className={[styles.mark, styles.markAttack].join(' ')} title="Attacking"><Swords size={13} aria-hidden="true" /></span>}
         {isBlocking && <span className={styles.mark} title="Blocking"><Shield size={13} aria-hidden="true" /></span>}
       </div>
+
+      {asleep && (
+        <span className={styles.sleep} style={{ transform: tapped ? 'rotate(-90deg)' : undefined }} data-still={motion ? undefined : ''} title="Summoning sick: it can't attack or tap until your next turn" aria-hidden="true">
+          <span>z</span><span>z</span><span>Z</span>
+        </span>
+      )}
 
       {keywords.length > 0 && (
         // what it can do in combat, readable without the picture; granted keywords print solid
@@ -295,11 +303,12 @@ function ptTone(permanent: PermanentView): string {
   return '';
 }
 
-function describe(permanent: PermanentView, state: { tapped: boolean; isAttacking: boolean; isBlocking: boolean; isSelected: boolean; keywords: string[] }): string {
+function describe(permanent: PermanentView, state: { tapped: boolean; asleep: boolean; isAttacking: boolean; isBlocking: boolean; isSelected: boolean; keywords: string[] }): string {
   const parts = [permanent.name ?? 'Permanent'];
   if (permanent.power !== undefined && (permanent.cardTypes ?? []).includes('CREATURE')) parts.push(`${permanent.power}/${permanent.toughness}`);
   parts.push(...state.keywords);
   if (state.tapped) parts.push('tapped');
+  if (state.asleep) parts.push('summoning sick');
   if (state.isAttacking) parts.push('attacking');
   if (state.isBlocking) parts.push('blocking');
   if (state.isSelected) parts.push('chosen');

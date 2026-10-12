@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { forgetGame, forgetOwner, gamesToRestore, OPEN_GAME_MAX_AGE_MS, ownerKey, rememberGame, type OpenGameRecord } from './openGames';
+import { forgetGame, forgetOwner, gamesToRestore, OPEN_GAME_MAX_AGE_MS, ownerKey, rememberedGame, rememberGame, type OpenGameRecord } from './openGames';
 
 const alice = ownerKey('ws://host:17172', 'Alice');
 const bob = ownerKey('ws://host:17172', 'Bob');
@@ -28,6 +28,14 @@ describe('open games book', () => {
     book = forgetGame(book, alice, 'g1');
     expect(book).toEqual({});
     expect(forgetGame(book, alice, 'nope')).toBe(book);
+  });
+
+  it('keeps where leaving a game goes, so a game rejoined after a reload still leads back to Career', () => {
+    const book = rememberGame({}, alice, { ...game('g1', 100), returnPath: '/career/rewards?back=%2Fcareer' });
+    expect(rememberedGame(book, alice, 'g1')?.returnPath).toBe('/career/rewards?back=%2Fcareer');
+    expect(gamesToRestore(book, alice, 200)[0].returnPath).toBe('/career/rewards?back=%2Fcareer');
+    expect(rememberedGame(book, alice, 'g2')).toBeNull();
+    expect(rememberedGame(book, bob, 'g1')).toBeNull();
   });
 
   it('restores oldest first so the newest game ends up on screen, and skips stale ones', () => {

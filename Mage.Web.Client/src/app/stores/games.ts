@@ -5,7 +5,8 @@ import { leaveRequest, type LeaveRequest } from '../../core/game/leave';
 import { stripMarkup } from '../../core/game/prompt';
 import { attention } from './attention';
 import { useCoach } from './coach';
-import { forgetOpenGame, openGamesToRestore, rememberOpenGame } from './openGames';
+import { forgetOpenGame, openGameRecord, openGamesToRestore, rememberOpenGame } from './openGames';
+import { usePlay } from './play';
 import { useSession } from './session';
 import { notify } from './toasts';
 
@@ -82,8 +83,13 @@ export const useGames = create<GamesState>((set, get) => ({
     // remembered so a reload can rejoin it (replays are not worth it), until it ends: a reload then has nothing to rejoin
     const { serverUrl, userName } = useSession.getState();
     if (mode !== 'replay') {
+      // where leaving it goes (a Career match leads back to Career) only lives in memory: it's kept with the record, and
+      // a game rejoined after a reload takes it back up, rather than leading home
+      const remembered = openGameRecord(serverUrl, userName, gameId);
+      const returnPath = mode === 'play' ? usePlay.getState().returnPath ?? remembered?.returnPath ?? null : null;
+      if (returnPath && !usePlay.getState().returnPath) usePlay.setState({ returnPath });
       rememberOpenGame(serverUrl, userName, {
-        gameId, playerId, mode, tableId: table?.tableId ?? null, parentTableId: table?.parentTableId ?? null, openedAt: Date.now(),
+        gameId, playerId, mode, tableId: table?.tableId ?? null, parentTableId: table?.parentTableId ?? null, openedAt: Date.now(), returnPath,
       });
       const unsubscribe = session.store.subscribe((state) => {
         if (!state.gameOver) return;
@@ -215,6 +221,18 @@ function restoreOpenGames(): number {
   }
   return records.length;
 }
+
+// a Career match learns its way back (the rewards for this table) once the server has set it up, which can be after
+// the game opened: the game being played keeps the newer one
+usePlay.subscribe((state, previous) => {
+  if (state.returnPath === previous.returnPath) return;
+  const gameId = useGames.getState().latestGameId;
+  const now = gameId ? useGames.getState().sessions[gameId]?.getState() : undefined;
+  if (!gameId || !now || now.mode !== 'play' || now.gameOver) return;
+  const { serverUrl, userName } = useSession.getState();
+  const record = openGameRecord(serverUrl, userName, gameId);
+  if (record) rememberOpenGame(serverUrl, userName, { ...record, returnPath: state.returnPath });
+});
 
 // the connection dropped: every board is stale until the server sends its game again
 rpc.onStatus((status) => {
