@@ -11,13 +11,21 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/arcanite24/playmat/releases/latest/download/Playmat-Setup-Windows-x64.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows-f0b13d?style=for-the-badge&logo=windows&logoColor=1d1406&labelColor=f0b13d&color=ffc65a"></a>
+  <a href="#play-on-your-computer"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-f0b13d?style=for-the-badge&logo=apple&logoColor=1d1406&labelColor=f0b13d&color=ffc65a"></a>
+  <a href="#play-on-your-computer"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux-f0b13d?style=for-the-badge&logo=linux&logoColor=1d1406&labelColor=f0b13d&color=ffc65a"></a>
+</p>
+
+<p align="center">
   <a href="https://arcanite24.github.io/playmat/">Website</a> ·
+  <a href="#play-on-your-computer">Download</a> ·
   <a href="#running-a-server">Run a server</a> ·
-  <a href="#run-it-locally">Run it locally</a> ·
+  <a href="#working-on-playmat">Working on Playmat</a> ·
   <a href="docs/WebSocketAPI.md">WebSocket API</a>
 </p>
 
 <p align="center">
+  <a href="https://github.com/arcanite24/playmat/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/arcanite24/playmat?label=release&color=f0b13d"></a>
   <a href="https://github.com/arcanite24/playmat/actions/workflows/web-client.yml"><img alt="Web client" src="https://github.com/arcanite24/playmat/actions/workflows/web-client.yml/badge.svg"></a>
   <a href="LICENSE.txt"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-f0b13d"></a>
   <img alt="Built on XMage" src="https://img.shields.io/badge/engine-XMage-3a5a51">
@@ -34,7 +42,8 @@
 
 Playmat is a fork of [XMage](https://github.com/magefree/mage), the open-source Magic rules engine with its cards, AI
 opponents, drafts and tournaments. It adds a WebSocket bridge to the server and a browser client styled after MTG
-Arena, so a group of friends can play on a server one of them runs. The engine stays XMage, merged from upstream
+Arena. [Install it on your computer](#play-on-your-computer) to play the AI, Career or friends on your Wi-Fi, or
+[run a server](#running-a-server) for a group that plays from anywhere. The engine stays XMage, merged from upstream
 regularly, so the cards it supports work here too.
 
 It's a work in progress with rough edges. Bug reports and pull requests are welcome.
@@ -58,6 +67,8 @@ keep the server running, you can [support the project on Ko-fi](https://ko-fi.co
 - **Social.** Lobby chat, players online, profiles, a table browser, spectating, match history and replays.
 - **Devices.** Desktop browsers, tablets, an installable web app and an Android app that keeps card
   pictures on the device. English and Spanish.
+- **On your computer.** Installers for Windows, macOS and Linux with everything inside, Java included: install,
+  open, play. Friends on the same network join from their browser.
 - **Hosting.** One Docker Compose stack: the server, Caddy with automatic HTTPS, a Scryfall picture cache,
   nightly backups and Discord notifications.
 
@@ -72,6 +83,54 @@ keep the server running, you can [support the project on Ko-fi](https://ko-fi.co
   </tr>
 </table>
 
+## Play on your computer
+
+One download with everything inside, Java included. Install it, open Playmat, and the game opens in your browser. Play
+the AI and Career on your own, or have friends on the same Wi-Fi join you. Nothing else to install.
+
+<p align="center"><img alt="The Playmat window: Ready to play, with a Play button and the address friends on the network can join at" src="site/assets/screens/launcher.webp" width="575"></p>
+
+| Your computer | Download |
+|---|---|
+| **Windows** 10 or 11 | [Playmat-Setup-Windows-x64.exe](https://github.com/arcanite24/playmat/releases/latest/download/Playmat-Setup-Windows-x64.exe): run it and press **Install** |
+| **Mac** with Apple silicon (M1 and later) | [Playmat-macOS-arm64.dmg](https://github.com/arcanite24/playmat/releases/latest/download/Playmat-macOS-arm64.dmg): drag Playmat to Applications |
+| **Mac** with an Intel processor | [Playmat-macOS-x64.dmg](https://github.com/arcanite24/playmat/releases/latest/download/Playmat-macOS-x64.dmg): drag Playmat to Applications |
+| **Linux** (x64 or ARM) | `curl -fsSL https://github.com/arcanite24/playmat/releases/latest/download/install.sh \| sh` |
+
+Prefer a terminal? These download the right file, install it and start Playmat, without the warnings below:
+
+```bash
+# macOS or Linux
+curl -fsSL https://github.com/arcanite24/playmat/releases/latest/download/install.sh | sh
+```
+
+```powershell
+# Windows (PowerShell)
+irm https://github.com/arcanite24/playmat/releases/latest/download/install.ps1 | iex
+```
+
+**The first time**
+
+- Windows may say it protected your PC: choose **More info**, then **Run anyway**. macOS may say it can't check
+  Playmat: open **System Settings**, **Privacy & Security** and choose **Open Anyway**. Playmat is a free fan project
+  without paid signing certificates; the terminal installers above skip both screens.
+- The first start prepares the card database, which takes a few minutes once. Your computer may ask whether Playmat
+  (Java) may accept network connections: allowing it lets friends on your network join.
+
+**Playing**
+
+- A small Playmat window shows what's happening and opens `http://localhost:17170` in your browser when the game is
+  ready. Keep it open while you play; closing it stops the game.
+- Create an account the first time; it stays on your computer and unlocks Career. Untick **Player accounts** in the
+  Playmat window to sign in with just a name instead.
+- Friends on the same network open the address the window shows, such as `http://192.168.1.20:17170`.
+- Card pictures come from Scryfall, so an internet connection helps.
+- The window tells you when a new version is out. Installing it keeps your accounts, decks and Career progress.
+
+Every version is on the [releases page](https://github.com/arcanite24/playmat/releases).
+[ops/desktop/README.md](ops/desktop/README.md) covers how the app works, where it keeps its data and how releases are
+built.
+
 ## Running a server
 
 You need Docker and a machine your players can reach.
@@ -85,9 +144,9 @@ Players open `https://<your domain>` and sign in. The first build compiles the c
 [ops/web/README.md](ops/web/README.md) covers private LAN servers, running behind another reverse proxy, every setting,
 accounts and moderation, Discord notifications, backups and capacity.
 
-## Run it locally
+## Working on Playmat
 
-Requirements: JDK 17 or later, Maven, and the Node.js version in [`Mage.Web.Client/.nvmrc`](Mage.Web.Client/.nvmrc).
+To run it from source while you change it. Requirements: JDK 17 or later, Maven, and the Node.js version in [`Mage.Web.Client/.nvmrc`](Mage.Web.Client/.nvmrc).
 
 ```bash
 # 1. build the server (a few minutes the first time)
@@ -113,6 +172,7 @@ architecture, tests and the Android build (`npm run android`).
 | [`Mage.Web.Client`](Mage.Web.Client) | The Playmat client: React 19, TypeScript, Vite. Product brief in [PRODUCT.md](Mage.Web.Client/PRODUCT.md), design system in [DESIGN.md](Mage.Web.Client/DESIGN.md). |
 | [`Mage.Server`](Mage.Server) | XMage's server, plus the JSON-RPC WebSocket bridge and Career services (`src/main/java/mage/server/websocket`, `.../career`). |
 | [`ops/web`](ops/web) | The Docker Compose deployment kit. |
+| [`ops/desktop`](ops/desktop) | The desktop app: a launcher and installers for Windows, macOS and Linux. |
 | [`docs`](docs) | The WebSocket API, data models and the upstream merge recipe. |
 | [`brand`](brand) | The Playmat logo, generated from the app's typeface by `build_logo.py`. |
 | [`site`](site) | The project website, published to GitHub Pages. |

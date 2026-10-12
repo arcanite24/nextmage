@@ -1,0 +1,208 @@
+name: Desktop app
+
+# Playmat for one computer: installers for Windows, macOS and Linux that bring their own Java, start the server and
+# open the game in the browser (ops/desktop). Every push and PR that touches the kit builds all of them; a v* tag
+# (or a manual run with a version) publishes them as a GitHub release.
+on:
+  push:
+    # tag pushes ignore the paths below; branch pushes build when the kit changes
+    branches: [ "**" ]
+    tags: [ "v*" ]
+    paths:
+      - "ops/desktop/**"
+      - ".github/workflows/desktop.yml"
+  pull_request:
+    paths:
+      - "ops/desktop/**"
+      - ".github/workflows/desktop.yml"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Publish as this version (e.g. 0.2.0, tagged v0.2.0). Empty: build only."
+        required: false
+        default: ""
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: Server, web client and launcher
+    runs-on: ubuntu-latest
+    # Mage.Server depends on Mage.Sets, so the first (uncached) build compiles every card
+    timeout-minutes: 120
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: version
+        name: Version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = tag ] && [[ "${GITHUB_REF_NAME}" == v* ]]; then
+            version=${GITHUB_REF_NAME#v}; publish=true
+          elif [ -n "${INPUT_VERSION:-}" ]; then
+            version=${INPUT_VERSION#v}; publish=true
+          else
+            version=0.0.0-dev.${GITHUB_SHA::7}; publish=false
+          fi
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.]+)?$ ]] || { echo "bad version '$version'" >&2; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "Playmat $version (publish: $publish)"
+      - uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: Mage.Web.Client/.nvmrc
+          cache: npm
+          cache-dependency-path: Mage.Web.Client/package-lock.json
+      - name: Build the server
+        run: |
+          mvn -B -ntp -T 1C -pl Mage.Server -am install -DskipTests
+          cd Mage.Server && mvn -B -ntp package assembly:single -DskipTests
+      - name: Build the web client
+        working-directory: Mage.Web.Client
+        # no VITE_IMAGE_PROXY: a desktop install has no image cache, pictures come straight from Scryfall
+        run: |
+          npm ci
+          npm run build
+      - name: Assemble the app
+        run: |
+          ops/desktop/build-app.sh "${{ steps.version.outputs.version }}" build
+          tar -C build -cf app.tar app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: app.tar
+          retention-days: 7
+
+  linux:
+    needs: app
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [ x64, arm64 ]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: temurin
+      - uses: actions/download-artifact@v5
+        with:
+          name: app
+      - run: |
+          mkdir build && tar -C build -xf app.tar
+          ops/desktop/package.sh linux ${{ matrix.arch }} build dist
+      - name: Smoke test
+        if: matrix.arch == 'x64'
+        run: |
+          mkdir smoke && tar -C smoke -xzf dist/Playmat-Linux-x64.tar.gz
+          PLAYMAT_DATA=$PWD/smoke-data smoke/Playmat/playmat --headless > smoke.log 2>&1 &
+          pid=$!
+          for i in $(seq 1 900); do
+            if curl -fs -o /dev/null http://localhost:17170/index.html && (exec 3<>/dev/tcp/127.0.0.1/17172) 2>/dev/null; then
+              echo "ready after ${i}s"; break
+            fi
+            sleep 1
+          done
+          cat smoke.log
+          (exec 3<>/dev/tcp/127.0.0.1/17172) || { tail -50 smoke-data/logs/server.log; exit 1; }
+          curl -fsS http://localhost:17170/ | grep -q '<div id="root"'
+          kill $pid
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: dist/*
+          retention-days: 7
+
+  macos:
+    needs: app
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [ arm64, x64 ]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: temurin
+      - uses: actions/download-artifact@v5
+        with:
+          name: app
+      - run: |
+          mkdir build && tar -C build -xf app.tar
+          ops/desktop/package.sh macos ${{ matrix.arch }} build dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}
+          path: dist/*
+          retention-days: 7
+
+  windows:
+    needs: app
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: temurin
+      - uses: actions/download-artifact@v5
+        with:
+          name: app
+      - name: Inno Setup
+        run: |
+          if [ ! -f "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" ]; then choco install innosetup -y --no-progress; fi
+      - run: |
+          mkdir build && tar -C build -xf app.tar
+          ops/desktop/package.sh windows x64 build dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: dist/*
+          retention-days: 7
+
+  release:
+    needs: [ app, linux, macos, windows ]
+    if: needs.app.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          path: artifacts
+          pattern: "{linux,macos,windows}-*"
+          merge-multiple: true
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.app.outputs.version }}
+        run: |
+          mkdir dist
+          cp artifacts/* ops/desktop/install.sh ops/desktop/install.ps1 dist/
+          (cd dist && sha256sum * > SHA256SUMS.txt)
+          sed "s/@VERSION@/$VERSION/g" ops/desktop/RELEASE_NOTES.md > notes.md
+          tag=v$VERSION
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --clobber
+            gh release edit "$tag" --notes-file notes.md
+          else
+            gh release create "$tag" dist/* --title "Playmat $VERSION" --notes-file notes.md --target "$GITHUB_SHA"
+          fi
