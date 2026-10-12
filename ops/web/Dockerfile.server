@@ -1,9 +1,10 @@
 # XMage server with the web bridge (WebSocket JSON-RPC on 17172).
 # Build context: the repository root.  docker build -f ops/web/Dockerfile.server .
 # The same image runs the nightly backup service (entrypoint xmage-backup).
-# The server is built with JDK 17 (for Java 8 bytecode) and runs on JAVA_RUNTIME: 25 by default, where compact object
-# headers (JEP 519) shrink every object by 4 bytes; 17 still works (docker build --build-arg JAVA_RUNTIME=17).
-ARG JAVA_RUNTIME=25
+# The server is built with JDK 17 (for Java 8 bytecode) and runs on JAVA_RUNTIME, 17 by default. 25 also works
+# (docker build --build-arg JAVA_RUNTIME=25, with compact object headers): it starts faster, but on a 1 vCPU / 1 GB box
+# its heap grew further under the same games (peak 588 MB against 303 MB on 17; ops/perf/README.md, M19).
+ARG JAVA_RUNTIME=17
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /src
 COPY . .
