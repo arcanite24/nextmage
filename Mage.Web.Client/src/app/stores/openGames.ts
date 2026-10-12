@@ -1,4 +1,4 @@
-import { forgetGame, forgetOwner, gamesToRestore, ownerKey, rememberGame, type OpenGameRecord, type OpenGamesBook } from '../../core/game/openGames';
+import { forgetGame, forgetOwner, gamesToRestore, ownerKey, rememberedGame, rememberGame, type OpenGameRecord, type OpenGamesBook } from '../../core/game/openGames';
 import { readJson, writeJson } from './persist';
 
 /** Open games per server and player, kept in local storage so a reload can rejoin them (see core/game/openGames). */
@@ -12,6 +12,10 @@ function read(): OpenGamesBook {
 export function rememberOpenGame(serverUrl: string, userName: string, record: OpenGameRecord): void {
   if (!userName) return;
   writeJson(KEY, rememberGame(read(), ownerKey(serverUrl, userName), record));
+}
+
+export function openGameRecord(serverUrl: string, userName: string, gameId: string): OpenGameRecord | null {
+  return userName ? rememberedGame(read(), ownerKey(serverUrl, userName), gameId) : null;
 }
 
 export function forgetOpenGame(serverUrl: string, userName: string, gameId: string): void {
