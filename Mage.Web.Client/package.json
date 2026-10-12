@@ -19,6 +19,7 @@
     "test:e2e:app": "MAGE_E2E_REQUIRE_SERVER=1 playwright test e2e/app- --project=chromium-desktop --workers=1",
     "test:e2e:import": "MAGE_E2E_REQUIRE_SERVER=1 playwright test e2e/deck-import.spec.ts --project=chromium-desktop --workers=1",
     "lint": "eslint . --max-warnings 0",
+    "perf": "bash ../ops/perf/perf.sh",
     "preview": "vite preview",
     "test:unit": "vitest run",
     "test:watch": "vitest",

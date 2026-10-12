@@ -45,6 +45,9 @@ export interface BotGameOptions {
   userData?: UserData;
   /** answers a prompt before the bot does: a command, or undefined to let the bot answer */
   intercept?: (state: GameSessionState) => Command | undefined;
+  /** stop answering after this turn and leave the game open until `holdUntil` (epoch ms), then concede; perf runs use it to measure held games */
+  holdAfterTurn?: number;
+  holdUntil?: number;
 }
 
 export interface BotGameStats {
@@ -62,7 +65,8 @@ export interface BotGameStats {
 
 export async function playBotGame(options: BotGameOptions): Promise<BotGameStats> {
   const playDeck = options.deck ?? RED_AGGRO;
-  const rpc = new RpcClient({ heartbeatMs: 0, stateDiffs: options.stateDiffs ?? true });
+  // a held game sits idle for minutes: keep the heartbeat a real client sends, or the server expires the session
+  const rpc = new RpcClient({ heartbeatMs: options.holdAfterTurn === undefined ? 0 : undefined, stateDiffs: options.stateDiffs ?? true });
   const bus = new EventBus(rpc);
   const api = createApi(rpc);
   await rpc.connect(options.serverUrl);
@@ -107,6 +111,15 @@ export async function playBotGame(options: BotGameOptions): Promise<BotGameStats
           return;
         }
         if (busy || state.awaitingServer) return;
+        if (options.holdAfterTurn !== undefined && stats.maxTurn > options.holdAfterTurn && state.interaction.mode === 'priority') {
+          if (Date.now() < (options.holdUntil ?? 0)) {
+            setTimeout(step, 1000);
+            return;
+          }
+          busy = true;
+          void session.respond({ type: 'action', action: 'CONCEDE' }).finally(() => { busy = false; });
+          return;
+        }
         if (stats.maxTurn > (options.maxTurns ?? 25) && state.interaction.mode === 'priority') {
           // keep the test bounded: the AI may stall a race; conceding still completes the game flow
           busy = true;
