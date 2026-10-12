@@ -59,8 +59,10 @@ live_heap_mb() { # full GC, then used heap
   "$JCMD" "$1" GC.heap_info 2>/dev/null | python3 -c '
 import re, sys
 text = sys.stdin.read()
-m = re.search(r"used (\d+)K", text)
-print(round(int(m.group(1)) / 1024) if m else -1)'
+# one heap line for G1, one per generation for Serial and Parallel; Metaspace and class space are not heap
+used = [int(k) for name, k in re.findall(r"^\s*([A-Za-z][\w -]*?)\s+total \d+K, used (\d+)K", text, re.M)
+        if not name.startswith(("Metaspace", "class space"))]
+print(round(sum(used) / 1024) if used else -1)'
 }
 metaspace_mb() {
   "$JCMD" "$1" GC.heap_info 2>/dev/null | python3 -c '

@@ -12,7 +12,11 @@ services:
       dockerfile: ops/web/Dockerfile.server
     environment:
       XMAGE_ALLOWED_ORIGINS: ${XMAGE_ALLOWED_ORIGINS:-https://${DOMAIN:?set DOMAIN}}
-      XMAGE_MEMORY: ${XMAGE_MEMORY:-2g}
+      XMAGE_MEMORY: ${XMAGE_MEMORY:-}
+      XMAGE_HEAP_PERCENT: ${XMAGE_HEAP_PERCENT:-}
+      XMAGE_GC: ${XMAGE_GC:-}
+      XMAGE_METASPACE: ${XMAGE_METASPACE:-}
+      XMAGE_CDS: ${XMAGE_CDS:-}
       XMAGE_JAVA_OPTS: ${XMAGE_JAVA_OPTS:-}
       XMAGE_ADMIN_PASSWORD: ${XMAGE_ADMIN_PASSWORD:-}
       # the proxy's network: the server trusts X-Forwarded-For only from these addresses

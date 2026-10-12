@@ -76,6 +76,8 @@ public final class Main {
     private static final String adminPasswordArg = "-adminPassword=";
     private static final String adminPasswordProp = "xmage.adminPassword";
     private static final String configPathProp = "xmage.config.path";
+    // image builds start the server once to build the card database and to record the classes it loads, then stop
+    private static final String exitAfterStartupProp = "xmage.exitAfterStartup";
 
     private static final File extensionFolder = new File("extensions");
     private static final String defaultConfigPath = Paths.get("config", "config.xml").toString();
@@ -339,6 +341,10 @@ public final class Main {
                     logger.info("MAGE server running in test mode");
                 }
                 initStatistics();
+                if (Boolean.getBoolean(exitAfterStartupProp)) {
+                    logger.info("Started; stopping now (" + exitAfterStartupProp + ")");
+                    System.exit(0);
+                }
             } else {
                 logger.fatal("Unable to start MAGE server - another server is already started");
             }

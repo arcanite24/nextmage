@@ -18,6 +18,7 @@ import mage.server.websocket.rpc.RpcMethod;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static mage.server.websocket.rpc.RpcParam.Type.INT;
 import static mage.server.websocket.rpc.RpcParam.Type.STRING;
@@ -62,6 +63,11 @@ final class AccountApi {
         /** when planned maintenance starts (epoch ms), or 0; no new tables can start meanwhile */
         public long maintenanceAt;
         public String maintenanceMessage;
+        /** games running now, and how many can run at once (maxGameThreads); further games wait for a free slot */
+        public int gamesRunning;
+        public int maxGames;
+        /** games waiting for a free slot */
+        public int gamesWaiting;
     }
 
     static List<RpcMethod> methods(ApiContext ctx) {
@@ -154,6 +160,13 @@ final class AccountApi {
             info.maxPasswordLength = config.getMaxPasswordLength();
         }
         info.deckSync = info.accounts;
+        if (ctx.managers != null && ctx.managers.threadExecutor() != null
+                && ctx.managers.threadExecutor().getGameExecutor() instanceof ThreadPoolExecutor) {
+            ThreadPoolExecutor games = (ThreadPoolExecutor) ctx.managers.threadExecutor().getGameExecutor();
+            info.gamesRunning = games.getActiveCount();
+            info.maxGames = games.getMaximumPoolSize();
+            info.gamesWaiting = games.getQueue().size();
+        }
         mage.server.Maintenance.MaintenancePlan maintenance = mage.server.Maintenance.get().plan();
         if (maintenance != null) {
             info.maintenanceAt = maintenance.startsAt;

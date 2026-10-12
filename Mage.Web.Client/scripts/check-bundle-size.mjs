@@ -53,8 +53,10 @@ import { gzipSync } from 'node:zlib';
 // console's side nav, Staff page and reason prompts (lazy), measured 450.5 kB
 // app raised 2026-10-11 from 455 kB for M14 (accounts): the admin Accounts and Feedback pages (lazy) and Send
 // feedback in the account menu (a lazy dialog), measured 454.3 kB
+// entry raised 2026-10-12 from 71 kB for M16 (performance): Home says when every game slot of the server is busy
+// (a polled serverInfo query and its message); measured entry 71.2 kB
 const BUDGET_KB = {
-  entry: 71,
+  entry: 72,
   initial: 212,
   app: 460,
 };
