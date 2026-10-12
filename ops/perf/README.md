@@ -130,7 +130,7 @@ The sets name their cards by class name instead of by class literal (a build ste
 
 The class archive recorded in the image shrinks with it (319 to 34 MB). The image's card database is defragmented with `SHUTDOWN DEFRAG` (about 280 to 33 MB). The build now fails if the file stays large, because the `SHUTDOWN COMPACT` that M18 shipped left it at full size without saying so.
 
-**A 1 vCPU / 1 GB box (B224, simulated).** On Multivac, the image ran in Docker with `--cpus=1 --memory=1g` and `small-vps.env`, while the load test played 3 games at once against the AI (bots answer at once, so a game is busier than a person's). Memory is what `docker stats` reports for the container. The host was shared with other work, so wall times are rough.
+**A 1 vCPU / 1 GB box (B224, simulated with `ops/perf/vps-sim.sh`).** On Multivac, the image ran in Docker with `--cpus=1 --memory=1g` and `small-vps.env`, while the load test played 3 games at once against the AI (bots answer at once, so a game is busier than a person's). Memory is what `docker stats` reports for the container. The host was shared with other work, so wall times are rough.
 
 | | M18, JDK 17 | M19, JDK 17 | M19, JDK 25 (compact headers) | M19, JDK 25 (without) |
 |---|---|---|---|---|
