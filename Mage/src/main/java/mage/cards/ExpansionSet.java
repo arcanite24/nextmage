@@ -49,7 +49,10 @@ public abstract class ExpansionSet implements Serializable {
         private final String name;
         private final String cardNumber;
         private final Rarity rarity;
-        private final Class<?> cardClass;
+        // the card's class, or only its name: the build writes the sets' class literals as names (see
+        // Mage.Sets/build/LazyCardClasses.java), so the ~30,000 card classes load when a card is made, not at startup
+        private volatile Class<?> cardClass;
+        private final String cardClassName;
         private final CardGraphicInfo graphicInfo;
 
         public SetCardInfo(String name, int cardNumber, Rarity rarity, Class<?> cardClass) {
@@ -65,10 +68,31 @@ public abstract class ExpansionSet implements Serializable {
         }
 
         public SetCardInfo(String name, String cardNumber, Rarity rarity, Class<?> cardClass, CardGraphicInfo graphicInfo) {
+            this(name, cardNumber, rarity, cardClass, cardClass.getName(), graphicInfo);
+        }
+
+        public SetCardInfo(String name, int cardNumber, Rarity rarity, String cardClassName) {
+            this(name, String.valueOf(cardNumber), rarity, cardClassName, null);
+        }
+
+        public SetCardInfo(String name, String cardNumber, Rarity rarity, String cardClassName) {
+            this(name, cardNumber, rarity, cardClassName, null);
+        }
+
+        public SetCardInfo(String name, int cardNumber, Rarity rarity, String cardClassName, CardGraphicInfo graphicInfo) {
+            this(name, String.valueOf(cardNumber), rarity, cardClassName, graphicInfo);
+        }
+
+        public SetCardInfo(String name, String cardNumber, Rarity rarity, String cardClassName, CardGraphicInfo graphicInfo) {
+            this(name, cardNumber, rarity, null, cardClassName, graphicInfo);
+        }
+
+        private SetCardInfo(String name, String cardNumber, Rarity rarity, Class<?> cardClass, String cardClassName, CardGraphicInfo graphicInfo) {
             this.name = name;
             this.cardNumber = cardNumber;
             this.rarity = rarity;
             this.cardClass = cardClass;
+            this.cardClassName = cardClassName;
             this.graphicInfo = graphicInfo;
 
             // verify check: only valid card numbers allow
@@ -93,7 +117,24 @@ public abstract class ExpansionSet implements Serializable {
         }
 
         public Class<?> getCardClass() {
-            return this.cardClass;
+            Class<?> result = this.cardClass;
+            if (result == null) {
+                try {
+                    ClassLoader loader = Thread.currentThread().getContextClassLoader();
+                    result = Class.forName(cardClassName, false, loader != null ? loader : SetCardInfo.class.getClassLoader());
+                } catch (ClassNotFoundException e) {
+                    throw new IllegalStateException("Card class not found: " + cardClassName + " (" + name + ")", e);
+                }
+                this.cardClass = result;
+            }
+            return result;
+        }
+
+        /**
+         * The card's class name, without loading the class
+         */
+        public String getCardClassName() {
+            return this.cardClassName;
         }
 
         public CardGraphicInfo getGraphicInfo() {
@@ -226,7 +267,7 @@ public abstract class ExpansionSet implements Serializable {
     }
 
     public List<SetCardInfo> findCardInfoByClass(Class<?> clazz) {
-        return cards.stream().filter(info -> info.getCardClass().equals(clazz)).collect(Collectors.toList());
+        return cards.stream().filter(info -> info.getCardClassName().equals(clazz.getName())).collect(Collectors.toList());
     }
 
     public List<Card> create15CardBooster() {

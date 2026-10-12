@@ -1,0 +1,234 @@
+From 72011cff091e937213f2d1e98e33fb9d197cf4cc Mon Sep 17 00:00:00 2001
+From: arcanite24 <arcaniteamp@gmail.com>
+Date: Mon, 12 Oct 2026 16:37:39 -0600
+Subject: [PATCH 09/10] AI: count search nodes per search, start think time
+ when the search starts, skip searches with nothing to play
+
+The node counter was static, so concurrent AI searches (several AI players, or several games) ate each other's node budget.
+A search that waited for one of the shared search threads lost that wait from its think time.
+A search with only mana abilities playable copies the game just to pass.
+---
+ .../src/mage/player/ai/ComputerPlayer6.java   | 34 +++++++++++++------
+ .../src/mage/player/ai/ComputerPlayer7.java   | 21 ++++++++++--
+ .../src/mage/player/ai/SimulatedPlayer2.java  |  2 +-
+ .../src/mage/player/ai/SimulationNode2.java   | 20 ++++++-----
+ 4 files changed, 56 insertions(+), 21 deletions(-)
+
+diff --git a/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/ComputerPlayer6.java b/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/ComputerPlayer6.java
+index ca070e50f8..892b0b8f66 100644
+--- a/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/ComputerPlayer6.java
++++ b/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/ComputerPlayer6.java
+@@ -52,7 +52,11 @@ public class ComputerPlayer6 extends ComputerPlayer {
+     // TODO: add and research maxNodes logs, is it good to increase from 5000 to 50000 for better results?
+     // TODO: increase maxNodes due AI skill level like max depth?
+     private static final int MAX_SIMULATED_NODES_PER_CALC = 5000;
+-    private static final int MAX_SIMULATED_NODES_PER_ERROR = 5100; // TODO: debug only, set low value to find big calculations
++    // nodes searched past the budget before it counts as an error (debug check, set low to find big calculations)
++    private static final int MAX_SIMULATED_NODES_OVER_BUDGET = 100;
++    // a search waits this long for a free search thread before the AI gives up on it; the wait doesn't count as
++    // think time, so AI players on a busy server don't lose their search to each other's
++    private static final int MAX_SECONDS_WAITING_FOR_A_SEARCH_THREAD = 60;
+ 
+     // same params as Executors.newFixedThreadPool
+     // no needs errors check in afterExecute here cause that pool used for FutureTask with result check already
+@@ -102,6 +106,8 @@ public class ComputerPlayer6 extends ComputerPlayer {
+     public ComputerPlayer6(final ComputerPlayer6 player) {
+         super(player);
+         this.maxDepth = player.maxDepth;
++        this.maxNodes = player.maxNodes;
++        this.maxThinkTimeSecs = player.maxThinkTimeSecs;
+         this.currentScore = player.currentScore;
+         if (player.combat != null) {
+             this.combat = player.combat.copy();
+@@ -214,12 +220,12 @@ public class ComputerPlayer6 extends ComputerPlayer {
+             return GameStateEvaluator2.evaluate(playerId, game).getTotalScore();
+         }
+         // Condition to stop deeper simulation
+-        if (SimulationNode2.nodeCount > MAX_SIMULATED_NODES_PER_ERROR) {
++        if (node.getSearchNodes() > maxNodes + MAX_SIMULATED_NODES_OVER_BUDGET) {
+             // how-to fix: make sure you are disabled debug mode by COMPUTER_DISABLE_TIMEOUT_IN_GAME_SIMULATIONS = false
+             throw new IllegalStateException("AI ERROR: too much nodes (possible actions)");
+         }
+         if (depth <= 0
+-                || SimulationNode2.nodeCount > maxNodes
++                || node.getSearchNodes() > maxNodes
+                 || game.checkIfGameIsOver()) {
+             val = GameStateEvaluator2.evaluate(playerId, game).getTotalScore();
+             if (logger.isTraceEnabled()) {
+@@ -337,10 +343,10 @@ public class ComputerPlayer6 extends ComputerPlayer {
+             if (alpha >= beta) {
+                 break;
+             }
+-            if (SimulationNode2.nodeCount > MAX_SIMULATED_NODES_PER_ERROR) {
++            if (node.getSearchNodes() > maxNodes + MAX_SIMULATED_NODES_OVER_BUDGET) {
+                 throw new IllegalStateException("AI ERROR: too much nodes (possible actions)");
+             }
+-            if (SimulationNode2.nodeCount > maxNodes) {
++            if (node.getSearchNodes() > maxNodes) {
+                 break;
+             }
+             int val = addActions(child, depth - 1, alpha, beta);
+@@ -415,7 +421,7 @@ public class ComputerPlayer6 extends ComputerPlayer {
+                         SimulationNode2 newNode = new SimulationNode2(node, sim, depth, stackObject.getControllerId());
+                         node.children.add(newNode);
+                         newNode.getTargets().add(targetId);
+-                        logger.trace("Sim search -- node#: " + SimulationNode2.getCount() + " for player: " + sim.getPlayer(stackObject.getControllerId()).getName());
++                        logger.trace("Sim search -- node#: " + newNode.getSearchNodes() + " for player: " + sim.getPlayer(stackObject.getControllerId()).getName());
+                     }
+                     return;
+                 }
+@@ -439,7 +445,11 @@ public class ComputerPlayer6 extends ComputerPlayer {
+         // TODO: all actions added and calculated one by one,
+         //  multithreading do not supported here
+         // run new game simulation in parallel thread
+-        FutureTask<Integer> task = new FutureTask<>(() -> addActions(root, maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE));
++        CountDownLatch started = new CountDownLatch(1);
++        FutureTask<Integer> task = new FutureTask<>(() -> {
++            started.countDown();
++            return addActions(root, maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE);
++        });
+         threadPoolSimulations.execute(task);
+         try {
+             int maxSeconds = maxThinkTimeSecs;
+@@ -447,6 +457,10 @@ public class ComputerPlayer6 extends ComputerPlayer {
+                 maxSeconds = 3600;
+             }
+             logger.debug("maxThink: " + maxSeconds + " seconds ");
++            // the think time starts when the search does, not while it waits for a thread other AI players use
++            if (!started.await(MAX_SECONDS_WAITING_FOR_A_SEARCH_THREAD, TimeUnit.SECONDS)) {
++                throw new TimeoutException("no free search thread");
++            }
+             Integer res = task.get(maxSeconds, TimeUnit.SECONDS);
+             if (res != null) {
+                 return res;
+@@ -717,10 +731,10 @@ public class ComputerPlayer6 extends ComputerPlayer {
+                 if (alpha >= beta) {
+                     break;
+                 }
+-                if (SimulationNode2.nodeCount > MAX_SIMULATED_NODES_PER_ERROR) {
++                if (node.getSearchNodes() > maxNodes + MAX_SIMULATED_NODES_OVER_BUDGET) {
+                     throw new IllegalStateException("AI ERROR: too many nodes (possible actions)");
+                 }
+-                if (SimulationNode2.nodeCount > maxNodes) {
++                if (node.getSearchNodes() > maxNodes) {
+                     logger.debug("Sim Prio -- reached end-state");
+                     break;
+                 }
+@@ -729,7 +743,7 @@ public class ComputerPlayer6 extends ComputerPlayer {
+ 
+         if (depth == maxDepth) {
+             // TODO: buggy? Why it ended with depth limit 6 on one Pass action?!
+-            logger.info("Sim Prio [" + depth + "] ## Ended due max actions chain depth limit (" + maxDepth + ") -- Nodes calculated: " + SimulationNode2.nodeCount);
++            logger.info("Sim Prio [" + depth + "] ## Ended due max actions chain depth limit (" + maxDepth + ") -- Nodes calculated: " + node.getSearchNodes());
+         }
+         if (bestNode != null) {
+             node.children.clear();
+diff --git a/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/ComputerPlayer7.java b/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/ComputerPlayer7.java
+index 09af732d42..13f47b3da6 100644
+--- a/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/ComputerPlayer7.java
++++ b/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/ComputerPlayer7.java
+@@ -1,6 +1,7 @@
+ package mage.player.ai;
+ 
+ import mage.abilities.Ability;
++import mage.abilities.ActivatedAbility;
+ import mage.constants.RangeOfInfluence;
+ import mage.game.Game;
+ import mage.player.ai.score.GameStateEvaluator2;
+@@ -112,10 +113,13 @@ public class ComputerPlayer7 extends ComputerPlayer6 {
+ 
+     protected void calculateActions(Game game) {
+         if (!getNextAction(game)) {
++            if (!hasActionsToSearch(game)) {
++                // nothing but mana abilities to use: passing is the only choice, no need to copy the game and search
++                return;
++            }
+             currentScore = GameStateEvaluator2.evaluate(playerId, game).getTotalScore();
+             Game sim = createSimulation(game);
+-            SimulationNode2.resetCount();
+-            root = new SimulationNode2(null, sim, maxDepth, playerId);
++            root = new SimulationNode2(null, sim, maxDepth, playerId); // a new search, with its own node count
+             addActionsTimed(); // TODO: root can be null again after addActionsTimed O_o need to research (it's a CPU AI problem?)
+             if (root != null && root.children != null && !root.children.isEmpty()) {
+                 logger.trace("After add actions timed: root.children.size = " + root.children.size());
+@@ -150,6 +154,19 @@ public class ComputerPlayer7 extends ComputerPlayer6 {
+         }
+     }
+ 
++    /**
++     * Whether the AI could do anything but pass: a spell or a non-mana ability it can use now. The search would find
++     * the same, at the price of copying the game.
++     */
++    private boolean hasActionsToSearch(Game game) {
++        for (ActivatedAbility ability : getPlayable(game, true)) {
++            if (!ability.isManaAbility()) {
++                return true;
++            }
++        }
++        return false;
++    }
++
+     @Override
+     public void setAllowBadMoves(boolean allowBadMoves) {
+         this.allowBadMoves = allowBadMoves;
+diff --git a/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/SimulatedPlayer2.java b/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/SimulatedPlayer2.java
+index 9d7347f7d2..97119787f4 100644
+--- a/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/SimulatedPlayer2.java
++++ b/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/SimulatedPlayer2.java
+@@ -350,7 +350,7 @@ public final class SimulatedPlayer2 extends ComputerPlayer {
+         }
+         sim.applyEffects();
+         SimulationNode2 newNode = new SimulationNode2(parent, sim, depth, playerId);
+-        logger.debug("simulating -- node #:" + SimulationNode2.getCount() + " triggered ability option");
++        logger.debug("simulating -- node #:" + newNode.getSearchNodes() + " triggered ability option");
+         for (Target target : ability.getTargets()) {
+             for (UUID targetId : target.getTargets()) {
+                 newNode.getTargets().add(targetId); // save for info only (real targets in newNode.game.stack already)
+diff --git a/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/SimulationNode2.java b/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/SimulationNode2.java
+index 3d11365f85..a9fbb03c67 100644
+--- a/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/SimulationNode2.java
++++ b/Mage.Server.Plugins/Mage.Player.AI.MAD/src/mage/player/ai/SimulationNode2.java
+@@ -15,7 +15,11 @@ import mage.game.combat.Combat;
+  */
+ public class SimulationNode2 implements Serializable {
+ 
+-    protected static int nodeCount;
++    /**
++     * Nodes made so far by the search this node belongs to, shared along the tree. It was a static count once, so
++     * games searching at the same time spent each other's node budget.
++     */
++    protected final int[] searchNodes;
+ 
+     protected Game game;
+     protected int gameValue; // game state hash to monitor changes
+@@ -35,7 +39,8 @@ public class SimulationNode2 implements Serializable {
+         this.depth = depth;
+         this.playerId = playerId;
+         game.setCustomData(this);
+-        nodeCount++;
++        this.searchNodes = parent == null ? new int[1] : parent.searchNodes;
++        this.searchNodes[0]++;
+     }
+ 
+     public SimulationNode2(SimulationNode2 parent, Game game, List<Ability> abilities, int depth, UUID playerId) {
+@@ -49,12 +54,11 @@ public class SimulationNode2 implements Serializable {
+         abilities.add(ability);
+     }
+ 
+-    public static void resetCount() {
+-        nodeCount = 0;
+-    }
+-
+-    public static int getCount() {
+-        return nodeCount;
++    /**
++     * Nodes made so far by this node's search.
++     */
++    public int getSearchNodes() {
++        return searchNodes[0];
+     }
+ 
+     public Game getGame() {
+-- 
+2.50.1 (Apple Git-155)
+

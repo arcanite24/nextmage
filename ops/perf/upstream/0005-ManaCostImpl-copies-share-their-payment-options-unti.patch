@@ -1,0 +1,68 @@
+From 886f1cdf5816dd2fd9284e9921c6f7e18ad9c044 Mon Sep 17 00:00:00 2001
+From: arcanite24 <arcaniteamp@gmail.com>
+Date: Mon, 12 Oct 2026 16:36:49 -0600
+Subject: [PATCH 05/10] ManaCostImpl: copies share their payment options until
+ one changes them
+
+---
+ .../abilities/costs/mana/ManaCostImpl.java    | 21 +++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/Mage/src/main/java/mage/abilities/costs/mana/ManaCostImpl.java b/Mage/src/main/java/mage/abilities/costs/mana/ManaCostImpl.java
+index c557d26032..2f2aede5b1 100644
+--- a/Mage/src/main/java/mage/abilities/costs/mana/ManaCostImpl.java
++++ b/Mage/src/main/java/mage/abilities/costs/mana/ManaCostImpl.java
+@@ -24,7 +24,10 @@ public abstract class ManaCostImpl extends CostImpl implements ManaCost {
+     protected Mana payment;
+     protected Mana usedManaToPay;
+     protected Mana cost;
++    // the ways to pay this cost, set up by constructors and only read afterwards: copies share them until one
++    // changes them (call ownOptions() first), since mana costs are copied with every ability of every game copy
+     protected ManaOptions options;
++    private boolean optionsShared = false;
+     protected Filter sourceFilter;
+     protected boolean phyrexian = false;
+ 
+@@ -39,7 +42,9 @@ public abstract class ManaCostImpl extends CostImpl implements ManaCost {
+         this.payment = manaCost.payment.copy();
+         this.usedManaToPay = manaCost.usedManaToPay.copy();
+         this.cost = manaCost.cost.copy();
+-        this.options = manaCost.options.copy();
++        this.options = manaCost.options;
++        this.optionsShared = true;
++        manaCost.optionsShared = true;
+         if (manaCost.sourceFilter != null) {
+             this.sourceFilter = manaCost.sourceFilter.copy();
+         }
+@@ -289,7 +294,19 @@ public abstract class ManaCostImpl extends CostImpl implements ManaCost {
+         this.payment.add(mana);
+     }
+ 
++    /**
++     * The options of this cost alone, to change them
++     */
++    protected ManaOptions ownOptions() {
++        if (optionsShared) {
++            options = options.copy();
++            optionsShared = false;
++        }
++        return options;
++    }
++
+     protected void addColoredOption(ColoredManaSymbol symbol) {
++        ownOptions();
+         switch (symbol) {
+             case B:
+                 this.options.add(Mana.BlackMana(1));
+@@ -324,7 +341,7 @@ public abstract class ManaCostImpl extends CostImpl implements ManaCost {
+     @Override
+     public void setPhyrexian(boolean phyrexian) {
+         if (phyrexian) {
+-            this.options.add(Mana.GenericMana(0));
++            ownOptions().add(Mana.GenericMana(0));
+         }
+         this.phyrexian = phyrexian;
+     }
+-- 
+2.50.1 (Apple Git-155)
+

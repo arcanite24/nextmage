@@ -1,0 +1,29 @@
+From 3bda277101c1e936b0925c6ac822b9d837770670 Mon Sep 17 00:00:00 2001
+From: arcanite24 <arcaniteamp@gmail.com>
+Date: Mon, 12 Oct 2026 16:36:50 -0600
+Subject: [PATCH 06/10] getManaAvailable: reuse the playable check's game copy
+ instead of making another
+
+---
+ Mage/src/main/java/mage/players/PlayerImpl.java | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/Mage/src/main/java/mage/players/PlayerImpl.java b/Mage/src/main/java/mage/players/PlayerImpl.java
+index 22f49e0107..4dfd53e96a 100644
+--- a/Mage/src/main/java/mage/players/PlayerImpl.java
++++ b/Mage/src/main/java/mage/players/PlayerImpl.java
+@@ -3618,8 +3618,9 @@ public abstract class PlayerImpl implements Player, Serializable {
+      */
+     @Override
+     public ManaOptions getManaAvailable(Game originalGame) {
+-        // workaround to fix a triggers list modification bug (game must be immutable on playable calculations)
+-        Game game = originalGame.createSimulationForPlayableCalc();
++        // workaround to fix a triggers list modification bug (game must be immutable on playable calculations);
++        // a game made for a playable calculation already is such a copy (getPlayable makes one), so don't copy it again
++        Game game = originalGame.inCheckPlayableState() ? originalGame : originalGame.createSimulationForPlayableCalc();
+ 
+         ManaOptions availableMana = new ManaOptions();
+         availableMana.addMana(manaPool.getMana());
+-- 
+2.50.1 (Apple Git-155)
+

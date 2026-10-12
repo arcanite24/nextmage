@@ -1,0 +1,35 @@
+From a34bfc2423d8bf2e07db527d6ba1ac10a22059a7 Mon Sep 17 00:00:00 2001
+From: arcanite24 <arcaniteamp@gmail.com>
+Date: Mon, 12 Oct 2026 16:36:51 -0600
+Subject: [PATCH 08/10] Finished games drop rollback states and last known
+ information
+
+---
+ Mage/src/main/java/mage/game/GameImpl.java | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/Mage/src/main/java/mage/game/GameImpl.java b/Mage/src/main/java/mage/game/GameImpl.java
+index 2b6dbb6f0a..5719d1399b 100644
+--- a/Mage/src/main/java/mage/game/GameImpl.java
++++ b/Mage/src/main/java/mage/game/GameImpl.java
+@@ -1081,6 +1081,17 @@ public abstract class GameImpl implements Game {
+     public void cleanUp() {
+         gameCards.clear();
+         meldCards.clear();
++        // a finished game can't roll back or look back any more, and a match keeps its finished games until it ends:
++        // drop the saved copies of the whole game state (one per priority, plus one per turn) and last known information
++        if (!simulation) {
++            gameStates.clear();
++            savedStates.clear();
++            gameStatesRollBack.clear();
++            lki.clear();
++            lkiCardState.clear();
++            lkiExtended.clear();
++            lkiShortLiving.clear();
++        }
+     }
+ 
+     @Override
+-- 
+2.50.1 (Apple Git-155)
+

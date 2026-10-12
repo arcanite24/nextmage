@@ -220,6 +220,10 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
   echo "-Xmx$HEAP"
   for flag in $GC_FLAGS; do echo "$flag"; done
   echo "-XX:MaxMetaspaceSize=${XMAGE_METASPACE:-512m}"
+  # JDK 25+: 8-byte object headers instead of 12 (the class-data archive was recorded with them, so they go together)
+  if [ "${XMAGE_JAVA_RUNTIME:-17}" -ge 25 ] && [ "${XMAGE_COMPACT_HEADERS:-true}" = true ]; then
+    echo "-XX:+UseCompactObjectHeaders"
+  fi
   # the class-data archive recorded when the image was built (see Dockerfile.server); the JVM skips it if it doesn't fit
   if [ "${XMAGE_CDS:-true}" = true ] && [ -f "$APP/xmage.jsa" ]; then
     echo "-XX:SharedArchiveFile=$APP/xmage.jsa"
