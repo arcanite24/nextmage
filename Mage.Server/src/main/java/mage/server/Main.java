@@ -78,6 +78,8 @@ public final class Main {
     private static final String configPathProp = "xmage.config.path";
     // image builds start the server once to build the card database and to record the classes it loads, then stop
     private static final String exitAfterStartupProp = "xmage.exitAfterStartup";
+    // false: web clients only; the desktop protocol (JBoss Remoting on the config's port) isn't started
+    private static final String remotingProp = "xmage.remoting";
 
     private static final File extensionFolder = new File("extensions");
     private static final String defaultConfigPath = Paths.get("config", "config.xml").toString();
@@ -303,17 +305,23 @@ public final class Main {
         try {
             // Parameter: serializationtype => jboss
             InvokerLocator serverLocator = new InvokerLocator(connection.getURI());
-            if (!isAlreadyRunning(config, serverLocator)) {
+            boolean remoting = !"false".equalsIgnoreCase(System.getProperty(remotingProp));
+            // without the desktop protocol, a second server shows itself when the WebSocket port is taken
+            if (!remoting || !isAlreadyRunning(config, serverLocator)) {
                 MageServerImpl mageServerImpl = new MageServerImpl(managerFactory, adminPassword, testMode, detailsMode);
-                server = new MageTransporterServer(
-                        managerFactory,
-                        serverLocator,
-                        mageServerImpl,
-                        MageServer.class.getName(),
-                        new MageServerInvocationHandler(managerFactory)
-                );
-                server.start();
-                logger.info("Started MAGE server - listening on " + connection.toString());
+                if (remoting) {
+                    server = new MageTransporterServer(
+                            managerFactory,
+                            serverLocator,
+                            mageServerImpl,
+                            MageServer.class.getName(),
+                            new MageServerInvocationHandler(managerFactory)
+                    );
+                    server.start();
+                    logger.info("Started MAGE server - listening on " + connection.toString());
+                } else {
+                    logger.info("Desktop clients are off (" + remotingProp + "=false): web clients only");
+                }
 
                 // WebSocket Server
                 int websocketPort = config.getWebsocketPort();
@@ -325,7 +333,9 @@ public final class Main {
                     webSocketServer.awaitStartup(10, java.util.concurrent.TimeUnit.SECONDS);
                 } catch (Exception ex) {
                     try {
-                        server.stop();
+                        if (server != null) {
+                            server.stop();
+                        }
                     } catch (Exception stopEx) {
                         logger.warn("Failed to stop MAGE remoting server after WebSocket startup failure", stopEx);
                     }

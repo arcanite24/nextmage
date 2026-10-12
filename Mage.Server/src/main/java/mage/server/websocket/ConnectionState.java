@@ -35,6 +35,8 @@ final class ConnectionState implements RpcConnection {
     private volatile String sessionId;
     private volatile WebSocketCallbackHandler callbackHandler;
     private final GameStates gameStates = new GameStates();
+    /** one per connection, shared by its logins' handlers, so its messages keep their order */
+    private final Executor sender = SerialSender.create();
 
     private int rateLimitStrikes;
     private double tokens = BURST;
@@ -86,7 +88,7 @@ final class ConnectionState implements RpcConnection {
         synchronized (gameStates) {
             gameStates.newSession();
         }
-        WebSocketCallbackHandler handler = new WebSocketCallbackHandler(conn, gameStates);
+        WebSocketCallbackHandler handler = new WebSocketCallbackHandler(conn, gameStates, sender);
         callbackHandler = handler;
         return handler;
     }

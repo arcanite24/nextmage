@@ -2,7 +2,6 @@ package mage.server.websocket;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import mage.interfaces.callback.ClientCallbackMethod;
 import mage.server.websocket.rpc.JsonCodec;
 
@@ -40,15 +39,27 @@ final class GameStates {
     private static final Set<ClientCallbackMethod> LAST = EnumSet.of(
             ClientCallbackMethod.GAME_OVER, ClientCallbackMethod.REPLAY_DONE);
 
+    /**
+     * A patch is sent without writing the complete message when it is clearly smaller (less than half) than the last
+     * complete one measured; every so many patches the complete message is written again to keep that size current.
+     */
+    static final int PATCHES_PER_SIZE_CHECK = 16;
+
     private static final class Baseline {
         final long seq;
-        final String view; // as text: a parsed tree takes several times the memory
+        /** the view as sent; the trees a handler builds are its own and never change after encoding */
+        final JsonObject view;
         final boolean replay;
+        /** size of the last complete message written for the game */
+        final int fullChars;
+        final int patchesSinceSizeCheck;
 
-        Baseline(long seq, String view, boolean replay) {
+        Baseline(long seq, JsonObject view, boolean replay, int fullChars, int patchesSinceSizeCheck) {
             this.seq = seq;
             this.view = view;
             this.replay = replay;
+            this.fullChars = fullChars;
+            this.patchesSinceSizeCheck = patchesSinceSizeCheck;
         }
     }
 
@@ -100,7 +111,8 @@ final class GameStates {
     }
 
     /**
-     * @param message a server event as built by {@link WebSocketCallbackHandler#serializeTree}; changed in place
+     * @param message a server event as built by {@link WebSocketCallbackHandler#serializeTree}; left unchanged, and
+     *                must not be changed afterwards (its view becomes the game's baseline)
      * @return null when the message holds no game view (send it as it is)
      */
     Encoded encode(ClientCallbackMethod method, UUID gameId, JsonObject message) {
@@ -115,8 +127,9 @@ final class GameStates {
         if (data == null || !data.isJsonObject()) {
             return null;
         }
+        boolean viewIsData = VIEW_IS_DATA.contains(method);
         JsonObject view;
-        if (VIEW_IS_DATA.contains(method)) {
+        if (viewIsData) {
             view = data.getAsJsonObject();
         } else {
             JsonElement inner = data.getAsJsonObject().get("gameView");
@@ -127,30 +140,63 @@ final class GameStates {
         }
 
         long seq = nextSeq++;
-        JsonObject state = new JsonObject();
-        state.addProperty("seq", seq);
-        message.add("state", state);
-        String full = JsonCodec.GSON.toJson(message);
-        Baseline previous = games.put(gameId, new Baseline(seq, JsonCodec.GSON.toJson(view), REPLAYS.contains(method)));
-        if (previous == null) {
+        boolean replay = REPLAYS.contains(method);
+        Baseline previous = games.get(gameId);
+        JsonElement patch = previous == null ? null : StateDiff.diff(previous.view, view);
+        if (previous == null || (patch != null && patch.isJsonArray() && patch.getAsJsonArray().size() == 1)) {
+            // the first state, or one replaced as a whole: nothing to patch
+            String full = complete(message, seq);
+            games.put(gameId, new Baseline(seq, view, replay, full.length(), 0));
             return new Encoded(full, full.length(), false);
         }
 
-        JsonElement patch = StateDiff.diff(JsonParser.parseString(previous.view), view);
-        if (patch != null && patch.isJsonArray() && patch.getAsJsonArray().size() == 1) {
-            return new Encoded(full, full.length(), false); // replaced as a whole: nothing to patch
-        }
-        if (view == data) {
-            message.remove("data");
-        } else {
-            data.getAsJsonObject().remove("gameView");
-        }
+        JsonObject state = new JsonObject();
+        state.addProperty("seq", seq);
         state.addProperty("base", previous.seq);
         state.add("patch", patch == null ? new JsonObject() : patch);
-        String patched = JsonCodec.GSON.toJson(message);
+        String patched = JsonCodec.GSON.toJson(withoutView(message, viewIsData, state));
+        if (patched.length() * 2 < previous.fullChars && previous.patchesSinceSizeCheck + 1 < PATCHES_PER_SIZE_CHECK) {
+            games.put(gameId, new Baseline(seq, view, replay, previous.fullChars, previous.patchesSinceSizeCheck + 1));
+            return new Encoded(patched, previous.fullChars, true);
+        }
+        // a close call, or time to measure again: write the complete message too, and send the smaller
+        String full = complete(message, seq);
+        games.put(gameId, new Baseline(seq, view, replay, full.length(), 0));
         return patched.length() < full.length()
                 ? new Encoded(patched, full.length(), true)
                 : new Encoded(full, full.length(), false);
+    }
+
+    /** The message with its view, as text. */
+    private static String complete(JsonObject message, long seq) {
+        JsonObject state = new JsonObject();
+        state.addProperty("seq", seq);
+        JsonObject copy = new JsonObject();
+        for (Map.Entry<String, JsonElement> entry : message.entrySet()) {
+            copy.add(entry.getKey(), entry.getValue());
+        }
+        copy.add("state", state);
+        return JsonCodec.GSON.toJson(copy);
+    }
+
+    /** A shallow copy of the message without its view (the client rebuilds it from the patch in {@code state}). */
+    private static JsonObject withoutView(JsonObject message, boolean viewIsData, JsonObject state) {
+        JsonObject copy = new JsonObject();
+        for (Map.Entry<String, JsonElement> entry : message.entrySet()) {
+            if (!entry.getKey().equals("data")) {
+                copy.add(entry.getKey(), entry.getValue());
+            } else if (!viewIsData) {
+                JsonObject data = new JsonObject();
+                for (Map.Entry<String, JsonElement> field : entry.getValue().getAsJsonObject().entrySet()) {
+                    if (!field.getKey().equals("gameView")) {
+                        data.add(field.getKey(), field.getValue());
+                    }
+                }
+                copy.add("data", data);
+            }
+        }
+        copy.add("state", state);
+        return copy;
     }
 
     /**
@@ -166,14 +212,14 @@ final class GameStates {
             return null;
         }
         long seq = nextSeq++;
-        games.put(gameId, new Baseline(seq, baseline.view, baseline.replay));
+        games.put(gameId, new Baseline(seq, baseline.view, baseline.replay, baseline.fullChars, baseline.patchesSinceSizeCheck));
         JsonObject state = new JsonObject();
         state.addProperty("seq", seq);
         JsonObject message = new JsonObject();
         message.addProperty("method", (baseline.replay ? ClientCallbackMethod.REPLAY_UPDATE : ClientCallbackMethod.GAME_UPDATE).name());
         message.addProperty("objectId", gameId.toString());
         message.addProperty("messageId", Math.max(0, lastMessageId));
-        message.add("data", JsonParser.parseString(baseline.view));
+        message.add("data", baseline.view);
         message.add("state", state);
         return JsonCodec.GSON.toJson(message);
     }

@@ -112,6 +112,11 @@ is_uint "$REPLAY_DAYS" || die "XMAGE_REPLAY_DAYS must be a whole number (got '$R
 REPLAY_MAX=${XMAGE_REPLAY_MAX:-300}
 is_uint "$REPLAY_MAX" || die "XMAGE_REPLAY_MAX must be a whole number (got '$REPLAY_MAX')"
 
+# --- desktop clients ---------------------------------------------------------------------------
+# The desktop protocol (JBoss Remoting on XMAGE_PORT) costs threads and memory; a web-only server can leave it off.
+DESKTOP=${XMAGE_DESKTOP:-true}
+is_bool "$DESKTOP" || die "XMAGE_DESKTOP must be true or false (got '$DESKTOP')"
+
 # --- access (contributors server) -------------------------------------------------------------
 # XMAGE_ACCESS=allowlist starts the server closed: only the owner, staff and the people on the
 # allowlist get in. It is read on the very first boot only; after that /admin switches it.
@@ -204,6 +209,7 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
   echo "-Dxmage.testMode=false"
   echo "-Dlog4j.configuration=file:$APP/config/log4j-docker.properties"
   echo "-Dxmage.replays=$REPLAYS"
+  echo "-Dxmage.remoting=$DESKTOP"
   echo "-Dxmage.replays.dir=$APP/saved/replays"
   echo "-Dxmage.replays.retentionDays=$REPLAY_DAYS"
   echo "-Dxmage.replays.maxCount=$REPLAY_MAX"

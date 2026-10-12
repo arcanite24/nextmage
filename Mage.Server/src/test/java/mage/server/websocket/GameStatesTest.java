@@ -189,6 +189,21 @@ public class GameStatesTest {
     }
 
     @Test
+    void longRunsOfPatchesStayExactAcrossSizeChecks() throws Exception {
+        int patches = 0;
+        for (int i = 0; i < GameStates.PATCHES_PER_SIZE_CHECK * 3; i++) {
+            // small changes (life, turn, now and then a card drawn), so every state after the first is a patch
+            LinkedHashMap<String, Object> next = i % 5 == 4
+                    ? view(i / 4 + 1, 20 - i % 7, "Forest", "Shock", "Island")
+                    : view(i / 4 + 1, 20 - i % 7, "Forest", "Shock");
+            JsonObject received = push(ClientCallbackMethod.GAME_UPDATE, next);
+            assertThat(received.get("data").toString()).isEqualTo(mage.server.websocket.rpc.JsonCodec.GSON.toJson(next));
+            patches += lastRaw().getAsJsonObject("state").has("patch") ? 1 : 0;
+        }
+        assertThat(patches).isEqualTo(GameStates.PATCHES_PER_SIZE_CHECK * 3 - 1);
+    }
+
+    @Test
     void gameOverIsCompleteAndForgetsTheGame() throws Exception {
         push(ClientCallbackMethod.GAME_UPDATE, view(1, 20, "Forest"));
         push(ClientCallbackMethod.GAME_OVER, new GameClientMessage(null, new HashMap<>(), "You won"));

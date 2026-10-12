@@ -1067,9 +1067,7 @@ public class GameController implements GameCallback {
             watcher.getGameView();
             destPlayers.add(watcher);
         }
-        if (replayRecorder != null) {
-            replayRecorder.frame();
-        }
+        // (no replay snapshot here: the board is the one the last update recorded, while a player decides)
 
         // warning, it's game update so make sure it's actual for current time, not on sending time
         // so prepare data now, send it later

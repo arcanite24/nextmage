@@ -85,3 +85,17 @@ PERF_JVM="-Xmx400m -XX:+UseSerialGC -XX:ActiveProcessorCount=1 -XX:SharedArchive
 | Idle CPU, after the first 90 s | 0.9–1.9% | 0.2% |
 | 3 AI tables for 2 minutes: peak RSS | 1,466 MB | 867 MB |
 | 3 AI tables: CPU seconds per game | 0.81 | 0.84 |
+
+### M17: the web bridge and replays (12 Oct 2026)
+
+State patches diff the trees the bridge already built (the last state is kept as a tree, so nothing is parsed back), and a patch goes out without writing the complete message unless it's a close call; prompts are written out only if they're sent again. Diffing and writing happen on a per-connection sender instead of the game thread. Replay snapshots are skipped while a cheap change key stays the same and are written straight to text. Decks that only name their cards reuse each name's preferred printing. `-Dxmage.remoting=false` (`XMAGE_DESKTOP=false`) leaves the desktop protocol off.
+
+| Measure (`-Xmx2g`) | Before | After |
+|---|---|---|
+| Human game: bridge diffs + replay recording | 52% of CPU, 2.5 CPU-s per game | 8–9% of CPU, 0.3 CPU-s per game |
+| Human game: everything but the AI and the rules | 4.0 CPU-s per game | 1.6 CPU-s per game |
+| AI vs AI: deck loading | 21% of CPU | 1.3% |
+| AI vs AI: CPU seconds per game | 1.17 | 0.98 |
+| Live heap per held game | 3.25 MB | 3.75 MB (the state kept as a tree) |
+
+Playable highlighting (two game copies per view) is now the largest cost after the AI; M18 takes it on.
