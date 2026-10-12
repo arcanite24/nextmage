@@ -50,11 +50,33 @@ public final class StateDiff {
         if (from.isJsonObject() || from.isJsonArray() || to.isJsonObject() || to.isJsonArray()) {
             return set(to);
         }
-        // primitives and nulls: equal when they serialize the same (Gson numbers differ in class after parsing)
-        return from.toString().equals(to.toString()) ? null : set(to);
+        return samePrimitive(from, to) ? null : set(to);
+    }
+
+    /**
+     * Primitives and nulls are equal when they serialize the same (Gson numbers differ in class after parsing, and it
+     * writes a number as its toString).
+     */
+    private static boolean samePrimitive(JsonElement from, JsonElement to) {
+        if (from.isJsonNull() || to.isJsonNull()) {
+            return from.isJsonNull() && to.isJsonNull();
+        }
+        JsonPrimitive a = from.getAsJsonPrimitive();
+        JsonPrimitive b = to.getAsJsonPrimitive();
+        if (a.isString()) {
+            return b.isString() && a.getAsString().equals(b.getAsString());
+        }
+        if (a.isBoolean()) {
+            return b.isBoolean() && a.getAsBoolean() == b.getAsBoolean();
+        }
+        return b.isNumber() && a.getAsNumber().toString().equals(b.getAsNumber().toString());
     }
 
     private static JsonElement diffObjects(JsonObject from, JsonObject to) {
+        JsonObject sameKeys = diffSameKeys(from, to);
+        if (sameKeys != null) {
+            return sameKeys.size() == 0 ? null : sameKeys;
+        }
         if (!keepsKeyOrder(from, to)) {
             return diffReordered(from, to);
         }
@@ -72,6 +94,33 @@ public final class StateDiff {
             }
         }
         return patch.size() == 0 ? null : patch;
+    }
+
+    /**
+     * The common case, an object whose keys stay the same and in the same order: walks both side by side, without a
+     * lookup per key (a Gson object is a tree map).
+     *
+     * @return the patch (empty when nothing changed), or null when the keys differ
+     */
+    private static JsonObject diffSameKeys(JsonObject from, JsonObject to) {
+        if (from.size() != to.size()) {
+            return null;
+        }
+        Iterator<Map.Entry<String, JsonElement>> old = from.entrySet().iterator();
+        for (String key : to.keySet()) {
+            if (!key.equals(old.next().getKey())) {
+                return null;
+            }
+        }
+        JsonObject patch = new JsonObject();
+        old = from.entrySet().iterator();
+        for (Map.Entry<String, JsonElement> entry : to.entrySet()) {
+            JsonElement operation = diff(old.next().getValue(), entry.getValue());
+            if (operation != null) {
+                patch.add(entry.getKey(), operation);
+            }
+        }
+        return patch;
     }
 
     private static JsonElement diffReordered(JsonObject from, JsonObject to) {
