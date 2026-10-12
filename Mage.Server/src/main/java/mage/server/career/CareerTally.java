@@ -182,18 +182,6 @@ public final class CareerTally {
             this.gameId = gameId;
         }
 
-        private Recorder(Recorder recorder) {
-            super(recorder);
-            this.gameId = recorder.gameId;
-        }
-
-        /** copied with every game copy: cheaper than the default copy through reflection */
-        @Override
-        @SuppressWarnings("unchecked")
-        public <T extends Watcher> T copy() {
-            return (T) new Recorder(this);
-        }
-
         @Override
         public void watch(GameEvent event, Game game) {
             if (game.isSimulation()) {

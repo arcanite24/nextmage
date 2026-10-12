@@ -33,21 +33,6 @@ public class GameEventRecorder extends Watcher {
         this.gameId = gameId;
     }
 
-    private GameEventRecorder(GameEventRecorder recorder) {
-        super(recorder);
-        this.gameId = recorder.gameId;
-    }
-
-    /**
-     * Every game copy (the AI's search, playable checks) copies its watchers; the default copy goes through
-     * reflection and deep-copies each field, which costs far more than this.
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T extends Watcher> T copy() {
-        return (T) new GameEventRecorder(this);
-    }
-
     @Override
     public void watch(GameEvent event, Game game) {
         if (game.isSimulation()) {
