@@ -25,6 +25,58 @@
 
     <build>
         <sourceDirectory>src</sourceDirectory>
+        <plugins>
+            <!-- Lazy card classes: the sets are compiled from a generated copy that names each card's class as a
+                 string instead of a class literal (build/LazyCardClasses.java), so a server loads a card's class when
+                 the card is first made instead of all ~30,000 at startup. src/mage/sets stays as upstream writes it. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>lazy-card-classes</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${java.home}/bin/java</executable>
+                            <arguments>
+                                <argument>${project.basedir}/build/LazyCardClasses.java</argument>
+                                <argument>${project.basedir}/src/mage/sets</argument>
+                                <argument>${project.build.directory}/generated-sources/lazy-sets/mage/sets</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <excludes>
+                                <exclude>mage/sets/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-lazy-sets</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.build.directory}/generated-sources/lazy-sets</compileSourceRoot>
+                            </compileSourceRoots>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <properties>

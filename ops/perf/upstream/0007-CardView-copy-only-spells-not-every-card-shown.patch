@@ -1,0 +1,43 @@
+From 2a322b679e47c8afb766bbd0a0c81a43eb15fa38 Mon Sep 17 00:00:00 2001
+From: arcanite24 <arcaniteamp@gmail.com>
+Date: Mon, 12 Oct 2026 16:37:05 -0600
+Subject: [PATCH 07/10] CardView: copy only spells, not every card shown
+
+---
+ Mage.Common/src/main/java/mage/view/CardView.java | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/Mage.Common/src/main/java/mage/view/CardView.java b/Mage.Common/src/main/java/mage/view/CardView.java
+index 66b525e70c..996dbc2dc9 100644
+--- a/Mage.Common/src/main/java/mage/view/CardView.java
++++ b/Mage.Common/src/main/java/mage/view/CardView.java
+@@ -319,10 +319,13 @@ public class CardView extends SimpleCardView {
+         // find real name from original card, cause face down status can be applied to card/spell
+         String sourceName = sourceCard.getMainCard().getName();
+ 
+-        // find real spell characteristics before resolve
+-        Card card = sourceCard.copy();
+-        if (game != null && card instanceof Spell) {
+-            card = ((Spell) card).getSpellAbility().getCharacteristics(game);
++        // find real spell characteristics before resolve; other objects are only read below, so they need no copy
++        Card card = sourceCard;
++        if (card instanceof Spell) {
++            card = sourceCard.copy();
++            if (game != null) {
++                card = ((Spell) card).getSpellAbility().getCharacteristics(game);
++            }
+         }
+         // use isFaceDown(game) only here to find real status, all other code must use this.faceDown
+         this.faceDown = game != null && sourceCard.isFaceDown(game);
+@@ -528,7 +531,7 @@ public class CardView extends SimpleCardView {
+             this.toughness = Integer.toString(card.getToughness().getValue());
+             this.cardTypes = new ArrayList<>(card.getCardType(game));
+             this.subTypes = card.getSubtype(game).copy();
+-            this.superTypes = card.getSuperType(game);
++            this.superTypes = new ArrayList<>(card.getSuperType(game));
+             this.color = card.getColor(game).copy();
+             this.flipCard = card.isFlipCard();
+ 
+-- 
+2.50.1 (Apple Git-155)
+

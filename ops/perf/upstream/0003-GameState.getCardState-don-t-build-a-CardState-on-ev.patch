@@ -1,0 +1,28 @@
+From 036594a398b2c1a282c12319a22e18c5ce5b82d4 Mon Sep 17 00:00:00 2001
+From: arcanite24 <arcaniteamp@gmail.com>
+Date: Mon, 12 Oct 2026 16:36:49 -0600
+Subject: [PATCH 03/10] GameState.getCardState: don't build a CardState on
+ every call
+
+---
+ Mage/src/main/java/mage/game/GameState.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Mage/src/main/java/mage/game/GameState.java b/Mage/src/main/java/mage/game/GameState.java
+index 0b5c936141..0218939081 100644
+--- a/Mage/src/main/java/mage/game/GameState.java
++++ b/Mage/src/main/java/mage/game/GameState.java
+@@ -1545,8 +1545,8 @@ public class GameState implements Serializable, Copyable<GameState> {
+     }
+ 
+     public CardState getCardState(UUID cardId) {
+-        cardState.putIfAbsent(cardId, new CardState());
+-        return cardState.get(cardId);
++        // called for every card on every characteristic read, so don't build a state just to throw it away
++        return cardState.computeIfAbsent(cardId, k -> new CardState());
+     }
+ 
+     public MageObjectAttribute getMageObjectAttribute(UUID cardId) {
+-- 
+2.50.1 (Apple Git-155)
+

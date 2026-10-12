@@ -1,0 +1,233 @@
+From beecec80f1e99ca258db4f644f2d62642731bd7f Mon Sep 17 00:00:00 2001
+From: arcanite24 <arcaniteamp@gmail.com>
+Date: Mon, 12 Oct 2026 16:36:58 -0600
+Subject: [PATCH 02/10] Sets name their cards by class name, so card classes
+ load on first use instead of at startup
+
+---
+ Mage.Sets/build/LazyCardClasses.java          | 65 +++++++++++++++++++
+ Mage.Sets/pom.xml                             | 52 +++++++++++++++
+ .../main/java/mage/cards/ExpansionSet.java    | 47 +++++++++++++-
+ 3 files changed, 161 insertions(+), 3 deletions(-)
+ create mode 100644 Mage.Sets/build/LazyCardClasses.java
+
+diff --git a/Mage.Sets/build/LazyCardClasses.java b/Mage.Sets/build/LazyCardClasses.java
+new file mode 100644
+index 0000000000..c7b9e4b8d6
+--- /dev/null
++++ b/Mage.Sets/build/LazyCardClasses.java
+@@ -0,0 +1,65 @@
++import java.io.IOException;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.DirectoryStream;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.nio.file.Paths;
++import java.util.HashSet;
++import java.util.Set;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
++
++/**
++ * Build step for Mage.Sets (runs with "java LazyCardClasses.java", JDK 11 or later):
++ * copies the set sources to a generated folder with each card's class literal written as its class name,
++ * {@code mage.cards.a.Abc.class} becoming {@code "mage.cards.a.Abc"}. A set then names its cards without loading
++ * them, and a card's class loads the first time the card is made, so a server no longer loads every one of the
++ * ~30,000 card classes at startup. The sets in src stay exactly as upstream writes them.
++ *
++ * Usage: java LazyCardClasses.java <set sources> <output folder>
++ */
++public class LazyCardClasses {
++
++    private static final Pattern CARD_CLASS = Pattern.compile("\\b(mage\\.cards\\.[a-z0-9]+\\.[A-Za-z0-9_]+)\\.class\\b");
++
++    public static void main(String[] args) throws IOException {
++        Path source = Paths.get(args[0]);
++        Path output = Paths.get(args[1]);
++        Files.createDirectories(output);
++        Set<String> names = new HashSet<>();
++        int written = 0;
++        int literals = 0;
++        try (DirectoryStream<Path> sets = Files.newDirectoryStream(source, "*.java")) {
++            for (Path set : sets) {
++                String name = set.getFileName().toString();
++                names.add(name);
++                String text = new String(Files.readAllBytes(set), StandardCharsets.UTF_8);
++                Matcher matcher = CARD_CLASS.matcher(text);
++                StringBuffer lazy = new StringBuffer(text.length());
++                while (matcher.find()) {
++                    matcher.appendReplacement(lazy, "\"$1\"");
++                    literals++;
++                }
++                matcher.appendTail(lazy);
++                byte[] bytes = lazy.toString().getBytes(StandardCharsets.UTF_8);
++                Path target = output.resolve(name);
++                // rewrite only what changed, so the compiler's stale-source check still works
++                if (!Files.exists(target) || !java.util.Arrays.equals(Files.readAllBytes(target), bytes)) {
++                    Files.write(target, bytes);
++                    written++;
++                }
++            }
++        }
++        int removed = 0;
++        try (DirectoryStream<Path> generated = Files.newDirectoryStream(output, "*.java")) {
++            for (Path file : generated) {
++                if (!names.contains(file.getFileName().toString())) {
++                    Files.delete(file);
++                    removed++;
++                }
++            }
++        }
++        System.out.println("LazyCardClasses: " + names.size() + " sets, " + literals + " card classes named lazily, "
++                + written + " files written, " + removed + " removed");
++    }
++}
+diff --git a/Mage.Sets/pom.xml b/Mage.Sets/pom.xml
+index 8b7325f5c5..080f373afa 100644
+--- a/Mage.Sets/pom.xml
++++ b/Mage.Sets/pom.xml
+@@ -25,6 +25,58 @@
+ 
+     <build>
+         <sourceDirectory>src</sourceDirectory>
++        <plugins>
++            <!-- Lazy card classes: the sets are compiled from a generated copy that names each card's class as a
++                 string instead of a class literal (build/LazyCardClasses.java), so a server loads a card's class when
++                 the card is first made instead of all ~30,000 at startup. src/mage/sets stays as upstream writes it. -->
++            <plugin>
++                <groupId>org.codehaus.mojo</groupId>
++                <artifactId>exec-maven-plugin</artifactId>
++                <executions>
++                    <execution>
++                        <id>lazy-card-classes</id>
++                        <phase>generate-sources</phase>
++                        <goals>
++                            <goal>exec</goal>
++                        </goals>
++                        <configuration>
++                            <executable>${java.home}/bin/java</executable>
++                            <arguments>
++                                <argument>${project.basedir}/build/LazyCardClasses.java</argument>
++                                <argument>${project.basedir}/src/mage/sets</argument>
++                                <argument>${project.build.directory}/generated-sources/lazy-sets/mage/sets</argument>
++                            </arguments>
++                        </configuration>
++                    </execution>
++                </executions>
++            </plugin>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-compiler-plugin</artifactId>
++                <executions>
++                    <execution>
++                        <id>default-compile</id>
++                        <configuration>
++                            <excludes>
++                                <exclude>mage/sets/**</exclude>
++                            </excludes>
++                        </configuration>
++                    </execution>
++                    <execution>
++                        <id>compile-lazy-sets</id>
++                        <phase>compile</phase>
++                        <goals>
++                            <goal>compile</goal>
++                        </goals>
++                        <configuration>
++                            <compileSourceRoots>
++                                <compileSourceRoot>${project.build.directory}/generated-sources/lazy-sets</compileSourceRoot>
++                            </compileSourceRoots>
++                        </configuration>
++                    </execution>
++                </executions>
++            </plugin>
++        </plugins>
+     </build>
+ 
+     <properties>
+diff --git a/Mage/src/main/java/mage/cards/ExpansionSet.java b/Mage/src/main/java/mage/cards/ExpansionSet.java
+index b1a688ed1f..d8005523a5 100644
+--- a/Mage/src/main/java/mage/cards/ExpansionSet.java
++++ b/Mage/src/main/java/mage/cards/ExpansionSet.java
+@@ -49,7 +49,10 @@ public abstract class ExpansionSet implements Serializable {
+         private final String name;
+         private final String cardNumber;
+         private final Rarity rarity;
+-        private final Class<?> cardClass;
++        // the card's class, or only its name: the build writes the sets' class literals as names (see
++        // Mage.Sets/build/LazyCardClasses.java), so the ~30,000 card classes load when a card is made, not at startup
++        private volatile Class<?> cardClass;
++        private final String cardClassName;
+         private final CardGraphicInfo graphicInfo;
+ 
+         public SetCardInfo(String name, int cardNumber, Rarity rarity, Class<?> cardClass) {
+@@ -65,10 +68,31 @@ public abstract class ExpansionSet implements Serializable {
+         }
+ 
+         public SetCardInfo(String name, String cardNumber, Rarity rarity, Class<?> cardClass, CardGraphicInfo graphicInfo) {
++            this(name, cardNumber, rarity, cardClass, cardClass.getName(), graphicInfo);
++        }
++
++        public SetCardInfo(String name, int cardNumber, Rarity rarity, String cardClassName) {
++            this(name, String.valueOf(cardNumber), rarity, cardClassName, null);
++        }
++
++        public SetCardInfo(String name, String cardNumber, Rarity rarity, String cardClassName) {
++            this(name, cardNumber, rarity, cardClassName, null);
++        }
++
++        public SetCardInfo(String name, int cardNumber, Rarity rarity, String cardClassName, CardGraphicInfo graphicInfo) {
++            this(name, String.valueOf(cardNumber), rarity, cardClassName, graphicInfo);
++        }
++
++        public SetCardInfo(String name, String cardNumber, Rarity rarity, String cardClassName, CardGraphicInfo graphicInfo) {
++            this(name, cardNumber, rarity, null, cardClassName, graphicInfo);
++        }
++
++        private SetCardInfo(String name, String cardNumber, Rarity rarity, Class<?> cardClass, String cardClassName, CardGraphicInfo graphicInfo) {
+             this.name = name;
+             this.cardNumber = cardNumber;
+             this.rarity = rarity;
+             this.cardClass = cardClass;
++            this.cardClassName = cardClassName;
+             this.graphicInfo = graphicInfo;
+ 
+             // verify check: only valid card numbers allow
+@@ -93,7 +117,24 @@ public abstract class ExpansionSet implements Serializable {
+         }
+ 
+         public Class<?> getCardClass() {
+-            return this.cardClass;
++            Class<?> result = this.cardClass;
++            if (result == null) {
++                try {
++                    ClassLoader loader = Thread.currentThread().getContextClassLoader();
++                    result = Class.forName(cardClassName, false, loader != null ? loader : SetCardInfo.class.getClassLoader());
++                } catch (ClassNotFoundException e) {
++                    throw new IllegalStateException("Card class not found: " + cardClassName + " (" + name + ")", e);
++                }
++                this.cardClass = result;
++            }
++            return result;
++        }
++
++        /**
++         * The card's class name, without loading the class
++         */
++        public String getCardClassName() {
++            return this.cardClassName;
+         }
+ 
+         public CardGraphicInfo getGraphicInfo() {
+@@ -226,7 +267,7 @@ public abstract class ExpansionSet implements Serializable {
+     }
+ 
+     public List<SetCardInfo> findCardInfoByClass(Class<?> clazz) {
+-        return cards.stream().filter(info -> info.getCardClass().equals(clazz)).collect(Collectors.toList());
++        return cards.stream().filter(info -> info.getCardClassName().equals(clazz.getName())).collect(Collectors.toList());
+     }
+ 
+     public List<Card> create15CardBooster() {
+-- 
+2.50.1 (Apple Git-155)
+

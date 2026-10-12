@@ -102,7 +102,7 @@ Playable highlighting (two game copies per view) is now the largest cost after t
 
 ### M18: the card database, playable highlighting, the AI's budgets, views and engine trims (12 Oct 2026)
 
-Startup checks the card classes against one query of every set and number instead of a lookup per card, and the card database's cache follows the heap (`XMAGE_DB_CACHE`, else an eighth of the heap, 16–150 MB). The image ships its card database compacted (290 to 53 MB). Playable highlighting is computed once per game change and priority player, and mana checks reuse the copy the check already made. Each AI search counts its own nodes, and the budget follows the skill (2,000 nodes at skills 1–2, 3,500 at 3, 5,000 above; `XMAGE_AI_NODE_SCALE`). A search no longer starts when the player has nothing but mana abilities to play. The search threads follow the machine (`XMAGE_AI_THREADS`). The Monte Carlo AI shares one pool and can be left off (`XMAGE_MONTE_CARLO=false`), and the client then offers only the standard AI. Card views no longer copy the card, and computer sideboards are no longer sent to every viewer. A finished game drops its rollback states and last-known information. Watcher copies look up their class once, mana costs share their payment options until one changes, and card states aren't built just to be thrown away.
+Startup checks the card classes against one query of every set and number instead of a lookup per card, and the card database's cache follows the heap (`XMAGE_DB_CACHE`, else an eighth of the heap, 16–150 MB). The image was meant to ship its card database compacted, but `SHUTDOWN COMPACT` leaves a database fresh from the server as it is (M19 switches to `SHUTDOWN DEFRAG`). Playable highlighting is computed once per game change and priority player, and mana checks reuse the copy the check already made. Each AI search counts its own nodes, and the budget follows the skill (2,000 nodes at skills 1–2, 3,500 at 3, 5,000 above; `XMAGE_AI_NODE_SCALE`). A search no longer starts when the player has nothing but mana abilities to play. The search threads follow the machine (`XMAGE_AI_THREADS`). The Monte Carlo AI shares one pool and can be left off (`XMAGE_MONTE_CARLO=false`), and the client then offers only the standard AI. Card views no longer copy the card, and computer sideboards are no longer sent to every viewer. A finished game drops its rollback states and last-known information. Watcher copies look up their class once, mana costs share their payment options until one changes, and card states aren't built just to be thrown away.
 
 | Measure (`-Xmx2g`) | Before | After |
 |---|---|---|
@@ -116,3 +116,29 @@ Startup checks the card classes against one query of every set and number instea
 | Warm start | 5.9 s | 4.4 s |
 
 Writing the views out as JSON trees (`serializeTree`, about 0.37 CPU-s per human game) is now the largest cost after the AI.
+
+### M19: card classes on demand, JDK 25 (12 Oct 2026)
+
+The sets name their cards by class name instead of by class literal (a build step rewrites a generated copy of `src/mage/sets`; the files in git stay as upstream writes them), so a card's class loads the first time the card is made instead of all ~30,000 at startup.
+
+| Measure (`-Xmx2g`, idle, 16 MB card cache) | Before | After |
+|---|---|---|
+| Metaspace | 262 MB | 30 MB |
+| RSS | 628 MB | 345 MB |
+| Live heap | 49 MB | 41 MB |
+| Ready | 4.3 s | 3.5 s |
+
+The class archive recorded in the image shrinks with it (319 to 34 MB). The image's card database is defragmented with `SHUTDOWN DEFRAG` (about 280 to 33 MB). The build now fails if the file stays large, because the `SHUTDOWN COMPACT` that M18 shipped left it at full size without saying so.
+
+**A 1 vCPU / 1 GB box (B224, simulated with `ops/perf/vps-sim.sh`).** On Multivac, the image ran in Docker with `--cpus=1 --memory=1g` and `small-vps.env`, while the load test played 3 games at once against the AI (bots answer at once, so a game is busier than a person's). Memory is what `docker stats` reports for the container. The host was shared with other work, so wall times are rough.
+
+| | M18, JDK 17 | M19, JDK 17 | M19, JDK 25 (compact headers) | M19, JDK 25 (without) |
+|---|---|---|---|---|
+| "Loading database" → WebSocket up | 14.5 s | 8.2 s | 6.0 s | |
+| Idle | 481 MiB | 207–213 MiB | 176 MiB | 223 MiB |
+| Peak while playing | ~550 MiB (3 games) | 290–303 MiB | 383–588 MiB | 348 MiB |
+| After the games | 572 MiB | 297–305 MiB | 552–588 MiB | 389 MiB |
+| Heap in use, mean / max | 102 / 139 MB | 105–107 / 124–139 MB | 132–138 / 242–270 MB | 126 / 191 MB |
+| Games finished | 3/3 | 9/9 | 9/9 | 6/6 |
+
+JDK 25 starts faster, but its serial collector let the heap grow much further under the same games, so the image stays on JDK 17 by default (`--build-arg JAVA_RUNTIME=25` builds the other). On the 1 GB box, M19 keeps the server at about 300 MB with three games running.
