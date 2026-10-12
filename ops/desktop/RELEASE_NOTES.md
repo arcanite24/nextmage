@@ -1,4 +1,4 @@
-Playmat @VERSION for your own computer. One download with everything inside, Java included: install it, open
+Playmat @VERSION@ for your own computer. One download with everything inside, Java included: install it, open
 Playmat, and the game opens in your browser. Play the AI and Career on your own, or have friends on the same Wi-Fi
 join you.
 

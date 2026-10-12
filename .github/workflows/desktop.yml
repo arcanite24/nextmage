@@ -202,6 +202,7 @@ jobs:
           tag=v$VERSION
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" dist/* --clobber
+            gh release edit "$tag" --notes-file notes.md
           else
             gh release create "$tag" dist/* --title "Playmat $VERSION" --notes-file notes.md --target "$GITHUB_SHA"
           fi
