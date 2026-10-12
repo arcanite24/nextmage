@@ -1,0 +1,8 @@
+#!/bin/sh
+# Playmat.app's executable: the launcher on the Java runtime bundled in Contents/Resources.
+RES=$(cd "$(dirname "$0")/../Resources" && pwd)
+exec "$RES/runtime/bin/java" \
+  -Xdock:name=Playmat \
+  -Xdock:icon="$RES/playmat.icns" \
+  -Dapple.awt.application.name=Playmat \
+  -jar "$RES/app/playmat-launcher.jar" "$@"

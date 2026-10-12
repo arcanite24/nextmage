@@ -246,6 +246,36 @@ p { margin: 0; text-wrap: pretty; }
 
 /* ---------- host ---------- */
 
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: var(--radius-control);
+  background: var(--decision);
+  color: var(--decision-ink);
+  font: 700 1.05rem/1.2 var(--font-ui);
+  text-decoration: none;
+  text-align: center;
+}
+.btn:hover { background: var(--decision-strong); color: var(--decision-ink); }
+.btn-quiet { background: var(--mat-600); color: var(--ink-strong); }
+.btn-quiet:hover { background: var(--mat-400); color: var(--ink-strong); }
+
+.download { padding: 112px 0 0; }
+.download-head { text-align: center; display: grid; justify-items: center; gap: 16px; }
+.download-head p { color: var(--ink-soft); max-width: 62ch; font-size: 1.1rem; }
+.downloads { list-style: none; padding: 0; margin: 48px 0 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.downloads li { display: grid; align-content: start; gap: 14px; padding: 28px; }
+.downloads h3 { margin: 0; }
+.oneliner {
+  display: block;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--mat-950);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 .host { padding: 112px 0 0; }
 .host-row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 56px; align-items: center; }
 .host-copy { display: grid; gap: 18px; }
@@ -287,7 +317,7 @@ p { margin: 0; text-wrap: pretty; }
 @media (max-width: 960px) {
   .feature-row, .feature-row.flip, .tablet-row, .host-row { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .feature-row.flip .feature-copy { order: 0; }
-  .modes { grid-template-columns: minmax(0, 1fr); }
+  .modes, .downloads { grid-template-columns: minmax(0, 1fr); }
   .career-hub { width: 100%; }
   .career-shots { padding-bottom: 0; display: grid; gap: 20px; }
   .career-pack { position: static; width: 100%; }
@@ -301,7 +331,7 @@ p { margin: 0; text-wrap: pretty; }
   .brand img { height: 32px; }
   .hero { padding-top: 56px; }
   .modes > div, .also > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-  .feature, .more, .host, .xmage { padding-top: 72px; }
+  .feature, .more, .download, .host, .xmage { padding-top: 72px; }
   .career { margin-top: 80px; padding: 72px 0; }
   .xmage-box { grid-template-columns: 1fr; padding: 36px 28px; }
   .stack > div { grid-template-columns: 1fr; gap: 2px; }

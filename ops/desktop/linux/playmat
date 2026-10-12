@@ -1,0 +1,25 @@
+#!/bin/sh
+# Starts Playmat with its bundled Java runtime. The first run also adds Playmat to the applications menu.
+# --headless: no window, status on the console (for a machine without a desktop).
+DIR=$(cd "$(dirname "$0")" && pwd)
+
+apps=${XDG_DATA_HOME:-$HOME/.local/share}/applications
+entry=$apps/playmat.desktop
+if [ -d "$HOME" ] && ! grep -qs "Exec=\"$DIR/playmat\"" "$entry"; then
+  mkdir -p "$apps"
+  cat > "$entry" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Playmat
+GenericName=Magic: The Gathering
+Comment=Play Magic against the AI or with friends
+Exec="$DIR/playmat"
+Icon=$DIR/playmat.png
+Terminal=false
+Categories=Game;CardGame;
+StartupWMClass=playmat-launcher-Main
+EOF
+  update-desktop-database "$apps" >/dev/null 2>&1 || true
+fi
+
+exec "$DIR/runtime/bin/java" -Dawt.useSystemAAFontSettings=on -jar "$DIR/app/playmat-launcher.jar" "$@"

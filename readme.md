@@ -12,6 +12,7 @@
 
 <p align="center">
   <a href="https://arcanite24.github.io/playmat/">Website</a> ·
+  <a href="#play-on-your-computer">Download</a> ·
   <a href="#running-a-server">Run a server</a> ·
   <a href="#run-it-locally">Run it locally</a> ·
   <a href="docs/WebSocketAPI.md">WebSocket API</a>
@@ -58,6 +59,7 @@ keep the server running, you can [support the project on Ko-fi](https://ko-fi.co
 - **Social.** Lobby chat, players online, profiles, a table browser, spectating, match history and replays.
 - **Devices.** Desktop browsers, tablets, an installable web app and an Android app that keeps card
   pictures on the device. English and Spanish.
+- **On your computer.** Installers for Windows, macOS and Linux that bring their own Java: install, open, play.
 - **Hosting.** One Docker Compose stack: the server, Caddy with automatic HTTPS, a Scryfall picture cache,
   nightly backups and Discord notifications.
 
@@ -71,6 +73,21 @@ keep the server running, you can [support the project on Ko-fi](https://ko-fi.co
     <td><img alt="Opening a booster pack" src="site/assets/screens/pack.webp"></td>
   </tr>
 </table>
+
+## Play on your computer
+
+One download with everything inside, Java included. Install it, open Playmat, and the game opens in your browser. Play
+the AI and Career on your own, or have friends on the same Wi-Fi join you.
+
+| Your computer | Download |
+|---|---|
+| Windows 10 or 11 | [Playmat-Setup-Windows-x64.exe](https://github.com/arcanite24/playmat/releases/latest/download/Playmat-Setup-Windows-x64.exe) |
+| Mac with Apple silicon | [Playmat-macOS-arm64.dmg](https://github.com/arcanite24/playmat/releases/latest/download/Playmat-macOS-arm64.dmg) |
+| Mac with an Intel processor | [Playmat-macOS-x64.dmg](https://github.com/arcanite24/playmat/releases/latest/download/Playmat-macOS-x64.dmg) |
+| macOS or Linux, from a terminal | `curl -fsSL https://github.com/arcanite24/playmat/releases/latest/download/install.sh \| sh` |
+
+The [release page](https://github.com/arcanite24/playmat/releases/latest) explains the one-time Windows and macOS
+warnings. [ops/desktop/README.md](ops/desktop/README.md) covers how the app works and how releases are built.
 
 ## Running a server
 
@@ -87,7 +104,7 @@ accounts and moderation, Discord notifications, backups and capacity.
 
 ## Run it locally
 
-Requirements: JDK 17 or later, Maven, and the Node.js version in [`Mage.Web.Client/.nvmrc`](Mage.Web.Client/.nvmrc).
+To work on Playmat itself. Requirements: JDK 17 or later, Maven, and the Node.js version in [`Mage.Web.Client/.nvmrc`](Mage.Web.Client/.nvmrc).
 
 ```bash
 # 1. build the server (a few minutes the first time)
@@ -113,6 +130,7 @@ architecture, tests and the Android build (`npm run android`).
 | [`Mage.Web.Client`](Mage.Web.Client) | The Playmat client: React 19, TypeScript, Vite. Product brief in [PRODUCT.md](Mage.Web.Client/PRODUCT.md), design system in [DESIGN.md](Mage.Web.Client/DESIGN.md). |
 | [`Mage.Server`](Mage.Server) | XMage's server, plus the JSON-RPC WebSocket bridge and Career services (`src/main/java/mage/server/websocket`, `.../career`). |
 | [`ops/web`](ops/web) | The Docker Compose deployment kit. |
+| [`ops/desktop`](ops/desktop) | The desktop app: a launcher and installers for Windows, macOS and Linux. |
 | [`docs`](docs) | The WebSocket API, data models and the upstream merge recipe. |
 | [`brand`](brand) | The Playmat logo, generated from the app's typeface by `build_logo.py`. |
 | [`site`](site) | The project website, published to GitHub Pages. |
