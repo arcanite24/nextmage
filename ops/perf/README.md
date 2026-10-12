@@ -64,3 +64,24 @@ Master 64ae4193 on a 12-core Mac with JDK 17, `-Xmx2g`, run by hand before this 
 | GC (CPU-s per AI game, 512 MB heap) | G1 1.54–1.69; Serial 1.15–1.23; C1-only JIT is about 50% worse |
 
 The first harness runs, the same day with replays on as in production, put replay recording at 17% of human-game CPU. They measured bridge state diffs 35%, replay recording 17%, deck loading 13%, AI search 13%, message serialization 9% and playable highlighting 7%, at 4.9 CPU-s per game (6 games, a short run). AI-vs-AI ran at 1.2 CPU-s per game: AI search 73%, deck loading 21%.
+
+## Results by milestone
+
+### M16: sizing, prebuilt card database, class archive (12 Oct 2026)
+
+The Docker image now builds its card database and records a class-data archive (`xmage.jsa`); the entrypoint sizes the heap to the machine and picks Serial GC on one or two CPUs. To run the harness the way a 1 GB VPS runs the image, record the archive in the distribution once and pass the same flags:
+
+```bash
+cd ops/perf/.dist && java -XX:ArchiveClassesAtExit=xmage.jsa -Dxmage.exitAfterStartup=true -Dxmage.healthPort=0 -jar lib/mage-server-*.jar
+PERF_JVM="-Xmx400m -XX:+UseSerialGC -XX:ActiveProcessorCount=1 -XX:SharedArchiveFile=xmage.jsa -Xlog:cds=off -Xlog:cds+dynamic=off" npm run perf -- ai
+```
+
+| Measure | Before (`-Xmx2g`, G1) | After (400 MB, Serial, archive) |
+|---|---|---|
+| Start, CPU seconds (one processor) | 12.9 without the archive | 9.8 |
+| First start of a new image | 28–30 s (card database rebuilt) | same as any start |
+| Idle metaspace | 262 MB | 6 MB (the classes live in the shared archive) |
+| Idle RSS | 1,004 MB | 540–790 MB on macOS, which counts the mapped archive |
+| Idle CPU, after the first 90 s | 0.9–1.9% | 0.2% |
+| 3 AI tables for 2 minutes: peak RSS | 1,466 MB | 867 MB |
+| 3 AI tables: CPU seconds per game | 0.81 | 0.84 |

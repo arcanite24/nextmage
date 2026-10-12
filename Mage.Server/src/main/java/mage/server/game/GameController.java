@@ -400,17 +400,46 @@ public class GameController implements GameCallback {
 
             // real game start
             GameWorker worker = new GameWorker(game, choosingPlayerId, this);
+            if (gameSlotsFull()) {
+                // every game thread is busy (maxGameThreads): the game waits in the executor's queue for a free one,
+                // so tell its players, and start the idle timer only once it really starts
+                logger.info("Game " + game.getId() + " waits for a free game slot");
+                managerFactory.chatManager().broadcast(chatId, "", "The server is running as many games as it can. "
+                                + "This game starts as soon as another one ends.",
+                        MessageColor.BLUE, true, game, MessageType.STATUS, null);
+                gameFuture = gameExecutor.submit(() -> {
+                    managerFactory.chatManager().broadcast(chatId, "", "A game slot is free: the game starts now.",
+                            MessageColor.BLUE, true, game, MessageType.STATUS, null);
+                    managerFactory.threadExecutor().getTimeoutExecutor().schedule(this::startChoosingPlayerIdleTimeout, 1, TimeUnit.SECONDS);
+                    return worker.call();
+                });
+                return;
+            }
             gameFuture = gameExecutor.submit(worker);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ignore) {
             }
-
-            if (game.getState().getChoosingPlayerId() != null) {
-                // start timer to force player to choose starting player otherwise loosing by being idle
-                startResponseIdleTimeout(game.getState().getChoosingPlayerId());
-            }
+            startChoosingPlayerIdleTimeout();
         }
+    }
+
+    private void startChoosingPlayerIdleTimeout() {
+        if (game.getState().getChoosingPlayerId() != null) {
+            // start timer to force player to choose starting player otherwise loosing by being idle
+            startResponseIdleTimeout(game.getState().getChoosingPlayerId());
+        }
+    }
+
+    /**
+     * Whether a game submitted now would wait: all maxGameThreads game threads are busy, or games already wait.
+     */
+    private boolean gameSlotsFull() {
+        if (!(gameExecutor instanceof ThreadPoolExecutor)) {
+            return false;
+        }
+        ThreadPoolExecutor pool = (ThreadPoolExecutor) gameExecutor;
+        return pool.getActiveCount() >= pool.getMaximumPoolSize() || !pool.getQueue().isEmpty();
     }
 
     private void sendInfoAboutPlayersNotJoinedYetAndTryToFixIt() {

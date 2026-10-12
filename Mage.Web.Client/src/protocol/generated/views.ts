@@ -1304,10 +1304,13 @@ export interface ServerInfo {
     accounts?: boolean;
     career?: boolean;
     deckSync?: boolean;
+    gamesRunning?: number;
+    gamesWaiting?: number;
     github?: boolean;
     mail?: boolean;
     maintenanceAt?: number;
     maintenanceMessage?: string;
+    maxGames?: number;
     maxPasswordLength?: number;
     maxUserNameLength?: number;
     minPasswordLength?: number;
