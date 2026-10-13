@@ -142,3 +142,14 @@ The class archive recorded in the image shrinks with it (319 to 34 MB). The imag
 | Games finished | 3/3 | 9/9 | 9/9 | 6/6 |
 
 JDK 25 starts faster, but its serial collector let the heap grow much further under the same games, so the image stays on JDK 17 by default (`--build-arg JAVA_RUNTIME=25` builds the other). On the 1 GB box, M19 keeps the server at about 300 MB with three games running.
+
+### B225: copying abilities (13 Oct 2026)
+
+The AI copies a permanent's abilities each time it resets the permanent (`PermanentCard.reset`): about 6% of the CPU in AI games and 1% in a person's game. Sharing the abilities until one changes (copy on write) isn't safe, because effects change abilities in place. Inside the copy, `Modes` worked out the selected modes once per mode, with loops over all of them. It now works them out once, with a direct path for the usual single mode.
+
+| AI vs AI (`perf.sh ai`) | Before | After |
+|---|---|---|
+| `Modes.getSelectedModes`, share of CPU | 7.4% | 1.6% |
+| CPU per game | 0.46 s | 0.45 and 0.50 s (two runs) |
+
+Per game, that is within the noise between runs (a person's game: 1.44 to 1.40 CPU-s). The rest of the copy (the modes' effects and targets, about 23% of AI CPU inside `Modes`) is the deep copy itself; making it cheaper means copy on write across the rules engine, deferred.

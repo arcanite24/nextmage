@@ -95,8 +95,10 @@ public class Modes extends LinkedHashMap<UUID, Mode> implements Copyable<Modes> 
         this.isRandom = modes.isRandom;
 
         // current mode must be "copied" at the end
-        this.selectedModes.addAll(modes.getSelectedModes()); // TODO: bugged - can lost multi selects here?
-        if (modes.getSelectedModes().isEmpty()) {
+        // (the selected modes are worked out once: every ability copy comes here, and each call loops over all modes)
+        List<UUID> selected = modes.getSelectedModes();
+        this.selectedModes.addAll(selected); // TODO: bugged - can lost multi selects here?
+        if (selected.isEmpty()) {
             this.currentMode = values().iterator().next();
         } else {
             this.currentMode = get(modes.getMode().getId()); // TODO: bugged - can lost multi selects here?
@@ -173,6 +175,15 @@ public class Modes extends LinkedHashMap<UUID, Mode> implements Copyable<Modes> 
      */
     public List<UUID> getSelectedModes() {
         // modes can be selected in any order by user, but execution must be in rule's order
+        if (this.selectedModes.size() == 1 && this.selectedDuplicateToOriginalModeRefs.isEmpty()) {
+            // the usual case (one mode, no multi selects), asked for on every ability copy: same result without the loops
+            UUID selectedId = this.selectedModes.get(0);
+            List<UUID> res = new ArrayList<>(1);
+            if (this.containsKey(selectedId)) {
+                res.add(selectedId);
+            }
+            return res;
+        }
         List<UUID> res = new ArrayList<>(this.size());
         for (Mode mode : this.values()) {
             for (UUID selectedId : this.selectedModes) {

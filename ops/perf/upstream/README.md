@@ -2,7 +2,8 @@
 
 The fork's performance work that isn't specific to Playmat, cut against upstream `master` at `afab346e06`
 (12 Oct 2026). Each patch is one change that stands alone. They apply in order with `git am` and compile.
-Nothing here has been sent upstream yet.
+Sent so far (13 Oct 2026): 0001 as magefree/mage#16472, 0003 as #16473, 0004 as #16474 and 0005 as #16475, the small
+engine fixes. The rest wait until those are reviewed.
 
 | Patch | Change | Measured in the fork |
 |---|---|---|
