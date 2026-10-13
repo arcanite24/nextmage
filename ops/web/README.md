@@ -138,6 +138,21 @@ cat ops/web/small-vps.env >> ops/web/.env
 - Build the images on another machine and push them, or build with nothing else running. A build needs more than 1 GB.
 - When every game slot is busy, a new game waits for one, and its players are told so in the game chat. The web client's home screen says when the server is full.
 
+### Building on another machine (ARM boxes)
+
+The card build takes minutes and gigabytes even on a fast machine, so a small box is better off receiving built images. Both Dockerfiles build for another architecture with their heavy stages native (`--platform=$BUILDPLATFORM`): the jars, the card database and the web client are the same everywhere, and Go cross-compiles Caddy. An Apple Silicon Mac builds ARM images (an Oracle Cloud Ampere box) natively; an x86 machine with `docker buildx` emulates only the runtime stage.
+
+From a clean clone (the build context is the whole tree, so a working copy with build output sends gigabytes):
+
+```bash
+git clone --depth 1 https://github.com/arcanite24/playmat build-src && cd build-src
+podman build --platform linux/arm64 -f ops/web/Dockerfile.server -t xmage-web-server:local .
+podman build --platform linux/arm64 -f ops/web/Dockerfile.web -t xmage-web:local .
+ops/web/ship-images.sh <ssh-host> podman
+```
+
+`ship-images.sh` loads both images on the host over SSH and restarts it with `up -d --no-build`. The host keeps a checkout of the repository with its `.env` in `~/xmage-server`.
+
 ## Accounts and moderation
 
 With `XMAGE_AUTH=true`, players register in the web client with a name, an email address and a password they choose. A forgotten password is reset with a six-digit code sent by mail: it works for 30 minutes and 5 tries. Configure Mailgun or SMTP (above), or players can't reset passwords. The web client asks the server (`serverInfo`) whether accounts and mail are on and shows only the forms that work.

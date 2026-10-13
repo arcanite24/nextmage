@@ -77,6 +77,8 @@ services:
     # no published ports: only the proxy reaches the server
 
   web:
+    # named, like the server's, so a host that receives built images (ops/web/ship-images.sh) runs them without building
+    image: xmage-web:local
     build:
       context: ../..
       dockerfile: ops/web/Dockerfile.web
