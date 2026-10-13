@@ -4,8 +4,10 @@
 # The server is built with JDK 17 (for Java 8 bytecode) and runs on JAVA_RUNTIME, 17 by default. 25 also works
 # (docker build --build-arg JAVA_RUNTIME=25, with compact object headers): it starts faster, but on a 1 vCPU / 1 GB box
 # its heap grew further under the same games (peak 588 MB against 303 MB on 17; ops/perf/README.md, M19).
+# Builds for another architecture (docker buildx build --platform linux/arm64) run this stage natively: what it makes
+# (jars and the card database) is the same on every architecture, so only the runtime stage is emulated.
 ARG JAVA_RUNTIME=17
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /src
 COPY . .
 # the full card set build is long (tens of minutes); the maven cache makes rebuilds faster
