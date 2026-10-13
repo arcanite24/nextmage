@@ -150,6 +150,6 @@ The AI copies a permanent's abilities each time it resets the permanent (`Perman
 | AI vs AI (`perf.sh ai`) | Before | After |
 |---|---|---|
 | `Modes.getSelectedModes`, share of CPU | 7.4% | 1.6% |
-| CPU per game | 0.46 s | 0.45 s |
+| CPU per game | 0.46 s | 0.45 and 0.50 s (two runs) |
 
-The rest of the copy (the modes' effects and targets, about 23% of AI CPU inside `Modes`) is the deep copy itself; making it cheaper means copy on write across the rules engine, deferred.
+Per game, that is within the noise between runs (a person's game: 1.44 to 1.40 CPU-s). The rest of the copy (the modes' effects and targets, about 23% of AI CPU inside `Modes`) is the deep copy itself; making it cheaper means copy on write across the rules engine, deferred.
