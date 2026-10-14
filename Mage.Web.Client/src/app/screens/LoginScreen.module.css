@@ -182,6 +182,11 @@
   }
 }
 
+/* signed in elsewhere: the form waits behind the offer to use the app here */
+.seat[hidden] {
+  display: none;
+}
+
 /* a refused sign-in: the zone shakes and its outline flushes oxblood */
 .refused {
   animation: refuse 520ms ease-out both;
