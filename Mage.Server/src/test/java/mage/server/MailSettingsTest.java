@@ -29,6 +29,7 @@ public class MailSettingsTest {
         assertThat(smtp.properties.getProperty("mail.smtps.auth")).isEqualTo("true");
         assertThat(smtp.properties.getProperty("mail.smtps.starttls.enable")).isNull();
         assertThat(smtp.properties.getProperty("mail.smtps.ssl.checkserveridentity")).isEqualTo("true");
+        assertThat(smtp.properties.getProperty("mail.smtps.ssl.protocols")).isEqualTo("TLSv1.3 TLSv1.2");
     }
 
     @Test
@@ -38,6 +39,8 @@ public class MailSettingsTest {
         assertThat(smtp.properties.getProperty("mail.smtp.port")).isEqualTo("587");
         assertThat(smtp.properties.getProperty("mail.smtp.starttls.enable")).isEqualTo("true");
         assertThat(smtp.properties.getProperty("mail.smtp.starttls.required")).isEqualTo("true");
+        // STARTTLS on 587 failed against Purelymail with JavaMail's default TLSv1
+        assertThat(smtp.properties.getProperty("mail.smtp.ssl.protocols")).isEqualTo("TLSv1.3 TLSv1.2");
         assertThat(smtp.properties.stringPropertyNames()).noneMatch(name -> name.startsWith("mail.smtps."));
     }
 

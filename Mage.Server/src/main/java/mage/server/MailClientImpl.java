@@ -60,6 +60,8 @@ public class MailClientImpl implements MailClient {
         properties.setProperty(prefix + "writetimeout", String.valueOf(TIMEOUT_MS));
         // the certificate must name the host, not just be valid
         properties.setProperty(prefix + "ssl.checkserveridentity", "true");
+        // this JavaMail asks for TLSv1 unless told otherwise, which current JDKs refuse ("No appropriate protocol")
+        properties.setProperty(prefix + "ssl.protocols", "TLSv1.3 TLSv1.2");
         if (startTls) {
             properties.setProperty(prefix + "starttls.enable", "true");
             // never log in over a connection that stayed plain text
