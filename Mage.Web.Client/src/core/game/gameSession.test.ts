@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GameView } from '../../protocol/generated/views';
 import type { EventBus } from '../rpc/EventBus';
 import { GameSession } from './gameSession';
+import { predict } from './prediction';
 
 type Handler = (data: unknown, event: { objectId: string | null }) => void;
 
@@ -62,11 +63,31 @@ function fakeApi() {
   const calls: string[] = [];
   const api = {
     sendPlayerBoolean: vi.fn(async () => { calls.push('boolean'); return true; }),
+    sendPlayerUUID: vi.fn(async () => { calls.push('uuid'); return true; }),
     gameResync: vi.fn(async () => { calls.push('resync'); return true; }),
     sendPlayerAction: vi.fn(async () => { calls.push('action'); return true; }),
   };
   return { api, calls };
 }
+
+describe('GameSession prediction', () => {
+  it('draws a clicked land tapped until the server says what happened', () => {
+    const { bus, emit } = fakeBus();
+    const { api } = fakeApi();
+    const session = new GameSession(api as never, bus, { gameId: 'g1', playerId: 'me', mode: 'play' });
+    const forest = { id: 'forest', cardTypes: ['LAND'], subTypes: ['FOREST'], rules: [] };
+    const board = { ...base, players: [{ playerId: 'me', battlefield: { forest } }] } as unknown as GameView;
+    emit('GAME_SELECT', { message: 'Play spells and abilities', gameView: { ...board, canPlayObjects: { objects: { forest: {} } } } });
+    const { view, interaction } = session.getState();
+    expect(session.click('forest', predict(view, interaction, 'forest'))).toBe(true);
+    expect(session.getState().prediction).toEqual({ id: 'forest', tapped: true });
+    expect(api.sendPlayerUUID).toHaveBeenCalledWith('g1', 'forest');
+
+    // the server's next view is the truth, whatever it says
+    emit('GAME_UPDATE', { ...board, turn: 5 });
+    expect(session.getState().prediction).toBeNull();
+  });
+});
 
 describe('GameSession reply timeout', () => {
   beforeEach(() => vi.useFakeTimers());

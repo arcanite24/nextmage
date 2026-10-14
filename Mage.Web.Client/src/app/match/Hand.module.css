@@ -74,6 +74,14 @@
   filter: brightness(0.5) saturate(0.6);
 }
 
+/* played, and the server hasn't answered yet: already on its way out of the hand */
+.pending,
+.pending:hover {
+  transform: translateY(-150px) rotate(0deg) scale(1.08);
+  cursor: progress;
+  z-index: var(--z-held) !important;
+}
+
 .selected {
   transform: translateY(-60px) rotate(0deg);
 }

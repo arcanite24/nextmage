@@ -15,6 +15,8 @@ export interface HandProps {
   choosing?: boolean;
   clickable: ReadonlySet<string>;
   selected: ReadonlySet<string>;
+  /** the card just played, lifted out of the hand until the server answers */
+  pending?: string | null;
   sleeve: string;
   onPlay(id: string): void;
   /** stage y above which a dragged card counts as played */
@@ -31,7 +33,7 @@ const CARD_WIDTH = 168;
 const DRAG_THRESHOLD = 12;
 
 /** The player's hand, fanned along the bottom edge. Hover lifts a card; drag it up (or click it) to play it. */
-export function Hand({ cards, choosing = false, clickable, selected, sleeve, onPlay, playLine, libraryOrigin, faceDown = false, label = 'Your hand' }: HandProps) {
+export function Hand({ cards, choosing = false, clickable, selected, pending = null, sleeve, onPlay, playLine, libraryOrigin, faceDown = false, label = 'Your hand' }: HandProps) {
   const t = useT();
   const count = cards.length;
   const spread = Math.min(CARD_WIDTH * 0.78, 1000 / Math.max(1, count));
@@ -54,6 +56,7 @@ export function Hand({ cards, choosing = false, clickable, selected, sleeve, onP
             clickable={clickable.has(card.id!)}
             choosing={choosing}
             selected={selected.has(card.id!)}
+            pending={pending === card.id}
             sleeve={sleeve}
             onPlay={onPlay}
             playLine={playLine}
@@ -75,6 +78,7 @@ interface HandCardProps {
   drop: number;
   clickable: boolean;
   selected: boolean;
+  pending: boolean;
   sleeve: string;
   onPlay(id: string): void;
   playLine: number;
@@ -82,7 +86,7 @@ interface HandCardProps {
   faceDown: boolean;
 }
 
-function HandCard({ card, choosing, index, left, rotate, drop, clickable, selected, sleeve, onPlay, playLine, libraryOrigin, faceDown }: HandCardProps) {
+function HandCard({ card, choosing, index, left, rotate, drop, clickable, selected, pending, sleeve, onPlay, playLine, libraryOrigin, faceDown }: HandCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const stage = useStage();
   const setZoom = useMatchUi((state) => state.setZoom);
@@ -132,7 +136,7 @@ function HandCard({ card, choosing, index, left, rotate, drop, clickable, select
     <div
       ref={ref}
       role="listitem"
-      className={[styles.card, faceDown ? styles.faceDown : '', clickable ? (choosing ? styles.choosable : styles.playable) : choosing ? styles.unchoosable : '', selected ? styles.selected : '', drag?.moved ? styles.dragging : ''].join(' ')}
+      className={[styles.card, faceDown ? styles.faceDown : '', clickable ? (choosing ? styles.choosable : styles.playable) : choosing ? styles.unchoosable : '', selected ? styles.selected : '', pending && !selected ? styles.pending : '', drag?.moved ? styles.dragging : ''].join(' ')}
       style={style}
       tabIndex={clickable ? 0 : -1}
       aria-label={`${faceDown ? 'Hidden card' : card.name ?? 'Card'}${clickable ? ', playable' : ''}${selected ? ', chosen' : ''}`}
