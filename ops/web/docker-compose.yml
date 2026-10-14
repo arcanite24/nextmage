@@ -58,6 +58,8 @@ services:
       XMAGE_MAIL_USER: ${XMAGE_MAIL_USER:-}
       XMAGE_MAIL_PASSWORD: ${XMAGE_MAIL_PASSWORD:-}
       XMAGE_MAIL_FROM: ${XMAGE_MAIL_FROM:-}
+      XMAGE_MAIL_SMTP_STARTTLS: ${XMAGE_MAIL_SMTP_STARTTLS:-}
+      XMAGE_MAILGUN_BASE_URL: ${XMAGE_MAILGUN_BASE_URL:-}
     volumes:
       - xmage-db:/opt/xmage/db         # user data only (accounts, stats, table records, feedback)
       - xmage-cards:/opt/xmage/cards-db # card database cache, rebuilt when the image changes

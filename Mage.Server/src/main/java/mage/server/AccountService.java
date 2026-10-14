@@ -38,9 +38,7 @@ public final class AccountService {
         String text = "Use this code to reset " + user.getName() + "'s password: " + code + '\n'
                 + "It works for " + (ResetTokens.VALID_MILLIS / 60000) + " minutes and " + ResetTokens.ATTEMPTS + " tries."
                 + " If you didn't ask for it, ignore this email.";
-        boolean sent = !managers.configSettings().getMailUser().isEmpty()
-                ? managers.mailClient().sendMessage(user.email, subject, text)
-                : managers.mailgunClient().sendMessage(user.email, subject, text);
+        boolean sent = Mailer.send(managers, user.email, subject, text);
         if (!sent) {
             if (Main.isTestMode()) {
                 logger.info("Test mode, email failed: the password reset code for " + user.getName() + " is " + code);
@@ -85,13 +83,10 @@ public final class AccountService {
         result.code = TOKENS.issue(user.email, now, STAFF_CODE_MILLIS);
         result.email = user.email;
         result.expiresAt = now + STAFF_CODE_MILLIS;
-        boolean mail = !managers.configSettings().getMailUser().isEmpty() || !managers.configSettings().getMailgunApiKey().isEmpty();
-        if (mail) {
+        if (Mailer.configured(managers.configSettings())) {
             String text = "The server's staff made a code to reset " + user.getName() + "'s password: " + result.code + '\n'
                     + "Enter it under Forgot password with this email address. It works for 24 hours.";
-            result.emailed = !managers.configSettings().getMailUser().isEmpty()
-                    ? managers.mailClient().sendMessage(user.email, "Password reset code", text)
-                    : managers.mailgunClient().sendMessage(user.email, "Password reset code", text);
+            result.emailed = Mailer.send(managers, user.email, "Password reset code", text);
         }
         logger.info("Password reset code made by staff for " + user.getName());
         return result;

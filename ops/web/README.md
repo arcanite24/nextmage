@@ -98,7 +98,9 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_ALLOWED_ORIGINS` | `https://$DOMAIN` | Browser origins the bridge accepts. Include the port when `HTTPS_PORT` isn't 443. |
 | `XMAGE_ALLOWED_ORIGINS` | `https://$DOMAIN` | Set by Compose. Browser origins allowed to open a game connection. |
 | `XMAGE_MAILGUN_API_KEY`, `XMAGE_MAILGUN_DOMAIN` | empty | Mailgun account for registration and password-reset mail. |
-| `XMAGE_MAIL_SMTP_HOST`, `XMAGE_MAIL_SMTP_PORT`, `XMAGE_MAIL_USER`, `XMAGE_MAIL_PASSWORD`, `XMAGE_MAIL_FROM` | empty | SMTP instead of Mailgun. The server uses SMTP when `XMAGE_MAIL_USER` is set. |
+| `XMAGE_MAILGUN_BASE_URL` | `https://api.mailgun.net/v3` | Mailgun's API address. `https://api.eu.mailgun.net/v3` for a domain in Mailgun's EU region. |
+| `XMAGE_MAIL_SMTP_HOST`, `XMAGE_MAIL_SMTP_PORT`, `XMAGE_MAIL_USER`, `XMAGE_MAIL_PASSWORD`, `XMAGE_MAIL_FROM` | empty | SMTP instead of Mailgun. The server uses SMTP when `XMAGE_MAIL_USER` is set. Port 465 speaks TLS from the start; port 587 upgrades with STARTTLS. `XMAGE_MAIL_FROM` defaults to the user. For Purelymail: `smtp.purelymail.com`, port `587`, the mailbox's full address as user. A mail server that doesn't answer is given up on after 10 seconds. |
+| `XMAGE_MAIL_SMTP_STARTTLS` | `false` | `true` uses STARTTLS on any port (and refuses to log in if the server can't upgrade). Port 587 always uses it. |
 | `XMAGE_DISCORD_WEBHOOK` | empty | Discord webhook address (`-Dxmage.discordWebhook`). Set: public tables, events starting and matches starting are posted to that channel (see [Discord notifications](#discord-notifications)). A secret: anyone with it can post to the channel. |
 | `XMAGE_DISCORD_STAFF_WEBHOOK` | empty | A second webhook for staff news: access requests, player reports and staff role changes (`-Dxmage.discordStaffWebhook`). Empty: those go to `XMAGE_DISCORD_WEBHOOK`. A secret. |
 | `XMAGE_CAREER` | `on` | `off` turns the optional single-player Career off. It needs accounts either way: without them nobody's collection would be safe. Progress is kept in `career.db`. |

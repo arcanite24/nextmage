@@ -77,6 +77,11 @@ if [ "$MONTE_CARLO" = false ]; then
   xmlstarlet ed -L -d "/config/playerTypes/playerType[@className='mage.player.ai.ComputerPlayerMCTS']" "$CONFIG"
 fi
 
+# SMTP: TLS from the start on 465, STARTTLS on 587 or when XMAGE_MAIL_SMTP_STARTTLS=true (the server reads it from the
+# environment, like XMAGE_MAILGUN_BASE_URL for Mailgun's EU region)
+[ -z "${XMAGE_MAIL_SMTP_STARTTLS:-}" ] || is_bool "$XMAGE_MAIL_SMTP_STARTTLS" \
+  || die "XMAGE_MAIL_SMTP_STARTTLS must be true or false (got '$XMAGE_MAIL_SMTP_STARTTLS')"
+
 if [ "${XMAGE_AUTH:-false}" = true ] && [ -z "${XMAGE_MAILGUN_API_KEY:-}${XMAGE_MAIL_USER:-}" ]; then
   echo "xmage-server: warning: XMAGE_AUTH=true without mail settings; password reset mails cannot be sent" >&2
 fi

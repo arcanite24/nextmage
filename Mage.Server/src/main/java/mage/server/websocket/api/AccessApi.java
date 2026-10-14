@@ -3,6 +3,7 @@ package mage.server.websocket.api;
 import mage.server.AuthorizedUser;
 import mage.server.AuthorizedUserRepository;
 import mage.server.DisconnectReason;
+import mage.server.Mailer;
 import mage.server.Session;
 import mage.server.User;
 import mage.server.admin.AccessPolicy;
@@ -14,7 +15,6 @@ import mage.server.admin.AuditEntry;
 import mage.server.admin.GithubAuth;
 import mage.server.admin.GithubSignIn;
 import mage.server.admin.Invite;
-import mage.server.managers.ConfigSettings;
 import mage.server.notify.DiscordNotifier;
 import mage.server.websocket.rpc.RpcCall;
 import mage.server.websocket.rpc.RpcException;
@@ -404,11 +404,7 @@ final class AccessApi {
             String link = System.getProperty(DiscordNotifier.PUBLIC_URL_PROP, "").trim();
             String text = "You can play on " + server + " now. Register with this email address (" + request.email + ")"
                     + (link.isEmpty() ? "." : " at " + link + " .");
-            ConfigSettings config = ctx.managers.configSettings();
-            boolean sent = !isBlank(config.getMailUser())
-                    ? ctx.managers.mailClient().sendMessage(request.email, "You're in: " + server, text)
-                    : ctx.managers.mailgunClient().sendMessage(request.email, "You're in: " + server, text);
-            if (!sent) {
+            if (!Mailer.send(ctx.managers, request.email, "You're in: " + server, text)) {
                 logger.warn("Access approval email failed for request " + request.id);
             }
         }
@@ -509,11 +505,7 @@ final class AccessApi {
     }
 
     static boolean mail(ApiContext ctx) {
-        if (ctx.managers == null) {
-            return false;
-        }
-        ConfigSettings config = ctx.managers.configSettings();
-        return !isBlank(config.getMailUser()) || !isBlank(config.getMailgunApiKey());
+        return ctx.managers != null && Mailer.configured(ctx.managers.configSettings());
     }
 
     private static String serverLabel(ApiContext ctx) {

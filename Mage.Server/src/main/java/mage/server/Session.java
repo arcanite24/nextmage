@@ -196,15 +196,11 @@ public class Session {
 
             boolean success;
             String subject = "Your account on " + serverLabel();
-            boolean mailConfigured = !managerFactory.configSettings().getMailUser().isEmpty()
-                    || !managerFactory.configSettings().getMailgunApiKey().isEmpty();
-            if (chosenPassword && !mailConfigured) {
+            if (chosenPassword && !Mailer.configured(managerFactory.configSettings())) {
                 // nothing to send: the player already knows the password
                 success = true;
-            } else if (!managerFactory.configSettings().getMailUser().isEmpty()) {
-                success = managerFactory.mailClient().sendMessage(email, subject, text);
             } else {
-                success = managerFactory.mailgunClient().sendMessage(email, subject, text);
+                success = Mailer.send(managerFactory, email, subject, text);
             }
             if (success || (chosenPassword && Main.isTestMode())) {
                 String ok = chosenPassword ? "Account " + userName + " created"

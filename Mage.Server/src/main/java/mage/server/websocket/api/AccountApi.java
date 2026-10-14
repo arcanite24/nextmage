@@ -152,7 +152,7 @@ final class AccountApi {
         info.testMode = Main.isTestMode();
         if (config != null) {
             info.accounts = config.isAuthenticationActivated();
-            info.mail = !isBlank(config.getMailUser()) || !isBlank(config.getMailgunApiKey());
+            info.mail = mage.server.Mailer.configured(config);
             info.serverName = config.getServerName();
             info.minUserNameLength = config.getMinUserNameLength();
             info.maxUserNameLength = config.getMaxUserNameLength();
@@ -221,9 +221,5 @@ final class AccountApi {
         } catch (IllegalStateException | SQLException e) {
             throw new RpcException(RpcException.SERVER_ERROR, e.getMessage(), e);
         }
-    }
-
-    private static boolean isBlank(String text) {
-        return text == null || text.trim().isEmpty();
     }
 }
