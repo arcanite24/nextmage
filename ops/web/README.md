@@ -258,6 +258,17 @@ Measured on 2026-10-09 on the LAN server (16 cores, Docker on Windows), using th
 - 14 games running at once used about 11% of the CPU on average, with a peak of 19%.
 - On that hardware, CPU is not the limit for a casual server. Games against the AI cost the most, because the AI thinks on the server's cores, and Hard or Expert AIs think longer.
 
+Measured again on 2026-10-14 on the public server, a Hetzner CAX21 (4 ARM vCPU, 8 GB), with `ops/perf/vps-sim.sh` running a throwaway copy of the production image beside the live one (`--cpus=4 --memory=7g`, accounts off, replays on, AI skill 1):
+
+| Games at once | Finished | Server CPU, share of all 4 cores (mean · p95 · max) | Heap max | Memory after |
+|---|---|---|---|---|
+| 4 | 4/4 | 16% · 28% · 62% | 244 MB | 457 MiB |
+| 8 | 8/8 | 19% · 59% · 74% | 291 MB | 517 MiB |
+| 12 | 12/12 | 24% · 85% · 87% | 465 MB | 752 MiB |
+| 24 | 15/24 | 31% · 87% · 90% | 461 MB | 780 MiB |
+
+The 24-game run lost nine bots to the server's limit of 16 connections per address (every bot came through one tunnel), not to load. The bots answer instantly, so each game lasts under a minute; people take ten to thirty times longer, so the same box carries several times as many human games. The public server runs with `XMAGE_MEMORY=2g`, `XMAGE_MAX_GAME_THREADS=20` and `XMAGE_MAX_AI_OPPONENTS=20`: memory stays far from the limit, and games over 20 queue with a notice (see Settings) instead of slowing everyone's AI turns. Raise both once the admin Overview shows games queueing while CPU is low.
+
 To repeat the test against your own server:
 
 ```
