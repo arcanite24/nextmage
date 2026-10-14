@@ -41,6 +41,11 @@ describe('release notes', () => {
     expect(notes.url).toBeUndefined();
   });
 
+  test('the desktop download notes are not changes', () => {
+    const body = `${GENERATED}\n<!-- desktop-downloads -->\nPlaymat 1.3.0 for your own computer.\n\n### The first time\n- **Windows** may say...\n`;
+    expect(parseReleaseNotes(body, 'v1.3.0').sections.map((section) => section.title)).toEqual(['Features', 'Fixes', 'Ops']);
+  });
+
   test('nothing for players means no sections', () => {
     expect(parseReleaseNotes('**Full Changelog**: https://github.com/a/b/compare/v1...v2', 'v2').sections).toEqual([]);
   });

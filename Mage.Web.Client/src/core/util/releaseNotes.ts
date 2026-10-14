@@ -32,6 +32,8 @@ const SECTION_IDS: Record<string, ReleaseSectionId> = {
   'other changes': 'other',
 };
 
+/** Where the desktop installers' download notes start (.github/workflows/desktop.yml adds them below the changes). */
+export const DESKTOP_NOTES_MARKER = '<!-- desktop-downloads -->';
 /** Sections that speak to contributors, not players. */
 const SKIPPED = /^(new contributors|full changelog)/i;
 const MAX_ITEMS = 12;
@@ -51,7 +53,8 @@ export function cleanItem(line: string): string {
 
 /**
  * Headings (## or ###) open sections and list items (*, -) fill them; anything else is left out. Items before any
- * heading go in an untitled "other" section. Empty sections and contributor sections are dropped.
+ * heading go in an untitled "other" section. Empty sections and contributor sections are dropped, and so is everything
+ * from the desktop download notes on.
  */
 export function parseReleaseNotes(markdown: string, version: string, url?: string): ReleaseNotes {
   const sections: ReleaseSection[] = [];
@@ -59,6 +62,7 @@ export function parseReleaseNotes(markdown: string, version: string, url?: strin
   let skipping = false;
   for (const raw of markdown.replace(/\r/g, '').split('\n')) {
     const line = raw.trim();
+    if (line.includes(DESKTOP_NOTES_MARKER)) break;
     const heading = /^#{2,3}\s+(.+)$/.exec(line);
     if (heading) {
       const title = cleanItem(heading[1]).replace(/^[^\p{L}\p{N}]+/u, '').trim();

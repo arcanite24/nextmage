@@ -151,7 +151,7 @@ podman build --platform linux/arm64 -f ops/web/Dockerfile.web -t xmage-web:local
 ops/web/ship-images.sh <ssh-host> podman
 ```
 
-`ship-images.sh` loads both images on the host over SSH and restarts it with `up -d --no-build`. The host keeps a checkout of the repository with its `.env` in `~/xmage-server`.
+`ship-images.sh` loads both images on the host over SSH and restarts it with `up -d --no-build`. The host keeps a checkout of the repository with its `.env` in `~/xmage-server`. A host set up for image-based deploys (`ops/web/deploy/setup-deploy-user.sh`) runs from `/srv/playmat` instead. Don't ship images to it: deploy a release or a `sha-<7>` build (see [Upgrade](#upgrade)).
 
 ## Accounts and moderation
 
