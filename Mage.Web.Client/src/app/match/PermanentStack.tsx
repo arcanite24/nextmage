@@ -28,6 +28,8 @@ export interface PermanentStackProps {
   /** a target is being chosen: the candidates stand out from merely playable cards */
   targeting?: boolean;
   onClick(id: string): void;
+  /** the permanent just clicked, drawn pressed until the server answers */
+  pending?: string | null;
   /** while blockers are declared: a creature dropped on an attacker blocks it (false when nothing was sent) */
   onBlockDrop?(blockerId: string, attackerId: string): boolean;
 }
@@ -125,7 +127,7 @@ interface PlacedCardProps extends PermanentStackProps {
   count?: number;
 }
 
-function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, attacking, blocking, forward, targeting, onClick, onBlockDrop, left, top, depth, count }: PlacedCardProps) {
+function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, attacking, blocking, forward, targeting, onClick, onBlockDrop, pending, left, top, depth, count }: PlacedCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = permanent.id!;
   const tapped = !!permanent.tapped;
@@ -205,6 +207,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
         isClickable && targeting && !isSelected ? styles.target : '',
         isSelected ? styles.selected : '',
         isAttacking ? styles.attacking : '',
+        pending === id ? styles.pending : '',
       ].join(' ')}
       style={style}
       role={isClickable ? 'button' : undefined}

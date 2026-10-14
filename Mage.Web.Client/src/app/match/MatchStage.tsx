@@ -14,6 +14,7 @@ import { spectatorHand } from '../../core/game/spectatorHand';
 import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
 import { offBoardTargets } from '../../core/game/offBoardTargets';
+import { withPredictedAttack, withPrediction } from '../../core/game/prediction';
 import type { CardView, ChatMessage, GameView, PlayerLook, PlayerView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
 import { useT } from '../i18n';
@@ -121,7 +122,7 @@ export interface MatchStageProps {
 }
 
 export function MatchStage({ session, state, replayLog, onLeave }: MatchStageProps) {
-  const { view, interaction, playerId, mode, awaitingServer } = state;
+  const { view, interaction, playerId, mode, awaitingServer, prediction } = state;
   const t = useT();
   const navigate = useNavigate();
   const animations = useSettings((settings) => settings.settings.animations);
@@ -148,7 +149,8 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   // a new game starts with a clean table
   useEffect(() => () => useMatchUi.setState({ zoom: null, dragging: null, viewer: null, logOpen: false, detail: null }), []);
 
-  const board = useMemo(() => buildBoard(view, playerId), [view, playerId]);
+  // a click's likely outcome (a land tapped for mana) shows at once; the server's next view replaces it
+  const board = useMemo(() => buildBoard(withPrediction(view, prediction), playerId), [view, prediction, playerId]);
   // combat damage is split on the creatures themselves: clicking one adds a point of damage to it
   const damageSplit = useDamageSplit(interaction, view);
   const clickable = useMemo(
@@ -156,7 +158,12 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
     [interaction.clickable, damageSplit],
   );
   const combat = view?.combat;
-  const { attacking, blocking, links, attacks } = useMemo(() => combatSets(combat), [combat]);
+  const combatNow = useMemo(() => combatSets(combat), [combat]);
+  const { blocking, links, attacks } = combatNow;
+  // a creature declared as an attacker steps forward before the server confirms it
+  const attacking = useMemo(() => withPredictedAttack(combatNow.attacking, prediction), [combatNow.attacking, prediction]);
+  const chosen = useMemo(() => withPredictedAttack(interaction.selected, prediction), [interaction.selected, prediction]);
+  const pending = prediction?.id ?? null;
   // lands can always tap for mana while you hold priority; glowing them all would drown the real options
   const quiet = useMemo(() => {
     if (interaction.mode !== 'priority' || !board.me) return EMPTY;
@@ -379,6 +386,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 targeting={targeting}
                 blocking={blocking}
                 onClick={onClick}
+                pending={pending}
                 deciding={!!opponent.player.hasPriority && interaction.mode === 'waiting'}
                 layout={layout}
                 commanders={commanders.get(opponent.player.playerId!) ?? NO_COMMANDERS}
@@ -389,7 +397,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
 
             {board.me && (
               <>
-                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={interaction.selected} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} onBlockDrop={interaction.mode === 'declareBlockers' && canAct ? onBlockDrop : undefined} place={layout.me} />
+                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={chosen} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} pending={pending} onBlockDrop={interaction.mode === 'declareBlockers' && canAct ? onBlockDrop : undefined} place={layout.me} />
                 <div className={styles.myPlate} style={layout.myPlate}>
                   <PlayerPlate
                     player={board.me.player}
@@ -448,6 +456,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 choosing={choosingInHand}
                 clickable={pickerCards ? EMPTY : clickable}
                 selected={interaction.selected}
+                pending={pending}
                 sleeve={sleeves.mine}
                 onPlay={onClick}
                 playLine={layout.playLine}
@@ -563,6 +572,7 @@ interface RowProps {
   blocking: ReadonlySet<string>;
   targeting: boolean;
   onClick(id: string): void;
+  pending: string | null;
   onBlockDrop?(blockerId: string, attackerId: string): boolean;
 }
 
