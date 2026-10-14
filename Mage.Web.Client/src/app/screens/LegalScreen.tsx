@@ -80,7 +80,9 @@ export function TermsScreen() {
         <p>{t('terms.staff.text')}</p>
       </Section>
       <Section id="terms-support" title={t('terms.support')}>
-        <p>{t('terms.support.text', app)}</p>
+        <p>
+          <RichText text={t('terms.support.text', app)} parts={{ support: <Link to="/support">{t('terms.support.link')}</Link> }} />
+        </p>
       </Section>
       <Section id="terms-account" title={t('terms.account')}>
         <p>{t('terms.account.text')}</p>

@@ -91,6 +91,13 @@ export function AboutScreen() {
           </p>
         </section>
 
+        <section className={styles.section} aria-labelledby="about-support">
+          <h2 id="about-support">{t('about.support')}</h2>
+          <p>
+            <RichText text={t('about.support.text', app)} parts={{ support: <Link to="/support">{t('about.support.link')}</Link> }} />
+          </p>
+        </section>
+
         <p className={styles.foot}><Link to="/">{t('about.backTo', app)}</Link></p>
       </div>
     </main>
