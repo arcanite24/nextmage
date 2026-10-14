@@ -57,9 +57,12 @@ function SignedIn() {
   );
 }
 
-// deck sync loads with the first sign-in: servers with accounts keep each account's decks
+// deck sync loads with the first sign-in: servers with accounts keep each account's decks; and the look opponents see
 useSession.subscribe((state) => {
-  if (state.phase === 'signedIn') void import('./stores/deckSync');
+  if (state.phase === 'signedIn') {
+    void import('./stores/deckSync');
+    void import('./support/lookSync');
+  }
 });
 
 // uncaught errors and unhandled rejections are reported (to the console by default) and kept for debugging

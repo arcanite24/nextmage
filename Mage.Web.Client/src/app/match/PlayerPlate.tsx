@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Swords } from 'lucide-react';
+import { Heart, Swords } from 'lucide-react';
 import { COMMANDER_DAMAGE_LETHAL } from '../../core/game/commander';
 import { POOL_MANA, poolId } from '../../core/game/payment';
 import { ROPE_SECONDS, ropeSecondsLeft, ropeVisible } from '../../core/game/rope';
-import type { PlayerView } from '../../protocol/generated/views';
+import type { PlayerLook, PlayerView } from '../../protocol/generated/views';
+import { CAREER_AVATARS, titleLabel } from '../career/progressModel';
 import { useT } from '../i18n';
 import './matchMessages';
 import { ManaCost } from '../ui/ManaCost';
@@ -32,6 +33,8 @@ export interface PlayerPlateProps {
   commanderDamage?: readonly { name: string; amount: number }[];
   /** outside your range of influence: you can't affect this player, nor they you */
   outOfRange?: boolean;
+  /** the look the player chose (servers with accounts): their Career avatar and title, a supporter's ring and heart */
+  look?: PlayerLook | null;
 }
 
 const ROPE_TICK_MS = 250;
@@ -74,7 +77,7 @@ function useRopeSeconds(player: PlayerView): number {
 }
 
 /** A player's seat: who they are, their life, counters, floating mana and clock. */
-export function PlayerPlate({ player, isMe, targetable, selected, deciding, sleeve, onClick, toPay, payable, onPay, commanderDamage = [], outOfRange = false }: PlayerPlateProps) {
+export function PlayerPlate({ player, isMe, targetable, selected, deciding, sleeve, onClick, toPay, payable, onPay, commanderDamage = [], outOfRange = false, look }: PlayerPlateProps) {
   const t = useT();
   const life = player.life ?? 0;
   // a player out of the game (lost, conceded or left: leaving loses) has no life worth showing, however low it went
@@ -100,6 +103,8 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
   const ticking = ropeVisible(player.timerActive, player.hasPriority, timeLeft);
   // the player's sigil from their profile, or their initial
   const initial = sigilOf(player.userData?.avatarId) ?? (player.name ?? '?').slice(0, 1).toUpperCase();
+  // a Career avatar, drawn in its colours, replaces the initial
+  const crest = look?.avatar ? CAREER_AVATARS[look.avatar] : undefined;
 
   return (
     <div
@@ -128,8 +133,18 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
       }}
       data-object-id={player.playerId}
     >
-      <div className={styles.avatar}>
-        <span aria-hidden="true">{initial}</span>
+      <div
+        className={[styles.avatar, look?.frame === 'supporter-ring' ? styles.ring : ''].join(' ')}
+        style={crest ? ({ '--crest-light': crest.light, '--crest-dark': crest.dark } as CSSProperties) : undefined}
+        data-crest={crest ? '' : undefined}
+      >
+        {crest ? (
+          <svg className={styles.crest} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d={crest.path} />
+          </svg>
+        ) : (
+          <span aria-hidden="true">{initial}</span>
+        )}
         {ticking && (
           <svg className={styles.rope} viewBox="0 0 100 100" role="img" aria-label={`${Math.ceil(timeLeft)} seconds left`}>
             <circle cx="50" cy="50" r="47" pathLength={ROPE_SECONDS} strokeDasharray={`${timeLeft} ${ROPE_SECONDS}`} />
@@ -139,6 +154,7 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
       <div className={styles.info}>
         <div className={styles.name}>
           {player.name}
+          {look?.flair === 'heart' && <Heart className={styles.flair} size={14} fill="currentColor" role="img" aria-label={t('shell.supporter')} />}
           {out && <span className={styles.range}>{t('match.plate.lost')}</span>}
           {disconnected && (
             <span className={[styles.range, styles.offline].join(' ')} title={t('match.plate.disconnectedTitle')}>
@@ -147,6 +163,7 @@ export function PlayerPlate({ player, isMe, targetable, selected, deciding, slee
           )}
           {outOfRange && !out && <span className={styles.range} title="Outside your range of influence">Out of range</span>}
         </div>
+        {look?.title && <div className={styles.title}>{titleLabel(look.title)}</div>}
         <div className={styles.lifeRow}>
           {out ? (
             <span className={[styles.life, styles.outLife].join(' ')}>{t('match.plate.out')}</span>
