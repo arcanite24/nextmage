@@ -123,8 +123,9 @@ try {
     }
     if (-not (Test-Path $envFile)) { throw "$envFile is missing (copy .env.example and edit it)" }
     if (-not $Project) {
-        $Project = @(Invoke-Docker ps --filter 'label=com.docker.compose.service=xmage' --format '{{.Label "com.docker.compose.project"}}')[0]
-        if (-not $Project) { $Project = 'web' }
+        # all the labels, parsed here: Windows PowerShell drops the inner quotes of {{.Label "..."}} on the way to docker
+        $labels = @(Invoke-Docker ps --filter 'label=com.docker.compose.service=xmage' --format '{{.Labels}}')[0]
+        if ($labels -match '(?:^|,)com\.docker\.compose\.project=([^,]+)') { $Project = $Matches[1] } else { $Project = 'web' }
     }
 
     $server = Get-PinnedImage "$registry/playmat-server"

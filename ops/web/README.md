@@ -389,7 +389,7 @@ Practise it now and then on a scratch server or scratch volumes. The drill of 20
 - `playmat-watchdog`, every 5 minutes (systemd timer): every compose service running and healthy, the root disk under 85%, at least 10% of memory available, the site answering over HTTPS, and more than 14 days left on its certificate. Problems go to the staff Discord webhook from `.env` when they start, every 6 hours while they last, and when they clear; always to the journal (`journalctl -t playmat-watchdog`). `playmat-watchdog test` posts a test message.
 - `playmat-offsite`, daily (see Off-site copies).
 
-Thresholds and the checkout path live in `/etc/playmat/host.env` (`PLAYMAT_DIR`, `DISK_MAX`, `MEM_MIN`, `CERT_DAYS`, `REPEAT_HOURS`).
+Thresholds and the checkout path live in `/etc/playmat/host.env` (`PLAYMAT_DIR`, `DISK_MAX`, `MEM_MIN`, `CERT_DAYS`, `REPEAT_HOURS`). On a host set up for image deploys (`/etc/playmat-deploy.conf`, see [RELEASING.md](../../RELEASING.md)) the watchdog checks the stack `playmat-compose` runs and reads the webhook from `/srv/playmat/.env`; `PLAYMAT_DIR` no longer matters there.
 
 The repository's `Uptime` workflow checks the public server from outside every 15 minutes (the site, the certificate and the game server behind `/ws`). A failing run is the alert: GitHub emails whoever last changed its schedule, and the `UPTIME_DISCORD_WEBHOOK` secret, when set, gets a message.
 
