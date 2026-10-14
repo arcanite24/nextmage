@@ -1,5 +1,7 @@
+/* the body doesn't scroll (base.css): the console scrolls itself, so it is exactly the window's height; every
+   section renders inside it */
 .page {
-  min-height: 100dvh;
+  height: 100dvh;
   overflow-y: auto;
   background: var(--mat-900);
   color: var(--ink);
