@@ -28,6 +28,13 @@ Methods still take a `sessionId` parameter in the documented position for compat
 
 Closing the socket counts as a lost connection: the user keeps their tables for a few minutes and can come back from a new connection with `connectUser`, passing the **server-issued restore token** as `restoreSessionId`. Get the token with `sessionGetRestoreToken` right after every successful login (it changes with each login) and keep it client side. A wrong or empty token never takes over another user's seat. Without authentication, a user with the same name from the same client IP is still treated as a reconnect (desktop compatibility).
 
+A user is connected through one session at a time. On a server with accounts, logging in as a user that is already
+connected (another tab, device or client) takes the user over, and the server ends the other session. A WebSocket
+connection that loses its user this way is closed with code **4001** ("Signed in somewhere else"); if it learns it from
+a call instead (the other login came from a desktop client), the call fails with -32001 and
+`data.reason: "signedInElsewhere"`. Clients must not log back in by themselves after either, or two of them keep taking
+the user from each other: ask the player first. Any other close is a lost connection to reconnect from.
+
 Access levels in the method table:
 
 - `public`: works before login.
@@ -64,7 +71,7 @@ A request without `id` is a notification: it runs, but gets no response.
 | -32602 | Missing or invalid parameter |
 | -32603 | Unexpected server error |
 | -32000 | The server rejected the request |
-| -32001 | Not logged in, or not allowed (wrong admin password, chat not joined) |
+| -32001 | Not logged in, or not allowed (wrong admin password, chat not joined). `data.reason` is `signedInElsewhere` when another login as the same user ended this connection's session |
 | -32003 | Too many requests, or locked out after failed admin logins |
 | -32004 | Server busy |
 | -32005 | Deck import failed; `data.reason` says why (see Deck import) |
@@ -130,7 +137,7 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 |--------|--------|--------|--------|-------------|
 | `ping` | `sessionId?: string`, `pingInfo?: string` | `boolean` | public | Keep-alive. Extends the logged in user's session; always succeeds before login. |
 | `setCapabilities` | `capabilities: string[]` | `string[]` | public | Turn on optional protocol features for this connection; returns the ones now on. "stateDiffs": game states are sent as patches against the previous one (see State patches). Call it right after connecting, before logging in; a new connection starts without them. |
-| `connectUser` | `userName: string`, `password: string`, `sessionId: string`, `restoreSessionId?: string`, `clientVersion?: string`, `userIdStr?: string`, `rememberToken?: string` | `boolean` | login | Log in. Creates the connection's session; restoreSessionId reattaches a user that lost its connection. rememberToken (from authRememberLogin) stands in for an account's password. |
+| `connectUser` | `userName: string`, `password: string`, `sessionId: string`, `restoreSessionId?: string`, `clientVersion?: string`, `userIdStr?: string`, `rememberToken?: string` | `boolean` | login | Log in. Creates the connection's session; restoreSessionId reattaches a user that lost its connection. rememberToken (from authRememberLogin) stands in for an account's password. Logging in as a user that is connected elsewhere takes it over: the other connection is closed with code 4001. |
 | `connectAdmin` | `password: string`, `sessionId: string` | `boolean` | login | Log in as server admin. Disabled unless the server was started with a non-empty admin password (-adminPassword=... or -Dxmage.adminPassword=...). After a wrong password the caller's IP is locked out for 1, 2, 4... seconds (at most 5 minutes). |
 | `sessionGetRestoreToken` | `sessionId: string` | `string` | session | Token that reattaches this user (and its tables) from a later connection: pass it as connectUser's restoreSessionId. It changes on every login, so fetch it again after each one. |
 | `authRememberLogin` | `sessionId: string` | `string` | session | "Keep me signed in": a token that signs this account in from this device without the password (connectUser's rememberToken) until it goes unused for 90 days, the password changes or authForgetLogin. Fails on servers without accounts. |
