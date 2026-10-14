@@ -295,6 +295,26 @@ docker compose -f ops/web/docker-compose.yml up -d --build</code></pre>
       </div>
     </section>
 
+    <!-- the public server's month: filled from its /public/support.json; stays hidden if the server can't be reached -->
+    <section id="support" class="support" hidden>
+      <div class="wrap support-box zone">
+        <div class="support-copy">
+          <h2>Keeping the server on</h2>
+          <p>Playmat is free to play, always. Players who can chip in cover the public server's monthly costs, and get a
+            small cosmetic thank-you in Playmat's own style. Nothing is ever gated behind it.</p>
+          <ul class="support-costs" id="support-costs"></ul>
+        </div>
+        <div class="support-goal">
+          <p class="support-month" id="support-month"></p>
+          <p class="support-amount" id="support-amount"></p>
+          <div class="support-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="support-track"><span id="support-fill"></span></div>
+          <p class="small" id="support-note"></p>
+          <a class="btn" id="support-cta" href="https://playmat.deimos.studio/support">Support the server</a>
+          <p class="small"><a href="https://playmat.deimos.studio/support">What supporters get, and the rules</a></p>
+        </div>
+      </div>
+    </section>
+
     <section class="xmage">
       <div class="wrap xmage-box zone">
         <img src="assets/brand/playmat-mark.svg" width="72" height="72" alt="">
@@ -347,6 +367,39 @@ docker compose -f ops/web/docker-compose.yml up -d --build</code></pre>
         if (!release || !release.tag_name) return;
         var note = document.getElementById('get-note');
         if (note && note.textContent.indexOf('Free for') === 0) note.firstChild.textContent = 'Free for Windows, macOS and Linux. Version ' + release.tag_name.replace(/^v/, '') + '. ';
+      })
+      .catch(function () {});
+    // the public server's month (calendar month, UTC, US dollars); the section stays hidden without it
+    fetch('https://playmat.deimos.studio/public/support.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (status) {
+        if (!status || !status.enabled) return;
+        var usd = function (cents) {
+          return new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: cents % 100 ? 2 : 0, minimumFractionDigits: cents % 100 ? 2 : 0 }).format(cents / 100);
+        };
+        var goal = status.goalCents || 0;
+        var month = status.monthCents || 0;
+        var parts = /^(\d{4})-(\d{2})$/.exec(status.monthLabel || '');
+        var label = parts ? new Date(Date.UTC(+parts[1], +parts[2] - 1, 1)).toLocaleDateString('en', { month: 'long', year: 'numeric', timeZone: 'UTC' }) : '';
+        var percent = goal > 0 ? Math.min(100, Math.round(month / goal * 100)) : (month > 0 ? 100 : 0);
+        document.getElementById('support-month').textContent = 'Server costs for ' + label;
+        document.getElementById('support-amount').textContent = usd(month) + ' of ' + usd(goal);
+        var track = document.getElementById('support-track');
+        track.setAttribute('aria-valuenow', String(percent));
+        track.setAttribute('aria-label', 'This month: ' + usd(month) + ' of ' + usd(goal));
+        document.getElementById('support-fill').style.width = percent + '%';
+        var note = month > goal ? 'Ahead by ' + usd(month - goal) + ', a buffer for busy months.'
+          : month === goal && goal > 0 ? 'Covered. Thank you!' : usd(goal - month) + ' to go.';
+        if (status.supporters) note += ' ' + status.supporters + (status.supporters === 1 ? ' supporter' : ' supporters') + ' this month.';
+        document.getElementById('support-note').textContent = note;
+        if (status.kofiUrl || status.sponsorsUrl) document.getElementById('support-cta').href = status.kofiUrl || status.sponsorsUrl;
+        var costs = document.getElementById('support-costs');
+        (status.costs || []).forEach(function (line) {
+          var item = document.createElement('li');
+          item.textContent = line;
+          costs.appendChild(item);
+        });
+        document.getElementById('support').hidden = false;
       })
       .catch(function () {});
   </script>
