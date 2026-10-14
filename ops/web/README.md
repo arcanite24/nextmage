@@ -315,6 +315,41 @@ $C up -d
 
 The restore replaces the accounts and feedback databases (rebuilt from the dumps) and the SQLite files. Databases missing from the backup are left alone. To restore from a copy kept off the machine, first copy the directory back into the volume: `$C cp ./xmage-backup-20261007 backup:/backups/20261007T033000Z`.
 
+### Off-site copies
+
+Backups on the server's own disk don't survive the loss of the server. `ops/web/host/install.sh` (see Host tools below) installs `playmat-offsite`, which packs the newest backup into `/var/backups/playmat/offsite/playmat-<name>.tar.gz` every day at 10:15 UTC and keeps three packs. Two ways take them off the machine; use either or both:
+
+- **Pulled by another machine** (what the public server does: Multivac pulls). The other machine gets an SSH key that the server only lets run the export, so that machine can fetch the newest pack and nothing else, and someone who takes over the server can't reach or delete the copies. On the server, add to `/root/.ssh/authorized_keys`:
+
+  ```
+  restrict,command="/usr/local/bin/playmat-offsite export" ssh-ed25519 AAAA... puller-name
+  ```
+
+  On a Windows puller, `ops/web/host/pull-backup.cmd` fetches the pack over an SSH alias (default `playmat-backup`) into `%USERPROFILE%\playmat-backups` and keeps the newest 30; run it daily from Task Scheduler, after 10:15 UTC. Anywhere else, `ssh <alias> > playmat-$(date -u +%Y%m%dT%H%M%SZ).tar.gz` does the same.
+- **Pushed with restic** to S3-compatible storage (Cloudflare R2, Backblaze B2) or a Hetzner Storage Box: create `/etc/playmat/offsite.env` (mode 600) with `RESTIC_REPOSITORY`, `RESTIC_PASSWORD` and the store's keys (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` for S3). The next pack also goes there, encrypted, keeping 30 daily and 12 monthly snapshots. Keep `RESTIC_PASSWORD` somewhere else too: without it the copies can't be read.
+
+To restore from a pack, unpack it into the backups volume and restore as above:
+
+```bash
+tar -C "$(docker volume inspect -f '{{.Mountpoint}}' <project>_xmage-backups)" -xzf playmat-20261014T025757Z.tar.gz
+$C stop xmage web && $C run --rm --no-deps backup restore 20261014T025757Z && $C up -d
+```
+
+Practise it now and then on a scratch server or scratch volumes. The drill of 2026-10-14 restored a pack pulled to Multivac into a throwaway container on the public server and checked the accounts and SQLite integrity.
+
+## Host tools
+
+`ops/web/host/install.sh` (run as root on the Docker host; safe to rerun after updates) installs:
+
+- `playmat-watchdog`, every 5 minutes (systemd timer): every compose service running and healthy, the root disk under 85%, at least 10% of memory available, the site answering over HTTPS, and more than 14 days left on its certificate. Problems go to the staff Discord webhook from `.env` when they start, every 6 hours while they last, and when they clear; always to the journal (`journalctl -t playmat-watchdog`). `playmat-watchdog test` posts a test message.
+- `playmat-offsite`, daily (see Off-site copies).
+
+Thresholds and the checkout path live in `/etc/playmat/host.env` (`PLAYMAT_DIR`, `DISK_MAX`, `MEM_MIN`, `CERT_DAYS`, `REPEAT_HOURS`).
+
+The repository's `Uptime` workflow checks the public server from outside every 15 minutes (the site, the certificate and the game server behind `/ws`). A failing run is the alert: GitHub emails whoever last changed its schedule, and the `UPTIME_DISCORD_WEBHOOK` secret, when set, gets a message.
+
+Also worth setting on a fresh host: Docker log rotation in `/etc/docker/daemon.json` (`"log-opts": {"max-size": "20m", "max-file": "5"}`, plus `"live-restore": true`), and a reboot window for unattended upgrades (`Unattended-Upgrade::Automatic-Reboot "true"` with a `Automatic-Reboot-Time` after the nightly backup).
+
 ## Upgrade
 
 ```bash
