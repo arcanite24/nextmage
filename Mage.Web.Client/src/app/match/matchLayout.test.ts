@@ -1,16 +1,18 @@
 import { describe, expect, test } from 'vitest';
 import { matchLayout } from './matchLayout';
-import { fitStage, MAX_TALL_HEIGHT, MIN_TALL_HEIGHT, STAGE_HEIGHT, STAGE_WIDTH, TALL_STAGE_WIDTH } from './stageContext';
+import { fitStage, MAX_STAGE_HEIGHT, MAX_TALL_HEIGHT, MIN_TALL_HEIGHT, STAGE_HEIGHT, STAGE_WIDTH, TALL_STAGE_WIDTH } from './stageContext';
 
 const CARD_RATIO = 88 / 63;
 
 describe('fitStage', () => {
   test('desktops and tablets on their side keep the wide stage', () => {
     expect(fitStage(1920, 1080)).toEqual({ layout: 'wide', width: STAGE_WIDTH, height: STAGE_HEIGHT, scale: 1 });
-    expect(fitStage(1440, 900)).toMatchObject({ layout: 'wide', width: 1920, height: 1080 });
+    // squarer than 16:9, the stage grows taller instead of leaving bars above and below
+    expect(fitStage(1440, 900)).toEqual({ layout: 'wide', width: 1920, height: 1200, scale: 0.75 });
     const ipad = fitStage(1024, 768);
-    expect(ipad).toMatchObject({ layout: 'wide', width: 1920 });
+    expect(ipad).toMatchObject({ layout: 'wide', width: 1920, height: MAX_STAGE_HEIGHT });
     expect(ipad.scale).toBeCloseTo(1024 / 1920);
+    expect(ipad.scale * MAX_STAGE_HEIGHT).toBeCloseTo(768);
     // an ultrawide widens the field
     expect(fitStage(2560, 1080).width).toBe(2560);
   });
@@ -36,6 +38,20 @@ describe('matchLayout', () => {
     expect(layout.fieldWidth).toBe(1920 - 300 - 470);
     expect(layout.seam).toBe(540);
     expect(layout.them(1, 2).left).toBeCloseTo(300 + 1150 / 2);
+  });
+
+  test.each([1080, 1200, 1350, 1440])('wide %i: their rows, the seam, your rows, your seat, in that order, and cards grow with the height', (height) => {
+    const layout = matchLayout({ layout: 'wide', width: 1920, height });
+    const them = layout.them(0, 1);
+    const me = layout.me;
+    expect(layout.seam).toBe(height / 2);
+    expect(them.frontTop).toBeGreaterThanOrEqual(them.backTop + them.backIdeal * CARD_RATIO);
+    expect(layout.seam).toBeGreaterThanOrEqual(them.frontTop + them.frontIdeal * CARD_RATIO);
+    expect(me.frontTop).toBeGreaterThan(layout.seam);
+    expect(me.backTop).toBeGreaterThanOrEqual(me.frontTop + me.frontIdeal * CARD_RATIO);
+    expect(layout.myPlate.top).toBeGreaterThanOrEqual(me.backTop + me.backIdeal * CARD_RATIO);
+    expect(layout.myPlate.top).toBe(height - 144);
+    expect(me.frontIdeal).toBe(Math.round(150 + (height - 1080) * 0.2));
   });
 
   test.each([1440, 1554, 1728, 1920])('tall %i: top band, their rows, the turn, your rows, your band, the hand, in that order', (height) => {

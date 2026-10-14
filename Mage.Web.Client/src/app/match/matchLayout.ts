@@ -48,6 +48,12 @@ const FIELD_LEFT = 300;
 const FIELD_RIGHT_MARGIN = 470;
 /** multiplayer: each opponent's seat (plate, counters) in the left column, this far apart */
 const SEAT_SPACING = 172;
+/**
+ * A wide stage taller than 1080 (a 16:10 or 4:3 window) splits its extra height between the two halves; each half
+ * spends most of it on bigger cards and the rest on the gaps between the rows.
+ */
+const WIDE_EXTRA_FRONT = 0.2;
+const WIDE_EXTRA_BACK = 0.15;
 
 /** The tall layout: margins, the bands above and below the battlefield, and the rows between them. */
 const TALL_MARGIN = 24;
@@ -97,30 +103,36 @@ export function matchLayout(stage: Pick<StageContextValue, 'layout' | 'width' | 
 function computeLayout(stage: Pick<StageContextValue, 'layout' | 'width' | 'height'>): MatchLayout {
   if (stage.layout === 'tall') return tallLayout(stage.width, stage.height);
   const fieldWidth = stage.width - FIELD_LEFT - FIELD_RIGHT_MARGIN;
+  const extra = Math.max(0, stage.height - STAGE_HEIGHT);
+  const half = Math.round(extra / 2);
+  const frontIdeal = Math.round(150 + extra * WIDE_EXTRA_FRONT);
+  const backIdeal = Math.round(112 + extra * WIDE_EXTRA_BACK);
+  const frontGrowth = Math.round((frontIdeal - 150) * CARD_RATIO);
+  const backGrowth = Math.round((backIdeal - 112) * CARD_RATIO);
   return {
     tall: false,
     fieldLeft: FIELD_LEFT,
     fieldWidth,
-    me: { left: FIELD_LEFT, width: fieldWidth, frontTop: 556, backTop: 778, frontIdeal: 150, backIdeal: 112 },
+    me: { left: FIELD_LEFT, width: fieldWidth, frontTop: 556 + half, backTop: 778 + half + frontGrowth, frontIdeal, backIdeal },
     them: (index, count) => {
       const width = fieldWidth / count;
       return {
         left: FIELD_LEFT + index * width,
         width: width - (count > 1 ? 24 : 0),
-        frontTop: count === 1 ? 330 : 300,
+        frontTop: (count === 1 ? 330 : 300) + backGrowth,
         backTop: count === 1 ? 160 : 150,
-        frontIdeal: 150,
-        backIdeal: 112,
+        frontIdeal,
+        backIdeal,
       };
     },
-    seam: STAGE_HEIGHT / 2,
-    playLine: STAGE_HEIGHT - 300,
-    myPlate: { left: 24, top: 936 },
-    myPiles: { left: 24, top: 600 },
+    seam: STAGE_HEIGHT / 2 + half,
+    playLine: stage.height - 300,
+    myPlate: { left: 24, top: 936 + extra },
+    myPiles: { left: 24, top: 600 + half },
     theirPlate: (index, count) => ({ left: 24, top: count === 1 ? 24 : 16 + index * SEAT_SPACING }),
     theirPiles: { left: 24, top: 140 },
     hiddenHandX: (index, count) => FIELD_LEFT + (index + 0.5) * (fieldWidth / count),
-    stackPoint: { x: stage.width - 341, y: 470 },
+    stackPoint: { x: stage.width - 341, y: 470 + half },
     handRaise: 0,
   };
 }
