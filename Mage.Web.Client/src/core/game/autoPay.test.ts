@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { handNeeds, manaOf, nextSource, parseCost, type ManaCostParts, type ManaSource } from './autoPay';
+import { abilityFor, canPay, handNeeds, manaOf, nextTap, parseCost, type ManaColor, type ManaCostParts, type ManaSource } from './autoPay';
 
-const land = (id: string, produces: ManaSource['produces']): ManaSource => ({ id, produces, isLand: true });
-const dork = (id: string, produces: ManaSource['produces']): ManaSource => ({ id, produces, isLand: false });
+/** a source making the colors in `colors` ("G", "RW"), or one auto-pay can't decide for (null) */
+const land = (id: string, colors: string | null): ManaSource => ({ id, colors: colors === null ? null : ([...colors] as ManaColor[]), isLand: true });
+const dork = (id: string, colors: string | null): ManaSource => ({ ...land(id, colors), isLand: false });
+const nextSource = (...args: Parameters<typeof nextTap>) => nextTap(...args)?.id ?? null;
 
 describe('parseCost', () => {
   it('reads generic and colored symbols', () => {
@@ -18,14 +20,20 @@ describe('parseCost', () => {
 
 describe('manaOf', () => {
   it('reads basic land types and simple mana abilities', () => {
-    expect(manaOf({ subTypes: ['FOREST'] })).toBe('G');
-    expect(manaOf({ rules: ['{T}: Add {C}.'] })).toBe('C');
-    expect(manaOf({ rules: ['{T}: Add {R}.'], cardTypes: ['CREATURE'] })).toBe('R');
+    expect(manaOf({ subTypes: ['FOREST'] })).toEqual(['G']);
+    expect(manaOf({ rules: ['{T}: Add {C}.'] })).toEqual(['C']);
+    expect(manaOf({ rules: ['{T}: Add {R}.'], cardTypes: ['CREATURE'] })).toEqual(['R']);
   });
-  it('marks sources with a choice of mana as ambiguous, and others as unreadable', () => {
-    expect(manaOf({ rules: ['{T}: Add {W} or {U}.'] })).toBeNull();
+  it('reads dual and tri lands as their colors', () => {
+    expect(manaOf({ rules: ['{T}: Add {W} or {U}.'] })).toEqual(['W', 'U']);
+    // a shockland: basic land types and the reminder text
+    expect(manaOf({ subTypes: ['MOUNTAIN', 'PLAINS'], rules: ['({T}: Add {R} or {W}.)', 'As Sacred Foundry enters, you may pay 2 life. If you don\'t, it enters tapped.'] })).toEqual(['W', 'R']);
+    expect(manaOf({ subTypes: ['ISLAND', 'MOUNTAIN', 'PLAINS'] })).toEqual(['W', 'U', 'R']);
+  });
+  it('leaves choices with a price, any color, and unreadable sources to the player', () => {
+    expect(manaOf({ rules: ['{T}: Add {C}.', '{T}: Add {W} or {U}. Adarkar Wastes deals 1 damage to you.'] })).toBeNull();
+    expect(manaOf({ rules: ['{T}: Add {G}.', '{T}, Pay 1 life: Add {B}.'] })).toBeNull();
     expect(manaOf({ rules: ['{T}: Add one mana of any color.'] })).toBeNull();
-    expect(manaOf({ subTypes: ['PLAINS', 'ISLAND'] })).toBeNull();
     expect(manaOf({ rules: ['Flying'] })).toBeUndefined();
   });
 });
@@ -43,7 +51,7 @@ describe('nextSource', () => {
   });
   it('gives up when the cost cannot be covered without a choice', () => {
     expect(nextSource({ generic: 0, colored: { U: 1 } }, [land('forest', 'G')])).toBeNull();
-    expect(nextSource({ generic: 1, colored: {} }, [land('dual', null)])).toBeNull();
+    expect(nextSource({ generic: 1, colored: {} }, [land('painland', null)])).toBeNull();
     expect(nextSource({ generic: 2, colored: {} }, [land('a', 'G')])).toBeNull();
   });
 });
@@ -62,7 +70,7 @@ describe('generic mana and the rest of the hand', () => {
       const source = untapped.find((candidate) => candidate.id === id);
       if (!source) throw new Error('no source');
       untapped = untapped.filter((candidate) => candidate !== source);
-      const color = source.produces!;
+      const color = source.colors![0];
       if (owed.colored[color]) owed = { ...owed, colored: { ...owed.colored, [color]: owed.colored[color]! - 1 } };
       else owed = { ...owed, generic: owed.generic - 1 };
     }
@@ -71,13 +79,13 @@ describe('generic mana and the rest of the hand', () => {
 
   it('keeps a Forest up for Giant Growth', () => {
     const left = pay({ generic: 3, colored: { R: 1 } }, board, ['{G}']);
-    expect(left.map((source) => source.produces)).toContain('G');
+    expect(left.map((source) => source.colors![0])).toContain('G');
     expect(left).toHaveLength(2);
   });
 
   it('spends the most plentiful color when the hand needs nothing, so both colors stay open', () => {
     const left = pay({ generic: 3, colored: { R: 1 } }, board, []);
-    expect(left.map((source) => source.produces).sort()).toEqual(['G', 'U']);
+    expect(left.map((source) => source.colors![0]).sort()).toEqual(['G', 'U']);
   });
 
   it('ignores hand cards the leftover mana could not cast anyway', () => {
@@ -86,5 +94,73 @@ describe('generic mana and the rest of the hand', () => {
 
   it('still pays when the hand wants more than is left', () => {
     expect(pay({ generic: 2, colored: {} }, [land('forest', 'G'), land('island', 'U')], ['{G}', '{U}'])).toEqual([]);
+  });
+});
+
+describe('dual lands', () => {
+  // taps as the server would: a dual makes the one owed color it can make, generic when it makes none, or what the plan answers when asked
+  function pay(cost: ManaCostParts, sources: ManaSource[]): { untapped: ManaSource[]; asked: number } {
+    let untapped = [...sources];
+    let owed: ManaCostParts = { generic: cost.generic, colored: { ...cost.colored } };
+    let asked = 0;
+    const total = (parts: ManaCostParts) => parts.generic + Object.values(parts.colored).reduce((sum, value) => sum + (value ?? 0), 0);
+    while (total(owed) > 0) {
+      const tap = nextTap(owed, untapped);
+      if (!tap) throw new Error(`stuck at ${JSON.stringify(owed)}`);
+      const source = untapped.find((candidate) => candidate.id === tap.id)!;
+      untapped = untapped.filter((candidate) => candidate !== source);
+      const owedColors = source.colors!.filter((color) => owed.colored[color]);
+      if (tap.ask) asked++;
+      expect(source.colors).toContain(tap.color);
+      if (!tap.ask && source.colors!.length > 1) expect(owedColors.length).toBeLessThan(2);
+      const color = tap.color;
+      if (owed.colored[color]) owed = { ...owed, colored: { ...owed.colored, [color]: owed.colored[color]! - 1 } };
+      else owed = { ...owed, generic: owed.generic - 1 };
+    }
+    return { untapped, asked };
+  }
+
+  it('pays with a shockland and basics when there is only one way', () => {
+    // {1}{R}{W} with Sacred Foundry, a Mountain and a Forest: the Foundry has to make the white
+    const { untapped, asked } = pay({ generic: 1, colored: { R: 1, W: 1 } }, [land('foundry', 'RW'), land('mountain', 'R'), land('forest', 'G')]);
+    expect(untapped).toEqual([]);
+    expect(asked).toBe(0);
+  });
+
+  it('taps basics before duals, keeping the dual for later', () => {
+    expect(nextSource({ generic: 0, colored: { R: 1 } }, [land('foundry', 'RW'), land('mountain', 'R')])).toBe('mountain');
+    expect(pay({ generic: 1, colored: {} }, [land('foundry', 'RW'), land('mountain', 'R')]).untapped.map((source) => source.id)).toEqual(['foundry']);
+  });
+
+  it('does not spend a dual on the color another dual can only make', () => {
+    // {W}{U}: a W/U guildgate and a U/B land; the guildgate must make the white
+    const { untapped } = pay({ generic: 0, colored: { W: 1, U: 1 } }, [land('azorius', 'WU'), land('dimir', 'UB')]);
+    expect(untapped).toEqual([]);
+  });
+
+  it('answers the server when a dual could make either owed color', () => {
+    const { untapped, asked } = pay({ generic: 0, colored: { R: 1, G: 1 } }, [land('stomping', 'RG'), land('cinder', 'RG')]);
+    expect(untapped).toEqual([]);
+    expect(asked).toBe(1);
+  });
+
+  it('uses triomes', () => {
+    expect(pay({ generic: 1, colored: { U: 1, R: 1 } }, [land('raugrin', 'WUR'), land('island', 'U'), land('plains', 'W')]).untapped).toEqual([]);
+  });
+
+  it('gives up when duals cannot cover the colors', () => {
+    expect(canPay({ generic: 0, colored: { W: 1, U: 1 } }, [land('azorius', 'WU'), land('forest', 'G')])).toBe(false);
+    expect(nextTap({ generic: 0, colored: { W: 1, U: 1 } }, [land('azorius', 'WU'), land('forest', 'G')])).toBeNull();
+  });
+});
+
+describe('abilityFor', () => {
+  const choices = [
+    { id: 'r', text: '{T}: Add {R}.' },
+    { id: 'w', text: '{T}: Add {W}.' },
+  ];
+  it('picks the ability adding the planned color', () => {
+    expect(abilityFor(choices, 'W')).toBe('w');
+    expect(abilityFor(choices, 'G')).toBeNull();
   });
 });
