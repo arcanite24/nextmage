@@ -25,6 +25,9 @@ export default {
   'legal.privacyLink': 'Privacy policy',
   'legal.termsLink': 'Terms',
   'shell.signOut': 'Sign out',
+  'shell.support': 'Support the server',
+  // the heart by a supporter's name
+  'shell.supporter': 'Supporter',
 
   // sign-in
   'login.title.sit': 'Take a seat',

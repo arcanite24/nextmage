@@ -76,7 +76,7 @@ final class MyAccountApi {
                 RpcMethod.named("accountExport")
                         .returns("string")
                         .doc("Everything the server keeps about the signed-in account as JSON, the same export staff can make: "
-                                + "the account, decks, Career, reports, feedback, stats. Passwords and sign-in tokens are left out.")
+                                + "the account, decks, Career, reports, feedback, stats, support payments and perks. Passwords and sign-in tokens are left out.")
                         .handler(call -> {
                             AuthorizedUser account = account(ctx, call);
                             return AccessApi.store(() -> AccountsApi.export(account));
@@ -85,8 +85,8 @@ final class MyAccountApi {
                 RpcMethod.named("accountDelete")
                         .params(of("password", STRING), of("confirmName", STRING))
                         .returns("boolean")
-                        .doc("Delete the signed-in account with its decks, Career, reports, stats, feedback and staff role, and "
-                                + "sign it out. confirmName must be the account's name exactly; password its password, except for "
+                        .doc("Delete the signed-in account with its decks, Career, reports, stats, feedback, staff role and "
+                                + "supporter perks, and sign it out (its payments stay in the ledger, anonymized). confirmName must be the account's name exactly; password its password, except for "
                                 + "an account that signs in with GitHub, which may leave it empty. The server's owner can't. "
                                 + "Can't be undone: accountExport first.")
                         .handler(call -> {

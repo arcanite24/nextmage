@@ -61,10 +61,14 @@ import { gzipSync } from 'node:zlib';
 // entry raised from 72 kB and app from 465 kB 2026-10-14 for M20 and M21 merged (email confirmation, Turnstile, privacy
 // and terms, account export and deletion): the generated RPC client and the sign-in form's agreement grew the entry;
 // the email banner and the Turnstile widget went lazy to keep it to +1 kB. Measured entry 72.6 kB, app 471.3 kB
+// app raised 2026-10-13 from 480 kB for M22 (supporting the server): the goal bar, the /support page, the thank-you
+// dialog, supporter pickers and settings, the look sync, opponents' looks in the match, the admin Support tab, and
+// their English and Spanish messages, all lazy. The entry gained the generated RPC methods, the supporter sleeve's drawn
+// back and the lazy hooks (+1.3 kB). Measured entry 73.9 kB, app 487.2 kB
 const BUDGET_KB = {
   entry: 75,
   initial: 212,
-  app: 480,
+  app: 492,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

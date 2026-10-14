@@ -14,7 +14,7 @@ import { spectatorHand } from '../../core/game/spectatorHand';
 import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
 import { offBoardTargets } from '../../core/game/offBoardTargets';
-import type { CardView, ChatMessage, GameView, PlayerView } from '../../protocol/generated/views';
+import type { CardView, ChatMessage, GameView, PlayerLook, PlayerView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
 import { useT } from '../i18n';
 import { useEvents } from '../stores/events';
@@ -56,6 +56,8 @@ import { Vfx } from './Vfx';
 import { CardPicker, ChoicePanel, GameOverOverlay, MulliganOverlay, StartingPlayerOverlay, ZoneViewer } from './Overlays';
 import { PermanentStack } from './PermanentStack';
 import { clothOf, clothStyle } from './playmats';
+import { usePlayerLooks } from '../support/supportData';
+import { opponentSleeve } from '../support/supportModel';
 import { PracticeTools } from './PracticeTools';
 import { PhaseLadder } from './PhaseLadder';
 import { DefenderPicker } from './DefenderPicker';
@@ -102,7 +104,8 @@ function useSleeves() {
   return useMemo(() => {
     const deck = rosterOf({ saved, starters }).find((candidate) => candidate.id === deckId);
     const mine = sleeveFor(sleeves, deck);
-    // opponents' sleeves must read as "theirs" at a glance
+    // opponents' sleeves must read as "theirs" at a glance; an opponent's own sleeve, when the server knows it, is used
+    // instead unless it looks like mine (support/supportModel.ts opponentSleeve)
     const theirs = SLEEVE_COLORS.find((color) => color !== mine && color !== SLEEVE_COLORS[0]) ?? SLEEVE_COLORS[2];
     return { mine, theirs, cover: deck?.cover ?? null };
   }, [deckId, sleeves, saved, starters]);
@@ -221,7 +224,18 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   const autoPassing = useAutoPass(session, state, !holding);
   useGameCues(state, myId, !!autoPassing);
   useAutoOrder(session, state);
-  const sleeveOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? sleeves.theirs : sleeves.mine), [myId, sleeves]);
+  // the players' own looks (servers with accounts), asked for once a game: opponents' sleeves, avatars, titles and flair
+  const playerNames = (view?.players ?? []).map((player) => player.name).join('\n');
+  const looks = usePlayerLooks(playerNames.split('\n'), true);
+  const lookOf = useCallback((player: PlayerView | undefined): PlayerLook | undefined => (player?.name ? looks[player.name.toLowerCase()] ?? undefined : undefined), [looks]);
+  const theirSleeves = useMemo(
+    () => new Map(board.opponents.map((opponent) => [opponent.player.playerId!, opponentSleeve(lookOf(opponent.player), sleeves.mine, sleeves.theirs)])),
+    [board.opponents, lookOf, sleeves],
+  );
+  const sleeveOf = useCallback(
+    (card: CardView) => (card.controllerId && card.controllerId !== myId ? theirSleeves.get(card.controllerId) ?? sleeves.theirs : sleeves.mine),
+    [myId, sleeves, theirSleeves],
+  );
   const originOf = useCallback((card: CardView) => (card.controllerId && card.controllerId !== myId ? `hand:${card.controllerId}` : undefined), [myId]);
 
   // games inside an event lead back to the event; others back to Play
@@ -355,7 +369,8 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 board={opponent}
                 index={index}
                 count={board.opponents.length}
-                sleeve={sleeves.theirs}
+                sleeve={theirSleeves.get(opponent.player.playerId!) ?? sleeves.theirs}
+                look={lookOf(opponent.player)}
                 handCount={opponent.player.handCount ?? 0}
                 clickable={clickable}
                 selected={interaction.selected}
@@ -380,6 +395,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                     player={board.me.player}
                     isMe={board.me.isMe}
                     sleeve={sleeves.mine}
+                    look={lookOf(board.me.player)}
                     targetable={clickable.has(board.me.player.playerId!)}
                     selected={interaction.selected.has(board.me.player.playerId!)}
                     deciding={canAct && interaction.mode !== 'waiting'}
@@ -594,8 +610,9 @@ function Row({ groups, left, width, top, ideal, min, forward, label, flip, ...re
 }
 
 /** An opponent's half: their rows mirrored above the seam, their seat, piles and hidden hand. */
-function OpponentSide({ board, index, count, sleeve, handCount, deciding, layout, commanders, commanderDamage, outOfRange, ...row }: RowProps & {
+function OpponentSide({ board, index, count, sleeve, handCount, deciding, layout, commanders, commanderDamage, outOfRange, look, ...row }: RowProps & {
   layout: MatchLayout;
+  look: PlayerLook | undefined;
   board: PlayerBoard;
   index: number;
   count: number;
@@ -621,6 +638,7 @@ function OpponentSide({ board, index, count, sleeve, handCount, deciding, layout
           onClick={() => row.onClick(player.playerId!)}
           commanderDamage={commanderDamage}
           outOfRange={outOfRange}
+          look={look}
         />
         {count > 1 && (
           <div className={styles.theirMini}>

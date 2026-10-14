@@ -2,7 +2,7 @@
 // Regenerate: mvn -pl Mage.Server test -Dtest=WebClientApiDocsTest -Dxmage.updateWebApiDocs=true
 
 import type { RpcMethodName, RpcMethods, UUID } from './protocol';
-import type { CardCriteria, ClientError, DeckCardInfo, DeckCardLists, ManaType, PlayerAction, UserData } from './views';
+import type { CardCriteria, ClientError, DeckCardInfo, DeckCardLists, ManaType, PlayerAction, PlayerLook, UserData } from './views';
 import type { WebCardFilters, WebMatchOptions, WebTournamentOptions } from '../options';
 
 export interface RpcCaller {
@@ -311,6 +311,26 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('accountExport'),
     accountDelete: (password: string, confirmName: string) =>
       rpc.call('accountDelete', password, confirmName),
+    supportStatus: () =>
+      rpc.call('supportStatus'),
+    supportPerks: () =>
+      rpc.call('supportPerks'),
+    supportNoticeSeen: () =>
+      rpc.call('supportNoticeSeen'),
+    supportSetWall: (show: boolean) =>
+      rpc.call('supportSetWall', show),
+    profileSetLook: (look: PlayerLook) =>
+      rpc.call('profileSetLook', look),
+    profileLooks: (names: string[]) =>
+      rpc.call('profileLooks', names),
+    adminSupportLedger: (month?: string | null, unmatched?: boolean | null, provider?: string | null) =>
+      rpc.call('adminSupportLedger', month, unmatched, provider),
+    adminSupportLink: (paymentId: number, userName: string) =>
+      rpc.call('adminSupportLink', paymentId, userName),
+    adminSupportRevoke: (paymentId: number, reason: string, removePerks?: boolean | null) =>
+      rpc.call('adminSupportRevoke', paymentId, reason, removePerks),
+    adminSupportGrant: (userName: string, reason: string) =>
+      rpc.call('adminSupportGrant', userName, reason),
     careerState: () =>
       rpc.call('careerState'),
     careerStarters: () =>

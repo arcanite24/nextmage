@@ -113,6 +113,9 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_GITHUB_CLIENT_ID`, `XMAGE_GITHUB_CLIENT_SECRET` | empty | An OAuth app for Sign in with GitHub (`-Dxmage.github.*`). Its callback URL is `XMAGE_PUBLIC_URL/auth/github`. Both set: the sign-in screen offers GitHub. The secret is a secret. |
 | `XMAGE_GITHUB_REPO`, `XMAGE_GITHUB_TOKEN` | empty | `owner/name` of a repository whose people get in to a contributors server by signing in with GitHub, fetched every 6 hours: its collaborators when the token can read them, its public contributors without a token. |
 | `XMAGE_PUBLIC_URL` | `https://$DOMAIN` | The web client's public address (`-Dxmage.publicUrl`), for join links in Discord posts. Include the port when `HTTPS_PORT` isn't 443. Empty: posts without links. |
+| `XMAGE_KOFI_TOKEN` | empty | Ko-fi's webhook verification token (`-Dxmage.kofi.token`). Set: Ko-fi payments are taken at `https://DOMAIN/hooks/kofi`. A secret. See [Support and the monthly goal](#support-and-the-monthly-goal). |
+| `XMAGE_GITHUB_SPONSORS_SECRET` | empty | The GitHub Sponsors webhook's secret (`-Dxmage.githubSponsors.secret`). Set: sponsorship events are taken at `https://DOMAIN/hooks/github-sponsors`. A secret. |
+| `XMAGE_HOOKS_PORT` | `17174` with a provider, else off | The server's webhook listener (`-Dxmage.hooksPort`), reached by Caddy only (`/hooks/*`, `/public/*`); `0` turns it off. Keep 17174: the Caddyfile forwards there. |
 | `XMAGE_CONTACT_EMAIL` | empty | The address the privacy policy and terms (`/privacy`, `/terms`) give for questions about players' data. Empty: they point players to Feedback. |
 | `XMAGE_JAVA_OPTS` | empty | Extra JVM flags. |
 | `BACKUP_AT` | `03:30` | Time of the daily backup, as `HH:MM` in `TZ`. |
@@ -120,11 +123,12 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `TZ` | `UTC` | Time zone for `BACKUP_AT`. |
 | `WS_RATE_LIMIT` / `WS_RATE_WINDOW` | `30` / `1m` | New game connections (`/ws` requests) Caddy lets one client address open per window. Over it: `429` with `Retry-After`. |
 | `IMG_API_RATE_LIMIT` / `IMG_API_RATE_WINDOW` | `300` / `1m` | Scryfall lookups (`/img/api/*`) per client address per window. Pictures (`/img/cards/*`, `/img/backs/*`) are not limited. |
+| `HOOKS_RATE_LIMIT` / `HOOKS_RATE_WINDOW` | `60` / `1m` | Payment webhooks and the public goal (`/hooks/*`, `/public/*`) per client address per window, at Caddy. The server allows 30 a minute per address on its own. |
 | `IMGCACHE_IMAGES_MAX_SIZE` | `20g` | Disk cap of the picture cache. The least recently used files go first. |
 | `IMGCACHE_API_MAX_SIZE` | `1g` | Disk cap of the lookup cache. |
 | `IMGCACHE_API_RATE` / `IMGCACHE_API_BURST` | `10r/s` / `20` | Requests per second the image cache sends to `api.scryfall.com` for the whole site (cache misses only), and how many more may queue before it answers `429`. |
 
-Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE`, `XMAGE_MAILGUN_API_KEY_FILE`, `XMAGE_DISCORD_WEBHOOK_FILE`, `XMAGE_DISCORD_STAFF_WEBHOOK_FILE`, `XMAGE_GITHUB_CLIENT_SECRET_FILE`, `XMAGE_GITHUB_TOKEN_FILE` and `XMAGE_TURNSTILE_SECRET_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password and the webhook address don't show up in `ps`.
+Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE`, `XMAGE_MAILGUN_API_KEY_FILE`, `XMAGE_DISCORD_WEBHOOK_FILE`, `XMAGE_DISCORD_STAFF_WEBHOOK_FILE`, `XMAGE_GITHUB_CLIENT_SECRET_FILE`, `XMAGE_GITHUB_TOKEN_FILE`, `XMAGE_TURNSTILE_SECRET_FILE`, `XMAGE_KOFI_TOKEN_FILE` and `XMAGE_GITHUB_SPONSORS_SECRET_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password and the webhook address don't show up in `ps`.
 
 Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a message that names the variable.
 
@@ -231,6 +235,7 @@ The Settings tab (admins) changes these at once, without a restart; they are kep
 | AI opponents per table | 0 to 15, or empty for the config's `maxAiOpponents` |
 | Time to answer | 30 to 3600 seconds, or the config's `maxSecondsIdle` |
 | Discord posts | tables, events, matches and staff news, each on or off |
+| Support (owner only) | on or off; the monthly goal in cents (default 4000, $40); the Ko-fi page; the GitHub Sponsors page; what support pays for; whether the Discord thank-you says the amount. See [Support and the monthly goal](#support-and-the-monthly-goal) |
 
 The Discord part also says whether each webhook is set (the address stays on the server) and posts a test message on request.
 
@@ -249,6 +254,26 @@ With `XMAGE_DISCORD_WEBHOOK` set (Discord: channel settings, Integrations, Webho
 Only tables with at least two human seats are posted: AI-only tables and one player against the AI are practice, not news. Password-protected tables are never posted. Posts never mention anyone (`allowed_mentions` is empty), and player-chosen names are shown as typed, without Discord formatting.
 
 Posting never holds up a game: posts wait in a small queue (20) for one background thread, with a 5-second timeout each. At most 30 go out per minute, Discord's limit for one webhook; anything over the limit or the queue is dropped with a warning in the server log (logger `mage.server.notify.DiscordNotifier`). The log never contains the webhook address.
+
+## Support and the monthly goal
+
+Players keep the lights on, and the game stays free: support never unlocks gameplay, formats, cards, queues or Career content. Supporters get a permanent thank-you set of cosmetics in Playmat's own art (a foil sleeve, the Patron playmat cloth, a ring around their avatar, the title Patron and a heart beside their name), shown to their opponents too. A payment reaches the server, goes in the ledger, links to an account and unlocks the perks within a minute; staff only handle payments nothing could link.
+
+The goal is $40 a month by default, counted over the calendar month (UTC) in US dollars, and shown on Home, on the sign-in screen and on `/support` with what it pays for and the supporters who chose to appear there. Being ahead is shown as being ahead, never hidden.
+
+**Ko-fi.** On ko-fi.com: set the page's currency to USD (Settings, Payments; other currencies are recorded but don't count toward the bar), then Settings, API, Webhooks: the URL is `https://DOMAIN/hooks/kofi`. Copy the verification token shown there into `.env` as `XMAGE_KOFI_TOKEN`, run `up -d`, and press **Send Single Donation Test** (it arrives as an unmatched payment in /admin, Support, which you can revoke). In /admin, Settings, Support, set the Ko-fi page (`https://ko-fi.com/<you>`); the support UI shows once a page is set.
+
+**GitHub Sponsors.** In the sponsors dashboard (github.com/sponsors/<you>/dashboard), Webhooks, Add webhook: payload URL `https://DOMAIN/hooks/github-sponsors`, content type `application/json`, a long random secret (`openssl rand -hex 32`) that also goes in `.env` as `XMAGE_GITHUB_SPONSORS_SECRET`. GitHub's ping should answer 200. Optionally set the Sponsors page in /admin, Settings, Support. A sponsor links through Sign in with GitHub: right away when their GitHub account already signs in to Playmat, otherwise as soon as it does. Each month a sponsorship runs it adds its monthly amount to the ledger.
+
+**How a payment finds its player.** In order: the player's support code (like `PM-7Q4K`, shown beside the Support button and on `/support`) anywhere in the Ko-fi message, with or without the dash; the payment's email, when it is the account's *confirmed* email (an unconfirmed one never links); an earlier linked payment from the same email (memberships' renewals follow the first). Anything else waits in /admin, Support, Unmatched, where an admin links it to an account.
+
+**Routes.** Caddy forwards `POST /hooks/*` and `GET /public/*` to the server's webhook listener on port 17174 over the Compose network; nothing publishes that port on the host, and other methods get `405`. `GET /public/support.json` is the month's public status (goal, total, supporters, costs, public names) for the project's site: cached five minutes, open to any origin, no personal data beyond the names on the wall. Bodies are limited to 64 KB and 10 seconds; Ko-fi's token and GitHub's signature are checked in constant time; repeats are ignored (Ko-fi retries). The log has one line per payment with its kind and amount, never names or emails.
+
+**Where it lives.** `db/support.db` (SQLite, in the nightly backup): the ledger, sponsorships, support codes, perks, looks and the wall choices. Emails are never stored, only a peppered SHA-256 of them (to follow renewals); the providers' raw payloads are kept 90 days, without the token and the email, then dropped. A player's data download includes their payments and perks; deleting an account keeps its payments' amounts for the months' totals and drops everything that names them.
+
+**Staff.** /admin, Support (admins and the owner; moderators don't see payments): the month's ledger against the goal, payments in other currencies, the unmatched queue with Link to account, Revoke (a refund or chargeback; it stops counting, and only when chosen takes back the perks it granted, unless another payment stands for them) and Grant (perks for support that came another way). Each is recorded in the audit log with its reason. Perks are otherwise never taken back.
+
+**Public thanks.** With `XMAGE_DISCORD_WEBHOOK` set, a payment from someone who may be thanked in public (a public Ko-fi payment that isn't linked, or a player who chose to appear on the wall in Settings) posts "💚 *name* supported the server — thank you!" to the lobby channel; the amount only when the owner turns it on.
 
 ## Health
 
@@ -296,7 +321,7 @@ Caddy allows one address 30 new `/ws` connections a minute (`WS_RATE_LIMIT`). A 
 
 | Volume | Mounted at | Holds | Back up? |
 |---|---|---|---|
-| `xmage-db` | `/opt/xmage/db` | `authorized_user.h2` (accounts), `feedback.h2`, `user_stats.db` (player stats), `table_record.db` (finished tables), `web_decks.db` (decks synced to accounts), `web_reports.db` (player reports), `career.db` (Career collections and progress) | yes, nightly |
+| `xmage-db` | `/opt/xmage/db` | `authorized_user.h2` (accounts), `feedback.h2`, `user_stats.db` (player stats), `table_record.db` (finished tables), `web_decks.db` (decks synced to accounts), `web_reports.db` (player reports), `career.db` (Career collections and progress), `web_admin.db` (/admin), `support.db` (support ledger, perks, looks) | yes, nightly |
 | `xmage-cards` | `/opt/xmage/cards-db` | `cards.h2`, the card database | no: a cache built from the image |
 | `xmage-saved` | `/opt/xmage/saved` | saved games (`XMAGE_SAVE_GAMES`) and web client replays (`saved/replays`) | optional |
 | `xmage-logs` | `/opt/xmage/logs` | `mageserver.log*` | no |
@@ -311,7 +336,7 @@ XMage opens every database under `./db`. Only user data stays on `xmage-db`. The
 The `backup` service runs daily at `BACKUP_AT` and writes `/backups/<UTC timestamp>/` into the `xmage-backups` volume:
 
 - `authorized_user.h2.sql.gz` and `feedback.h2.sql.gz`: H2 SQL dumps. They're taken online by joining the running server's database through H2's auto-server mode, so each dump is consistent.
-- `user_stats.db`, `table_record.db`, `web_decks.db`, `web_reports.db`, `career.db` and `web_admin.db`: SQLite copies made with SQLite's online backup API.
+- `user_stats.db`, `table_record.db`, `web_decks.db`, `web_reports.db`, `career.db`, `web_admin.db` and `support.db`: SQLite copies made with SQLite's online backup API.
 
 Every run writes `db/backup-status.json` (when, whether it worked, its size and the last good one). The admin Overview shows it, and once an hour the server checks it: a failed run, or no good backup for 36 hours, is posted to the staff channel (once a day at most).
 

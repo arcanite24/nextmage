@@ -1151,6 +1151,25 @@ export interface ObjectColor extends Serializable, Copyable<ObjectColor>, Compar
     white?: boolean;
 }
 
+export interface Payment {
+    account?: string;
+    amountCents?: number;
+    currency?: string;
+    fromName?: string;
+    id?: number;
+    isPublic?: boolean;
+    kind?: string;
+    linkedBy?: string;
+    message?: string;
+    provider?: string;
+    providerId?: string;
+    receivedAt?: number;
+    revoked?: boolean;
+    revokedReason?: string;
+    sponsorId?: number;
+    tier?: string;
+}
+
 export interface PermanentView extends CardView {
     attachedControllerDiffers?: boolean;
     attachedTo?: string;
@@ -1198,6 +1217,16 @@ export interface PlayableObjectStats extends Serializable, Copyable<PlayableObje
 
 export interface PlayableObjectsList extends Serializable, Copyable<PlayableObjectsList> {
     objects?: { [index: string]: PlayableObjectStats };
+}
+
+export interface PlayerLook {
+    avatar?: string;
+    cloth?: string;
+    flair?: string;
+    frame?: string;
+    name?: string;
+    sleeve?: string;
+    title?: string;
 }
 
 export interface PlayerReport {
@@ -1327,6 +1356,7 @@ export interface ServerInfo {
     notice?: string;
     registration?: string;
     serverName?: string;
+    support?: boolean;
     testMode?: boolean;
     turnstileSiteKey?: string;
 }
@@ -1428,6 +1458,44 @@ export interface StaffResetCode {
     email?: string;
     emailed?: boolean;
     expiresAt?: number;
+}
+
+export interface SupportLedger {
+    goalCents?: number;
+    month?: string;
+    monthCents?: number;
+    otherCurrencies?: string[];
+    payments?: Payment[];
+    supporters?: number;
+    unmatched?: number;
+}
+
+export interface SupportPerk {
+    grantedAt?: number;
+    item?: string;
+    kind?: string;
+}
+
+export interface SupportStatus {
+    costs?: string[];
+    enabled?: boolean;
+    goalCents?: number;
+    kofiUrl?: string;
+    monthCents?: number;
+    monthLabel?: string;
+    publicSupporters?: string[];
+    sponsorsUrl?: string;
+    supporters?: number;
+    you?: SupportYou;
+}
+
+export interface SupportYou {
+    code?: string;
+    notice?: boolean;
+    perks?: SupportPerk[];
+    since?: number;
+    supporter?: boolean;
+    wall?: boolean;
 }
 
 export interface TableClientMessage extends Serializable {

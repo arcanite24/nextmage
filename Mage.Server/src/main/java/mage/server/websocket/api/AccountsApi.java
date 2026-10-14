@@ -172,7 +172,7 @@ final class AccountsApi {
                         .params(of("userName", STRING), of("reason", STRING))
                         .returns("boolean")
                         .doc("Staff (admin): delete the account with its decks, Career, reports, stats, feedback, allowlist "
-                                + "entry and staff role, signing its player out. Can't be undone: export first. The audit log keeps "
+                                + "entry, staff role and supporter perks (its payments stay in the ledger, anonymized), signing its player out. Can't be undone: export first. The audit log keeps "
                                 + "the record of the deletion.")
                         .handler(call -> {
                             String actor = Staff.require(ctx, call, StaffRole.ADMIN);
@@ -331,6 +331,8 @@ final class AccountsApi {
         out.put("stats", stats == null || stats.getProto() == null ? null : stats.getProto().toString());
         GithubLink link = AccessPolicy.get().store().githubLinkOf(name);
         out.put("githubLogin", link == null ? null : link.login);
+        // support for the server: the code, payments (without the providers' payloads), perks and the look
+        out.put("support", SupportApi.export(name));
         Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
         return gson.toJson(out);
     }
@@ -347,6 +349,12 @@ final class AccountsApi {
             logger.warn("No Career store to delete " + name + " from");
         }
         ReportStore.get().forget(name);
+        try {
+            // the ledger keeps the amounts, for the months' totals, without anything that names the payer
+            mage.server.support.Support.get().forget(name);
+        } catch (IllegalStateException e) {
+            logger.warn("No support store to forget " + name + " in");
+        }
         UserStatsRepository.instance.remove(name);
         AccessPolicy.get().store().forgetAccount(name);
         AuthorizedUserRepository.getInstance().remove(name);

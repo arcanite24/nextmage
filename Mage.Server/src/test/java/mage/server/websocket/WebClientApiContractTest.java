@@ -79,7 +79,9 @@ public class WebClientApiContractTest {
             "adminTableWatch", "adminClientErrorResolve", "adminSettings", "adminSetSetting", "adminMaintenance",
             "adminMaintenanceCancel", "adminDiscordTest", // watching, client errors, settings and maintenance (M15)
             "accountEmailStatus", "accountEmailVerifyStart", "accountEmailVerify", // email verification (EmailVerificationTest)
-            "accountExport", "accountDelete" // the player's own data (api/MyAccountApiTest)
+            "accountExport", "accountDelete", // the player's own data (api/MyAccountApiTest)
+            "supportStatus", "supportPerks", "supportNoticeSeen", "supportSetWall", "profileSetLook", "profileLooks",
+            "adminSupportLedger", "adminSupportLink", "adminSupportRevoke", "adminSupportGrant" // support store (support/*Test)
     ));
 
     static {

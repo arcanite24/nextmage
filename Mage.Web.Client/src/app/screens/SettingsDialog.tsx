@@ -22,6 +22,9 @@ import { CARD_BACKS, cardBackImage, type CardBackId } from '../ui/cardBack';
 import { Dialog } from '../ui/Dialog';
 import { useServerInfo } from '../queries';
 import { AccountSettings } from './AccountSettings';
+import { useSupportPerks } from '../support/supportData';
+import { LockedSwatch } from '../support/SupporterPicks';
+import { owns } from '../support/supportModel';
 import styles from './SettingsDialog.module.css';
 
 registerMessages(messages);
@@ -351,7 +354,17 @@ function PlaymatSettings() {
   // Career cloths show once unlocked (the level track lists the unlocks; the Career screens share this query)
   const levels = useQuery({ queryKey: ['career', 'levels'], queryFn: () => api.careerLevels(), enabled: settings.careerOptIn, staleTime: 30_000 });
   const unlocks = levels.data?.unlocks;
-  const cloths = useMemo(() => MAT_CLOTHS.filter((cloth) => !cloth.career || !!unlocks?.some((unlock) => unlock.kind === 'playmat' && unlock.id === cloth.id)), [unlocks]);
+  // the Patron cloth is a thank-you for supporting the server: shown once owned, and as a quiet teaser where the server
+  // takes support
+  const accounts = useServerInfo().data?.accounts === true;
+  const support = useServerInfo().data?.support === true;
+  const perks = useSupportPerks();
+  const owned = perks.data?.perks;
+  const cloths = useMemo(
+    () => MAT_CLOTHS.filter((cloth) => (cloth.career ? !!unlocks?.some((unlock) => unlock.kind === 'playmat' && unlock.id === cloth.id) : cloth.perk ? owns(owned, 'playmat', cloth.id) : true)),
+    [unlocks, owned],
+  );
+  const teasers = accounts && support && perks.isSuccess ? MAT_CLOTHS.filter((cloth) => cloth.perk && !owns(owned, 'playmat', cloth.id)) : [];
   const typed = name.trim();
   const suggestions = useQuery({
     queryKey: ['playmat-names', typed.toLowerCase()],
@@ -374,18 +387,30 @@ function PlaymatSettings() {
   return (
     <>
       <Row label={t('settings.playmat.cloth')} detail={t('settings.playmat.cloth.detail')}>
-        <div className={styles.cloths} role="radiogroup" aria-label={t('settings.playmat.cloth')}>
-          {cloths.map((cloth) => (
-            <button
+        <div className={styles.cloths}>
+          <div className={styles.cloths} role="radiogroup" aria-label={t('settings.playmat.cloth')}>
+            {cloths.map((cloth) => (
+              <button
+                key={cloth.id}
+                type="button"
+                role="radio"
+                aria-checked={settings.matCloth === cloth.id}
+                aria-label={t(`settings.playmat.cloth.${cloth.id}` as MessageKey)}
+                title={cloth.career || cloth.perk
+                  ? `${t(`settings.playmat.cloth.${cloth.id}` as MessageKey)} · ${t(cloth.career ? 'settings.playmat.cloth.career' : 'settings.playmat.cloth.perk')}`
+                  : t(`settings.playmat.cloth.${cloth.id}` as MessageKey)}
+                className={styles.cloth}
+                style={clothSwatch(cloth)}
+                onClick={() => update({ matCloth: cloth.id })}
+              />
+            ))}
+          </div>
+          {teasers.map((cloth) => (
+            <LockedSwatch
               key={cloth.id}
-              type="button"
-              role="radio"
-              aria-checked={settings.matCloth === cloth.id}
-              aria-label={t(`settings.playmat.cloth.${cloth.id}` as MessageKey)}
-              title={cloth.career ? `${t(`settings.playmat.cloth.${cloth.id}` as MessageKey)} · ${t('settings.playmat.cloth.career')}` : t(`settings.playmat.cloth.${cloth.id}` as MessageKey)}
+              label={`${t(`settings.playmat.cloth.${cloth.id}` as MessageKey)} · ${t('settings.playmat.cloth.perk')}`}
               className={styles.cloth}
               style={clothSwatch(cloth)}
-              onClick={() => update({ matCloth: cloth.id })}
             />
           ))}
         </div>

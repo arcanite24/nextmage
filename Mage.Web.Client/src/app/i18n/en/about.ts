@@ -34,5 +34,9 @@ export default {
   'about.data.chat': 'Chat is not stored. Friends and ignore lists stay in your browser.',
   // {privacy} is a link to the privacy policy
   'about.data.more': 'The {privacy} has the details, and the {terms} the rules of playing here.',
+  'about.support': 'Supporting the server',
+  // {support} is a link to the support page
+  'about.support.text': "Players may chip in toward the server's monthly costs on the {support}. It is a voluntary donation: nothing in {app} is gated behind it, and every format, card and feature stays free for everyone. Supporters get a small thank-you that is cosmetic only and drawn in {app}'s own style, never Wizards of the Coast art, and they keep it. Refunds follow Ko-fi's process; when a payment is refunded, staff may take back the thank-you it gave.",
+  'about.support.link': 'support page',
   'about.backTo': 'Back to {app}',
 } as const;
