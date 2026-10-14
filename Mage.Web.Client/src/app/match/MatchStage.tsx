@@ -463,6 +463,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 canAct={canAct}
                 special={!!view?.special}
                 holdingPriority={holding}
+                undoable={stack.length === 0 && (board.me?.player.statesSavedSize ?? 0) > 0}
                 autoPassing={!!autoPassing}
                 extra={prompt?.kind === 'ask' ? <AlwaysAnswerMenu gameId={state.gameId} prompt={prompt} onCommand={onCommand} /> : undefined}
                 fullControl={fullControl}
