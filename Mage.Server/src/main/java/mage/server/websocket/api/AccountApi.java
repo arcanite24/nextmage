@@ -72,6 +72,8 @@ final class AccountApi {
         public String turnstileSiteKey;
         /** where players write about their data and the server (XMAGE_CONTACT_EMAIL); absent when not set */
         public String contactEmail;
+        /** players can support the server here: a support page is set, or payments arrive (supportStatus says more) */
+        public boolean support;
     }
 
     static List<RpcMethod> methods(ApiContext ctx) {
@@ -185,6 +187,9 @@ final class AccountApi {
             info.notice = access.notice();
             info.github = info.accounts && mage.server.admin.GithubAuth.get().isEnabled();
             info.registration = RuntimeSettings.get().registrationOpen() ? "open" : "invite";
+            RuntimeSettings runtime = RuntimeSettings.get();
+            info.support = runtime.supportOn() && (!runtime.supportKofiUrl().isEmpty() || !runtime.supportSponsorsUrl().isEmpty()
+                    || mage.server.support.SupportHooks.listening());
         } catch (IllegalStateException e) {
             info.registration = "open";
             info.access = AccessPolicy.OPEN;

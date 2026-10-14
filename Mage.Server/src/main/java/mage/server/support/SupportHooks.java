@@ -75,7 +75,14 @@ public final class SupportHooks {
         String of(HttpExchange exchange);
     }
 
+    private static volatile boolean listening;
+
     private SupportHooks() {
+    }
+
+    /** whether the server takes payments (the listener runs) */
+    public static boolean listening() {
+        return listening;
     }
 
     static String setting(String prop, String env) {
@@ -140,6 +147,7 @@ public final class SupportHooks {
         try {
             HttpServer server = listen(new InetSocketAddress(port), kofiToken, sponsorsSecret, receiver, addresses, System::currentTimeMillis);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop(0), "Support webhooks shutdown"));
+            listening = true;
             Support.startDaily();
             logger.info("Support webhooks on port " + port + ": Ko-fi " + (kofiToken.isEmpty() ? "off" : "on")
                     + ", GitHub Sponsors " + (sponsorsSecret.isEmpty() ? "off" : "on"));

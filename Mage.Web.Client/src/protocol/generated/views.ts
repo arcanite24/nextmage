@@ -1356,6 +1356,7 @@ export interface ServerInfo {
     notice?: string;
     registration?: string;
     serverName?: string;
+    support?: boolean;
     testMode?: boolean;
     turnstileSiteKey?: string;
 }
