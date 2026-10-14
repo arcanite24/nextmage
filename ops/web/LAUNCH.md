@@ -2,11 +2,11 @@
 
 What has to be true before we tell strangers about the public server, how each item was checked, and what is still open. Re-run [Checking it again](#checking-it-again) before any big push (a Reddit post, a Discord announcement) and after moving hosts.
 
-Last assessed 2026-10-14 on the Hetzner CAX21 (4 Ampere cores, 8 GB, Falkenstein), running master 433d5d2 (M20 to M22) from the published images.
+Last assessed 2026-10-14 on the Hetzner CAX21 (4 Ampere cores, 8 GB, Falkenstein), running master 433d5d2 (M20 to M22) from the published images. Updated the same evening after the owner steps, on 9fd06ed.
 
 ## Verdict
 
-**Go for the invited soft launch (B257). Not yet for the public announcement:** six owner steps are left, listed in [Before the announcement](#before-the-announcement). None of them needs code. Everything else in this list has been checked on the live server.
+**Go for the invited soft launch (B257). Not yet for the public announcement:** there are no moderators besides the owner yet (B260). Mail, the contact address, Discord, Turnstile and Ko-fi were set up on 2026-10-14; see [Before the announcement](#before-the-announcement). Everything else in this list has been checked on the live server.
 
 ## Status
 
@@ -18,15 +18,15 @@ Last assessed 2026-10-14 on the Hetzner CAX21 (4 Ampere cores, 8 GB, Falkenstein
 | WebSocket | ok | `/ws` accepts only allowed origins; another origin gets 404. 30 new connections a minute per address (Caddy), 16 open connections per address (server). |
 | SSH | ok | Keys only. Root logs in only through forced commands (the off-site backup pull). Admin user `neri` with sudo. GitHub deploys use `deploy`, whose key runs `playmat-deploy` and nothing else. |
 | Accounts | ok | Sign-in throttle, registration limit (3 an hour, 10 a day per address), email confirmation, unconfirmed names released after 48 hours, self-service export and deletion. Owner set by `XMAGE_OWNER`; no other staff yet. |
-| Bot protection | partial | Registration limits are live. Cloudflare Turnstile is wired but needs the owner's widget keys. |
-| Mail | **missing** | Code supports Purelymail on 587 (STARTTLS); no credentials yet, so confirmation and reset codes can't be sent. |
-| Privacy and terms | partial | `/privacy` and `/terms` are live and sign-up requires agreeing. `XMAGE_CONTACT_EMAIL` is unset, so the pages point to in-app Feedback, which people without an account can't use. |
+| Bot protection | ok | Registration limits, plus Cloudflare Turnstile on Create account. |
+| Mail | ok | `noreply@deimos.studio` through Purelymail on 587 (STARTTLS). SPF, DKIM and DMARC (a CNAME to Purelymail) were already in place. A reset code was delivered after the TLS fix in PR #61. |
+| Privacy and terms | ok | `/privacy` and `/terms` are live with a contact address, and sign-up requires agreeing. |
 | Capacity | ok | 12 bot games at once finished with CPU p95 85% and a 465 MB heap (ops/web/README.md, Capacity). The heap may grow to 2 GB. |
 | Backups | ok | Nightly online dumps (fixed 2026-10-14: H2 dumps had been empty), a daily off-site copy pulled to Multivac (30 kept), and a restore drill that brought back an account. A snapshot is also taken before every deploy. |
-| Monitoring | partial | Host watchdog every 5 minutes and the external Uptime workflow every 15. Both post to Discord, but the webhooks don't exist yet; until then failures show up only in the journal and as failed workflow runs (GitHub emails). |
+| Monitoring | ok | Host watchdog every 5 minutes and the external Uptime workflow every 15, both posting to the staff Discord channel (test messages delivered). |
 | Deploys | ok | Release → approval → deploy with snapshot, drain, health gate and automatic rollback. First deploy took 22 s from restart to healthy. Rollback: `sudo -u deploy playmat-deploy rollback`. |
 | Staging | ok | Multivac pulls master's images hourly and runs them for the group before a release. |
-| Funding | ready, off | The ledger, the Ko-fi and GitHub Sponsors webhooks, the $40 goal and the supporter cosmetics are deployed. A throwaway server on the live image accepted a Ko-fi-shaped payment (200), ignored its repeat, refused a wrong token (401), malformed data (400) and GET (405), and served `/public/support.json` with CORS and a 5-minute cache. The listener stays off, and the support UI hidden, until the owner sets up Ko-fi (B255). |
+| Funding | ok | Ko-fi page linked and the $40 goal shown. Ko-fi's own test donation reached the ledger within a minute and was revoked in /admin. The GitHub Sponsors webhook is configured; its ping is unconfirmed. Before launch, a throwaway server on the live image also accepted a Ko-fi-shaped payment (200), ignored its repeat, and refused a wrong token (401), malformed data (400) and GET (405). |
 | Link previews | ok | Open Graph and Twitter card tags; robots.txt keeps crawlers out of `/admin` and `/hooks/`. |
 | Moderation | **open** | Reports, mutes and locks exist in /admin, but there are no moderators besides the owner (B260). |
 
@@ -37,19 +37,18 @@ Last assessed 2026-10-14 on the Hetzner CAX21 (4 Ampere cores, 8 GB, Falkenstein
 - **`pull-images.ps1` failed on Windows PowerShell 5.1**, which drops the inner quotes of a docker `--format` argument (PR #58).
 - **The bundle grew past its budget** when M20 and M21 merged; the email banner and the Turnstile widget now load lazily (PR #57).
 - **No link previews**: a shared link showed no card (PR #58).
+- **Mail failed its first send.** This JavaMail asks for TLS 1.0 on STARTTLS, which current JDKs refuse ("No appropriate protocol"); it now asks for 1.3 and 1.2 (PR #61).
+- **Two tabs of one account kicked each other forever** after a password reset, each reconnect taking the session back. A replaced connection is now closed with code 4001 and the client stops and offers "Use Playmat here" (PR #65).
+- **/admin couldn't scroll** past the window (PR #65).
 
 ## Before the announcement
 
-The owner's steps, in order of importance:
+1. **Moderators** (B260). At least two besides the owner, in different time zones, added in /admin, Staff.
+2. **Sign in with GitHub** (B238). The OAuth app (callback `https://playmat.deimos.studio/auth/github`) is configured and the button shows; one sign-in still has to approve the app and confirm the round trip.
 
-1. **Mail** (B228). Create `noreply@deimos.studio` in Purelymail, then in `/srv/playmat/.env` set `XMAGE_MAIL_SMTP_HOST=smtp.purelymail.com`, `XMAGE_MAIL_SMTP_PORT=587`, `XMAGE_MAIL_USER`, `XMAGE_MAIL_PASSWORD` and `XMAGE_MAIL_FROM=noreply@deimos.studio`, then run `sudo playmat-compose up -d --no-build`. Add DMARC at Cloudflare: TXT `_dmarc` = `v=DMARC1; p=quarantine; rua=mailto:<you>@deimos.studio`.
-2. **Contact address** (B231). `XMAGE_CONTACT_EMAIL=<an address you read>` in `/srv/playmat/.env`.
-3. **Discord webhooks** (B236). Create a public channel and a staff channel, put their webhooks in `XMAGE_DISCORD_WEBHOOK` and `XMAGE_DISCORD_STAFF_WEBHOOK`, run `sudo playmat-compose up -d --no-build`, then `sudo playmat-watchdog test`. Add the staff webhook as the repository secret `UPTIME_DISCORD_WEBHOOK` too.
-4. **Turnstile** (B230). In Cloudflare, Turnstile, add a widget for `playmat.deimos.studio` (Managed), then set `XMAGE_TURNSTILE_SITE_KEY` and `XMAGE_TURNSTILE_SECRET`.
-5. **Ko-fi** (B255). Create the page in USD, with one-off donations and $3 and $5 memberships. In Ko-fi, Settings, API, Webhooks, set `https://playmat.deimos.studio/hooks/kofi`, put the verification token in `/srv/playmat/.env` as `XMAGE_KOFI_TOKEN`, restart, and press Send Single Donation Test. It shows up in /admin, Support, Unmatched; revoke it there. Then set the Ko-fi page and turn support on in /admin, Settings, Support. GitHub Sponsors works the same way (ops/web/README.md, Support and the monthly goal).
-6. **Moderators** (B260). At least two, in different time zones, added in /admin, Staff.
+Done on 2026-10-14: mail (B228), contact address (B231), Discord webhooks and `UPTIME_DISCORD_WEBHOOK` (B236), Turnstile (B230) and Ko-fi (B255). The steps are in ops/web/README.md.
 
-Nice to have: Sign in with GitHub (B238: an OAuth app with callback `https://playmat.deimos.studio/auth/github`), restic to Cloudflare R2 for a second off-site copy, and Hetzner's own backups (20% of the server price) for whole-disk restores.
+Nice to have: restic to Cloudflare R2 for a second off-site copy, and Hetzner's own backups (20% of the server price) for whole-disk restores.
 
 ## Known limits
 
