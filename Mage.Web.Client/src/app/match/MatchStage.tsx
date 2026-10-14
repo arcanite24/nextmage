@@ -185,6 +185,11 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   const stack = useMemo(() => Object.values(view?.stack ?? {}), [view?.stack]);
 
   const onCommand = useCallback((command: Command) => {
+    // Cancel on a payment is never dropped: auto-pay keeps a tap with the server most of the time
+    if (command.type === 'boolean' && !command.value && session.getState().interaction.mode === 'payMana') {
+      session.cancelPayment();
+      return;
+    }
     // one answer per question: while the server works on the last one, further answers are dropped
     if (command.type !== 'action' && session.getState().awaitingServer) return;
     if (command.type === 'action' && (command.action === 'HOLD_PRIORITY' || command.action === 'UNHOLD_PRIORITY')) {

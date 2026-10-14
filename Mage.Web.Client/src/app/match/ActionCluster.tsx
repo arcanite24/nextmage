@@ -84,7 +84,7 @@ export function ActionCluster({
       } else if (undo && (event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         onCommand(undo.command);
-      } else if (event.key === 'Escape' && cancel && !awaiting) {
+      } else if (event.key === 'Escape' && cancel && (!awaiting || interaction.mode === 'payMana')) {
         onCommand(cancel.command);
       } else {
         const ahead = PASS_AHEAD.find((item) => item.key === event.key);
@@ -96,7 +96,7 @@ export function ActionCluster({
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [main, cancel, undo, awaiting, canAct, onCommand]);
+  }, [main, cancel, undo, awaiting, canAct, interaction.mode, onCommand]);
 
   // Ctrl+Shift on its own, as on Arena, locks full control on or off (released without any other key in between)
   useEffect(() => {
