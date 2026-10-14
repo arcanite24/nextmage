@@ -85,6 +85,9 @@ export function LoginScreen() {
   const inviteCheck = useInviteCheck(invite, status === 'online');
   const art = useRotatingArt();
   const resumed = useRef(false);
+  // another sign-in took the session over: this tab waits for the player instead of taking it back by itself
+  const [takingBack, setTakingBack] = useState(false);
+  const elsewhere = (session.signedInElsewhere || takingBack) && !invite && !backFromGithub;
 
   useEffect(() => {
     if (resumed.current || invite || backFromGithub) return;
@@ -168,6 +171,17 @@ export function LoginScreen() {
     }
   }
 
+  async function takeBack() {
+    setTakingBack(true);
+    if (await session.takeBack()) {
+      seated();
+      return;
+    }
+    // what this tab had no longer works: the form, saying why
+    setTakingBack(false);
+    refuse();
+  }
+
   function seated() {
     // the deck is dealt across the table, then Play takes over
     setDealing(true);
@@ -234,7 +248,21 @@ export function LoginScreen() {
         </h1>
       </header>
 
-      <form key={refused} className={[styles.seat, refused > 0 ? styles.refused : ''].join(' ')} onSubmit={submit} aria-labelledby="seat-title">
+      {elsewhere && (
+        <section className={styles.seat} aria-labelledby="elsewhere-title">
+          <h2 id="elsewhere-title" className={styles.seatLabel}>{t('login.elsewhere.title')}</h2>
+          <p className={styles.notice} role="status">{t('login.elsewhere.text', { name: session.userName })}</p>
+          <Button type="button" variant="decision" size="xl" busy={busy || takingBack} className={styles.submit} onClick={() => void takeBack()}>
+            {t('login.elsewhere.useHere', { app: APP_NAME })}
+          </Button>
+          <p className={styles.quiet}>{t('login.elsewhere.hint')}</p>
+          <button type="button" className={styles.linkButton} onClick={() => useSession.setState({ signedInElsewhere: false })}>
+            {t('login.elsewhere.other')}
+          </button>
+        </section>
+      )}
+
+      <form key={refused} hidden={elsewhere} className={[styles.seat, refused > 0 ? styles.refused : ''].join(' ')} onSubmit={submit} aria-labelledby="seat-title">
         <h2 id="seat-title" className={styles.seatLabel}>{t(MODE_TITLES[mode === 'sit' && accounts ? 'signIn' : mode])}</h2>
         {info?.notice && <p className={styles.serverNotice}>{info.notice}</p>}
         {contributors && mode === 'sit' && <p className={styles.notice}>{t('login.contributors')}</p>}
@@ -383,6 +411,7 @@ export function LoginScreen() {
 
         {notice && <p className={styles.notice} role="status">{notice}</p>}
         {session.expired && !session.error && <p className={styles.error} role="alert">{t('login.serverRestarted')}</p>}
+        {session.staleLogin && !session.error && <p className={styles.notice} role="status">{t('login.staleLogin')}</p>}
         {session.error && <p className={styles.error} role="alert">{session.error}</p>}
 
         <Button type="submit" variant="decision" size="xl" busy={busy || working} disabled={!canSubmit} className={styles.submit}>

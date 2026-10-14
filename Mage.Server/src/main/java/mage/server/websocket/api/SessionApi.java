@@ -83,13 +83,17 @@ final class SessionApi {
                                 optional("restoreSessionId", STRING), optional("clientVersion", STRING), optional("userIdStr", STRING),
                                 optional("rememberToken", STRING))
                         .doc("Log in. Creates the connection's session; restoreSessionId reattaches a user that lost its connection. "
-                                + "rememberToken (from authRememberLogin) stands in for an account's password.")
+                                + "rememberToken (from authRememberLogin) stands in for an account's password. Logging in as a user "
+                                + "that is connected elsewhere takes it over: the other connection is closed with code 4001.")
                         .handler(call -> {
                             String rememberToken = call.optString(6, "");
                             if (!rememberToken.isEmpty()) {
                                 ctx.sessions.trustRememberedLogin(call.string(2), call.string(0), rememberToken);
                             }
-                            return connectUser(ctx, call, serverVersion);
+                            boolean ok = connectUser(ctx, call, serverVersion);
+                            // the name the server knows the user by: a later login as it elsewhere ends this session
+                            call.getConnection().setUserName(ok ? ctx.sessions.userName(call.sessionId()).orElse(null) : null);
+                            return ok;
                         }),
 
                 RpcMethod.named("connectAdmin")
