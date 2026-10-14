@@ -52,9 +52,15 @@ backup_once() {
   mkdir -p "$tmp"
   for db in "${H2_DBS[@]}"; do
     [[ -e $DB_DIR/$db.mv.db ]] || continue
+    # With the server running, AUTO_SERVER hands the SCRIPT command to the server's process, which writes the file in
+    # its own container. So the dump goes to the db volume both containers mount, at the same path, then moves here.
+    local dump=$DB_DIR/.backup-$db.sql
+    rm -f "$dump"
     java -Xmx128m -cp "$h2" org.h2.tools.Script \
       -url "jdbc:h2:file:$DB_DIR/$db;AUTO_SERVER=TRUE;IFEXISTS=TRUE" -user "" -password "" \
-      -script "$tmp/$db.sql"
+      -script "$dump"
+    [[ -s $dump ]] || { log "the dump of $db is missing or empty"; false; }
+    mv "$dump" "$tmp/$db.sql"
     gzip -9 "$tmp/$db.sql"
   done
   for db in "${SQLITE_DBS[@]}"; do
