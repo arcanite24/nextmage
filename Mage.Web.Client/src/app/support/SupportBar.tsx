@@ -51,29 +51,42 @@ export function GoalBar({ status, place }: { status: SupportStatus; place: 'home
       >
         <span className={progress.reached ? styles.full : undefined} style={{ width: `${Math.round(progress.fraction * 100)}%` }} />
       </div>
-      <div className={styles.foot}>
-        <span className={styles.note}>
-          {note}
-          {(status.supporters ?? 0) > 0 && <> · {t('support.bar.supporters', { count: status.supporters ?? 0 })}</>}
-        </span>
-        {url && (
-          <ButtonLink
-            variant={place === 'page' ? 'decision' : 'print'}
-            size="sm"
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            icon={<ExternalLink size={14} />}
-            aria-label={`${t('support.cta')} (${t('support.cta.newTab')})`}
-          >
-            <Heart size={14} aria-hidden="true" className={styles.heart} /> {t('support.cta')}
-          </ButtonLink>
-        )}
-        {status.kofiUrl && status.sponsorsUrl && (
-          <a className={styles.link} href={status.sponsorsUrl} target="_blank" rel="noreferrer">{t('support.cta.sponsors')}</a>
-        )}
-        {place !== 'page' && <Link className={styles.link} to="/support">{t('support.more')}</Link>}
-      </div>
+      {place === 'login' ? (
+        // under the sign-in form: two quiet links, the details are a page away
+        <div className={styles.foot}>
+          {url && (
+            <a className={styles.link} href={url} target="_blank" rel="noreferrer" aria-label={`${t('support.cta')} (${t('support.cta.newTab')})`}>
+              <Heart size={13} aria-hidden="true" className={styles.heart} /> {t('support.cta')}
+            </a>
+          )}
+          <Link className={styles.link} to="/support">{t('support.more')}</Link>
+        </div>
+      ) : (
+        <div className={styles.foot}>
+          <span className={styles.note}>
+            {note}
+            {(status.supporters ?? 0) > 0 && <> · {t('support.bar.supporters', { count: status.supporters ?? 0 })}</>}
+          </span>
+          {url && (
+            <ButtonLink
+              variant={place === 'page' ? 'decision' : 'print'}
+              size="sm"
+              className={styles.cta}
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              icon={<ExternalLink size={14} />}
+              aria-label={`${t('support.cta')} (${t('support.cta.newTab')})`}
+            >
+              <Heart size={14} aria-hidden="true" className={styles.heart} /> {t('support.cta')}
+            </ButtonLink>
+          )}
+          {status.kofiUrl && status.sponsorsUrl && (
+            <a className={styles.link} href={status.sponsorsUrl} target="_blank" rel="noreferrer">{t('support.cta.sponsors')}</a>
+          )}
+          {place !== 'page' && <Link className={styles.link} to="/support">{t('support.more')}</Link>}
+        </div>
+      )}
       {code && <SupportCode code={code} />}
     </section>
   );

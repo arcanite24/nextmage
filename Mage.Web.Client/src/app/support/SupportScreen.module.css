@@ -1,7 +1,7 @@
 /* the About page's paper (screens/AboutScreen.module.css), without its rule that inks every link: the goal bar's
    button keeps its own colours */
 .page {
-  min-height: 100dvh;
+  height: 100dvh;
   overflow-y: auto;
   background: var(--mat-900);
   color: var(--ink);

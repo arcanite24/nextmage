@@ -11,16 +11,28 @@
   font-size: var(--text-sm);
 }
 
-/* the sign-in card: no frame of its own, it sits under the form */
+/* the sign-in card: no frame of its own, it sits small under the form */
 .login {
+  gap: 6px;
   background: none;
   box-shadow: none;
   padding: var(--space-2) 0 0;
   border-top: 1px solid var(--ink-ghost);
   border-radius: 0;
+  font-size: var(--text-xs);
+}
+
+.login .label,
+.login .amount {
+  font-size: var(--text-xs);
+}
+
+.login .track {
+  height: 4px;
 }
 
 .page {
+  margin-top: var(--space-5);
   padding: var(--space-4);
   font-size: var(--text-md);
 }
@@ -82,9 +94,19 @@
   color: var(--ink-dim);
 }
 
+/* a button, not a link in running text */
+.cta {
+  text-decoration: none;
+}
+
 .heart {
   color: var(--brass);
   vertical-align: -2px;
+}
+
+/* on the page's amber button the heart takes the button's ink */
+.page .heart {
+  color: inherit;
 }
 
 .link {
