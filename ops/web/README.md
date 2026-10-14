@@ -494,6 +494,10 @@ For the Compose stack on a LAN, see [Private server on a LAN](#private-server-on
 
 Add the page origin to `websocketAllowedOrigins` in `config.xml` on the `<server>` element, for example `http://192.168.1.20:8080`.
 
+## Launch checklist
+
+[LAUNCH.md](LAUNCH.md) is the go/no-go for promoting the public server: what was checked, how, what the owner still has to do, and the commands to check it again.
+
 ## Security notes
 
 - Leave port 17172 unpublished. The bridge expects the proxy in front of it, for TLS, the origin check and the client address.
