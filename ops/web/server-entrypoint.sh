@@ -22,7 +22,7 @@ from_file() {
     eval "$1=\$(cat \"\$file\")"
   fi
 }
-for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY XMAGE_DISCORD_WEBHOOK XMAGE_DISCORD_STAFF_WEBHOOK XMAGE_GITHUB_CLIENT_SECRET XMAGE_GITHUB_TOKEN; do
+for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY XMAGE_DISCORD_WEBHOOK XMAGE_DISCORD_STAFF_WEBHOOK XMAGE_GITHUB_CLIENT_SECRET XMAGE_GITHUB_TOKEN XMAGE_TURNSTILE_SECRET; do
   from_file "$secret"
 done
 
@@ -81,6 +81,10 @@ fi
 # environment, like XMAGE_MAILGUN_BASE_URL for Mailgun's EU region)
 [ -z "${XMAGE_MAIL_SMTP_STARTTLS:-}" ] || is_bool "$XMAGE_MAIL_SMTP_STARTTLS" \
   || die "XMAGE_MAIL_SMTP_STARTTLS must be true or false (got '$XMAGE_MAIL_SMTP_STARTTLS')"
+
+if [ -n "${XMAGE_TURNSTILE_SITE_KEY:-}" ] && [ -z "${XMAGE_TURNSTILE_SECRET:-}" ]; then
+  echo "xmage-server: warning: XMAGE_TURNSTILE_SITE_KEY without XMAGE_TURNSTILE_SECRET; Turnstile stays off" >&2
+fi
 
 if [ "${XMAGE_AUTH:-false}" = true ] && [ -z "${XMAGE_MAILGUN_API_KEY:-}${XMAGE_MAIL_USER:-}" ]; then
   echo "xmage-server: warning: XMAGE_AUTH=true without mail settings; password reset mails cannot be sent" >&2
@@ -273,6 +277,13 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
       printf '"-Dxmage.github.%s=%s"\n' "${pair#*:}" "$(printf '%s' "$val" | sed 's/[\\"]/\\&/g')"
     fi
   done
+  # Cloudflare Turnstile on registration and access requests: the site key goes to the web client, the secret stays here
+  if [ -n "${XMAGE_TURNSTILE_SITE_KEY:-}" ]; then
+    printf '"-Dxmage.turnstile.siteKey=%s"\n' "$(printf '%s' "$XMAGE_TURNSTILE_SITE_KEY" | sed 's/[\\"]/\\&/g')"
+  fi
+  if [ -n "${XMAGE_TURNSTILE_SECRET:-}" ]; then
+    printf '"-Dxmage.turnstile.secret=%s"\n' "$(printf '%s' "$XMAGE_TURNSTILE_SECRET" | sed 's/[\\"]/\\&/g')"
+  fi
   if [ -n "${XMAGE_TRUSTED_PROXIES:-}" ]; then
     echo "-Dxmage.web.trustedProxies=$XMAGE_TRUSTED_PROXIES"
   fi

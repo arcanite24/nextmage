@@ -68,6 +68,8 @@ final class AccountApi {
         public int maxGames;
         /** games waiting for a free slot */
         public int gamesWaiting;
+        /** Cloudflare Turnstile's site key: registration and access requests need the widget's token. Absent when off */
+        public String turnstileSiteKey;
     }
 
     static List<RpcMethod> methods(ApiContext ctx) {
@@ -160,6 +162,7 @@ final class AccountApi {
             info.maxPasswordLength = config.getMaxPasswordLength();
         }
         info.deckSync = info.accounts;
+        info.turnstileSiteKey = ctx.turnstile.siteKey();
         if (ctx.managers != null && ctx.managers.threadExecutor() != null
                 && ctx.managers.threadExecutor().getGameExecutor() instanceof ThreadPoolExecutor) {
             ThreadPoolExecutor games = (ThreadPoolExecutor) ctx.managers.threadExecutor().getGameExecutor();

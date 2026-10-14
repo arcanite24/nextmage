@@ -83,6 +83,7 @@ const es: Catalog = {
   'login.asked': 'Tu solicitud está con el equipo del servidor. Cuando la aprueben, crea una cuenta con {email}.',
   'login.invite.checking': 'Comprobando tu invitación…',
   'login.invite.valid': 'Tienes una invitación. Crea tu cuenta y entrará directamente en la lista de este servidor.',
+  'login.turnstile.unavailable': 'No cargó la verificación de que eres una persona. Revisa tu conexión o permite challenges.cloudflare.com en tu bloqueador de contenido, y vuelve a cargar la página.',
 
   // Play
   'home.yourDecks': 'Tus mazos',

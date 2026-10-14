@@ -80,6 +80,7 @@ export default {
   'login.asked': "Your request is with the server's staff. Once it's approved, create an account with {email}.",
   'login.invite.checking': 'Checking your invite…',
   'login.invite.valid': "You're invited. Create your account and it goes straight onto this server's list.",
+  'login.turnstile.unavailable': "The check that you're a person didn't load. Check your connection, or allow challenges.cloudflare.com in your content blocker, then reload.",
 
   // Play
   'home.yourDecks': 'Your decks',

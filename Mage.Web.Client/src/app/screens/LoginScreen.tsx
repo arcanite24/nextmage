@@ -13,6 +13,7 @@ import { Field } from '../ui/Field';
 import { Mark } from '../ui/Mark';
 import { MatPrint } from '../ui/MatPrint';
 import { checkPassword } from './accountRules';
+import { TurnstileWidget } from './TurnstileWidget';
 import styles from './LoginScreen.module.css';
 
 type ServerStatus = 'checking' | 'online' | 'offline';
@@ -70,6 +71,9 @@ export function LoginScreen() {
   const [code, setCode] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
+  // Cloudflare Turnstile's token, when the server asks for one on registering and asking for access
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileBroken, setTurnstileBroken] = useState(false);
   const { status, info } = useServerStatus(serverUrl);
   const inviteCheck = useInviteCheck(invite, status === 'online');
   const art = useRotatingArt();
@@ -88,14 +92,16 @@ export function LoginScreen() {
   const busy = session.phase === 'signingIn' || dealing;
   const name = userName.trim();
   const nameError = name && !/^[A-Za-z0-9_]{3,14}$/.test(name) ? t('login.nameRule') : null;
+  const turnstileKey = (mode === 'register' || mode === 'ask') && info?.turnstileSiteKey ? info.turnstileSiteKey : null;
+  const checked = !turnstileKey || !!turnstileToken;
   const minPassword = info?.minPasswordLength || 8;
   const passwordRule = t('login.passwordRule', { min: minPassword });
   const passwordProblem = password && (mode === 'register' || mode === 'reset') ? checkPassword(password, minPassword, name) : null;
   const passwordError = passwordProblem ? t(PASSWORD_PROBLEMS[passwordProblem], { min: minPassword }) : null;
   const canSubmit = mode === 'sit' ? !!name && !nameError && (!accounts || !!password)
-    : mode === 'register' ? !!name && !nameError && !!email.trim() && !!password && !passwordError
+    : mode === 'register' ? !!name && !nameError && !!email.trim() && !!password && !passwordError && checked
       : mode === 'forgot' ? !!email.trim()
-        : mode === 'ask' ? !!name && !nameError && !!email.trim()
+        : mode === 'ask' ? !!name && !nameError && !!email.trim() && checked
           : mode === 'githubName' ? !!name && !nameError
           : code.length === 6 && !!password && !passwordError;
   const submitLabel = t(mode === 'register' ? 'login.submit.register' : mode === 'forgot' ? 'login.submit.forgot' : mode === 'reset' ? 'login.submit.reset'
@@ -106,7 +112,14 @@ export function LoginScreen() {
     setMode(next);
     setNotice(null);
     setPassword('');
+    setTurnstileToken('');
     useSession.setState({ error: null });
+  }
+
+  /** The form shakes and starts over; a Turnstile token is used up by the try, so the check runs again. */
+  function refuse() {
+    setRefused((count) => count + 1);
+    setTurnstileToken('');
   }
 
   // back from GitHub: sign in to the account it names, or pick a name for a new one first
@@ -160,25 +173,25 @@ export function LoginScreen() {
     const url = serverUrl.trim();
     if (mode === 'sit') {
       if (await session.signIn(url, name, password, remember)) seated();
-      else setRefused((count) => count + 1);
+      else refuse();
       return;
     }
     setWorking(true);
     try {
       if (mode === 'register') {
-        if (await session.register(url, name, email.trim(), password, remember, invite)) seated();
-        else setRefused((count) => count + 1);
+        if (await session.register(url, name, email.trim(), password, remember, invite, turnstileToken)) seated();
+        else refuse();
       } else if (mode === 'githubName' && github) {
         await finishGithub(name);
       } else if (mode === 'ask') {
         try {
           if (rpc.getStatus() !== 'open' || rpc.getUrl() !== url) await rpc.connect(url);
-          await api.accessRequest(name, email.trim(), note.trim() || null);
+          await api.accessRequest(name, email.trim(), note.trim() || null, turnstileToken || null);
           switchMode('sit');
           setNotice(t('login.asked', { email: email.trim() }));
         } catch (error) {
           useSession.setState({ error: error instanceof Error ? error.message : String(error) });
-          setRefused((count) => count + 1);
+          refuse();
         }
       } else if (mode === 'forgot') {
         if (await session.requestPasswordReset(url, email.trim())) {
@@ -190,7 +203,7 @@ export function LoginScreen() {
         switchMode('sit');
         setNotice(t('login.passwordChanged'));
       } else {
-        setRefused((count) => count + 1);
+        refuse();
       }
     } finally {
       setWorking(false);
@@ -334,6 +347,13 @@ export function LoginScreen() {
                 spellCheck={false}
               />
             )}
+          </div>
+        )}
+
+        {turnstileKey && (
+          <div className={styles.turnstile}>
+            <TurnstileWidget siteKey={turnstileKey} onToken={setTurnstileToken} onUnavailable={() => setTurnstileBroken(true)} />
+            {turnstileBroken && <p className={styles.error} role="alert">{t('login.turnstile.unavailable')}</p>}
           </div>
         )}
 

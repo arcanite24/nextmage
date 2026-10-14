@@ -101,6 +101,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_MAILGUN_BASE_URL` | `https://api.mailgun.net/v3` | Mailgun's API address. `https://api.eu.mailgun.net/v3` for a domain in Mailgun's EU region. |
 | `XMAGE_MAIL_SMTP_HOST`, `XMAGE_MAIL_SMTP_PORT`, `XMAGE_MAIL_USER`, `XMAGE_MAIL_PASSWORD`, `XMAGE_MAIL_FROM` | empty | SMTP instead of Mailgun. The server uses SMTP when `XMAGE_MAIL_USER` is set. Port 465 speaks TLS from the start; port 587 upgrades with STARTTLS. `XMAGE_MAIL_FROM` defaults to the user. For Purelymail: `smtp.purelymail.com`, port `587`, the mailbox's full address as user. A mail server that doesn't answer is given up on after 10 seconds. |
 | `XMAGE_MAIL_SMTP_STARTTLS` | `false` | `true` uses STARTTLS on any port (and refuses to log in if the server can't upgrade). Port 587 always uses it. |
+| `XMAGE_TURNSTILE_SITE_KEY`, `XMAGE_TURNSTILE_SECRET` | empty | [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) on registration and access requests (`-Dxmage.turnstile.*`). Both set: the web client shows the widget and the server checks each token with Cloudflare (5 s timeout); a missing or failed token, or Cloudflare not answering, refuses the registration. Create the widget for `DOMAIN` (and `localhost`, for the Android app). The secret is a secret. Independently, the server allows 3 new accounts an hour and 10 a day per client address, and the same for access requests. |
 | `XMAGE_DISCORD_WEBHOOK` | empty | Discord webhook address (`-Dxmage.discordWebhook`). Set: public tables, events starting and matches starting are posted to that channel (see [Discord notifications](#discord-notifications)). A secret: anyone with it can post to the channel. |
 | `XMAGE_DISCORD_STAFF_WEBHOOK` | empty | A second webhook for staff news: access requests, player reports and staff role changes (`-Dxmage.discordStaffWebhook`). Empty: those go to `XMAGE_DISCORD_WEBHOOK`. A secret. |
 | `XMAGE_CAREER` | `on` | `off` turns the optional single-player Career off. It needs accounts either way: without them nobody's collection would be safe. Progress is kept in `career.db`. |
@@ -120,7 +121,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `IMGCACHE_API_MAX_SIZE` | `1g` | Disk cap of the lookup cache. |
 | `IMGCACHE_API_RATE` / `IMGCACHE_API_BURST` | `10r/s` / `20` | Requests per second the image cache sends to `api.scryfall.com` for the whole site (cache misses only), and how many more may queue before it answers `429`. |
 
-Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE`, `XMAGE_MAILGUN_API_KEY_FILE`, `XMAGE_DISCORD_WEBHOOK_FILE`, `XMAGE_DISCORD_STAFF_WEBHOOK_FILE`, `XMAGE_GITHUB_CLIENT_SECRET_FILE` and `XMAGE_GITHUB_TOKEN_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password and the webhook address don't show up in `ps`.
+Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE`, `XMAGE_MAILGUN_API_KEY_FILE`, `XMAGE_DISCORD_WEBHOOK_FILE`, `XMAGE_DISCORD_STAFF_WEBHOOK_FILE`, `XMAGE_GITHUB_CLIENT_SECRET_FILE`, `XMAGE_GITHUB_TOKEN_FILE` and `XMAGE_TURNSTILE_SECRET_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password and the webhook address don't show up in `ps`.
 
 Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a message that names the variable.
 
@@ -374,7 +375,9 @@ Add the page origin to `websocketAllowedOrigins` in `config.xml` on the `<server
 - Caddy sends a `Content-Security-Policy`: scripts only from the site itself, styles from the site plus inline
   styles (React), pictures from the site, `data:`/`blob:` and Scryfall (a client built without the image proxy loads
   them from Scryfall directly), connections to the site, any `wss:` server and `api.scryfall.com`, and no framing
-  (`frame-ancestors 'none'`). Adding a third-party script or host to the client means adding it there too.
+  (`frame-ancestors 'none'`). The one third-party script is Cloudflare Turnstile (`challenges.cloudflare.com` in
+  `script-src`, `frame-src` and `connect-src`), which the client loads only on the registration and access forms of
+  a server that turns it on. Adding a third-party script or host to the client means adding it there too.
 - Rate limits per client address exist twice. Caddy limits how fast an address opens game connections
   (`WS_RATE_LIMIT` per `WS_RATE_WINDOW`) and Scryfall lookups (`IMG_API_RATE_LIMIT`), answering `429` with
   `Retry-After`. The server separately caps concurrent game connections per address

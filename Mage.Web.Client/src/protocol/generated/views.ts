@@ -1327,6 +1327,7 @@ export interface ServerInfo {
     registration?: string;
     serverName?: string;
     testMode?: boolean;
+    turnstileSiteKey?: string;
 }
 
 export interface ServerSetting {

@@ -47,8 +47,6 @@ final class AccessApi {
 
     private static final Logger logger = Logger.getLogger(AccessApi.class);
 
-    /** access requests one address may send an hour */
-    static final int REQUESTS_PER_HOUR = 3;
     private static final long HOUR = 3_600_000L;
     private static final Map<String, Deque<Long>> recentRequests = new HashMap<>();
 
@@ -259,10 +257,11 @@ final class AccessApi {
 
                 RpcMethod.named("accessRequest")
                         .publicAccess()
-                        .params(of("userName", STRING), of("email", STRING), optional("note", STRING))
+                        .params(of("userName", STRING), of("email", STRING), optional("note", STRING), optional("turnstileToken", STRING))
                         .returns("boolean")
-                        .doc("Ask to be let in to a contributors-only server, or for an account while registration is invite only: staff see it in /admin. " + REQUESTS_PER_HOUR
-                                + " an hour from one address. Callable before login.")
+                        .doc("Ask to be let in to a contributors-only server, or for an account while registration is invite only: staff see it in /admin. "
+                                + RegistrationLimiter.PER_HOUR + " an hour and " + RegistrationLimiter.PER_DAY + " a day from one address. "
+                                + "When serverInfo has a turnstileSiteKey, turnstileToken is the Turnstile widget's token. Callable before login.")
                         .handler(call -> requestAccess(ctx, call))
         );
     }
@@ -437,19 +436,27 @@ final class AccessApi {
         }
         String address = call.getConnection() == null ? "" : call.getConnection().getRemoteHost();
         long now = System.currentTimeMillis();
-        if (!takeRequestSlot(address, now)) {
-            throw new RpcException(RpcException.RATE_LIMITED, "You've asked a few times already. Try again in an hour.");
+        String problem = ctx.registrations.take("request:" + address);
+        if (problem != null) {
+            throw new RpcException(RpcException.RATE_LIMITED, "You've asked a few times already. Try again later.");
         }
-        AccessRequest request = store(() -> AccessPolicy.get().store().requestAccess(call.string(0), call.string(1),
-                call.optString(2, ""), now));
+        problem = ctx.turnstile.check(call.optString(3, null), address);
+        if (problem != null) {
+            ctx.registrations.refund("request:" + address);
+            throw RpcException.invalidParams(problem);
+        }
+        AccessRequest request;
+        try {
+            request = store(() -> AccessPolicy.get().store().requestAccess(call.string(0), call.string(1),
+                    call.optString(2, ""), now));
+        } catch (RpcException e) {
+            ctx.registrations.refund("request:" + address);
+            throw e;
+        }
         if (request.createdAt == now) {
             DiscordNotifier.staff().accessRequested(request.name, request.note);
         }
         return true;
-    }
-
-    static boolean takeRequestSlot(String address, long now) {
-        return takeSlot(address, now, REQUESTS_PER_HOUR);
     }
 
     /** At most perHour calls an hour for this key (an address, or "kind:name"). */

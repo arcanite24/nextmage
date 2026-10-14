@@ -17,7 +17,7 @@ export interface RpcMethods {
   sessionGetRestoreToken: { params: [sessionId: string]; result: string };
   authRememberLogin: { params: [sessionId: string]; result: string };
   authForgetLogin: { params: [userName: string, rememberToken: string]; result: boolean };
-  authRegister: { params: [sessionId: string, userName: string, password: string, email: string, inviteCode?: string | null]; result: boolean };
+  authRegister: { params: [sessionId: string, userName: string, password: string, email: string, inviteCode?: string | null, turnstileToken?: string | null]; result: boolean };
   authSendTokenToEmail: { params: [sessionId: string, email: string]; result: boolean };
   authResetPassword: { params: [sessionId: string, email: string, authToken: string, password: string]; result: boolean };
   disconnectSession: { params: [sessionId: string, keepGames?: boolean | null]; result: boolean };
@@ -129,7 +129,7 @@ export interface RpcMethods {
   inviteCheck: { params: [code: string]; result: InviteCheck };
   githubStart: { params: []; result: string };
   githubFinish: { params: [state: string, code: string, userName?: string | null]; result: GithubSignInResult };
-  accessRequest: { params: [userName: string, email: string, note?: string | null]; result: boolean };
+  accessRequest: { params: [userName: string, email: string, note?: string | null, turnstileToken?: string | null]; result: boolean };
   staffMe: { params: []; result: StaffMe };
   adminStaff: { params: []; result: StaffList };
   adminStaffGrant: { params: [userName: string, role: string, reason?: string | null]; result: StaffMember };
