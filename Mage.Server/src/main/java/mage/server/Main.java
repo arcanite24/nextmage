@@ -344,6 +344,8 @@ public final class Main {
 
                 Runtime.getRuntime().addShutdownHook(new Thread(webSocketServer::shutdown, "WebSocket shutdown"));
                 logger.info("Started MAGE WebSocket server - listening on port " + websocketPort);
+                // before Health: the first JDK HTTP server fixes the request time limits for both
+                mage.server.support.SupportHooks.start();
                 Health.start(managerFactory);
                 BackupStatus.startChecks();
 
