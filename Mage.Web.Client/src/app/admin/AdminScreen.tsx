@@ -18,6 +18,7 @@ import { ConfirmAction } from './ConfirmAction';
 import { FeedbackPage } from './FeedbackPage';
 import { SettingsPage } from './SettingsPage';
 import { StaffPage } from './StaffPage';
+import { SupportPage } from './SupportPage';
 import { atLeast, describeAge, formatBytes, formatDate, formatDuration, MUTE_CHOICES, type StaffRole } from './adminFormat';
 import styles from './AdminScreen.module.css';
 
@@ -148,6 +149,8 @@ const SECTIONS: { id: string; label: string; role: StaffRole }[] = [
   { id: 'broadcast', label: 'Broadcast', role: 'admin' },
   { id: 'access', label: 'Access', role: 'admin' },
   { id: 'settings', label: 'Settings', role: 'admin' },
+  // payments: admins and the owner, not moderators
+  { id: 'support', label: 'Support', role: 'admin' },
   { id: 'staff', label: 'Staff', role: 'owner' },
   { id: 'errors', label: 'Client errors', role: 'moderator' },
   { id: 'audit', label: 'Audit', role: 'moderator' },
@@ -178,6 +181,7 @@ function Console({ staff }: { staff: StaffSession }) {
           <Tabs.Content value="broadcast" className={styles.panel}><Broadcast api={api} /></Tabs.Content>
           <Tabs.Content value="access" className={styles.panel}><AccessPage api={api} /></Tabs.Content>
           <Tabs.Content value="settings" className={styles.panel}><SettingsPage api={api} role={role} /></Tabs.Content>
+          <Tabs.Content value="support" className={styles.panel}><SupportPage api={api} /></Tabs.Content>
         </>
       )}
       {atLeast(role, 'owner') && <Tabs.Content value="staff" className={styles.panel}><StaffPage api={api} actor={staff.actor} /></Tabs.Content>}

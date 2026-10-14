@@ -294,6 +294,8 @@
   font: inherit;
 }
 input.settingInput { inline-size: 7ch; font-variant-numeric: tabular-nums; }
+/* a page address or a line of text (the support settings) */
+input.settingWide { inline-size: min(40ch, 100%); }
 .maintenance {
   display: grid;
   gap: var(--space-2);
@@ -308,3 +310,6 @@ input.settingInput { inline-size: 7ch; font-variant-numeric: tabular-nums; }
 @media (max-width: 640px) {
   .setting { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* a refunded support payment: kept in the ledger, no longer counted */
+.revoked { opacity: 0.55; }
