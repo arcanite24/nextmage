@@ -1,5 +1,5 @@
 import { ArrowLeft, ChevronDown, KeyRound } from 'lucide-react';
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../brand';
 import { api, rpc } from '../connection';
@@ -14,8 +14,10 @@ import { Field } from '../ui/Field';
 import { Mark } from '../ui/Mark';
 import { MatPrint } from '../ui/MatPrint';
 import { checkPassword } from './accountRules';
-import { TurnstileWidget } from './TurnstileWidget';
 import styles from './LoginScreen.module.css';
+
+// Cloudflare's check loads only on servers that turn it on
+const TurnstileWidget = lazy(() => import('./TurnstileWidget').then((module) => ({ default: module.TurnstileWidget })));
 
 type ServerStatus = 'checking' | 'online' | 'offline';
 type Mode = 'sit' | 'register' | 'forgot' | 'reset' | 'ask' | 'githubName';
@@ -370,7 +372,9 @@ export function LoginScreen() {
 
         {turnstileKey && (
           <div className={styles.turnstile}>
-            <TurnstileWidget siteKey={turnstileKey} onToken={setTurnstileToken} onUnavailable={() => setTurnstileBroken(true)} />
+            <Suspense fallback={null}>
+              <TurnstileWidget siteKey={turnstileKey} onToken={setTurnstileToken} onUnavailable={() => setTurnstileBroken(true)} />
+            </Suspense>
             {turnstileBroken && <p className={styles.error} role="alert">{t('login.turnstile.unavailable')}</p>}
           </div>
         )}
