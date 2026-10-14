@@ -11,7 +11,8 @@
 #   playmat-watchdog test     post a test message to the webhook
 #
 # Settings come from /etc/playmat/host.env when it exists: PLAYMAT_DIR (the checkout holding ops/web, default
-# /root/xmage-server), DISK_MAX (85), MEM_MIN (10), CERT_DAYS (14), REPEAT_HOURS (6).
+# /root/xmage-server), DISK_MAX (85), MEM_MIN (10), CERT_DAYS (14), REPEAT_HOURS (6). On a host set up for image
+# deploys (/etc/playmat-deploy.conf, ops/web/deploy) the stack is the one playmat-compose runs, with /srv/playmat/.env.
 set -uo pipefail
 
 [[ -r /etc/playmat/host.env ]] && . /etc/playmat/host.env
@@ -21,8 +22,15 @@ MEM_MIN=${MEM_MIN:-10}
 CERT_DAYS=${CERT_DAYS:-14}
 REPEAT_HOURS=${REPEAT_HOURS:-6}
 STATE_DIR=${STATE_DIR:-/var/lib/playmat-watchdog}
-ENV_FILE=$PLAYMAT_DIR/ops/web/.env
-COMPOSE=(docker compose -f "$PLAYMAT_DIR/ops/web/docker-compose.yml" --env-file "$ENV_FILE")
+if [[ -r /etc/playmat-deploy.conf ]] && command -v playmat-compose > /dev/null; then
+  # read, not sourced: the deploy settings have a STATE_DIR of their own
+  compose_dir=$(sed -n 's/^COMPOSE_DIR=//p' /etc/playmat-deploy.conf | tail -1)
+  ENV_FILE=${compose_dir:-/srv/playmat}/.env
+  COMPOSE=(playmat-compose)
+else
+  ENV_FILE=$PLAYMAT_DIR/ops/web/.env
+  COMPOSE=(docker compose -f "$PLAYMAT_DIR/ops/web/docker-compose.yml" --env-file "$ENV_FILE")
+fi
 mkdir -p "$STATE_DIR"
 
 env_value() { sed -n "s/^$1=//p" "$ENV_FILE" 2>/dev/null | tail -1; }
@@ -63,7 +71,7 @@ problem() {
 # services: every one the compose file defines must run, and be healthy when it has a health check
 mapfile -t services < <("${COMPOSE[@]}" config --services 2>/dev/null)
 if (( ${#services[@]} == 0 )); then
-  problem compose "can't read the compose project in $PLAYMAT_DIR/ops/web"
+  problem compose "can't read the compose project (${COMPOSE[*]})"
 fi
 for svc in "${services[@]}"; do
   id=$("${COMPOSE[@]}" ps -q "$svc" 2>/dev/null | head -1)
