@@ -82,6 +82,12 @@ export function AboutScreen() {
             <li>{t('about.data.errors')}</li>
           </ul>
           <p>{t('about.data.chat')}</p>
+          <p>
+            <RichText
+              text={t('about.data.more')}
+              parts={{ privacy: <Link to="/privacy">{t('legal.privacyLink')}</Link>, terms: <Link to="/terms">{t('legal.termsLink')}</Link> }}
+            />
+          </p>
         </section>
 
         <p className={styles.foot}><Link to="/">{t('about.backTo', app)}</Link></p>

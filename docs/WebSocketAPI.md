@@ -274,6 +274,8 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `accountEmailStatus` | - | `AccountEmailStatus` | session | The signed-in account's email, masked, and whether it is confirmed. Only on servers with accounts. |
 | `accountEmailVerifyStart` | - | `boolean` | session | Email a six-digit code that confirms the signed-in account's address (5 an hour, one a minute; each works 30 minutes and 5 tries). Fails with the reason. |
 | `accountEmailVerify` | `code: string` | `boolean` | session | Confirm the signed-in account's email with the mailed code. False when the code is wrong or has expired. |
+| `accountExport` | - | `string` | session | Everything the server keeps about the signed-in account as JSON, the same export staff can make: the account, decks, Career, reports, feedback, stats. Passwords and sign-in tokens are left out. |
+| `accountDelete` | `password: string`, `confirmName: string` | `boolean` | session | Delete the signed-in account with its decks, Career, reports, stats, feedback and staff role, and sign it out. confirmName must be the account's name exactly; password its password, except for an account that signs in with GitHub, which may leave it empty. The server's owner can't. Can't be undone: accountExport first. |
 | `careerState` | - | `CareerState` | session | Whether this server offers Career, and the signed-in account's Career (profile null before it opens one). |
 | `careerStarters` | - | `CareerStarter[]` | session | The starter decks a Career can open with. |
 | `careerStart` | `starterId: string` | `CareerProfile` | session | Open a Career with a starter deck: its cards become the collection, plus coins for a first pack. |

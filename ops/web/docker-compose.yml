@@ -62,6 +62,7 @@ services:
       XMAGE_MAILGUN_BASE_URL: ${XMAGE_MAILGUN_BASE_URL:-}
       XMAGE_TURNSTILE_SITE_KEY: ${XMAGE_TURNSTILE_SITE_KEY:-}
       XMAGE_TURNSTILE_SECRET: ${XMAGE_TURNSTILE_SECRET:-}
+      XMAGE_CONTACT_EMAIL: ${XMAGE_CONTACT_EMAIL:-}
     volumes:
       - xmage-db:/opt/xmage/db         # user data only (accounts, stats, table records, feedback)
       - xmage-cards:/opt/xmage/cards-db # card database cache, rebuilt when the image changes

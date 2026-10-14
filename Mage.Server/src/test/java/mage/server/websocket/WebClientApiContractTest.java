@@ -78,7 +78,8 @@ public class WebClientApiContractTest {
             "adminFeedbackMark", "sendFeedback", // accounts and feedback (api/AccountsApiTest)
             "adminTableWatch", "adminClientErrorResolve", "adminSettings", "adminSetSetting", "adminMaintenance",
             "adminMaintenanceCancel", "adminDiscordTest", // watching, client errors, settings and maintenance (M15)
-            "accountEmailStatus", "accountEmailVerifyStart", "accountEmailVerify" // email verification (EmailVerificationTest)
+            "accountEmailStatus", "accountEmailVerifyStart", "accountEmailVerify", // email verification (EmailVerificationTest)
+            "accountExport", "accountDelete" // the player's own data (api/MyAccountApiTest)
     ));
 
     static {

@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../brand';
 import { api, rpc } from '../connection';
 import { useT, type MessageKey } from '../i18n';
+import { RichText } from '../i18n/RichText';
 import type { InviteCheck, ServerInfo } from '../../protocol/generated/views';
 import type { StarterDeck } from '../stores/decks';
 import { useSession } from '../stores/session';
@@ -69,7 +70,9 @@ export function LoginScreen() {
   const [note, setNote] = useState('');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [notice, setNotice] = useState<string | null>(null);
+  // a notice another screen left for this one (an account just deleted)
+  const [notice, setNotice] = useState<string | null>((location.state as { notice?: string } | null)?.notice ?? null);
+  const [agreed, setAgreed] = useState(false);
   const [working, setWorking] = useState(false);
   // Cloudflare Turnstile's token, when the server asks for one on registering and asking for access
   const [turnstileToken, setTurnstileToken] = useState('');
@@ -99,7 +102,7 @@ export function LoginScreen() {
   const passwordProblem = password && (mode === 'register' || mode === 'reset') ? checkPassword(password, minPassword, name) : null;
   const passwordError = passwordProblem ? t(PASSWORD_PROBLEMS[passwordProblem], { min: minPassword }) : null;
   const canSubmit = mode === 'sit' ? !!name && !nameError && (!accounts || !!password)
-    : mode === 'register' ? !!name && !nameError && !!email.trim() && !!password && !passwordError && checked
+    : mode === 'register' ? !!name && !nameError && !!email.trim() && !!password && !passwordError && checked && agreed
       : mode === 'forgot' ? !!email.trim()
         : mode === 'ask' ? !!name && !nameError && !!email.trim() && checked
           : mode === 'githubName' ? !!name && !nameError
@@ -324,6 +327,21 @@ export function LoginScreen() {
           </label>
         )}
 
+        {mode === 'register' && (
+          <label className={styles.remember}>
+            <input type="checkbox" checked={agreed} required onChange={(event) => setAgreed(event.target.checked)} />
+            <span>
+              <RichText
+                text={t('login.agree')}
+                parts={{
+                  terms: <Link to="/terms" target="_blank">{t('login.agree.terms')}</Link>,
+                  privacy: <Link to="/privacy" target="_blank">{t('login.agree.privacy')}</Link>,
+                }}
+              />
+            </span>
+          </label>
+        )}
+
         {mode === 'sit' && !accounts && !needsPassword && (
           <button type="button" className={styles.linkButton} onClick={() => setNeedsPassword(true)}>
             <KeyRound size={15} aria-hidden="true" /> {t('login.needsPassword')}
@@ -385,7 +403,11 @@ export function LoginScreen() {
             <ArrowLeft size={15} aria-hidden="true" /> {t('login.back')}
           </button>
         )}
-        <Link to="/about" className={styles.about}>{t('shell.about')}</Link>
+        <nav className={styles.legal} aria-label={t('shell.about')}>
+          <Link to="/about" className={styles.about}>{t('shell.about')}</Link>
+          <Link to="/privacy" className={styles.about}>{t('legal.privacyLink')}</Link>
+          <Link to="/terms" className={styles.about}>{t('legal.termsLink')}</Link>
+        </nav>
       </form>
 
       <Deck dealing={dealing} />

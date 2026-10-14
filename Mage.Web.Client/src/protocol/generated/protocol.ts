@@ -156,6 +156,8 @@ export interface RpcMethods {
   accountEmailStatus: { params: []; result: AccountEmailStatus };
   accountEmailVerifyStart: { params: []; result: boolean };
   accountEmailVerify: { params: [code: string]; result: boolean };
+  accountExport: { params: []; result: string };
+  accountDelete: { params: [password: string, confirmName: string]; result: boolean };
   careerState: { params: []; result: CareerState };
   careerStarters: { params: []; result: CareerStarter[] };
   careerStart: { params: [starterId: string]; result: CareerProfile };
@@ -346,6 +348,8 @@ export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: Rp
   accountEmailStatus: { access: 'session', sessionParam: -1 },
   accountEmailVerifyStart: { access: 'session', sessionParam: -1 },
   accountEmailVerify: { access: 'session', sessionParam: -1 },
+  accountExport: { access: 'session', sessionParam: -1 },
+  accountDelete: { access: 'session', sessionParam: -1 },
   careerState: { access: 'session', sessionParam: -1 },
   careerStarters: { access: 'session', sessionParam: -1 },
   careerStart: { access: 'session', sessionParam: -1 },

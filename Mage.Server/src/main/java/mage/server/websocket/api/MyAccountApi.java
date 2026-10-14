@@ -16,7 +16,8 @@ import static mage.server.websocket.rpc.RpcParam.Type.STRING;
 import static mage.server.websocket.rpc.RpcParam.of;
 
 /**
- * Web client bridge: the signed-in player's own account. Confirming its email address.
+ * Web client bridge: the signed-in player's own account. Confirming its email address, downloading everything the
+ * server keeps about it, and deleting it.
  */
 final class MyAccountApi {
 
@@ -70,8 +71,59 @@ final class MyAccountApi {
                         .handler(call -> {
                             AuthorizedUser account = account(ctx, call);
                             return EmailVerification.get().verify(account.getName(), call.string(0), System.currentTimeMillis());
+                        }),
+
+                RpcMethod.named("accountExport")
+                        .returns("string")
+                        .doc("Everything the server keeps about the signed-in account as JSON, the same export staff can make: "
+                                + "the account, decks, Career, reports, feedback, stats. Passwords and sign-in tokens are left out.")
+                        .handler(call -> {
+                            AuthorizedUser account = account(ctx, call);
+                            return AccessApi.store(() -> AccountsApi.export(account));
+                        }),
+
+                RpcMethod.named("accountDelete")
+                        .params(of("password", STRING), of("confirmName", STRING))
+                        .returns("boolean")
+                        .doc("Delete the signed-in account with its decks, Career, reports, stats, feedback and staff role, and "
+                                + "sign it out. confirmName must be the account's name exactly; password its password, except for "
+                                + "an account that signs in with GitHub, which may leave it empty. The server's owner can't. "
+                                + "Can't be undone: accountExport first.")
+                        .handler(call -> {
+                            AuthorizedUser account = account(ctx, call);
+                            String name = account.getName();
+                            refuseDeletion(ctx, account, call.string(0), call.string(1));
+                            AccessApi.store(() -> {
+                                AccountsApi.delete(ctx, name, "Your account was deleted. Thanks for playing.");
+                                return null;
+                            });
+                            Staff.audit(name, "user.delete.self", name, null, null);
+                            return true;
                         })
         );
+    }
+
+    /** guesses at the password through deletion, an hour */
+    static final int DELETE_TRIES_PER_HOUR = 5;
+
+    /** Throws why the account can't be deleted with this password and typed name. */
+    static void refuseDeletion(ApiContext ctx, AuthorizedUser account, String password, String confirmName) throws RpcException {
+        String name = account.getName();
+        if (AccessPolicy.get().isOwner(name)) {
+            throw RpcException.invalidParams("The server's owner (XMAGE_OWNER) can't delete their own account here.");
+        }
+        if (confirmName == null || !name.equals(confirmName.trim())) {
+            throw RpcException.invalidParams("Type your account name, " + name + ", exactly as it is.");
+        }
+        if (!AccessApi.takeSlot("delete:" + name.toLowerCase(java.util.Locale.ROOT), System.currentTimeMillis(), DELETE_TRIES_PER_HOUR)) {
+            throw new RpcException(RpcException.RATE_LIMITED, "Too many tries. Wait an hour.");
+        }
+        boolean github = AccessApi.store(() -> AccessPolicy.get().store().githubLinkOf(name)) != null;
+        boolean passwordless = github && (password == null || password.isEmpty());
+        if (!passwordless && (password == null || password.isEmpty() || !account.doCredentialsMatch(name, password))) {
+            throw RpcException.invalidParams(github ? "That password is wrong. An account that signs in with GitHub may leave it empty."
+                    : "That password is wrong.");
+        }
     }
 
     /** The signed-in player's account; refused on servers without accounts. */

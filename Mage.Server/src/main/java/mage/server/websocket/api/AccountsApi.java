@@ -187,7 +187,7 @@ final class AccountsApi {
                             }
                             AdminApi.refuseStaffTarget(ctx, actor, name);
                             AccessApi.store(() -> {
-                                delete(ctx, name);
+                                delete(ctx, name, "This account was deleted by the server's staff.");
                                 return null;
                             });
                             Staff.audit(actor, "user.delete", name, null, reason);
@@ -302,7 +302,8 @@ final class AccountsApi {
         });
     }
 
-    private static String export(AuthorizedUser account) throws SQLException {
+    /** Everything kept about the account as JSON, passwords and sign-in tokens left out: for staff, and for the player. */
+    static String export(AuthorizedUser account) throws SQLException {
         String name = account.getName();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("exportedAt", System.currentTimeMillis());
@@ -313,6 +314,7 @@ final class AccountsApi {
         fields.put("lockedUntil", account.getLockedUntil());
         fields.put("mutedUntil", account.getChatLockedUntil());
         fields.put("lastConnection", account.getLastConnection());
+        fields.put("emailVerified", mage.server.EmailVerification.isVerified(name, account.getEmail()));
         out.put("account", fields);
         List<DeckSyncEntry> decks = DeckStore.get().export(name);
         out.put("decks", decks);
@@ -333,13 +335,11 @@ final class AccountsApi {
         return gson.toJson(out);
     }
 
-    private static void delete(ApiContext ctx, String name) throws SQLException {
-        if (ctx.managers != null) {
-            ctx.managers.userManager().getUserByName(name).ifPresent(user -> {
-                user.showUserMessage("Account deleted", "This account was deleted by the server's staff.");
-                ctx.managers.sessionManager().disconnect(user.getSessionId(), mage.server.DisconnectReason.DisconnectedByAdmin, true);
-            });
-        }
+    /**
+     * Deletes the account with everything kept about it, then signs its player out with {@code message}, after a
+     * moment so the caller's answer (and the message) arrive first. The audit log keeps its record.
+     */
+    static void delete(ApiContext ctx, String name, String message) throws SQLException {
         DeckStore.get().deleteAll(name);
         try {
             CareerService.get().delete(name);
@@ -351,6 +351,20 @@ final class AccountsApi {
         AccessPolicy.get().store().forgetAccount(name);
         AuthorizedUserRepository.getInstance().remove(name);
         logger.info("Account deleted: " + name);
+        if (ctx.managers != null) {
+            ctx.managers.userManager().getUserByName(name).ifPresent(user -> {
+                user.showUserMessage("Account deleted", message);
+                String sessionId = user.getSessionId();
+                ctx.managers.threadExecutor().getCallExecutor().execute(() -> {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    ctx.managers.sessionManager().disconnect(sessionId, mage.server.DisconnectReason.DisconnectedByAdmin, true);
+                });
+            });
+        }
     }
 
     private static String reason(RpcCall call, int index) throws RpcException {

@@ -22,6 +22,8 @@ export default {
   'shell.admin': 'Admin',
   'shell.feedback': 'Send feedback',
   'shell.about': 'About and credits',
+  'legal.privacyLink': 'Privacy policy',
+  'legal.termsLink': 'Terms',
   'shell.signOut': 'Sign out',
 
   // sign-in
@@ -52,6 +54,11 @@ export default {
   'login.password': 'Password',
   'login.newPassword': 'New password',
   'login.remember': 'Keep me signed in on this device',
+  // {terms} and {privacy} are links to the terms and the privacy policy
+  'login.agree': 'I agree to the {terms} and the {privacy}.',
+  'login.agree.terms': 'terms',
+  'login.agree.privacy': 'privacy policy',
+  'login.deleted': 'Your account was deleted. Thanks for playing.',
   'login.needsPassword': 'This server needs a password',
   'login.server.online': 'Online',
   'login.server.offline': "Can't reach",

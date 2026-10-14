@@ -83,6 +83,8 @@ const router = createBrowserRouter([
   { path: '/auth/github', element: <LoginScreen /> },
   // credits and legal notices, readable before signing in
   { path: '/about', lazy: () => import('./screens/AboutScreen').then((m) => ({ Component: m.AboutScreen })) },
+  { path: '/privacy', lazy: () => import('./screens/LegalScreen').then((m) => ({ Component: m.PrivacyScreen })) },
+  { path: '/terms', lazy: () => import('./screens/LegalScreen').then((m) => ({ Component: m.TermsScreen })) },
   { path: '/admin', lazy: () => import('./admin/AdminScreen').then((m) => ({ Component: m.AdminScreen })) },
   {
     element: <SignedIn />,

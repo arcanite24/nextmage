@@ -307,6 +307,10 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('accountEmailVerifyStart'),
     accountEmailVerify: (code: string) =>
       rpc.call('accountEmailVerify', code),
+    accountExport: () =>
+      rpc.call('accountExport'),
+    accountDelete: (password: string, confirmName: string) =>
+      rpc.call('accountDelete', password, confirmName),
     careerState: () =>
       rpc.call('careerState'),
     careerStarters: () =>

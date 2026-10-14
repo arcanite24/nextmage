@@ -30,5 +30,7 @@ export default {
   'about.data.reports': 'Reports you file about other players, until a moderator closes them.',
   'about.data.errors': 'Error reports from your browser when something breaks: the message, the screen and the browser, never your password.',
   'about.data.chat': 'Chat is not stored. Friends and ignore lists stay in your browser.',
+  // {privacy} is a link to the privacy policy
+  'about.data.more': 'The {privacy} has the details, and the {terms} the rules of playing here.',
   'about.backTo': 'Back to {app}',
 } as const;

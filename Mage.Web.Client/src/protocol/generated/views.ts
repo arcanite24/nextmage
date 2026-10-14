@@ -1311,6 +1311,7 @@ export interface ServerInfo {
     access?: string;
     accounts?: boolean;
     career?: boolean;
+    contactEmail?: string;
     deckSync?: boolean;
     gamesRunning?: number;
     gamesWaiting?: number;

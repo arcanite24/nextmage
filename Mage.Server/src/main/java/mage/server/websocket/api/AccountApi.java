@@ -70,6 +70,8 @@ final class AccountApi {
         public int gamesWaiting;
         /** Cloudflare Turnstile's site key: registration and access requests need the widget's token. Absent when off */
         public String turnstileSiteKey;
+        /** where players write about their data and the server (XMAGE_CONTACT_EMAIL); absent when not set */
+        public String contactEmail;
     }
 
     static List<RpcMethod> methods(ApiContext ctx) {
@@ -163,6 +165,7 @@ final class AccountApi {
         }
         info.deckSync = info.accounts;
         info.turnstileSiteKey = ctx.turnstile.siteKey();
+        info.contactEmail = contactEmail();
         if (ctx.managers != null && ctx.managers.threadExecutor() != null
                 && ctx.managers.threadExecutor().getGameExecutor() instanceof ThreadPoolExecutor) {
             ThreadPoolExecutor games = (ThreadPoolExecutor) ctx.managers.threadExecutor().getGameExecutor();
@@ -188,6 +191,17 @@ final class AccountApi {
             info.notice = "";
         }
         return info;
+    }
+
+    public static final String CONTACT_EMAIL_PROP = "xmage.contactEmail";
+    public static final String CONTACT_EMAIL_ENV = "XMAGE_CONTACT_EMAIL";
+
+    static String contactEmail() {
+        String value = System.getProperty(CONTACT_EMAIL_PROP);
+        if (value == null || value.trim().isEmpty()) {
+            value = System.getenv(CONTACT_EMAIL_ENV);
+        }
+        return value == null || value.trim().isEmpty() ? null : value.trim();
     }
 
     /**
