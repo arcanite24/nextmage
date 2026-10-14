@@ -11,6 +11,7 @@
 #   user_stats.db, table_record.db                  SQLite copies (player stats, finished tables)
 #   web_decks.db, web_reports.db, career.db         SQLite copies (synced decks, player reports, Career progress)
 #   web_admin.db                                    SQLite copy (/admin: access, staff, audit log, settings)
+#   support.db                                      SQLite copy (support ledger, sponsorships, perks, looks)
 # H2 dumps are taken online: AUTO_SERVER lets this process join the running server's database.
 # SQLite copies use the online backup API. The newest $BACKUP_KEEP (default 14) backups are kept.
 # Every run writes db/backup-status.json, which the server reads for /admin and its staff alerts.
@@ -21,7 +22,7 @@ BACKUP_DIR=${BACKUP_DIR:-/backups}
 BACKUP_AT=${BACKUP_AT:-03:30}
 BACKUP_KEEP=${BACKUP_KEEP:-14}
 H2_DBS=(authorized_user.h2 feedback.h2)
-SQLITE_DBS=(user_stats.db table_record.db web_decks.db web_reports.db career.db web_admin.db)
+SQLITE_DBS=(user_stats.db table_record.db web_decks.db web_reports.db career.db web_admin.db support.db)
 STATUS=$DB_DIR/backup-status.json
 
 h2_jar() {

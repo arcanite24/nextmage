@@ -22,7 +22,7 @@ from_file() {
     eval "$1=\$(cat \"\$file\")"
   fi
 }
-for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY XMAGE_DISCORD_WEBHOOK XMAGE_DISCORD_STAFF_WEBHOOK XMAGE_GITHUB_CLIENT_SECRET XMAGE_GITHUB_TOKEN XMAGE_TURNSTILE_SECRET; do
+for secret in XMAGE_ADMIN_PASSWORD XMAGE_MAIL_PASSWORD XMAGE_MAILGUN_API_KEY XMAGE_DISCORD_WEBHOOK XMAGE_DISCORD_STAFF_WEBHOOK XMAGE_GITHUB_CLIENT_SECRET XMAGE_GITHUB_TOKEN XMAGE_TURNSTILE_SECRET XMAGE_KOFI_TOKEN XMAGE_GITHUB_SPONSORS_SECRET; do
   from_file "$secret"
 done
 
@@ -149,6 +149,12 @@ ALLOWLIST=${XMAGE_ALLOWLIST:-}
 case "$ALLOWLIST" in
   @*) [ -r "${ALLOWLIST#@}" ] || die "XMAGE_ALLOWLIST file ${ALLOWLIST#@} can't be read" ;;
 esac
+
+# --- support for the server ---------------------------------------------------------------------
+# The payment webhooks' listener (Caddy forwards /hooks and /public to it): on 17174 when Ko-fi or GitHub Sponsors is
+# set up, unless XMAGE_HOOKS_PORT says otherwise (0 = off)
+HOOKS_PORT=${XMAGE_HOOKS_PORT:-}
+[ -z "$HOOKS_PORT" ] || is_uint "$HOOKS_PORT" || die "XMAGE_HOOKS_PORT must be a whole number (got '$HOOKS_PORT')"
 
 # --- JVM sizing ---------------------------------------------------------------------------------
 # Sized to the machine the container sees: its memory limit when it has one, else the host's memory;
@@ -284,6 +290,14 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
   if [ -n "${XMAGE_TURNSTILE_SECRET:-}" ]; then
     printf '"-Dxmage.turnstile.secret=%s"\n' "$(printf '%s' "$XMAGE_TURNSTILE_SECRET" | sed 's/[\\"]/\\&/g')"
   fi
+  # support payments: Ko-fi's verification token and the GitHub Sponsors webhook secret stay out of ps
+  if [ -n "${XMAGE_KOFI_TOKEN:-}" ]; then
+    printf '"-Dxmage.kofi.token=%s"\n' "$(printf '%s' "$XMAGE_KOFI_TOKEN" | sed 's/[\\"]/\\&/g')"
+  fi
+  if [ -n "${XMAGE_GITHUB_SPONSORS_SECRET:-}" ]; then
+    printf '"-Dxmage.githubSponsors.secret=%s"\n' "$(printf '%s' "$XMAGE_GITHUB_SPONSORS_SECRET" | sed 's/[\\"]/\\&/g')"
+  fi
+  [ -z "$HOOKS_PORT" ] || echo "-Dxmage.hooksPort=$HOOKS_PORT"
   if [ -n "${XMAGE_TRUSTED_PROXIES:-}" ]; then
     echo "-Dxmage.web.trustedProxies=$XMAGE_TRUSTED_PROXIES"
   fi
