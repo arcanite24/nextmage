@@ -56,6 +56,8 @@ playmat.multivac.club {
 
 The front proxy replaces `X-Forwarded-For` with the visitor's address, and this stack believes it only from `UPSTREAM_PROXIES`, so rate limits and the server's per-address caps see each player. Only forward ports 80 and 443 to the front proxy: `HTTP_PORT` must not be reachable from the internet. A publicly trusted certificate also makes the app installable on Android, which refuses to install from the local CA.
 
+**Cloudflare's proxy.** To put the public server behind Cloudflare's orange cloud (DDoS protection), see [CLOUDFLARE.md](CLOUDFLARE.md). It covers the origin certificate, SSL mode Full (strict), setting `UPSTREAM_PROXIES` to Cloudflare's ranges, limiting the firewall to Cloudflare, and switching back to DNS only.
+
 ## Settings
 
 Set these in `ops/web/.env` (Compose reads it automatically) or in the environment. An empty value uses the default. The server renders `config/config.xml` from the shipped config and these variables on every start, so removing a variable restores its default. You never edit `config.xml` and you don't need to rebuild to change settings: `docker compose -f ops/web/docker-compose.yml up -d` applies them.
@@ -63,7 +65,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | Variable | Default | Meaning |
 |---|---|---|
 | `DOMAIN` | required | Public host name. It becomes the only allowed browser origin. |
-| `PROXIED_HOST`, `UPSTREAM_PROXIES` | none (a name that matches nothing), `127.0.0.1/32` | A public name served over plain HTTP on `HTTP_PORT` for a reverse proxy in front that holds its certificate, and the range that proxy connects from, whose `X-Forwarded-For` names the client. See [Behind another reverse proxy](#behind-another-reverse-proxy). |
+| `PROXIED_HOST`, `UPSTREAM_PROXIES` | none (a name that matches nothing), `127.0.0.1/32` | A public name served over plain HTTP on `HTTP_PORT` for a reverse proxy in front that holds its certificate, and the range that proxy connects from, whose `X-Forwarded-For` names the client. See [Behind another reverse proxy](#behind-another-reverse-proxy), and [CLOUDFLARE.md](CLOUDFLARE.md) for Cloudflare's proxy (several ranges, separated by spaces). |
 | `LAN_IP` | empty | The host's LAN address, served too (Caddy signs a certificate for it) for devices that can't resolve `DOMAIN`. Add `https://<LAN_IP>:<HTTPS_PORT>` to `XMAGE_ALLOWED_ORIGINS`. |
 | `XMAGE_ADMIN_PASSWORD` | unset | Admin password (`-Dxmage.adminPassword`). Unset: admin login is disabled. |
 | `XMAGE_AUTH` | `false` | `authenticationActivated`. `true` makes players register and log in with a password. Use it on a public server. |
