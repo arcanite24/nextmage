@@ -5,7 +5,7 @@ import type { EventBus } from '../rpc/EventBus';
 import type { ServerEvent } from '../rpc/RpcClient';
 import { DelayedRelay } from './broadcastDelay';
 import { deriveInteraction, type Command, type Interaction } from './interaction';
-import { predict, type Prediction } from './prediction';
+import type { Prediction } from './prediction';
 import { PROMPT_EVENTS, parsePrompt, promptGameView, stripMarkup, type Prompt, type PromptEventName } from './prompt';
 import { structuralShare } from './structuralShare';
 
@@ -308,12 +308,15 @@ export class GameSession {
     }
   }
 
-  /** Click on a card, permanent, player or stack object; returns false when the object is not clickable now. */
-  click(objectId: string): boolean {
-    const { view, interaction, awaitingServer } = this.store.getState();
+  /**
+   * Click on a card, permanent, player or stack object; returns false when the object is not clickable now. The
+   * prediction (see prediction.ts) is drawn until the server's next view or question.
+   */
+  click(objectId: string, prediction: Prediction | null = null): boolean {
+    const { interaction, awaitingServer } = this.store.getState();
     const command = interaction.clickable.get(objectId);
     if (!command || awaitingServer) return false;
-    this.store.setState({ prediction: predict(view, interaction, objectId) });
+    this.store.setState({ prediction });
     void this.respond(command).catch(() => undefined);
     return true;
   }

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GameView } from '../../protocol/generated/views';
 import type { EventBus } from '../rpc/EventBus';
 import { GameSession } from './gameSession';
+import { predict } from './prediction';
 
 type Handler = (data: unknown, event: { objectId: string | null }) => void;
 
@@ -77,7 +78,8 @@ describe('GameSession prediction', () => {
     const forest = { id: 'forest', cardTypes: ['LAND'], subTypes: ['FOREST'], rules: [] };
     const board = { ...base, players: [{ playerId: 'me', battlefield: { forest } }] } as unknown as GameView;
     emit('GAME_SELECT', { message: 'Play spells and abilities', gameView: { ...board, canPlayObjects: { objects: { forest: {} } } } });
-    expect(session.click('forest')).toBe(true);
+    const { view, interaction } = session.getState();
+    expect(session.click('forest', predict(view, interaction, 'forest'))).toBe(true);
     expect(session.getState().prediction).toEqual({ id: 'forest', tapped: true });
     expect(api.sendPlayerUUID).toHaveBeenCalledWith('g1', 'forest');
 

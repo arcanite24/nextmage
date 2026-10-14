@@ -14,7 +14,7 @@ import { spectatorHand } from '../../core/game/spectatorHand';
 import { matchProgress } from '../../core/game/matchProgress';
 import { pregameChoice } from '../../core/game/pregame';
 import { offBoardTargets } from '../../core/game/offBoardTargets';
-import { withPredictedAttack, withPrediction } from '../../core/game/prediction';
+import { predict, withPredictedAttack, withPrediction } from '../../core/game/prediction';
 import type { CardView, ChatMessage, GameView, PlayerLook, PlayerView } from '../../protocol/generated/views';
 import { rosterOf, sleeveFor, SLEEVE_COLORS, useDecks } from '../stores/decks';
 import { useT } from '../i18n';
@@ -210,7 +210,9 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
     }
     if (session.getState().interaction.mode === 'declareBlockers') setLastBlocker(id);
     if (session.getState().interaction.mode === 'declareAttackers') setLastAttacker(id);
-    session.click(id);
+    // what the click will likely do shows at once (prediction.ts), until the server's answer
+    const { view: current, interaction: now } = session.getState();
+    session.click(id, predict(current, now, id));
   }, [session, damageSplit]);
 
   const blockDrop = useBlockDrag(session, state);
