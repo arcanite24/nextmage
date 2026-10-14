@@ -2,6 +2,8 @@
 export default {
   'settings.title': 'Settings',
   'settings.restore': 'Restore defaults',
+  // the dialog's footer: "Playmat v1.2.3"
+  'settings.version': '{app} {version}',
   'settings.sections': 'Settings sections',
   'settings.tab.play': 'Gameplay',
   'settings.tab.stops': 'Stops',
@@ -11,6 +13,28 @@ export default {
   'settings.tab.alerts': 'Alerts',
   'settings.tab.import': 'Import',
   'settings.tab.language': 'Language',
+  'settings.tab.account': 'Account',
+
+  'settings.account.email': 'Email address',
+  // {email} is the masked address, like n***@example.com
+  'settings.account.email.verified': '{email}, confirmed. You can recover your account with it.',
+  'settings.account.email.unverified': '{email}, not confirmed yet. Confirm it to recover your account and receive supporter perks.',
+  'settings.account.email.none': 'Your account has no email address. Ask the server\'s staff to add one.',
+  'settings.account.email.noMail': "This server can't send email, so addresses can't be confirmed here.",
+  'settings.account.data': 'Your data',
+  'settings.account.data.detail': 'Everything the server keeps about your account, as a JSON file: the account, decks, Career, ratings, reports and feedback.',
+  'settings.account.download': 'Download my data',
+  'settings.account.delete': 'Delete my account',
+  'settings.account.delete.detail': "Deletes your account and everything that belongs to it, for good. It can't be undone: download your data first if you want to keep it.",
+  // {name} is the account name
+  'settings.account.delete.title': 'Delete {name}?',
+  'settings.account.delete.text': 'Your account, decks, Career, ratings, reports and feedback are deleted for good, and you are signed out. Type your account name and your password to confirm.',
+  'settings.account.delete.github': 'You sign in with GitHub, so the password may stay empty: typing your account name is enough.',
+  'settings.account.delete.name': 'Account name',
+  'settings.account.delete.password': 'Password',
+  'settings.account.delete.confirm': 'Delete my account for good',
+  'settings.account.delete.cancel': 'Keep my account',
+  'settings.account.legal': 'How this server handles your data',
 
   'settings.style': 'Play style',
   'settings.style.streamlined': 'Streamlined',

@@ -29,8 +29,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('authRememberLogin', SESSION),
     authForgetLogin: (userName: string, rememberToken: string) =>
       rpc.call('authForgetLogin', userName, rememberToken),
-    authRegister: (userName: string, password: string, email: string, inviteCode?: string | null) =>
-      rpc.call('authRegister', SESSION, userName, password, email, inviteCode),
+    authRegister: (userName: string, password: string, email: string, inviteCode?: string | null, turnstileToken?: string | null) =>
+      rpc.call('authRegister', SESSION, userName, password, email, inviteCode, turnstileToken),
     authSendTokenToEmail: (email: string) =>
       rpc.call('authSendTokenToEmail', SESSION, email),
     authResetPassword: (email: string, authToken: string, password: string) =>
@@ -253,8 +253,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('githubStart'),
     githubFinish: (state: string, code: string, userName?: string | null) =>
       rpc.call('githubFinish', state, code, userName),
-    accessRequest: (userName: string, email: string, note?: string | null) =>
-      rpc.call('accessRequest', userName, email, note),
+    accessRequest: (userName: string, email: string, note?: string | null, turnstileToken?: string | null) =>
+      rpc.call('accessRequest', userName, email, note, turnstileToken),
     staffMe: () =>
       rpc.call('staffMe'),
     adminStaff: () =>
@@ -301,6 +301,16 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('reportPlayer', userName, reason, details, gameId),
     clientReportError: (report: ClientError) =>
       rpc.call('clientReportError', report),
+    accountEmailStatus: () =>
+      rpc.call('accountEmailStatus'),
+    accountEmailVerifyStart: () =>
+      rpc.call('accountEmailVerifyStart'),
+    accountEmailVerify: (code: string) =>
+      rpc.call('accountEmailVerify', code),
+    accountExport: () =>
+      rpc.call('accountExport'),
+    accountDelete: (password: string, confirmName: string) =>
+      rpc.call('accountDelete', password, confirmName),
     careerState: () =>
       rpc.call('careerState'),
     careerStarters: () =>

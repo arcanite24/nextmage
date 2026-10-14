@@ -48,7 +48,8 @@ export interface SessionState {
   signIn(serverUrl: string, userName: string, password: string, remember?: boolean): Promise<boolean>;
   /** creates an account with the chosen password and signs in with it */
   /** inviteCode: an invite link's code, which lets the account in to a contributors-only server */
-  register(serverUrl: string, userName: string, email: string, password: string, remember?: boolean, inviteCode?: string): Promise<boolean>;
+  /** turnstileToken: Cloudflare Turnstile's token, for servers that ask for one */
+  register(serverUrl: string, userName: string, email: string, password: string, remember?: boolean, inviteCode?: string, turnstileToken?: string): Promise<boolean>;
   /** signs in with a remembered-device token the server gave this device (after Sign in with GitHub) */
   signInWithToken(serverUrl: string, userName: string, token: string): Promise<boolean>;
   /** emails a reset code to the account with this address (the server doesn't say whether there is one) */
@@ -186,11 +187,11 @@ export const useSession = create<SessionState>((set, get) => ({
     return get().signIn(serverUrl, userName, '');
   },
 
-  async register(serverUrl, userName, email, password, remember = false, inviteCode) {
+  async register(serverUrl, userName, email, password, remember = false, inviteCode, turnstileToken) {
     set({ phase: 'signingIn', error: null, serverUrl, userName });
     try {
       await connectTo(serverUrl);
-      await api.authRegister(userName, password, email, inviteCode || null);
+      await api.authRegister(userName, password, email, inviteCode || null, turnstileToken || null);
     } catch (error) {
       set({ phase: 'signedOut', error: describeError(error) });
       return false;

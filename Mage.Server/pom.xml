@@ -436,6 +436,7 @@
                                 <class>mage.server.websocket.api.AccountsApi$AccountsPage</class>
                                 <class>mage.server.websocket.api.AccountsApi$AccountSession</class>
                                 <class>mage.server.websocket.api.AccountsApi$AccountDetail</class>
+                                <class>mage.server.websocket.api.MyAccountApi$AccountEmailStatus</class>
                                 <class>mage.server.AccountService$StaffResetCode</class>
                                 <class>mage.server.admin.FeedbackEntry</class>
                                 <class>mage.server.websocket.api.AccessApi$InviteCheck</class>

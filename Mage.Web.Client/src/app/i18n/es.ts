@@ -25,6 +25,8 @@ const es: Catalog = {
   'shell.admin': 'Administración',
   'shell.feedback': 'Enviar comentarios',
   'shell.about': 'Acerca de y créditos',
+  'legal.privacyLink': 'Política de privacidad',
+  'legal.termsLink': 'Términos',
   'shell.signOut': 'Cerrar sesión',
 
   // sign-in
@@ -55,6 +57,10 @@ const es: Catalog = {
   'login.password': 'Contraseña',
   'login.newPassword': 'Contraseña nueva',
   'login.remember': 'Mantener la sesión iniciada en este dispositivo',
+  'login.agree': 'Acepto los {terms} y la {privacy}.',
+  'login.agree.terms': 'términos',
+  'login.agree.privacy': 'política de privacidad',
+  'login.deleted': 'Tu cuenta se eliminó. Gracias por jugar.',
   'login.needsPassword': 'Este servidor pide contraseña',
   'login.server.online': 'En línea',
   'login.server.offline': 'Sin respuesta',
@@ -83,6 +89,7 @@ const es: Catalog = {
   'login.asked': 'Tu solicitud está con el equipo del servidor. Cuando la aprueben, crea una cuenta con {email}.',
   'login.invite.checking': 'Comprobando tu invitación…',
   'login.invite.valid': 'Tienes una invitación. Crea tu cuenta y entrará directamente en la lista de este servidor.',
+  'login.turnstile.unavailable': 'No cargó la verificación de que eres una persona. Revisa tu conexión o permite challenges.cloudflare.com en tu bloqueador de contenido, y vuelve a cargar la página.',
 
   // Play
   'home.yourDecks': 'Tus mazos',
@@ -109,6 +116,18 @@ const es: Catalog = {
   'home.continue': 'Continuar',
   'home.career': 'Carrera',
   'home.career.note': 'Tu propia colección, rivales de IA por niveles, sobres que ganar.',
+
+  // confirmar el correo de la cuenta
+  'email.banner.title': 'Confirma tu correo',
+  'email.banner.text': 'Confirma tu correo para poder recuperar tu cuenta y recibir las recompensas de apoyo. Los códigos llegan a {email}.',
+  'email.banner.dismiss': 'Ahora no',
+  'email.code': 'Código del correo',
+  'email.codeHint': 'Seis dígitos. Sirve durante 30 minutos y cinco intentos.',
+  'email.confirm': 'Confirmar',
+  'email.send': 'Enviar un código nuevo',
+  'email.sent': 'Te enviamos un código nuevo. Revisa también la carpeta de spam.',
+  'email.confirmed': 'Tu correo está confirmado. ¡Gracias!',
+  'email.wrongCode': 'Ese código es incorrecto o ya venció. Pide uno nuevo.',
 
   // the AI opponent (Play)
   'ai.title': 'Jugar contra la IA',
@@ -189,6 +208,16 @@ const es: Catalog = {
   'decks.sync.failed': 'No se pudo guardar en tu cuenta',
   'decks.sync.saved': 'Guardado en tu cuenta',
 
+  // "What's new"
+  'whatsNew.title': 'Novedades de la {version}',
+  'whatsNew.lede': '{app} se actualizó desde la última vez que jugaste.',
+  'whatsNew.features': 'Nuevo',
+  'whatsNew.fixes': 'Corregido',
+  'whatsNew.ops': 'Servidor',
+  'whatsNew.other': 'Además',
+  'whatsNew.all': 'Todos los cambios',
+  'whatsNew.close': 'Entendido',
+
   // shared UI kit
   'ui.back': 'Atrás',
   'ui.close': 'Cerrar',
@@ -202,6 +231,7 @@ const es: Catalog = {
   // settings
   'settings.title': 'Ajustes',
   'settings.restore': 'Restablecer valores predeterminados',
+  'settings.version': '{app} {version}',
   'settings.sections': 'Secciones de ajustes',
   'settings.tab.play': 'Juego',
   'settings.tab.stops': 'Paradas',
@@ -211,6 +241,25 @@ const es: Catalog = {
   'settings.tab.alerts': 'Avisos',
   'settings.tab.import': 'Importar',
   'settings.tab.language': 'Idioma',
+  'settings.tab.account': 'Cuenta',
+  'settings.account.email': 'Correo electrónico',
+  'settings.account.email.verified': '{email}, confirmado. Puedes recuperar tu cuenta con él.',
+  'settings.account.email.unverified': '{email}, todavía sin confirmar. Confírmalo para poder recuperar tu cuenta y recibir las recompensas de apoyo.',
+  'settings.account.email.none': 'Tu cuenta no tiene correo electrónico. Pídele al equipo del servidor que agregue uno.',
+  'settings.account.email.noMail': 'Este servidor no puede enviar correos, así que aquí no se pueden confirmar direcciones.',
+  'settings.account.data': 'Tus datos',
+  'settings.account.data.detail': 'Todo lo que el servidor guarda sobre tu cuenta, en un archivo JSON: la cuenta, los mazos, la Carrera, las calificaciones, los reportes y los comentarios.',
+  'settings.account.download': 'Descargar mis datos',
+  'settings.account.delete': 'Eliminar mi cuenta',
+  'settings.account.delete.detail': 'Elimina tu cuenta y todo lo que le pertenece, para siempre. No se puede deshacer: si quieres conservar tus datos, descárgalos primero.',
+  'settings.account.delete.title': '¿Eliminar {name}?',
+  'settings.account.delete.text': 'Tu cuenta, tus mazos, tu Carrera, tus calificaciones, tus reportes y tus comentarios se eliminan para siempre, y se cierra tu sesión. Escribe el nombre de tu cuenta y tu contraseña para confirmar.',
+  'settings.account.delete.github': 'Inicias sesión con GitHub, así que puedes dejar la contraseña vacía: basta con escribir el nombre de tu cuenta.',
+  'settings.account.delete.name': 'Nombre de la cuenta',
+  'settings.account.delete.password': 'Contraseña',
+  'settings.account.delete.confirm': 'Eliminar mi cuenta para siempre',
+  'settings.account.delete.cancel': 'Conservar mi cuenta',
+  'settings.account.legal': 'Cómo trata tus datos este servidor',
 
   'settings.style': 'Estilo de juego',
   'settings.style.streamlined': 'Ágil',
@@ -456,6 +505,7 @@ const es: Catalog = {
   // about
   'about.back': 'Atrás',
   'about.title': 'Acerca de {app}',
+  'about.version': 'Versión {version}',
   'about.lede': '{app} es un cliente web gratuito para XMage, el motor de reglas de código abierto de Magic: The Gathering. Nadie paga por jugar y aquí no se vende nada.',
   'about.wotc': 'Wizards of the Coast',
   // the Fan Content Policy notice stays in English, as Wizards words it
@@ -478,6 +528,7 @@ const es: Catalog = {
   'about.data.reports': 'Los reportes que haces sobre otros jugadores, hasta que un moderador los cierra.',
   'about.data.errors': 'Los reportes de errores de tu navegador cuando algo falla: el mensaje, la pantalla y el navegador, nunca tu contraseña.',
   'about.data.chat': 'El chat no se guarda. Las listas de amigos e ignorados quedan en tu navegador.',
+  'about.data.more': 'La {privacy} tiene los detalles, y los {terms}, las reglas para jugar aquí.',
   'about.backTo': 'Volver a {app}',
 
   // career
@@ -1072,6 +1123,54 @@ const es: Catalog = {
   'match.score.won': 'Ganaste la partida {game} · {wins}–{losses}',
   'match.score.lost': 'Perdiste la partida {game} · {wins}–{losses}',
   'match.score.draw': 'La partida {game} fue empate · {wins}–{losses}',
+
+  // privacidad y términos
+  'legal.updated': 'Última actualización: {date}.',
+  'legal.contact': 'Preguntas o pedidos sobre tus datos: {contact}.',
+  'legal.contact.feedback': 'escríbele al equipo del servidor con Enviar comentarios (en el menú bajo tu nombre, con la sesión iniciada)',
+  'privacy.title': 'Privacidad',
+  'privacy.lede': '{app} lo administra el proyecto Playmat de deimos.studio. Esta página explica qué guarda el servidor sobre ti, para qué, durante cuánto tiempo y quién más participa. No hay anuncios, ni rastreadores, ni cookies.',
+  'privacy.collect': 'Qué guardamos y para qué',
+  'privacy.collect.account': 'Tu cuenta: su nombre, tu correo electrónico y tu contraseña, guardada solo como un hash con sal que no podemos revertir. Para iniciar tu sesión y para que puedas recuperar la cuenta por correo.',
+  'privacy.collect.addresses': 'Tu dirección IP: en los registros del servidor y, por un rato, en memoria para limitar los inicios de sesión fallidos y las cuentas nuevas por dirección. Para proteger el servidor del abuso.',
+  'privacy.collect.games': 'Tus partidas: resultados, calificaciones y repeticiones de las partidas terminadas. Las repeticiones se borran a los 30 días. Para que puedas volver a ver tus partidas y jugar enfrentamientos justos.',
+  'privacy.collect.chat': 'El chat: los mensajes llegan a los jugadores de tu mesa y no se guardan. El registro de la partida (qué se lanzó, qué murió) forma parte de la repetición.',
+  'privacy.collect.decks': 'Tus mazos y tu progreso en la Carrera, guardados con tu cuenta para que te sigan a otro dispositivo.',
+  'privacy.collect.reports': 'Los reportes que haces sobre otros jugadores y los reportes sobre ti, para los moderadores. Los comentarios que envías, para el equipo.',
+  'privacy.collect.errors': 'Reportes de errores de la app cuando algo falla: el mensaje, la pantalla, el navegador y la versión de la app, con el nombre de tu cuenta. Nunca tu contraseña.',
+  'privacy.collect.payments': 'Próximamente, si decides apoyar el proyecto por Ko-fi: el nombre, el correo, el monto y el mensaje que Ko-fi nos envía con tu apoyo, para agradecerte y asociarlo a tu cuenta.',
+  'privacy.howLong': 'Durante cuánto tiempo',
+  'privacy.howLong.text': 'Tu cuenta y lo que le pertenece se guardan hasta que eliminas la cuenta. Las repeticiones se borran a los 30 días. Los registros del servidor se guardan hasta que rotan, lo que tarda unas pocas semanas como mucho. Las copias de seguridad nocturnas de las bases de datos se guardan 14 días, así que después de eso lo borrado desaparece del todo.',
+  'privacy.others': 'Quién más participa',
+  'privacy.others.hetzner': 'Hetzner aloja el servidor, en Alemania.',
+  'privacy.others.cloudflare': 'Cloudflare maneja nuestro DNS. Si el sitio sufre un ataque, podemos hacerlo pasar por Cloudflare durante un tiempo, y entonces el tráfico pasa por ellos.',
+  'privacy.others.scryfall': 'Scryfall proporciona las imágenes y los datos de las cartas. Los pedimos a través de nuestra propia caché, así que tu dirección nunca llega a Scryfall.',
+  'privacy.others.mail': 'Nuestro proveedor de correo entrega los correos que te enviamos: códigos y avisos de la cuenta, nada más.',
+  'privacy.others.payments': 'Ko-fi, y Stripe o PayPal detrás de él, procesan los pagos de apoyo. Nunca vemos los datos de tu tarjeta.',
+  'privacy.others.github': 'GitHub, solo si inicias sesión con GitHub: nos dice tu nombre de GitHub y tu correo verificado.',
+  'privacy.others.discord': 'Discord, donde el servidor puede publicar mesas públicas y eventos en el canal de la comunidad. Esas publicaciones muestran nombres de mesas y de jugadores.',
+  'privacy.storage': 'En tu dispositivo',
+  'privacy.storage.text': '{app} no usa cookies. Tus ajustes, tu sesión en este dispositivo y tus listas de amigos e ignorados se guardan en el almacenamiento de tu navegador. Sin cuenta, tus mazos también quedan ahí.',
+  'privacy.rights': 'Tus derechos',
+  'privacy.rights.download': 'Descargar todo lo que guardamos sobre tu cuenta: Ajustes, Cuenta, Descargar mis datos.',
+  'privacy.rights.delete': 'Eliminar tu cuenta y todo lo que le pertenece: Ajustes, Cuenta, Eliminar mi cuenta.',
+  'privacy.rights.correct': 'Corregir algo que esté mal, como tu correo electrónico: pídenoslo (abajo).',
+  'terms.title': 'Términos',
+  'terms.lede': '{app} es un proyecto de fans gratuito y no oficial. Al jugar aquí aceptas estas pocas reglas.',
+  'terms.fan': 'Un proyecto de fans',
+  'terms.warranty': 'Sin garantías',
+  'terms.warranty.text': 'El servidor y la app se ofrecen tal como son, gratis. Pueden caerse, tener errores o perder datos de vez en cuando, aunque hacemos copias de seguridad y nos esforzamos para que no pase.',
+  'terms.conduct': 'Juega limpio',
+  'terms.conduct.text': 'Trata bien a los demás jugadores. Nada de acoso, odio, trampas, abuso de errores, bots, spam ni hacerse pasar por otra persona. Si alguien rompe estas reglas, repórtalo: {report}.',
+  'terms.conduct.report': 'abre su perfil, o el menú sobre su nombre en la lista de jugadores del lobby, y elige Report',
+  'terms.staff': 'Qué puede hacer el equipo',
+  'terms.staff.text': 'El equipo del servidor puede silenciar, bloquear o eliminar cuentas que rompan estas reglas, y quitar mesas. Lo que hace queda registrado.',
+  'terms.support': 'Apoyar el proyecto',
+  'terms.support.text': 'Los pagos de apoyo son donaciones voluntarias. Nunca desbloquean nada del juego: como mucho, quienes apoyan reciben agradecimientos cosméticos en el arte propio de {app}, y el juego sigue siendo gratis para todos.',
+  'terms.account': 'Tu cuenta',
+  'terms.account.text': 'Una persona por cuenta. No compartas tu contraseña. Puedes eliminar tu cuenta cuando quieras.',
+  'terms.changes': 'Cambios',
+  'terms.changes.text': 'Si estos términos o la política de privacidad cambian, esta página y su fecha cambian también; si el cambio es grande, lo avisaremos en la app.',
 };
 
 

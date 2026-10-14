@@ -22,6 +22,8 @@ export default {
   'shell.admin': 'Admin',
   'shell.feedback': 'Send feedback',
   'shell.about': 'About and credits',
+  'legal.privacyLink': 'Privacy policy',
+  'legal.termsLink': 'Terms',
   'shell.signOut': 'Sign out',
 
   // sign-in
@@ -52,6 +54,11 @@ export default {
   'login.password': 'Password',
   'login.newPassword': 'New password',
   'login.remember': 'Keep me signed in on this device',
+  // {terms} and {privacy} are links to the terms and the privacy policy
+  'login.agree': 'I agree to the {terms} and the {privacy}.',
+  'login.agree.terms': 'terms',
+  'login.agree.privacy': 'privacy policy',
+  'login.deleted': 'Your account was deleted. Thanks for playing.',
   'login.needsPassword': 'This server needs a password',
   'login.server.online': 'Online',
   'login.server.offline': "Can't reach",
@@ -80,6 +87,7 @@ export default {
   'login.asked': "Your request is with the server's staff. Once it's approved, create an account with {email}.",
   'login.invite.checking': 'Checking your invite…',
   'login.invite.valid': "You're invited. Create your account and it goes straight onto this server's list.",
+  'login.turnstile.unavailable': "The check that you're a person didn't load. Check your connection, or allow challenges.cloudflare.com in your content blocker, then reload.",
 
   // Play
   'home.yourDecks': 'Your decks',
@@ -106,6 +114,19 @@ export default {
   'home.continue': 'Continue',
   'home.career': 'Career',
   'home.career.note': 'Your own collection, AI opponents in tiers, packs to earn.',
+
+  // confirming the account's email (Home banner, Settings → Account)
+  'email.banner.title': 'Confirm your email',
+  // {email} is the masked address, like n***@example.com
+  'email.banner.text': 'Confirm your email to recover your account and receive supporter perks. Codes go to {email}.',
+  'email.banner.dismiss': 'Not now',
+  'email.code': 'Code from the email',
+  'email.codeHint': 'Six digits. It works for 30 minutes and five tries.',
+  'email.confirm': 'Confirm',
+  'email.send': 'Send a new code',
+  'email.sent': 'A new code is on its way. Check your spam folder too.',
+  'email.confirmed': 'Your email address is confirmed. Thank you!',
+  'email.wrongCode': 'That code is wrong or has expired. Send a new one.',
 
   // the AI opponent (Play)
   'ai.title': 'Playing the AI',

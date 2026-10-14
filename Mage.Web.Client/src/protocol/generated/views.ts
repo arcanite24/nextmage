@@ -48,11 +48,19 @@ export interface AccountDetail {
     tourneys?: number;
 }
 
+export interface AccountEmailStatus {
+    email?: string;
+    github?: boolean;
+    mail?: boolean;
+    verified?: boolean;
+}
+
 export interface AccountRow {
     active?: boolean;
     allowlisted?: boolean;
     career?: boolean;
     email?: string;
+    emailVerified?: boolean;
     lastConnection?: number;
     lockedUntil?: number;
     mutedUntil?: number;
@@ -1303,6 +1311,7 @@ export interface ServerInfo {
     access?: string;
     accounts?: boolean;
     career?: boolean;
+    contactEmail?: string;
     deckSync?: boolean;
     gamesRunning?: number;
     gamesWaiting?: number;
@@ -1319,6 +1328,7 @@ export interface ServerInfo {
     registration?: string;
     serverName?: string;
     testMode?: boolean;
+    turnstileSiteKey?: string;
 }
 
 export interface ServerSetting {

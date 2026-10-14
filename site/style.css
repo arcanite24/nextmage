@@ -262,6 +262,7 @@ p { margin: 0; text-wrap: pretty; }
 
 .cta { display: grid; justify-items: center; gap: 10px; margin-top: 6px; }
 .btn-big { padding: 16px 34px; font-size: 1.2rem; }
+.cta-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 .cta-note { margin: 0; }
 
 .download { padding: 112px 0 0; }

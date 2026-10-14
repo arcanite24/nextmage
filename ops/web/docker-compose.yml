@@ -2,7 +2,10 @@
 #   cp ops/web/.env.example ops/web/.env   # then edit
 #   docker compose -f ops/web/docker-compose.yml up -d --build
 # Every server setting is documented in ops/web/README.md. Empty values use the image defaults.
-x-server-image: &server-image xmage-web-server:local
+# Images: built here (build:) under the local names, unless .env names published ones (XMAGE_SERVER_IMAGE and
+# XMAGE_WEB_IMAGE, e.g. ghcr.io/arcanite24/playmat-server:v1.2.3@sha256:...), which `up -d --no-build` runs as they
+# are; the image-based deploy (ops/web/deploy) pins them there. Building with them set fails: unset them to build.
+x-server-image: &server-image ${XMAGE_SERVER_IMAGE:-xmage-web-server:local}
 
 services:
   xmage:
@@ -58,6 +61,11 @@ services:
       XMAGE_MAIL_USER: ${XMAGE_MAIL_USER:-}
       XMAGE_MAIL_PASSWORD: ${XMAGE_MAIL_PASSWORD:-}
       XMAGE_MAIL_FROM: ${XMAGE_MAIL_FROM:-}
+      XMAGE_MAIL_SMTP_STARTTLS: ${XMAGE_MAIL_SMTP_STARTTLS:-}
+      XMAGE_MAILGUN_BASE_URL: ${XMAGE_MAILGUN_BASE_URL:-}
+      XMAGE_TURNSTILE_SITE_KEY: ${XMAGE_TURNSTILE_SITE_KEY:-}
+      XMAGE_TURNSTILE_SECRET: ${XMAGE_TURNSTILE_SECRET:-}
+      XMAGE_CONTACT_EMAIL: ${XMAGE_CONTACT_EMAIL:-}
     volumes:
       - xmage-db:/opt/xmage/db         # user data only (accounts, stats, table records, feedback)
       - xmage-cards:/opt/xmage/cards-db # card database cache, rebuilt when the image changes
@@ -78,7 +86,7 @@ services:
 
   web:
     # named, like the server's, so a host that receives built images (ops/web/ship-images.sh) runs them without building
-    image: xmage-web:local
+    image: ${XMAGE_WEB_IMAGE:-xmage-web:local}
     build:
       context: ../..
       dockerfile: ops/web/Dockerfile.web
@@ -149,7 +157,7 @@ services:
 
   backup:
     image: *server-image
-    pull_policy: never # built by the xmage service
+    pull_policy: never # the xmage service's image, built or pulled for it
     entrypoint: ["xmage-backup"]
     command: ["daemon"]
     init: true

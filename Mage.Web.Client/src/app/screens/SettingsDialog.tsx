@@ -11,7 +11,7 @@ import { notificationsSupported, requestNotifications } from '../stores/attentio
 import { useAutoAnswers } from '../stores/autoAnswers';
 import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
-import { APP_NAME, PUBLIC_ORIGIN } from '../brand';
+import { APP_NAME, APP_VERSION, PUBLIC_ORIGIN } from '../brand';
 import { clearPictureStore, DEVICE_PICTURES, pictureStoreStats } from '../nativePictures';
 import { formatNumber, LOCALES, registerMessages, useT, type LocalePreference, type MessageKey, type Translate } from '../i18n';
 import messages from '../i18n/en/settings';
@@ -20,6 +20,8 @@ import { RichText } from '../i18n/RichText';
 import { Button } from '../ui/Button';
 import { CARD_BACKS, cardBackImage, type CardBackId } from '../ui/cardBack';
 import { Dialog } from '../ui/Dialog';
+import { useServerInfo } from '../queries';
+import { AccountSettings } from './AccountSettings';
 import styles from './SettingsDialog.module.css';
 
 registerMessages(messages);
@@ -35,6 +37,8 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   const settings = useSettings((state) => state.settings);
   const update = useSettings((state) => state.update);
   const t = useT();
+  // the Account tab: servers with accounts only
+  const accounts = useServerInfo().data?.accounts === true;
 
   const toggle = (key: keyof PlaySettings) => (
     <Switch checked={!!settings[key]} onChange={(value) => update({ [key]: value } as Partial<PlaySettings>)} />
@@ -47,9 +51,12 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title={t('settings.title')} width="lg"
       footer={(
-        <Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag, locale: settings.locale, matCloth: settings.matCloth, matArt: settings.matArt, matCard: settings.matCard, cardBack: settings.cardBack })}>
-          {t('settings.restore')}
-        </Button>
+        <>
+          <span className={styles.version}>{t('settings.version', { app: APP_NAME, version: APP_VERSION })}</span>
+          <Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag, locale: settings.locale, matCloth: settings.matCloth, matArt: settings.matArt, matCard: settings.matCard, cardBack: settings.cardBack })}>
+            {t('settings.restore')}
+          </Button>
+        </>
       )}>
       <Tabs.Root defaultValue="play" className={styles.tabs} orientation="vertical">
         <Tabs.List className={styles.list} aria-label={t('settings.sections')}>
@@ -62,6 +69,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <Tabs.Trigger value="alerts" className={styles.trigger}>{t('settings.tab.alerts')}</Tabs.Trigger>
           <Tabs.Trigger value="import" className={styles.trigger}>{t('settings.tab.import')}</Tabs.Trigger>
           <Tabs.Trigger value="language" className={styles.trigger}>{t('settings.tab.language')}</Tabs.Trigger>
+          {accounts && <Tabs.Trigger value="account" className={styles.trigger}>{t('settings.tab.account')}</Tabs.Trigger>}
         </Tabs.List>
 
         <Tabs.Content value="play" className={styles.panel}>
@@ -214,6 +222,12 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             </select>
           </Row>
         </Tabs.Content>
+
+        {accounts && (
+          <Tabs.Content value="account" className={styles.panel}>
+            <AccountSettings />
+          </Tabs.Content>
+        )}
       </Tabs.Root>
     </Dialog>
   );

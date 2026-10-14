@@ -56,6 +56,8 @@ playmat.multivac.club {
 
 The front proxy replaces `X-Forwarded-For` with the visitor's address, and this stack believes it only from `UPSTREAM_PROXIES`, so rate limits and the server's per-address caps see each player. Only forward ports 80 and 443 to the front proxy: `HTTP_PORT` must not be reachable from the internet. A publicly trusted certificate also makes the app installable on Android, which refuses to install from the local CA.
 
+**Cloudflare's proxy.** To put the public server behind Cloudflare's orange cloud (DDoS protection), see [CLOUDFLARE.md](CLOUDFLARE.md). It covers the origin certificate, SSL mode Full (strict), setting `UPSTREAM_PROXIES` to Cloudflare's ranges, limiting the firewall to Cloudflare, and switching back to DNS only.
+
 ## Settings
 
 Set these in `ops/web/.env` (Compose reads it automatically) or in the environment. An empty value uses the default. The server renders `config/config.xml` from the shipped config and these variables on every start, so removing a variable restores its default. You never edit `config.xml` and you don't need to rebuild to change settings: `docker compose -f ops/web/docker-compose.yml up -d` applies them.
@@ -63,7 +65,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | Variable | Default | Meaning |
 |---|---|---|
 | `DOMAIN` | required | Public host name. It becomes the only allowed browser origin. |
-| `PROXIED_HOST`, `UPSTREAM_PROXIES` | none (a name that matches nothing), `127.0.0.1/32` | A public name served over plain HTTP on `HTTP_PORT` for a reverse proxy in front that holds its certificate, and the range that proxy connects from, whose `X-Forwarded-For` names the client. See [Behind another reverse proxy](#behind-another-reverse-proxy). |
+| `PROXIED_HOST`, `UPSTREAM_PROXIES` | none (a name that matches nothing), `127.0.0.1/32` | A public name served over plain HTTP on `HTTP_PORT` for a reverse proxy in front that holds its certificate, and the range that proxy connects from, whose `X-Forwarded-For` names the client. See [Behind another reverse proxy](#behind-another-reverse-proxy), and [CLOUDFLARE.md](CLOUDFLARE.md) for Cloudflare's proxy (several ranges, separated by spaces). |
 | `LAN_IP` | empty | The host's LAN address, served too (Caddy signs a certificate for it) for devices that can't resolve `DOMAIN`. Add `https://<LAN_IP>:<HTTPS_PORT>` to `XMAGE_ALLOWED_ORIGINS`. |
 | `XMAGE_ADMIN_PASSWORD` | unset | Admin password (`-Dxmage.adminPassword`). Unset: admin login is disabled. |
 | `XMAGE_AUTH` | `false` | `authenticationActivated`. `true` makes players register and log in with a password. Use it on a public server. |
@@ -98,7 +100,10 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_ALLOWED_ORIGINS` | `https://$DOMAIN` | Browser origins the bridge accepts. Include the port when `HTTPS_PORT` isn't 443. |
 | `XMAGE_ALLOWED_ORIGINS` | `https://$DOMAIN` | Set by Compose. Browser origins allowed to open a game connection. |
 | `XMAGE_MAILGUN_API_KEY`, `XMAGE_MAILGUN_DOMAIN` | empty | Mailgun account for registration and password-reset mail. |
-| `XMAGE_MAIL_SMTP_HOST`, `XMAGE_MAIL_SMTP_PORT`, `XMAGE_MAIL_USER`, `XMAGE_MAIL_PASSWORD`, `XMAGE_MAIL_FROM` | empty | SMTP instead of Mailgun. The server uses SMTP when `XMAGE_MAIL_USER` is set. |
+| `XMAGE_MAILGUN_BASE_URL` | `https://api.mailgun.net/v3` | Mailgun's API address. `https://api.eu.mailgun.net/v3` for a domain in Mailgun's EU region. |
+| `XMAGE_MAIL_SMTP_HOST`, `XMAGE_MAIL_SMTP_PORT`, `XMAGE_MAIL_USER`, `XMAGE_MAIL_PASSWORD`, `XMAGE_MAIL_FROM` | empty | SMTP instead of Mailgun. The server uses SMTP when `XMAGE_MAIL_USER` is set. Port 465 speaks TLS from the start; port 587 upgrades with STARTTLS. `XMAGE_MAIL_FROM` defaults to the user. For Purelymail: `smtp.purelymail.com`, port `587`, the mailbox's full address as user. A mail server that doesn't answer is given up on after 10 seconds. |
+| `XMAGE_MAIL_SMTP_STARTTLS` | `false` | `true` uses STARTTLS on any port (and refuses to log in if the server can't upgrade). Port 587 always uses it. |
+| `XMAGE_TURNSTILE_SITE_KEY`, `XMAGE_TURNSTILE_SECRET` | empty | [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) on registration and access requests (`-Dxmage.turnstile.*`). Both set: the web client shows the widget and the server checks each token with Cloudflare (5 s timeout); a missing or failed token, or Cloudflare not answering, refuses the registration. Create the widget for `DOMAIN` (and `localhost`, for the Android app). The secret is a secret. Independently, the server allows 3 new accounts an hour and 10 a day per client address, and the same for access requests. |
 | `XMAGE_DISCORD_WEBHOOK` | empty | Discord webhook address (`-Dxmage.discordWebhook`). Set: public tables, events starting and matches starting are posted to that channel (see [Discord notifications](#discord-notifications)). A secret: anyone with it can post to the channel. |
 | `XMAGE_DISCORD_STAFF_WEBHOOK` | empty | A second webhook for staff news: access requests, player reports and staff role changes (`-Dxmage.discordStaffWebhook`). Empty: those go to `XMAGE_DISCORD_WEBHOOK`. A secret. |
 | `XMAGE_CAREER` | `on` | `off` turns the optional single-player Career off. It needs accounts either way: without them nobody's collection would be safe. Progress is kept in `career.db`. |
@@ -108,6 +113,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_GITHUB_CLIENT_ID`, `XMAGE_GITHUB_CLIENT_SECRET` | empty | An OAuth app for Sign in with GitHub (`-Dxmage.github.*`). Its callback URL is `XMAGE_PUBLIC_URL/auth/github`. Both set: the sign-in screen offers GitHub. The secret is a secret. |
 | `XMAGE_GITHUB_REPO`, `XMAGE_GITHUB_TOKEN` | empty | `owner/name` of a repository whose people get in to a contributors server by signing in with GitHub, fetched every 6 hours: its collaborators when the token can read them, its public contributors without a token. |
 | `XMAGE_PUBLIC_URL` | `https://$DOMAIN` | The web client's public address (`-Dxmage.publicUrl`), for join links in Discord posts. Include the port when `HTTPS_PORT` isn't 443. Empty: posts without links. |
+| `XMAGE_CONTACT_EMAIL` | empty | The address the privacy policy and terms (`/privacy`, `/terms`) give for questions about players' data. Empty: they point players to Feedback. |
 | `XMAGE_JAVA_OPTS` | empty | Extra JVM flags. |
 | `BACKUP_AT` | `03:30` | Time of the daily backup, as `HH:MM` in `TZ`. |
 | `BACKUP_KEEP` | `14` | Number of backups to keep. |
@@ -118,7 +124,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `IMGCACHE_API_MAX_SIZE` | `1g` | Disk cap of the lookup cache. |
 | `IMGCACHE_API_RATE` / `IMGCACHE_API_BURST` | `10r/s` / `20` | Requests per second the image cache sends to `api.scryfall.com` for the whole site (cache misses only), and how many more may queue before it answers `429`. |
 
-Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE`, `XMAGE_MAILGUN_API_KEY_FILE`, `XMAGE_DISCORD_WEBHOOK_FILE`, `XMAGE_DISCORD_STAFF_WEBHOOK_FILE`, `XMAGE_GITHUB_CLIENT_SECRET_FILE` and `XMAGE_GITHUB_TOKEN_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password and the webhook address don't show up in `ps`.
+Secrets can also come from files: `XMAGE_ADMIN_PASSWORD_FILE`, `XMAGE_MAIL_PASSWORD_FILE`, `XMAGE_MAILGUN_API_KEY_FILE`, `XMAGE_DISCORD_WEBHOOK_FILE`, `XMAGE_DISCORD_STAFF_WEBHOOK_FILE`, `XMAGE_GITHUB_CLIENT_SECRET_FILE`, `XMAGE_GITHUB_TOKEN_FILE` and `XMAGE_TURNSTILE_SECRET_FILE` take precedence over the plain variables. To use them, mount the file and add the variable to the `xmage` service. The JVM gets its flags through a private argument file, so the admin password and the webhook address don't show up in `ps`.
 
 Invalid values (for example `XMAGE_AUTH=yes`) stop the server at start with a message that names the variable.
 
@@ -151,11 +157,13 @@ podman build --platform linux/arm64 -f ops/web/Dockerfile.web -t xmage-web:local
 ops/web/ship-images.sh <ssh-host> podman
 ```
 
-`ship-images.sh` loads both images on the host over SSH and restarts it with `up -d --no-build`. The host keeps a checkout of the repository with its `.env` in `~/xmage-server`.
+`ship-images.sh` loads both images on the host over SSH and restarts it with `up -d --no-build`. The host keeps a checkout of the repository with its `.env` in `~/xmage-server`. A host set up for image-based deploys (`ops/web/deploy/setup-deploy-user.sh`) runs from `/srv/playmat` instead. Don't ship images to it: deploy a release or a `sha-<7>` build (see [Upgrade](#upgrade)).
 
 ## Accounts and moderation
 
 With `XMAGE_AUTH=true`, players register in the web client with a name, an email address and a password they choose. A forgotten password is reset with a six-digit code sent by mail: it works for 30 minutes and 5 tries. Configure Mailgun or SMTP (above), or players can't reset passwords. The web client asks the server (`serverInfo`) whether accounts and mail are on and shows only the forms that work.
+
+With mail on, the welcome mail carries a six-digit code that confirms the player's email address; Home and Settings, Account let them type it or ask for a new one (once a minute, five an hour). A password reset by mailed code and Sign in with GitHub confirm the address too. Confirmed addresses are kept in `web_admin.db`, and the admin console marks them. Unconfirmed accounts play everything. When someone registers with an address held by an account that never confirmed it, was registered more than 48 hours ago and hasn't signed in for 48 hours, the address moves to the new account and the audit log records it (`user.email.release`), so a squatter can't keep an owner out.
 
 Signed-in players' decks sync to their account (`web_decks.db`), so they follow the player to another browser. Without accounts, decks stay in each browser.
 
@@ -244,7 +252,8 @@ Posting never holds up a game: posts wait in a small queue (20) for one backgrou
 
 ## Health
 
-- `xmage` answers `GET /healthz` on `127.0.0.1:17173` inside its container (`-Dxmage.healthPort`, 0 turns it off): its version and commit, uptime, players online, games running, planned maintenance and any backup problem, as JSON. It is healthy once that answers, which is after the card database is loaded; the first start gets 15 minutes for that. `docker compose exec xmage bash -c 'exec 3<>/dev/tcp/127.0.0.1/17173; printf "GET /healthz HTTP/1.0\r\n\r\n" >&3; cat <&3'` shows it.
+- `xmage` answers `GET /healthz` on `127.0.0.1:17173` inside its container (`-Dxmage.healthPort`, 0 turns it off): its version and commit, uptime, players online, games running (`activeGames`, and `gamesRunning`, what a drain waits for), planned maintenance and any backup problem, as JSON.
+- The same loopback listener takes `POST /maintenance?minutes=N&message=...` (announce maintenance, as the owner's Settings does, without restart-when-idle) and `POST /maintenance/cancel`. The image-based deploy (`ops/web/deploy/playmat-deploy`) drains the server with them through `docker compose exec`, so it needs no admin password. Only processes inside the container reach them. It is healthy once that answers, which is after the card database is loaded; the first start gets 15 minutes for that. `docker compose exec xmage bash -c 'exec 3<>/dev/tcp/127.0.0.1/17173; printf "GET /healthz HTTP/1.0\r\n\r\n" >&3; cat <&3'` shows it.
 - The admin Overview shows the same version, the commit (the image build reads it from the checkout's `.git`), and the last backup.
 - `web` checks Caddy's admin API on `localhost:2019`. It starts only after `xmage` and `imgcache` are healthy.
 - `imgcache` answers `/healthz` on port 8080 inside the network.
@@ -363,14 +372,66 @@ Also worth setting on a fresh host: Docker log rotation in `/etc/docker/daemon.j
 
 ## Upgrade
 
+There are three ways to get a new version running. All of them keep the volumes, and settings stay in `.env`.
+
+### Published images (production)
+
+GitHub Actions builds both images for every master commit and every release (`.github/workflows/images.yml`), for amd64 and arm64, and pushes them to GHCR:
+
+| Image | Tags |
+|---|---|
+| `ghcr.io/arcanite24/playmat-server` | `sha-<7>` for every build, `master` for master's newest, `vX.Y.Z` and `latest` for releases |
+| `ghcr.io/arcanite24/playmat-web` | the same |
+
+The compose file runs whatever `XMAGE_SERVER_IMAGE` and `XMAGE_WEB_IMAGE` in `.env` name, and falls back to the local build names when they're empty. To run a published version by hand:
+
+```bash
+XMAGE_SERVER_IMAGE=ghcr.io/arcanite24/playmat-server:v1.2.3
+XMAGE_WEB_IMAGE=ghcr.io/arcanite24/playmat-web:v1.2.3
+```
+
+```bash
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env pull xmage web
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env up -d --no-build
+```
+
+Production doesn't do this by hand. A published GitHub release builds its images and deploys them after approval (`.github/workflows/deploy.yml`, see [RELEASING.md](../../RELEASING.md)). The workflow reaches the host as a `deploy` user whose key can only run `ops/web/deploy/playmat-deploy`. That script:
+
+1. pulls both images and pins their digests,
+2. snapshots the user databases into `/var/backups/playmat` (an online dump; the newest 5 are kept),
+3. drains the server: with games running it announces maintenance and waits up to 15 minutes for them to end,
+4. writes the digests into `.env`,
+5. runs `up -d --no-build` with the compose file the server image carries (`/opt/xmage/deploy-kit`), so a rollback also rolls back the compose file,
+6. waits up to 5 minutes for `xmage` and `web` to be healthy and `https://DOMAIN/` to answer 200, and otherwise rolls back to the previous digests,
+7. posts the result to the staff Discord channel, then removes images older than the previous version.
+
+On that host the stack lives in `/srv/playmat`: its `.env`, one compose kit per deployed version under `releases/`, and `current`. `ops/web/deploy/setup-deploy-user.sh` sets this up once, and the deploy user can't read a checkout under `/root`. From then on, use `playmat-compose` on the host in place of `docker compose -f ...`: for example `playmat-compose ps`, `playmat-compose logs -f xmage`, or `playmat-compose up -d --no-build` after editing `/srv/playmat/.env`. `playmat-deploy status` shows the current and previous versions.
+
+### Multivac follows master (staging)
+
+The group server on Windows runs master's newest images. `ops/web/pull-images.ps1` (Windows PowerShell 5.1) pulls `playmat-server:master` and `playmat-web:master` from GHCR and pins their digests in `ops\web\.env`. It then runs `up -d --no-build` with the compose kit from the server image, which it extracts to `ops\web\deploy-kit`. If the result isn't healthy within 5 minutes, it puts the previous `.env` back. When the digests haven't changed, it does nothing. The images are public, so it needs no secrets.
+
+Docker Desktop's credential helper fails over SSH, so run the script from a scheduled task in the console session, the same way the build-based redeploy runs. Once, from the checkout (`git pull` first so the script is there):
+
+```bat
+schtasks /Create /TN playmat-pull /SC HOURLY /IT /F /TR "powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\neri\xmage-server\ops\web\pull-images.ps1"
+schtasks /Run /TN playmat-pull
+```
+
+- The script finds the compose project from the running `xmage` container (`-Project` overrides it) and logs to `ops\web\pull-images.log`.
+- `-Tag v1.2.3` runs a release instead of master. To build locally again, empty `XMAGE_SERVER_IMAGE` and `XMAGE_WEB_IMAGE` in `.env`.
+- If an older task builds from the checkout (`up --build`), disable it: a build fails while `.env` names published images.
+
+### Building on the host
+
 ```bash
 git pull
 docker compose -f ops/web/docker-compose.yml up -d --build
 ```
 
-- Volumes are kept. The first start after an upgrade rebuilds the card database (a few minutes); the site comes up when the server reports healthy.
+- This builds `xmage-web-server:local` and `xmage-web:local`. It works only while `XMAGE_SERVER_IMAGE` and `XMAGE_WEB_IMAGE` are empty. `ship-images.sh` sends images built elsewhere under the same names.
+- The image ships its card database, so the first start after an upgrade takes seconds. The site comes up when the server reports healthy.
 - Take a backup first (`xmage-backup once`) when the release notes mention database changes.
-- Settings live in `.env`, so an upgrade never overwrites them.
 
 ## Card image cache
 
@@ -416,7 +477,9 @@ Add the page origin to `websocketAllowedOrigins` in `config.xml` on the `<server
 - Caddy sends a `Content-Security-Policy`: scripts only from the site itself, styles from the site plus inline
   styles (React), pictures from the site, `data:`/`blob:` and Scryfall (a client built without the image proxy loads
   them from Scryfall directly), connections to the site, any `wss:` server and `api.scryfall.com`, and no framing
-  (`frame-ancestors 'none'`). Adding a third-party script or host to the client means adding it there too.
+  (`frame-ancestors 'none'`). The one third-party script is Cloudflare Turnstile (`challenges.cloudflare.com` in
+  `script-src`, `frame-src` and `connect-src`), which the client loads only on the registration and access forms of
+  a server that turns it on. Adding a third-party script or host to the client means adding it there too.
 - Rate limits per client address exist twice. Caddy limits how fast an address opens game connections
   (`WS_RATE_LIMIT` per `WS_RATE_WINDOW`) and Scryfall lookups (`IMG_API_RATE_LIMIT`), answering `429` with
   `Retry-After`. The server separately caps concurrent game connections per address

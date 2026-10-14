@@ -1,5 +1,5 @@
 import { ChevronRight, SlidersHorizontal, Trophy } from 'lucide-react';
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rosterOf, sleeveFor, useDecks } from '../stores/decks';
 import { useCoach } from '../stores/coach';
@@ -14,8 +14,11 @@ import { AiSettingsDialog } from './AiSettingsDialog';
 import { useImportDrop, useImportPaste } from '../decks/import/useImportShortcuts';
 import { openImport } from '../stores/importSheet';
 import { describeAi } from './aiSetup';
-import { slotsFull, useGameSlots, useServerInfo } from '../queries';
+import { slotsFull, useEmailStatus, useGameSlots, useServerInfo } from '../queries';
 import styles from './HomeScreen.module.css';
+
+// the banner and its code form load only for a player whose address still needs confirming
+const EmailBanner = lazy(() => import('./EmailConfirm').then((module) => ({ default: module.EmailBanner })));
 
 type Mode = 'ai' | 'practice' | 'friend';
 
@@ -34,6 +37,8 @@ export function HomeScreen() {
   const play = usePlay();
   const [mode, setMode] = useState<Mode>('ai');
   const [aiOpen, setAiOpen] = useState(false);
+  const emailStatus = useEmailStatus().data;
+  const emailUnconfirmed = !!emailStatus?.email && !emailStatus.verified && !!emailStatus.mail;
   const roster = useMemo(() => rosterOf(decks), [decks]);
   const selected = roster.find((deck) => deck.id === decks.selectedId) ?? roster[0] ?? null;
   const sleeve = sleeveFor(decks.sleeves, selected);
@@ -120,6 +125,7 @@ export function HomeScreen() {
 
         <div className={styles.playZone} role="group" aria-labelledby="play-zone-label">
           <h2 id="play-zone-label" className={styles.zoneLabel}>{t('home.play')}</h2>
+          {emailUnconfirmed && <Suspense fallback={null}><EmailBanner /></Suspense>}
           {!firstGameDone && (
             <div className={styles.firstGame}>
               <p className={styles.firstGameText}>{t('home.firstGame.text')}</p>

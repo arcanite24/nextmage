@@ -280,7 +280,7 @@ public final class Main {
         logger.info("Config - second.bind port: " + config.getSecondaryBindPort());
         logger.info("Config - users registr.:   " + (config.isAuthenticationActivated() ? "true" : "false"));
         logger.info("Config - users anon:       " + (!config.isAuthenticationActivated() ? "true" : "false"));
-        logger.info("Config - mailgun api key : " + config.getMailgunApiKey());
+        logger.info("Config - mailgun api key : " + (config.getMailgunApiKey() == null || config.getMailgunApiKey().isEmpty() ? "not set" : "set"));
         logger.info("Config - mailgun domain  : " + config.getMailgunDomain());
         logger.info("Config - mail smtp Host  : " + config.getMailSmtpHost());
         logger.info("Config - mail smtpPort   : " + config.getMailSmtpPort());

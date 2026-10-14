@@ -557,3 +557,23 @@
 .about:hover {
   color: var(--ink-strong);
 }
+
+/* Cloudflare Turnstile's widget (300 × 65), on servers that ask for it */
+.turnstile {
+  display: grid;
+  gap: var(--space-2);
+  min-height: 65px;
+}
+
+/* About, privacy and terms, under the form */
+.legal {
+  align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-4);
+}
+
+.remember a {
+  color: var(--ink-strong);
+}
