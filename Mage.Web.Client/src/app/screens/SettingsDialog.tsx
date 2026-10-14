@@ -20,6 +20,8 @@ import { RichText } from '../i18n/RichText';
 import { Button } from '../ui/Button';
 import { CARD_BACKS, cardBackImage, type CardBackId } from '../ui/cardBack';
 import { Dialog } from '../ui/Dialog';
+import { useServerInfo } from '../queries';
+import { AccountSettings } from './AccountSettings';
 import styles from './SettingsDialog.module.css';
 
 registerMessages(messages);
@@ -35,6 +37,8 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   const settings = useSettings((state) => state.settings);
   const update = useSettings((state) => state.update);
   const t = useT();
+  // the Account tab: servers with accounts only
+  const accounts = useServerInfo().data?.accounts === true;
 
   const toggle = (key: keyof PlaySettings) => (
     <Switch checked={!!settings[key]} onChange={(value) => update({ [key]: value } as Partial<PlaySettings>)} />
@@ -62,6 +66,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <Tabs.Trigger value="alerts" className={styles.trigger}>{t('settings.tab.alerts')}</Tabs.Trigger>
           <Tabs.Trigger value="import" className={styles.trigger}>{t('settings.tab.import')}</Tabs.Trigger>
           <Tabs.Trigger value="language" className={styles.trigger}>{t('settings.tab.language')}</Tabs.Trigger>
+          {accounts && <Tabs.Trigger value="account" className={styles.trigger}>{t('settings.tab.account')}</Tabs.Trigger>}
         </Tabs.List>
 
         <Tabs.Content value="play" className={styles.panel}>
@@ -214,6 +219,12 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             </select>
           </Row>
         </Tabs.Content>
+
+        {accounts && (
+          <Tabs.Content value="account" className={styles.panel}>
+            <AccountSettings />
+          </Tabs.Content>
+        )}
       </Tabs.Root>
     </Dialog>
   );

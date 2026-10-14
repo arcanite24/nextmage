@@ -301,6 +301,12 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('reportPlayer', userName, reason, details, gameId),
     clientReportError: (report: ClientError) =>
       rpc.call('clientReportError', report),
+    accountEmailStatus: () =>
+      rpc.call('accountEmailStatus'),
+    accountEmailVerifyStart: () =>
+      rpc.call('accountEmailVerifyStart'),
+    accountEmailVerify: (code: string) =>
+      rpc.call('accountEmailVerify', code),
     careerState: () =>
       rpc.call('careerState'),
     careerStarters: () =>

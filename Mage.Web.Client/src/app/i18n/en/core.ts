@@ -107,6 +107,19 @@ export default {
   'home.career': 'Career',
   'home.career.note': 'Your own collection, AI opponents in tiers, packs to earn.',
 
+  // confirming the account's email (Home banner, Settings → Account)
+  'email.banner.title': 'Confirm your email',
+  // {email} is the masked address, like n***@example.com
+  'email.banner.text': 'Confirm your email to recover your account and receive supporter perks. Codes go to {email}.',
+  'email.banner.dismiss': 'Not now',
+  'email.code': 'Code from the email',
+  'email.codeHint': 'Six digits. It works for 30 minutes and five tries.',
+  'email.confirm': 'Confirm',
+  'email.send': 'Send a new code',
+  'email.sent': 'A new code is on its way. Check your spam folder too.',
+  'email.confirmed': 'Your email address is confirmed. Thank you!',
+  'email.wrongCode': 'That code is wrong or has expired. Send a new one.',
+
   // the AI opponent (Play)
   'ai.title': 'Playing the AI',
   'ai.restore': 'Restore defaults',

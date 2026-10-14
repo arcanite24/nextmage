@@ -80,7 +80,7 @@ public final class AccountService {
         }
         long now = System.currentTimeMillis();
         StaffResetCode result = new StaffResetCode();
-        result.code = TOKENS.issue(user.email, now, STAFF_CODE_MILLIS);
+        result.code = TOKENS.issue(user.email, now, STAFF_CODE_MILLIS, true);
         result.email = user.email;
         result.expiresAt = now + STAFF_CODE_MILLIS;
         if (Mailer.configured(managers.configSettings())) {
@@ -106,13 +106,19 @@ public final class AccountService {
         if (problem != null) {
             return problem;
         }
-        if (!TOKENS.redeem(email, code, System.currentTimeMillis())) {
+        long now = System.currentTimeMillis();
+        ResetTokens.Redeemed redeemed = TOKENS.redeemCode(email, code, now);
+        if (redeemed == null) {
             logger.info("Wrong or expired password reset code for " + user.getName());
             return "That code is wrong or has expired. Ask for a new one.";
         }
         // the new password only: locks, the active flag and the email stay as they were
         if (!AuthorizedUserRepository.getInstance().changePassword(user.getName(), password)) {
             return "The password couldn't be changed. Try again.";
+        }
+        // a code that came only by mail proves the player reads the address; one staff passed on doesn't
+        if (redeemed == ResetTokens.Redeemed.BY_MAIL) {
+            EmailVerification.markVerified(user.getName(), user.getEmail(), now);
         }
         logger.info("Password reset for " + user.getName());
         return null;

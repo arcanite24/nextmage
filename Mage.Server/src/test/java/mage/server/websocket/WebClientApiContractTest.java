@@ -77,7 +77,8 @@ public class WebClientApiContractTest {
             "adminAccounts", "adminAccount", "adminResetCode", "adminAccountExport", "adminDeleteAccount", "adminFeedback",
             "adminFeedbackMark", "sendFeedback", // accounts and feedback (api/AccountsApiTest)
             "adminTableWatch", "adminClientErrorResolve", "adminSettings", "adminSetSetting", "adminMaintenance",
-            "adminMaintenanceCancel", "adminDiscordTest" // watching, client errors, settings and maintenance (M15)
+            "adminMaintenanceCancel", "adminDiscordTest", // watching, client errors, settings and maintenance (M15)
+            "accountEmailStatus", "accountEmailVerifyStart", "accountEmailVerify" // email verification (EmailVerificationTest)
     ));
 
     static {

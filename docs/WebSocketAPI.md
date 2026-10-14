@@ -271,6 +271,9 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `deckSyncDelete` | `deckId: string`, `deletedAt: number` | `DeckPutResult` | session | Delete a deck of the signed-in account, unless the server has a change newer than the deletion. |
 | `reportPlayer` | `userName: string`, `reason: string`, `details: string`, `gameId?: string` | `number` | session | Report a player to the server's moderators. Reasons: abuse, cheating, spam, stalling, other. A player can have 5 open reports at a time. Returns the report id. |
 | `clientReportError` | `report: ClientError` | `boolean` | public | A crash report from the web client: kept in the server log and the admin console, never sent elsewhere. Limited per connection; extra reports are dropped. |
+| `accountEmailStatus` | - | `AccountEmailStatus` | session | The signed-in account's email, masked, and whether it is confirmed. Only on servers with accounts. |
+| `accountEmailVerifyStart` | - | `boolean` | session | Email a six-digit code that confirms the signed-in account's address (5 an hour, one a minute; each works 30 minutes and 5 tries). Fails with the reason. |
+| `accountEmailVerify` | `code: string` | `boolean` | session | Confirm the signed-in account's email with the mailed code. False when the code is wrong or has expired. |
 | `careerState` | - | `CareerState` | session | Whether this server offers Career, and the signed-in account's Career (profile null before it opens one). |
 | `careerStarters` | - | `CareerStarter[]` | session | The starter decks a Career can open with. |
 | `careerStart` | `starterId: string` | `CareerProfile` | session | Open a Career with a starter deck: its cards become the collection, plus coins for a first pack. |

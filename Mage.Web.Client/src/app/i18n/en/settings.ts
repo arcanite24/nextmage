@@ -11,6 +11,14 @@ export default {
   'settings.tab.alerts': 'Alerts',
   'settings.tab.import': 'Import',
   'settings.tab.language': 'Language',
+  'settings.tab.account': 'Account',
+
+  'settings.account.email': 'Email address',
+  // {email} is the masked address, like n***@example.com
+  'settings.account.email.verified': '{email}, confirmed. You can recover your account with it.',
+  'settings.account.email.unverified': '{email}, not confirmed yet. Confirm it to recover your account and receive supporter perks.',
+  'settings.account.email.none': 'Your account has no email address. Ask the server\'s staff to add one.',
+  'settings.account.email.noMail': "This server can't send email, so addresses can't be confirmed here.",
 
   'settings.style': 'Play style',
   'settings.style.streamlined': 'Streamlined',

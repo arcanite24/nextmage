@@ -11,6 +11,7 @@ import { MatPrint } from '../ui/MatPrint';
 import { storeCards } from '../ui/imageCache';
 import { DEVICE_PICTURES } from '../nativePictures';
 import { AiSettingsDialog } from './AiSettingsDialog';
+import { EmailBanner } from './EmailConfirm';
 import { useImportDrop, useImportPaste } from '../decks/import/useImportShortcuts';
 import { openImport } from '../stores/importSheet';
 import { describeAi } from './aiSetup';
@@ -120,6 +121,7 @@ export function HomeScreen() {
 
         <div className={styles.playZone} role="group" aria-labelledby="play-zone-label">
           <h2 id="play-zone-label" className={styles.zoneLabel}>{t('home.play')}</h2>
+          <EmailBanner />
           {!firstGameDone && (
             <div className={styles.firstGame}>
               <p className={styles.firstGameText}>{t('home.firstGame.text')}</p>

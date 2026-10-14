@@ -61,6 +61,10 @@ public final class GithubSignIn {
         if (account != null) {
             AuthorizedUser user = accounts.getByName(account);
             store.linkGithub(who.id, who.login, account, now);
+            // GitHub vouches that this person reads the address
+            if (who.email != null && who.email.equalsIgnoreCase(user.getEmail())) {
+                store.emailVerified(account, user.getEmail(), now);
+            }
             if (!access.allows(account, user.getEmail()) && !github.isRepoPerson(who.login)) {
                 throw new IllegalArgumentException(AccessPolicy.REFUSED);
             }
@@ -88,6 +92,8 @@ public final class GithubSignIn {
         // nobody knows this password: the account signs in with GitHub, or with a reset code sent to its email
         accounts.add(name, Base64.getEncoder().encodeToString(bytes) + "a1", who.email);
         store.linkGithub(who.id, who.login, name, now);
+        store.accountRegistered(name, now);
+        store.emailVerified(name, who.email, now);
         if (access.isAllowlist() && github.isRepoPerson(who.login)) {
             store.allow(name, "github: " + who.login, "github", now);
         }

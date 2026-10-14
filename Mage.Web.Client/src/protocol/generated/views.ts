@@ -48,11 +48,19 @@ export interface AccountDetail {
     tourneys?: number;
 }
 
+export interface AccountEmailStatus {
+    email?: string;
+    github?: boolean;
+    mail?: boolean;
+    verified?: boolean;
+}
+
 export interface AccountRow {
     active?: boolean;
     allowlisted?: boolean;
     career?: boolean;
     email?: string;
+    emailVerified?: boolean;
     lastConnection?: number;
     lockedUntil?: number;
     mutedUntil?: number;

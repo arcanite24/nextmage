@@ -375,3 +375,26 @@
 .matCardRow input {
   flex: 1;
 }
+
+/* Account: one block per subject (email, your data), each with its own actions */
+.accountSection {
+  display: grid;
+  gap: var(--space-2);
+  padding: 12px 0 var(--space-4);
+  border-bottom: 1px solid var(--ink-ghost);
+}
+
+.accountSection h3 {
+  margin: 0;
+  font-size: inherit;
+}
+
+.accountSection p {
+  margin: 0;
+}
+
+.accountActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

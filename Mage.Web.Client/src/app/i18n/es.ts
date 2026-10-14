@@ -110,6 +110,18 @@ const es: Catalog = {
   'home.career': 'Carrera',
   'home.career.note': 'Tu propia colección, rivales de IA por niveles, sobres que ganar.',
 
+  // confirmar el correo de la cuenta
+  'email.banner.title': 'Confirma tu correo',
+  'email.banner.text': 'Confirma tu correo para poder recuperar tu cuenta y recibir las recompensas de apoyo. Los códigos llegan a {email}.',
+  'email.banner.dismiss': 'Ahora no',
+  'email.code': 'Código del correo',
+  'email.codeHint': 'Seis dígitos. Sirve durante 30 minutos y cinco intentos.',
+  'email.confirm': 'Confirmar',
+  'email.send': 'Enviar un código nuevo',
+  'email.sent': 'Te enviamos un código nuevo. Revisa también la carpeta de spam.',
+  'email.confirmed': 'Tu correo está confirmado. ¡Gracias!',
+  'email.wrongCode': 'Ese código es incorrecto o ya venció. Pide uno nuevo.',
+
   // the AI opponent (Play)
   'ai.title': 'Jugar contra la IA',
   'ai.restore': 'Restablecer valores predeterminados',
@@ -211,6 +223,12 @@ const es: Catalog = {
   'settings.tab.alerts': 'Avisos',
   'settings.tab.import': 'Importar',
   'settings.tab.language': 'Idioma',
+  'settings.tab.account': 'Cuenta',
+  'settings.account.email': 'Correo electrónico',
+  'settings.account.email.verified': '{email}, confirmado. Puedes recuperar tu cuenta con él.',
+  'settings.account.email.unverified': '{email}, todavía sin confirmar. Confírmalo para poder recuperar tu cuenta y recibir las recompensas de apoyo.',
+  'settings.account.email.none': 'Tu cuenta no tiene correo electrónico. Pídele al equipo del servidor que agregue uno.',
+  'settings.account.email.noMail': 'Este servidor no puede enviar correos, así que aquí no se pueden confirmar direcciones.',
 
   'settings.style': 'Estilo de juego',
   'settings.style.streamlined': 'Ágil',

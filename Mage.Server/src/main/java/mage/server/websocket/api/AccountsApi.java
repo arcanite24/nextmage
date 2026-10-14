@@ -55,6 +55,8 @@ final class AccountsApi {
         public String name;
         /** admins and owners only */
         public String email;
+        /** the player confirmed the email with a mailed code (or GitHub vouched for it) */
+        public boolean emailVerified;
         public boolean active;
         /** 0 when not locked */
         public long lockedUntil;
@@ -235,6 +237,7 @@ final class AccountsApi {
         AccountRow row = new AccountRow();
         row.name = account.getName();
         row.email = admin ? account.getEmail() : null;
+        row.emailVerified = mage.server.EmailVerification.isVerified(account.getName(), account.getEmail());
         row.active = account.isActive();
         row.lockedUntil = future(account.getLockedUntil(), now);
         row.mutedUntil = future(account.getChatLockedUntil(), now);
