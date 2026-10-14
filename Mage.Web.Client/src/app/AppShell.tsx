@@ -1,11 +1,12 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useQuery } from '@tanstack/react-query';
 import { IdCard, Info, LogOut, MessageSquare, Settings, ShieldCheck, WifiOff, Wrench } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Outlet, useMatch, useNavigate } from 'react-router-dom';
 import { APP_NAME } from './brand';
 import { api } from './connection';
 import { useT, type MessageKey } from './i18n';
+import type { ReleaseNotes } from '../core/util/releaseNotes';
 import { useServerInfo } from './queries';
 import { Avatar } from './social/Avatar';
 import { LobbyButton } from './social/LobbyButton';
@@ -41,6 +42,9 @@ const SettingsDialog = lazy(() => import('./screens/SettingsDialog').then((modul
 
 const FeedbackDialog = lazy(() => import('./screens/FeedbackDialog').then((module) => ({ default: module.FeedbackDialog })));
 
+// "What's new" loads only when there is something to show: once, after an update
+const WhatsNewDialog = lazy(() => import('./WhatsNewDialog').then((module) => ({ default: module.WhatsNewDialog })));
+
 /** Planned maintenance, from the server info: when it starts, and what it means for new tables. */
 function MaintenanceChip() {
   const t = useT();
@@ -72,6 +76,21 @@ function SettingsHost({ open, onOpenChange }: { open: boolean; onOpenChange(open
   const [loaded, setLoaded] = useState(false);
   if (open && !loaded) setLoaded(true);
   return loaded ? <Suspense fallback={null}><SettingsDialog open={open} onOpenChange={onOpenChange} /></Suspense> : null;
+}
+
+/** After an update (the service worker's reload, or any later visit), the new version's notes, once. */
+function WhatsNewHost() {
+  const [notes, setNotes] = useState<ReleaseNotes | null>(null);
+  useEffect(() => {
+    let live = true;
+    void import('./whatsNew').then(({ pendingReleaseNotes }) => pendingReleaseNotes()).then((pending) => {
+      if (live && pending) setNotes(pending);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  return notes ? <Suspense fallback={null}><WhatsNewDialog notes={notes} onClose={() => setNotes(null)} /></Suspense> : null;
 }
 
 function SocialHost() {
@@ -172,6 +191,7 @@ export function AppShell() {
       <SocialHost />
       <SettingsHost open={settingsOpen} onOpenChange={setSettingsOpen} />
       <FeedbackHost />
+      <WhatsNewHost />
       <ImportSheetHost />
       <Toaster />
     </div>

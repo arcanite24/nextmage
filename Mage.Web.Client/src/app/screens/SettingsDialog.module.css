@@ -398,3 +398,11 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+
+/* the footer's left end: which build this is, for bug reports */
+.version {
+  margin-right: auto;
+  align-self: center;
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}

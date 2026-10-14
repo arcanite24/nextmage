@@ -44,6 +44,12 @@
   color: var(--ink-soft);
 }
 
+.version {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
 .section {
   margin-top: var(--space-6);
   padding-top: var(--space-4);

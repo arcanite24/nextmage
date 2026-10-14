@@ -157,7 +157,7 @@ podman build --platform linux/arm64 -f ops/web/Dockerfile.web -t xmage-web:local
 ops/web/ship-images.sh <ssh-host> podman
 ```
 
-`ship-images.sh` loads both images on the host over SSH and restarts it with `up -d --no-build`. The host keeps a checkout of the repository with its `.env` in `~/xmage-server`.
+`ship-images.sh` loads both images on the host over SSH and restarts it with `up -d --no-build`. The host keeps a checkout of the repository with its `.env` in `~/xmage-server`. A host set up for image-based deploys (`ops/web/deploy/setup-deploy-user.sh`) runs from `/srv/playmat` instead. Don't ship images to it: deploy a release or a `sha-<7>` build (see [Upgrade](#upgrade)).
 
 ## Accounts and moderation
 
@@ -252,7 +252,8 @@ Posting never holds up a game: posts wait in a small queue (20) for one backgrou
 
 ## Health
 
-- `xmage` answers `GET /healthz` on `127.0.0.1:17173` inside its container (`-Dxmage.healthPort`, 0 turns it off): its version and commit, uptime, players online, games running, planned maintenance and any backup problem, as JSON. It is healthy once that answers, which is after the card database is loaded; the first start gets 15 minutes for that. `docker compose exec xmage bash -c 'exec 3<>/dev/tcp/127.0.0.1/17173; printf "GET /healthz HTTP/1.0\r\n\r\n" >&3; cat <&3'` shows it.
+- `xmage` answers `GET /healthz` on `127.0.0.1:17173` inside its container (`-Dxmage.healthPort`, 0 turns it off): its version and commit, uptime, players online, games running (`activeGames`, and `gamesRunning`, what a drain waits for), planned maintenance and any backup problem, as JSON.
+- The same loopback listener takes `POST /maintenance?minutes=N&message=...` (announce maintenance, as the owner's Settings does, without restart-when-idle) and `POST /maintenance/cancel`. The image-based deploy (`ops/web/deploy/playmat-deploy`) drains the server with them through `docker compose exec`, so it needs no admin password. Only processes inside the container reach them. It is healthy once that answers, which is after the card database is loaded; the first start gets 15 minutes for that. `docker compose exec xmage bash -c 'exec 3<>/dev/tcp/127.0.0.1/17173; printf "GET /healthz HTTP/1.0\r\n\r\n" >&3; cat <&3'` shows it.
 - The admin Overview shows the same version, the commit (the image build reads it from the checkout's `.git`), and the last backup.
 - `web` checks Caddy's admin API on `localhost:2019`. It starts only after `xmage` and `imgcache` are healthy.
 - `imgcache` answers `/healthz` on port 8080 inside the network.
@@ -325,14 +326,66 @@ The restore replaces the accounts and feedback databases (rebuilt from the dumps
 
 ## Upgrade
 
+There are three ways to get a new version running. All of them keep the volumes, and settings stay in `.env`.
+
+### Published images (production)
+
+GitHub Actions builds both images for every master commit and every release (`.github/workflows/images.yml`), for amd64 and arm64, and pushes them to GHCR:
+
+| Image | Tags |
+|---|---|
+| `ghcr.io/arcanite24/playmat-server` | `sha-<7>` for every build, `master` for master's newest, `vX.Y.Z` and `latest` for releases |
+| `ghcr.io/arcanite24/playmat-web` | the same |
+
+The compose file runs whatever `XMAGE_SERVER_IMAGE` and `XMAGE_WEB_IMAGE` in `.env` name, and falls back to the local build names when they're empty. To run a published version by hand:
+
+```bash
+XMAGE_SERVER_IMAGE=ghcr.io/arcanite24/playmat-server:v1.2.3
+XMAGE_WEB_IMAGE=ghcr.io/arcanite24/playmat-web:v1.2.3
+```
+
+```bash
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env pull xmage web
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env up -d --no-build
+```
+
+Production doesn't do this by hand. A published GitHub release builds its images and deploys them after approval (`.github/workflows/deploy.yml`, see [RELEASING.md](../../RELEASING.md)). The workflow reaches the host as a `deploy` user whose key can only run `ops/web/deploy/playmat-deploy`. That script:
+
+1. pulls both images and pins their digests,
+2. snapshots the user databases into `/var/backups/playmat` (an online dump; the newest 5 are kept),
+3. drains the server: with games running it announces maintenance and waits up to 15 minutes for them to end,
+4. writes the digests into `.env`,
+5. runs `up -d --no-build` with the compose file the server image carries (`/opt/xmage/deploy-kit`), so a rollback also rolls back the compose file,
+6. waits up to 5 minutes for `xmage` and `web` to be healthy and `https://DOMAIN/` to answer 200, and otherwise rolls back to the previous digests,
+7. posts the result to the staff Discord channel, then removes images older than the previous version.
+
+On that host the stack lives in `/srv/playmat`: its `.env`, one compose kit per deployed version under `releases/`, and `current`. `ops/web/deploy/setup-deploy-user.sh` sets this up once, and the deploy user can't read a checkout under `/root`. From then on, use `playmat-compose` on the host in place of `docker compose -f ...`: for example `playmat-compose ps`, `playmat-compose logs -f xmage`, or `playmat-compose up -d --no-build` after editing `/srv/playmat/.env`. `playmat-deploy status` shows the current and previous versions.
+
+### Multivac follows master (staging)
+
+The group server on Windows runs master's newest images. `ops/web/pull-images.ps1` (Windows PowerShell 5.1) pulls `playmat-server:master` and `playmat-web:master` from GHCR and pins their digests in `ops\web\.env`. It then runs `up -d --no-build` with the compose kit from the server image, which it extracts to `ops\web\deploy-kit`. If the result isn't healthy within 5 minutes, it puts the previous `.env` back. When the digests haven't changed, it does nothing. The images are public, so it needs no secrets.
+
+Docker Desktop's credential helper fails over SSH, so run the script from a scheduled task in the console session, the same way the build-based redeploy runs. Once, from the checkout (`git pull` first so the script is there):
+
+```bat
+schtasks /Create /TN playmat-pull /SC HOURLY /IT /F /TR "powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\neri\xmage-server\ops\web\pull-images.ps1"
+schtasks /Run /TN playmat-pull
+```
+
+- The script finds the compose project from the running `xmage` container (`-Project` overrides it) and logs to `ops\web\pull-images.log`.
+- `-Tag v1.2.3` runs a release instead of master. To build locally again, empty `XMAGE_SERVER_IMAGE` and `XMAGE_WEB_IMAGE` in `.env`.
+- If an older task builds from the checkout (`up --build`), disable it: a build fails while `.env` names published images.
+
+### Building on the host
+
 ```bash
 git pull
 docker compose -f ops/web/docker-compose.yml up -d --build
 ```
 
-- Volumes are kept. The first start after an upgrade rebuilds the card database (a few minutes); the site comes up when the server reports healthy.
+- This builds `xmage-web-server:local` and `xmage-web:local`. It works only while `XMAGE_SERVER_IMAGE` and `XMAGE_WEB_IMAGE` are empty. `ship-images.sh` sends images built elsewhere under the same names.
+- The image ships its card database, so the first start after an upgrade takes seconds. The site comes up when the server reports healthy.
 - Take a backup first (`xmage-backup once`) when the release notes mention database changes.
-- Settings live in `.env`, so an upgrade never overwrites them.
 
 ## Card image cache
 

@@ -9,7 +9,8 @@
 #   podman build --platform linux/arm64 -f ops/web/Dockerfile.web -t xmage-web:local .
 # engine: docker (default) or podman, whichever built them. The host needs Docker with compose and a checkout of this
 # repository with its ops/web/.env in ~/xmage-server (SHIP_DIR). The checkout is updated to its branch's latest commit,
-# so the compose file there matches the images.
+# so the compose file there matches the images. The host's .env must not name published images (XMAGE_SERVER_IMAGE,
+# XMAGE_WEB_IMAGE): those win over the local names these images arrive under.
 set -eu
 
 host=${1:?usage: ship-images.sh <ssh-host> [engine]}
