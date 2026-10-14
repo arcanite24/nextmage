@@ -465,8 +465,8 @@ each picture and lookup leaves the box once instead of once per player:
 
 | Path | Upstream | Cached for |
 |---|---|---|
-| `/img/cards/...` | `https://cards.scryfall.io/...` (pictures) | 30 days (404s: 1 day) |
-| `/img/backs/...` | `https://backs.scryfall.io/...` (the classic card back setting) | 30 days (404s: 1 day) |
+| `/img/cards/...` | `https://cards.scryfall.io/...` (pictures) | a year (404s: 1 day) |
+| `/img/backs/...` | `https://backs.scryfall.io/...` (the classic card back setting) | a year (404s: 1 day) |
 | `/img/api/...` (GET) | `https://api.scryfall.com/...` (per-card image links, which redirect to `/img/cards/...`) | 24 hours (404s: 1 hour) |
 | `/img/api/cards/collection` (POST) | batch lookups of up to 75 printings, keyed on the request body | 24 hours |
 
@@ -478,7 +478,8 @@ each picture and lookup leaves the box once instead of once per player:
 - When Scryfall is down or rate limits, expired copies are served (`proxy_cache_use_stale`).
 - Responses carry `X-Cache-Status` (`HIT`, `MISS`, `STALE`...) for checking.
 - Sizes: a `normal` picture is roughly 100 kB, so the 20 GB default holds around 200,000 pictures; lookups are small.
-  Change `IMGCACHE_IMAGES_MAX_SIZE` / `IMGCACHE_API_MAX_SIZE` and `up -d`. nginx evicts the least recently used files.
+  Change `IMGCACHE_IMAGES_MAX_SIZE` / `IMGCACHE_API_MAX_SIZE` and `up -d`. nginx evicts the least recently used files,
+  and anything unused for a year.
 - Clear it (players' browsers keep their own copies):
 
 ```bash
@@ -487,6 +488,30 @@ $C exec imgcache sh -c 'rm -rf /var/cache/nginx/scryfall/images/* /var/cache/ngi
 $C restart imgcache
 # or drop the volume: $C stop imgcache web && $C rm -f imgcache && docker volume rm <project>_xmage-imgcache && $C up -d
 ```
+
+### Before going offline
+
+A LAN party with no internet, or a day when Scryfall is down, still has every picture the cache already holds.
+To prepare a server for that, fill the cache ahead of time with `warm-images.mjs` (Node 18 or later, from any machine
+that reaches the site):
+
+```bash
+node ops/web/warm-images.mjs --site https://play.example.org                 # estimate the size and time, download nothing more
+node ops/web/warm-images.mjs --site https://play.example.org --yes           # every card name Scryfall knows
+node ops/web/warm-images.mjs --site https://play.example.org --names decks.txt --yes   # only these cards (deck lists work)
+```
+
+- It asks the site for the links a client uses when it can't reach Scryfall's lookups (a picture by card name,
+  `/img/api/cards/named?...`), and for the picture each one points to. A game played offline then shows each card
+  with Scryfall's default printing of it, rather than the exact printing.
+- Every card name in `small` and `normal` (what the board shows) is about 76,000 lookups (38,000 per size) and
+  4 to 5 GB. The estimate measures a sample first: check `IMGCACHE_IMAGES_MAX_SIZE` can hold it. Add `large` (the
+  enlarged card) or `art_crop` (mat prints, deck boxes) with `--sizes`.
+- It goes at 4.5 lookups a second (`--rate`), under the site's limit of 300 a minute per address
+  (`IMG_API_RATE_LIMIT`), so all names take about five hours. Cached lookups are asked again after a day and
+  pictures after a year, and whatever the cache holds is served when Scryfall can't be reached.
+- Players' browsers keep the pictures they have shown, and the links they looked up, for a month.
+- It needs this cache: a server run without Docker (below) sends players to Scryfall directly.
 
 ## Without Docker on a LAN
 
