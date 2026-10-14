@@ -19,6 +19,8 @@ import styles from './HomeScreen.module.css';
 
 // the banner and its code form load only for a player whose address still needs confirming
 const EmailBanner = lazy(() => import('./EmailConfirm').then((module) => ({ default: module.EmailBanner })));
+// the month's server costs, on servers that take support
+const SupportBar = lazy(() => import('../support/SupportBar').then((module) => ({ default: module.SupportBar })));
 
 type Mode = 'ai' | 'practice' | 'friend';
 
@@ -188,6 +190,7 @@ export function HomeScreen() {
               <ChevronRight size={18} aria-hidden="true" />
             </button>
           )}
+          {serverInfo?.support && <Suspense fallback={null}><SupportBar place="home" /></Suspense>}
         </div>
       </section>
       <AiSettingsDialog open={aiOpen} onOpenChange={setAiOpen} />

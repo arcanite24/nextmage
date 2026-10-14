@@ -9,9 +9,10 @@ import { Dialog } from '../ui/Dialog';
 import { downloadText } from '../ui/download';
 import { Field } from '../ui/Field';
 import { EmailCodeForm } from './EmailConfirm';
+import { SupporterSettings } from '../support/SupporterSettings';
 import styles from './SettingsDialog.module.css';
 
-/** Settings, Account: the account's email and confirming it, downloading its data, deleting it. */
+/** Settings, Account: the account's email and confirming it, supporting the server, downloading its data, deleting it. */
 export function AccountSettings() {
   const t = useT();
   const status = useEmailStatus();
@@ -50,6 +51,8 @@ export function AccountSettings() {
           </>
         )}
       </section>
+
+      <SupporterSettings />
 
       <section className={styles.accountSection} aria-labelledby="account-data">
         <h3 id="account-data" className={styles.rowLabel}>{t('settings.account.data')}</h3>

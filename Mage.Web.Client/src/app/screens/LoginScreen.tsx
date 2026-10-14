@@ -18,6 +18,8 @@ import styles from './LoginScreen.module.css';
 
 // Cloudflare's check loads only on servers that turn it on
 const TurnstileWidget = lazy(() => import('./TurnstileWidget').then((module) => ({ default: module.TurnstileWidget })));
+// the month's server costs, on servers that take support
+const SupportBar = lazy(() => import('../support/SupportBar').then((module) => ({ default: module.SupportBar })));
 
 type ServerStatus = 'checking' | 'online' | 'offline';
 type Mode = 'sit' | 'register' | 'forgot' | 'reset' | 'ask' | 'githubName';
@@ -412,6 +414,7 @@ export function LoginScreen() {
           <Link to="/privacy" className={styles.about}>{t('legal.privacyLink')}</Link>
           <Link to="/terms" className={styles.about}>{t('legal.termsLink')}</Link>
         </nav>
+        {mode === 'sit' && status === 'online' && info?.support && <Suspense fallback={null}><SupportBar place="login" /></Suspense>}
       </form>
 
       <Deck dealing={dealing} />

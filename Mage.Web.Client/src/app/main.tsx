@@ -85,6 +85,8 @@ const router = createBrowserRouter([
   { path: '/about', lazy: () => import('./screens/AboutScreen').then((m) => ({ Component: m.AboutScreen })) },
   { path: '/privacy', lazy: () => import('./screens/LegalScreen').then((m) => ({ Component: m.PrivacyScreen })) },
   { path: '/terms', lazy: () => import('./screens/LegalScreen').then((m) => ({ Component: m.TermsScreen })) },
+  // the month's server costs and supporting them, readable before signing in
+  { path: '/support', lazy: () => import('./support/SupportScreen').then((m) => ({ Component: m.SupportScreen })) },
   { path: '/admin', lazy: () => import('./admin/AdminScreen').then((m) => ({ Component: m.AdminScreen })) },
   {
     element: <SignedIn />,

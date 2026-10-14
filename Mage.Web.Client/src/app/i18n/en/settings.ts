@@ -139,6 +139,8 @@ export default {
   'settings.playmat.cloth.midnight': 'Midnight',
   'settings.playmat.cloth.rose': 'Rose',
   'settings.playmat.cloth.career': 'Unlocked in Career',
+  'settings.playmat.cloth.patron': 'Patron',
+  'settings.playmat.cloth.perk': 'A thank-you for supporting the server',
   'settings.playmat.art': 'Art',
   'settings.playmat.art.detail': 'What is printed into your half of the mat.',
   'settings.playmat.art.deck': "Your deck's cover",
