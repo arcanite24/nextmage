@@ -11,7 +11,7 @@ import { notificationsSupported, requestNotifications } from '../stores/attentio
 import { useAutoAnswers } from '../stores/autoAnswers';
 import { useGames } from '../stores/games';
 import { DEFAULT_SETTINGS, FULL_CONTROL, STREAMLINED, useSettings, type PlaySettings } from '../stores/settings';
-import { APP_NAME, PUBLIC_ORIGIN } from '../brand';
+import { APP_NAME, APP_VERSION, PUBLIC_ORIGIN } from '../brand';
 import { clearPictureStore, DEVICE_PICTURES, pictureStoreStats } from '../nativePictures';
 import { formatNumber, LOCALES, registerMessages, useT, type LocalePreference, type MessageKey, type Translate } from '../i18n';
 import messages from '../i18n/en/settings';
@@ -47,9 +47,12 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title={t('settings.title')} width="lg"
       footer={(
-        <Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag, locale: settings.locale, matCloth: settings.matCloth, matArt: settings.matArt, matCard: settings.matCard, cardBack: settings.cardBack })}>
-          {t('settings.restore')}
-        </Button>
+        <>
+          <span className={styles.version}>{t('settings.version', { app: APP_NAME, version: APP_VERSION })}</span>
+          <Button variant="quiet" onClick={() => update({ ...DEFAULT_SETTINGS, avatarId: settings.avatarId, flag: settings.flag, locale: settings.locale, matCloth: settings.matCloth, matArt: settings.matArt, matCard: settings.matCard, cardBack: settings.cardBack })}>
+            {t('settings.restore')}
+          </Button>
+        </>
       )}>
       <Tabs.Root defaultValue="play" className={styles.tabs} orientation="vertical">
         <Tabs.List className={styles.list} aria-label={t('settings.sections')}>

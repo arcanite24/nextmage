@@ -2,6 +2,8 @@
 export default {
   'settings.title': 'Settings',
   'settings.restore': 'Restore defaults',
+  // the dialog's footer: "Playmat v1.2.3"
+  'settings.version': '{app} {version}',
   'settings.sections': 'Settings sections',
   'settings.tab.play': 'Gameplay',
   'settings.tab.stops': 'Stops',

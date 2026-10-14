@@ -55,10 +55,13 @@ import { gzipSync } from 'node:zlib';
 // feedback in the account menu (a lazy dialog), measured 454.3 kB
 // entry raised 2026-10-12 from 71 kB for M16 (performance): Home says when every game slot of the server is busy
 // (a polled serverInfo query and its message); measured entry 71.2 kB
+// app raised 2026-10-13 from 460 kB for M21 (ship from GitHub): the version in About and Settings, and the "What's new"
+// dialog with its release notes reader (lazy, with its English and Spanish messages); the entry gained only its host
+// (+0.2 kB, 71.6 kB). Measured app 460.3 kB
 const BUDGET_KB = {
   entry: 72,
   initial: 212,
-  app: 460,
+  app: 465,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

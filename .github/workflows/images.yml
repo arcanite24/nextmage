@@ -148,14 +148,17 @@ jobs:
         env:
           IMAGE: ${{ matrix.image }}
           VERSION: ${{ needs.meta.outputs.version }}
+          RELEASE: ${{ needs.meta.outputs.release }}
           APP_NAME: ${{ vars.APP_NAME || 'Playmat' }}
         run: |
           {
             echo "args<<EOF"
-            # Dockerfile.web: the version the app shows (About, Settings) and the product name
+            # Dockerfile.web: the version the app shows (About, Settings), the product name, and the release page
+            # its "What's new" dialog links
             if [ "$IMAGE" = web ]; then
               echo "VITE_APP_VERSION=$VERSION"
               echo "VITE_APP_NAME=$APP_NAME"
+              if [ "$RELEASE" = true ]; then echo "RELEASE_NOTES_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$VERSION"; fi
             fi
             echo "EOF"
           } >> "$GITHUB_OUTPUT"

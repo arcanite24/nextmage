@@ -91,6 +91,8 @@
 		# the service worker and the web manifest keep their names across releases, so browsers must revalidate
 		# them to notice an update (browsers also cap a service worker's HTTP caching at a day)
 		header /sw.js Cache-Control "no-cache"
+		# the release's notes for the "What's new" dialog, written with each release build
+		header /release-notes.json Cache-Control "no-cache"
 		header /manifest.webmanifest {
 			Cache-Control "no-cache"
 			Content-Type "application/manifest+json"

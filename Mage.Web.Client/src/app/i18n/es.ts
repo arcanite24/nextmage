@@ -189,6 +189,16 @@ const es: Catalog = {
   'decks.sync.failed': 'No se pudo guardar en tu cuenta',
   'decks.sync.saved': 'Guardado en tu cuenta',
 
+  // "What's new"
+  'whatsNew.title': 'Novedades de la {version}',
+  'whatsNew.lede': '{app} se actualizó desde la última vez que jugaste.',
+  'whatsNew.features': 'Nuevo',
+  'whatsNew.fixes': 'Corregido',
+  'whatsNew.ops': 'Servidor',
+  'whatsNew.other': 'Además',
+  'whatsNew.all': 'Todos los cambios',
+  'whatsNew.close': 'Entendido',
+
   // shared UI kit
   'ui.back': 'Atrás',
   'ui.close': 'Cerrar',
@@ -202,6 +212,7 @@ const es: Catalog = {
   // settings
   'settings.title': 'Ajustes',
   'settings.restore': 'Restablecer valores predeterminados',
+  'settings.version': '{app} {version}',
   'settings.sections': 'Secciones de ajustes',
   'settings.tab.play': 'Juego',
   'settings.tab.stops': 'Paradas',
@@ -456,6 +467,7 @@ const es: Catalog = {
   // about
   'about.back': 'Atrás',
   'about.title': 'Acerca de {app}',
+  'about.version': 'Versión {version}',
   'about.lede': '{app} es un cliente web gratuito para XMage, el motor de reglas de código abierto de Magic: The Gathering. Nadie paga por jugar y aquí no se vende nada.',
   'about.wotc': 'Wizards of the Coast',
   // the Fan Content Policy notice stays in English, as Wizards words it

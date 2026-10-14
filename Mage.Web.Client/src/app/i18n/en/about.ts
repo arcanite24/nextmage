@@ -5,6 +5,8 @@
 export default {
   'about.back': 'Back',
   'about.title': 'About {app}',
+  // {version}: v1.2.3, sha-abc1234 or dev
+  'about.version': 'Version {version}',
   'about.lede': '{app} is a free web client for XMage, the open-source Magic: The Gathering rules engine. Nobody pays to play, and nothing here is for sale.',
   'about.wotc': 'Wizards of the Coast',
   // {policy} is the link to the Fan Content Policy
