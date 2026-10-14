@@ -17,6 +17,10 @@ ENV VITE_IMAGE_PROXY=${VITE_IMAGE_PROXY}
 # the product name shown in the app and the page title
 ARG VITE_APP_NAME=Playmat
 ENV VITE_APP_NAME=${VITE_APP_NAME}
+# the version players see (About, Settings) and errors report: the release tag or sha-<7> from the image workflow
+# (.github/workflows/images.yml); empty shows "dev"
+ARG VITE_APP_VERSION=
+ENV VITE_APP_VERSION=${VITE_APP_VERSION}
 RUN npm run build
 
 # Caddy with the per-address rate limit module, pinned to a known commit (2026-06-12)

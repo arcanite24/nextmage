@@ -62,6 +62,10 @@ RUN sed -i "s/\r$//" /usr/local/bin/xmage-server /usr/local/bin/xmage-backup \
  && useradd --system --home /opt/xmage xmage \
  && mkdir -p db cards-db logs saved /backups \
  && chown -R xmage /opt/xmage /backups
+# The compose kit this image belongs with: the image-based deploy (ops/web/deploy/playmat-deploy) runs the compose file
+# of the version it deploys, taken from here, so a rollback rolls the compose file back too. Copied last: editing it
+# rebuilds this layer only.
+COPY ops/web/docker-compose.yml ops/web/imgcache.conf.template /opt/xmage/deploy-kit/
 USER xmage
 # 17172: web clients (behind the proxy). 17171 is the desktop client's port; publish it only if you want desktop players.
 EXPOSE 17172
