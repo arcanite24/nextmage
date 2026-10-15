@@ -67,8 +67,11 @@ import { gzipSync } from 'node:zlib';
 // back and the lazy hooks (+1.3 kB). Measured entry 73.9 kB, app 487.2 kB
 // app raised 2026-10-14 from 492 kB for pets: three.js and its glTF loader (154 kB) in one lazy chunk, PetScene,
 // downloaded only when a player with a pet sits at the table; the entry is unchanged. Measured app 646.3 kB
+// entry raised 2026-10-15 from 75 kB for Settings, Cosmetics (the locker for everyone): master already measured 74.998 kB,
+// and the new code is all lazy (the locker, its tab); the entry only gains chunk-name churn (+7 bytes gzipped).
+// Measured entry 75.0 kB, app 650.8 kB
 const BUDGET_KB = {
-  entry: 75,
+  entry: 75.5,
   initial: 212,
   app: 665,
 };
