@@ -181,6 +181,50 @@ describe('GameSession reply timeout', () => {
   });
 });
 
+describe('GameSession cancelling a payment', () => {
+  function paying() {
+    const { bus, emit } = fakeBus();
+    const calls: string[] = [];
+    const api = {
+      sendPlayerBoolean: vi.fn(async (_game: string, value: boolean) => { calls.push(`boolean ${value}`); return true; }),
+      sendPlayerUUID: vi.fn(async (_game: string, id: string) => { calls.push(`tap ${id}`); return true; }),
+    };
+    const session = new GameSession(api as never, bus, { gameId: 'g1', playerId: 'me', mode: 'play' });
+    emit('GAME_PLAY_MANA', { message: 'Pay {R}{4}', gameView: base });
+    return { session, emit, calls };
+  }
+
+  it('cancels at once when nothing is with the server', () => {
+    const { session, calls } = paying();
+    session.cancelPayment();
+    expect(calls).toEqual(['boolean false']);
+  });
+
+  it('waits for a tap in flight, then cancels at the next request for mana', () => {
+    const { session, emit, calls } = paying();
+    void session.respond({ type: 'uuid', id: 'mountain' });
+    session.cancelPayment();
+    expect(calls).toEqual(['tap mountain']);
+    emit('GAME_PLAY_MANA', { message: 'Pay {4}', gameView: base });
+    expect(calls).toEqual(['tap mountain', 'boolean false']);
+    expect(session.getState().awaitingServer).toBe(true);
+    // the rollback's priority prompt is not answered again
+    emit('GAME_SELECT', { message: 'Play spells and abilities', gameView: base });
+    expect(calls).toEqual(['tap mountain', 'boolean false']);
+    expect(session.getState().notices).toEqual([]);
+  });
+
+  it('says so when the tap in flight finished the payment', () => {
+    const { session, emit, calls } = paying();
+    void session.respond({ type: 'uuid', id: 'mountain' });
+    session.cancelPayment();
+    emit('GAME_SELECT', { message: 'Play spells and abilities', gameView: base });
+    // never sent: the priority prompt would take it as a pass, and the spell would resolve
+    expect(calls).toEqual(['tap mountain']);
+    expect(session.getState().notices.map((notice) => notice.text)).toEqual(['Too late to cancel: the cost was already paid.']);
+  });
+});
+
 describe('GameSession after a reload or a dropped connection', () => {
   it('is stale until the server sends the game again', () => {
     const { bus, emit } = fakeBus();
