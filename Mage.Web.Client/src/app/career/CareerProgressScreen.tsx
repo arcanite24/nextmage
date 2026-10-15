@@ -22,6 +22,8 @@ import { dealStyle } from './motion';
 import motion from './motion.module.css';
 import { CardArt } from './Portraits';
 import { Crest } from './ModeArt';
+import { PatronPlaymat, PatronTitle, PetShelf, SupporterMarks, SupporterSleeveItem } from './SupporterLocker';
+import { useThankYou } from '../support/supportData';
 import { useCampaigns } from './careerModesData';
 import {
   CAREER_AVATARS, CAREER_PLAYMATS, CAREER_SLEEVES, achievementState, cosmeticName, describePay, describeReward, fraction, hasUnlock, levelRows,
@@ -292,6 +294,13 @@ function Locker({ track, achievements }: { track: CareerLevelTrack; achievements
     return [...all];
   }, [unlocks, achievements]);
   const how = (cosmetic: CareerCosmetic) => sourceOf(t, track.rewards, achievements, cosmetic);
+  // the thank-you set: a supporter's Patron title is worn instead of the Career one
+  const thanks = useThankYou();
+  const patron = thanks.has('title') && thanks.wear.title;
+  const pickTitle = (id: string | null) => {
+    choose(user, { title: id });
+    if (patron) thanks.choose({ title: false });
+  };
 
   return (
     <div className={progress.locker}>
@@ -315,9 +324,9 @@ function Locker({ track, achievements }: { track: CareerLevelTrack; achievements
 
       <section className={progress.shelfPanel} aria-labelledby="locker-title">
         <h3 id="locker-title">{t('career.look.title')}</h3>
-        <p className={progress.namePlate}><b>{user}</b>{title && <small>{titleLabel(title)}</small>}</p>
+        <p className={progress.namePlate}><b>{user}</b>{patron ? <small>{t('support.locker.patron')}</small> : title && <small>{titleLabel(title)}</small>}</p>
         <div className={progress.titles} role="radiogroup" aria-labelledby="locker-title">
-          <button type="button" role="radio" aria-checked={!title} className={progress.titleOption} onClick={() => choose(user, { title: null })} data-nav>
+          <button type="button" role="radio" aria-checked={!patron && !title} className={progress.titleOption} onClick={() => pickTitle(null)} data-nav>
             {t('career.look.none')}
           </button>
           {titles.map((id) => {
@@ -329,19 +338,23 @@ function Locker({ track, achievements }: { track: CareerLevelTrack; achievements
                 key={id}
                 type="button"
                 role="radio"
-                aria-checked={title === id}
+                aria-checked={!patron && title === id}
                 disabled={!open}
                 className={progress.titleOption}
                 title={open ? undefined : from}
-                onClick={() => choose(user, { title: id })}
+                onClick={() => pickTitle(id)}
                 data-nav
               >
                 {!open && <Lock size={12} aria-hidden="true" />} {open || !from.includes('???') ? titleLabel(id) : t('career.achievements.secret')}
               </button>
             );
           })}
+          <PatronTitle thanks={thanks} on={patron} />
         </div>
       </section>
+
+      <PetShelf thanks={thanks} />
+      <SupporterMarks thanks={thanks} />
 
       <section className={progress.shelfPanel} aria-labelledby="locker-sleeves">
         <h3 id="locker-sleeves">{t('career.look.sleeves')}</h3>
@@ -357,6 +370,7 @@ function Locker({ track, achievements }: { track: CareerLevelTrack; achievements
               </span>
             );
           })}
+          <SupporterSleeveItem thanks={thanks} />
         </div>
       </section>
 
@@ -373,6 +387,7 @@ function Locker({ track, achievements }: { track: CareerLevelTrack; achievements
               </LockerItem>
             );
           })}
+          <PatronPlaymat thanks={thanks} />
         </div>
       </section>
     </div>

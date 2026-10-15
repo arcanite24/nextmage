@@ -1256,6 +1256,18 @@ const es: Catalog = {
   'pet.party-corgi': 'Corgi fiestero',
   'pet.label': '{pet}, la mascota de {name}. Haz clic para celebrar.',
   'pet.mine': '{pet}, tu mascota. Haz clic para celebrar.',
+
+  'support.locker.locked': '{name}: solo para quienes apoyan. Abre la página de apoyo.',
+  'support.locker.only': 'Solo para quienes apoyan',
+  'support.locker.patron': 'Patron',
+  'support.locker.pets': 'Mascotas',
+  'support.locker.petsNote': 'Una mascota se sienta junto a tu lado del campo de batalla en cada partida, y todos en la mesa pueden hacerle clic.',
+  'support.locker.noPet': 'Sin mascota',
+  'support.locker.marks': 'Anillo y corazón',
+  'support.locker.marksNote': 'El anillo rodea tu avatar y el corazón va junto a tu nombre, dondequiera que otros te vean.',
+  'support.locker.ring': 'Anillo de quien apoya',
+  'support.locker.heart': 'Corazón junto a tu nombre',
+  'support.locker.patronMat': 'Tapete Mecenas',
 };
 
 

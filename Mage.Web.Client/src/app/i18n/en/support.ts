@@ -86,4 +86,17 @@ export default {
   'pet.party-corgi': 'Party corgi',
   'pet.label': '{pet}, {name}’s pet. Click to celebrate.',
   'pet.mine': '{pet}, your pet. Click to celebrate.',
+
+  // the thank-you set in Career's locker (Progress, Look): everyone sees it, a non-supporter's is locked
+  'support.locker.locked': '{name}: supporters only. Opens the support page.',
+  'support.locker.only': 'Supporters only',
+  'support.locker.patron': 'Patron',
+  'support.locker.pets': 'Pets',
+  'support.locker.petsNote': 'A pet sits by your side of the battlefield in every game, and everyone at the table can click it.',
+  'support.locker.noPet': 'No pet',
+  'support.locker.marks': 'Ring and heart',
+  'support.locker.marksNote': 'The ring goes round your avatar and the heart by your name, wherever others see you.',
+  'support.locker.ring': 'Supporter ring',
+  'support.locker.heart': 'Heart by your name',
+  'support.locker.patronMat': 'Patron playmat',
 } as const;
