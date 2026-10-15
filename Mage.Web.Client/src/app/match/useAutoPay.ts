@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { abilityFor, handNeeds, manaOf, nextTap, parseCost, type ManaSource, type ManaTap } from '../../core/game/autoPay';
+import { abilityFor, handNeeds, landsPartOf, manaOf, nextTap, parseCost, type ManaSource, type ManaTap } from '../../core/game/autoPay';
+import { parsePayment } from '../../core/game/payment';
 import type { GameSession, GameSessionState } from '../../core/game/gameSession';
 import type { PlayerBoard } from './boardModel';
 
@@ -37,14 +38,26 @@ export function useAutoPay(session: GameSession, state: GameSessionState, me: Pl
     const text = prompt.text;
     // the same request again after a tap means the tap didn't help: hand the payment back to the player
     if (lastAsk.current?.text === text && lastAsk.current.tries >= 1) return;
-    const cost = parseCost(text);
-    if (!cost) return;
+    const fullCost = parseCost(text);
+    if (!fullCost) return;
 
     const permanents = new Map(me.back.concat(me.front).flatMap((group) => group.members).map((permanent) => [permanent.id!, permanent]));
+    // delve, convoke, improvise: lands pay what those can't, and the rest waits for the player's own choice of cards
+    const untapped = (type: string) => [...permanents.values()].filter((permanent) => !permanent.tapped && (permanent.cardTypes ?? []).includes(type as never)).length;
+    const cost = prompt.specialLabel
+      ? landsPartOf(fullCost, prompt.specialLabel, {
+        graveyard: Object.keys(me.player.graveyard ?? {}).length,
+        creatures: untapped('CREATURE'),
+        artifacts: untapped('ARTIFACT'),
+      })
+      : fullCost;
+    if (!cost) return;
+    // a manland paying for its own animation must not tap itself: it would come alive tapped
+    const payingFor = parsePayment(prompt).sourceId;
     const sources: ManaSource[] = [];
     for (const id of interaction.clickable.keys()) {
       const permanent = permanents.get(id);
-      if (!permanent || permanent.tapped) continue;
+      if (!permanent || permanent.tapped || id === payingFor) continue;
       const colors = manaOf(permanent);
       if (colors === undefined) continue;
       sources.push({ id, colors, isLand: (permanent.cardTypes ?? []).includes('LAND') });

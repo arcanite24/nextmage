@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { abilityFor, canPay, handNeeds, manaOf, nextTap, parseCost, type ManaColor, type ManaCostParts, type ManaSource } from './autoPay';
+import { abilityFor, canPay, handNeeds, landsPartOf, manaOf, nextTap, parseCost, type ManaColor, type ManaCostParts, type ManaSource } from './autoPay';
 
 /** a source making the colors in `colors` ("G", "RW"), or one auto-pay can't decide for (null) */
 const land = (id: string, colors: string | null): ManaSource => ({ id, colors: colors === null ? null : ([...colors] as ManaColor[]), isLand: true });
@@ -162,5 +162,23 @@ describe('abilityFor', () => {
   it('picks the ability adding the planned color', () => {
     expect(abilityFor(choices, 'W')).toBe('w');
     expect(abilityFor(choices, 'G')).toBeNull();
+  });
+});
+
+describe('landsPartOf', () => {
+  const payers = { graveyard: 3, creatures: 1, artifacts: 0 };
+  it('delve: lands pay the colors and the generic the graveyard cannot cover', () => {
+    expect(landsPartOf({ generic: 4, colored: { B: 1 } }, 'Delve', payers)).toEqual({ generic: 1, colored: { B: 1 } });
+    expect(landsPartOf({ generic: 2, colored: { U: 1 } }, 'Delve', payers)).toEqual({ generic: 0, colored: { U: 1 } });
+  });
+
+  it('nothing for lands when the special payment can cover it all', () => {
+    expect(landsPartOf({ generic: 3, colored: {} }, 'Delve', payers)).toBeNull();
+    expect(landsPartOf({ generic: 1, colored: {} }, 'Convoke', payers)).toBeNull();
+  });
+
+  it('improvise counts artifacts; an unknown special leaves all generic mana to the player', () => {
+    expect(landsPartOf({ generic: 2, colored: { R: 1 } }, 'Improvise', payers)).toEqual({ generic: 2, colored: { R: 1 } });
+    expect(landsPartOf({ generic: 5, colored: { G: 1 } }, 'Special payment', payers)).toEqual({ generic: 0, colored: { G: 1 } });
   });
 });
