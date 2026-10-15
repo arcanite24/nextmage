@@ -1214,6 +1214,8 @@ const es: Catalog = {
   'support.perk.title': 'El título Patron bajo tu nombre',
   'support.perk.flair': 'Un corazoncito junto a tu nombre en la sala, el chat y las partidas',
   'support.perk.pet': 'El corgi fiestero, una mascota que se sienta junto a tu lado del campo de batalla y celebra cuando le hacen clic',
+  'support.corgi.alt': 'El corgi fiestero girando en un cielo estrellado, con gorro de fiesta y lentes oscuros, junto a un NEW! que parpadea y letras arcoíris: THANK U 4 SUPPORTING!!',
+  'support.corgi.caption': 'Se ve mejor en Netscape Navigator a 800×600',
   'support.perks.status': 'Mientras una membresía o un patrocinio sigan activos, y durante 30 días tras una donación, también apareces como quien apoya. El set de agradecimiento se queda contigo de todos modos.',
   'support.how': 'Cómo llega a tu cuenta',
   'support.how.text': 'Paga con el correo de tu cuenta (una vez confirmado), o pon tu código de apoyo en el mensaje de Ko-fi. GitHub Sponsors se asocia mediante Entrar con GitHub. Tarda cerca de un minuto; si no, el equipo lo asocia a mano.',

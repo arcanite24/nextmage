@@ -37,6 +37,9 @@ export default {
   'support.perk.title': 'The Patron title under your name',
   'support.perk.flair': 'A small heart by your name in the lobby, chat and games',
   'support.perk.pet': 'The party corgi, a pet that sits by your side of the battlefield and celebrates when clicked',
+  'support.corgi.alt': 'The party corgi, spinning in a starfield in party hat and sunglasses, beside a blinking NEW! and rainbow letters: THANK U 4 SUPPORTING!!',
+  // a joke: the GIF is drawn like a 1997 homepage
+  'support.corgi.caption': 'Best viewed in Netscape Navigator at 800×600',
   'support.perks.status': 'While a membership or sponsorship runs, and for 30 days after a donation, you also show as a supporter. The thank-you set stays either way.',
   'support.how': 'How it reaches your account',
   'support.how.text': 'Pay with your account’s email address (once it is confirmed), or put your support code in the Ko-fi message. GitHub Sponsors are matched through Sign in with GitHub. It takes about a minute; if it doesn’t, the staff link it by hand.',
