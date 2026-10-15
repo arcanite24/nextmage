@@ -15,6 +15,7 @@ const PIECES: { key: keyof Wear; kind: string; label: MessageKey; detail?: Messa
   { key: 'frame', kind: 'frame', label: 'support.settings.frame' },
   { key: 'flair', kind: 'flair', label: 'support.settings.flair' },
   { key: 'title', kind: 'title', label: 'support.settings.title', detail: 'support.settings.title.detail' },
+  { key: 'pet', kind: 'pet', label: 'support.settings.pet', detail: 'support.settings.pet.detail' },
 ];
 
 /**

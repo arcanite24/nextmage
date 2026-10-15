@@ -15,7 +15,7 @@ public final class SupportPerks {
 
     /** the only kinds a perk may be: what a player looks like, never what they can do */
     public static final Set<String> COSMETIC_KINDS = Collections.unmodifiableSet(new LinkedHashSet<>(Arrays.asList(
-            "sleeve", "playmat", "avatar", "frame", "title", "flair")));
+            "sleeve", "playmat", "avatar", "frame", "title", "flair", "pet")));
 
     /** One perk: its kind and item. */
     public static final class Perk {
@@ -33,6 +33,8 @@ public final class SupportPerks {
     public static final String FRAME = "supporter-ring";
     public static final String TITLE = "patron";
     public static final String FLAIR = "heart";
+    /** a companion on the battlefield, a little 3D model that plays when clicked */
+    public static final String PET = "party-corgi";
 
     /** the permanent thank-you set any linked payment unlocks */
     public static final List<Perk> THANK_YOU = Collections.unmodifiableList(Arrays.asList(
@@ -40,7 +42,8 @@ public final class SupportPerks {
             new Perk("playmat", PLAYMAT),
             new Perk("frame", FRAME),
             new Perk("title", TITLE),
-            new Perk("flair", FLAIR)
+            new Perk("flair", FLAIR),
+            new Perk("pet", PET)
     ));
 
     private SupportPerks() {

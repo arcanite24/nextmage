@@ -48,6 +48,12 @@ public final class SupportStore implements AutoCloseable {
                     "CREATE TABLE looks (account TEXT PRIMARY KEY COLLATE NOCASE, sleeve TEXT, cloth TEXT, avatar TEXT, frame TEXT,"
                             + " title TEXT, flair TEXT, updated_at INTEGER NOT NULL)",
                     "CREATE TABLE prefs (account TEXT PRIMARY KEY COLLATE NOCASE, wall INTEGER NOT NULL DEFAULT 0)"
+            },
+            {
+                    // pets: a look column, and the party corgi for everyone who already has the thank-you set
+                    "ALTER TABLE looks ADD COLUMN pet TEXT",
+                    "INSERT OR IGNORE INTO perks (account, kind, item, granted_at, payment_id)"
+                            + " SELECT account, 'pet', 'party-corgi', granted_at, payment_id FROM perks WHERE kind = 'sleeve' AND item = 'supporter'"
             }
     };
 
@@ -510,7 +516,7 @@ public final class SupportStore implements AutoCloseable {
     // ---- looks
 
     public synchronized PlayerLook look(String account) throws SQLException {
-        try (PreparedStatement select = connection.prepareStatement("SELECT account, sleeve, cloth, avatar, frame, title, flair FROM looks WHERE account = ?")) {
+        try (PreparedStatement select = connection.prepareStatement("SELECT account, sleeve, cloth, avatar, frame, title, flair, pet FROM looks WHERE account = ?")) {
             select.setString(1, account);
             try (ResultSet rows = select.executeQuery()) {
                 if (!rows.next()) {
@@ -524,6 +530,7 @@ public final class SupportStore implements AutoCloseable {
                 look.frame = rows.getString(5);
                 look.title = rows.getString(6);
                 look.flair = rows.getString(7);
+                look.pet = rows.getString(8);
                 return look;
             }
         }
@@ -531,7 +538,7 @@ public final class SupportStore implements AutoCloseable {
 
     public synchronized void putLook(String account, PlayerLook look, long now) throws SQLException {
         try (PreparedStatement upsert = connection.prepareStatement("INSERT OR REPLACE INTO looks (account, sleeve, cloth, avatar, frame,"
-                + " title, flair, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + " title, flair, pet, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             upsert.setString(1, account);
             upsert.setString(2, look.sleeve);
             upsert.setString(3, look.cloth);
@@ -539,7 +546,8 @@ public final class SupportStore implements AutoCloseable {
             upsert.setString(5, look.frame);
             upsert.setString(6, look.title);
             upsert.setString(7, look.flair);
-            upsert.setLong(8, now);
+            upsert.setString(8, look.pet);
+            upsert.setLong(9, now);
             upsert.executeUpdate();
         }
     }

@@ -1225,6 +1225,7 @@ export interface PlayerLook {
     flair?: string;
     frame?: string;
     name?: string;
+    pet?: string;
     sleeve?: string;
     title?: string;
 }

@@ -2,7 +2,8 @@ package mage.server.support;
 
 /**
  * The look a player plays with, as their opponents see it: the sleeve on their cards, their playmat cloth, a Career
- * avatar, the supporter ring around it, a title under their name and a flair glyph beside it. Every field is optional;
+ * avatar, the supporter ring around it, a title under their name, a flair glyph beside it and a pet on their side of the
+ * battlefield. Every field is optional;
  * the server keeps only what the account owns (see {@link Support#validLook}).
  */
 public class PlayerLook {
@@ -21,11 +22,13 @@ public class PlayerLook {
     public String title;
     /** heart */
     public String flair;
+    /** a pet's id: party-corgi */
+    public String pet;
 
     public PlayerLook() {
     }
 
     boolean isEmpty() {
-        return sleeve == null && cloth == null && avatar == null && frame == null && title == null && flair == null;
+        return sleeve == null && cloth == null && avatar == null && frame == null && title == null && flair == null && pet == null;
     }
 }

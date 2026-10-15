@@ -12,7 +12,7 @@ import styles from './SupportScreen.module.css';
 
 registerMessages(messages);
 
-const PERKS: MessageKey[] = ['support.perk.sleeve', 'support.perk.playmat', 'support.perk.frame', 'support.perk.title', 'support.perk.flair'];
+const PERKS: MessageKey[] = ['support.perk.sleeve', 'support.perk.playmat', 'support.perk.frame', 'support.perk.title', 'support.perk.flair', 'support.perk.pet'];
 const RULES: MessageKey[] = ['support.rule.free', 'support.rule.cosmetic', 'support.rule.voluntary', 'support.rule.kept', 'support.rule.refunds'];
 
 /**

@@ -1,13 +1,13 @@
 import type { PlayerLook, SupportPerk, SupportStatus } from '../../protocol/generated/views';
 import { CAREER_SLEEVES, careerSleeveOf, SUPPORTER_SLEEVE } from '../ui/sleeveArt';
+import { DEFAULT_WEAR, THANK_YOU, type Wear } from './thankYou';
 
 /**
  * Supporting the server, without React: the month's goal as the bar shows it, the thank-you set a player owns, and
  * the look they play with as the server keeps it (Mage.Server support/Support.java validLook).
  */
 
-/** The thank-you set (Mage.Server support/SupportPerks THANK_YOU): one item per kind, all cosmetic. */
-export const THANK_YOU = { sleeve: 'supporter', playmat: 'patron', frame: 'supporter-ring', title: 'patron', flair: 'heart' } as const;
+export { DEFAULT_WEAR, THANK_YOU, type Wear } from './thankYou';
 
 /** A dollar amount in the reader's language: "$40", "$13.09". */
 export function usd(cents: number, locale: string): string {
@@ -71,14 +71,6 @@ export function sleeveColorOf(id: string | undefined): string | null {
   return CAREER_SLEEVES[id] ?? null;
 }
 
-/** Which of the thank-you set a supporter shows (Settings, Account); all of it unless they turn a piece off. */
-export interface Wear {
-  frame: boolean;
-  flair: boolean;
-  title: boolean;
-}
-
-export const DEFAULT_WEAR: Wear = { frame: true, flair: true, title: true };
 
 export interface LookInputs {
   /** the sleeve colour of the deck being played */
@@ -103,6 +95,7 @@ export function lookOf({ sleeve, cloth, careerAvatar, careerTitle, perks, wear =
   if (careerAvatar) look.avatar = careerAvatar;
   if (wear.frame && owns(perks, 'frame', THANK_YOU.frame)) look.frame = THANK_YOU.frame;
   if (wear.flair && owns(perks, 'flair', THANK_YOU.flair)) look.flair = THANK_YOU.flair;
+  if (wear.pet && owns(perks, 'pet', THANK_YOU.pet)) look.pet = THANK_YOU.pet;
   const title = wear.title && owns(perks, 'title', THANK_YOU.title) ? THANK_YOU.title : careerTitle;
   if (title) look.title = title;
   return look;
@@ -110,7 +103,7 @@ export function lookOf({ sleeve, cloth, careerAvatar, careerTitle, perks, wear =
 
 /** Whether two looks are the same, so an unchanged look isn't sent again. */
 export function sameLook(a: PlayerLook | null | undefined, b: PlayerLook | null | undefined): boolean {
-  const keys: (keyof PlayerLook)[] = ['sleeve', 'cloth', 'avatar', 'frame', 'title', 'flair'];
+  const keys: (keyof PlayerLook)[] = ['sleeve', 'cloth', 'avatar', 'frame', 'title', 'flair', 'pet'];
   return !!a && !!b && keys.every((key) => (a[key] ?? null) === (b[key] ?? null));
 }
 
