@@ -1,7 +1,8 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { BookmarkPlus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { api } from '../connection';
 import { MAT_CLOTHS, clothSwatch } from '../match/playmats';
 import bookmarkletSource from '../decks/import/bookmarklet.source.js?raw';
@@ -29,6 +30,9 @@ import styles from './SettingsDialog.module.css';
 
 registerMessages(messages);
 
+// the locker loads with the tab: it's Career's, and draws card backs and art
+const CosmeticsSettings = lazy(() => import('../career/CosmeticsLocker'));
+
 const STEPS: (keyof SkipPrioritySteps)[] = ['upkeep', 'draw', 'main1', 'beforeCombat', 'endOfCombat', 'main2', 'endOfTurn'];
 
 const PLAY_STYLES = [
@@ -42,6 +46,14 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   const t = useT();
   // the Account tab: servers with accounts only
   const accounts = useServerInfo().data?.accounts === true;
+  // a link inside (a locked cosmetic, to the support page) leaves for another screen: the dialog goes with it
+  const path = useLocation().pathname;
+  const shownAt = useRef(path);
+  useEffect(() => {
+    if (path === shownAt.current) return;
+    shownAt.current = path;
+    if (open) onOpenChange(false);
+  }, [path, open, onOpenChange]);
 
   const toggle = (key: keyof PlaySettings) => (
     <Switch checked={!!settings[key]} onChange={(value) => update({ [key]: value } as Partial<PlaySettings>)} />
@@ -72,6 +84,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <Tabs.Trigger value="alerts" className={styles.trigger}>{t('settings.tab.alerts')}</Tabs.Trigger>
           <Tabs.Trigger value="import" className={styles.trigger}>{t('settings.tab.import')}</Tabs.Trigger>
           <Tabs.Trigger value="language" className={styles.trigger}>{t('settings.tab.language')}</Tabs.Trigger>
+          {accounts && <Tabs.Trigger value="cosmetics" className={styles.trigger}>{t('settings.tab.cosmetics')}</Tabs.Trigger>}
           {accounts && <Tabs.Trigger value="account" className={styles.trigger}>{t('settings.tab.account')}</Tabs.Trigger>}
         </Tabs.List>
 
@@ -226,6 +239,14 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             </select>
           </Row>
         </Tabs.Content>
+
+        {accounts && (
+          <Tabs.Content value="cosmetics" className={styles.panel}>
+            <Suspense fallback={null}>
+              <CosmeticsSettings />
+            </Suspense>
+          </Tabs.Content>
+        )}
 
         {accounts && (
           <Tabs.Content value="account" className={styles.panel}>

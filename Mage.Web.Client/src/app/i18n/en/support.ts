@@ -75,15 +75,23 @@ export default {
   'support.settings.none': 'Supporting the server gives you a thank-you set: a sleeve, a playmat, a ring, a title, a heart and a pet corgi.',
   'support.settings.wall': 'Show my name on the supporters wall',
   'support.settings.wall.detail': 'Off until you choose it. Your account name shows on the support page in the months you support.',
-  'support.settings.frame': 'Wear the supporter ring',
-  'support.settings.flair': 'Show the heart by my name',
-  'support.settings.title': 'Use the Patron title',
-  'support.settings.title.detail': 'Instead of a Career title, in games.',
-  'support.settings.pet': 'Bring the party corgi',
-  'support.settings.pet.detail': 'It sits by your side of the battlefield. Everyone at the table can click it.',
+  'support.settings.wear': 'Choose the ring, the title, the heart and the pet you wear in Settings, Cosmetics.',
 
   // pets on the battlefield; {name} is the player's name
   'pet.party-corgi': 'Party corgi',
   'pet.label': '{pet}, {name}’s pet. Click to celebrate.',
   'pet.mine': '{pet}, your pet. Click to celebrate.',
+
+  // the thank-you set in Career's locker (Progress, Look): everyone sees it, a non-supporter's is locked
+  'support.locker.locked': '{name}: supporters only. Opens the support page.',
+  'support.locker.only': 'Supporters only',
+  'support.locker.patron': 'Patron',
+  'support.locker.pets': 'Pets',
+  'support.locker.petsNote': 'A pet sits by your side of the battlefield in every game, and everyone at the table can click it.',
+  'support.locker.noPet': 'No pet',
+  'support.locker.marks': 'Ring and heart',
+  'support.locker.marksNote': 'The ring goes round your avatar and the heart by your name, wherever others see you.',
+  'support.locker.ring': 'Supporter ring',
+  'support.locker.heart': 'Heart by your name',
+  'support.locker.patronMat': 'Patron playmat',
 } as const;

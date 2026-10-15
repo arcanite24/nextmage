@@ -6,7 +6,8 @@ import { api, rpc } from '../connection';
 import { queryClient, useServerInfo } from '../queries';
 import { readJson, writeJson } from '../stores/persist';
 import { useSession } from '../stores/session';
-import { DEFAULT_WEAR, type Wear } from './thankYou';
+import { DEFAULT_WEAR, THANK_YOU, type Wear } from './thankYou';
+import { owns } from './supportModel';
 
 /** Supporting the server, as the screens ask for it: the month's goal, the player's thank-you set, and others' looks. */
 
@@ -76,6 +77,44 @@ export const useWear = create<WearState>((set, get) => ({
 
 export function wearOf(wear: Record<string, Wear>, user: string): Wear {
   return { ...DEFAULT_WEAR, ...wear[user.toLowerCase()] };
+}
+
+// ---- the thank-you set in the locker
+
+export type ThankYouKind = keyof typeof THANK_YOU;
+
+export interface ThankYou {
+  /** whether the account owns this piece of the thank-you set */
+  has(kind: ThankYouKind): boolean;
+  /** whether the account owns this item of a kind (a pet among the pets) */
+  hasItem(kind: ThankYouKind, item: string): boolean;
+  /** whether a piece shows at all: owned, or a locked teaser where the server takes support */
+  shows(kind: ThankYouKind): boolean;
+  /** which owned pieces the player wears */
+  wear: Wear;
+  choose(patch: Partial<Wear>): void;
+}
+
+/**
+ * The thank-you set as the locker shows it: everyone sees every piece where the server takes support, a supporter
+ * picks theirs, and the rest are locked and lead to the support page. The server keeps only what the account owns
+ * (Mage.Server support/Support.java validLook), so wearing here is only ever a wish.
+ */
+export function useThankYou(): ThankYou {
+  const user = useSession((session) => session.userName);
+  const support = useServerInfo().data?.support === true;
+  const perks = useSupportPerks();
+  const worn = useWear((state) => state.wear[user.toLowerCase()]);
+  const chooseWear = useWear((state) => state.choose);
+  const owned = perks.data?.perks;
+  const has = (kind: ThankYouKind) => owns(owned, kind, THANK_YOU[kind]);
+  return {
+    has,
+    hasItem: (kind, item) => owns(owned, kind, item),
+    shows: (kind) => has(kind) || (support && perks.isSuccess),
+    wear: wearOf({ [user.toLowerCase()]: worn }, user),
+    choose: (patch) => chooseWear(user, patch),
+  };
 }
 
 // ---- other players' looks (sleeve, avatar, frame, title, flair), asked for in batches and kept a while

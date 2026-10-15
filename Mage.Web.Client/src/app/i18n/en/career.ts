@@ -246,6 +246,10 @@ export default {
   'career.look.sleeves': 'Sleeves',
   'career.look.sleevesNote': "Sleeves are chosen per deck: pick them from a deck's Sleeves button.",
   'career.look.playmats': 'Playmats',
+  'career.look.inCareer': 'Earned in Career',
+  'career.look.loading': 'Opening your locker…',
+  'career.look.everywhere': 'What you wear here shows in every game and every mode, wherever others see you. Career unlocks more as you play it.',
+  'career.look.everywhereNoCareer': 'What you wear here shows in every game, wherever others see you.',
 
   'career.settings': 'Settings',
   'career.settings.countAi': 'Count regular games against the AI for quests and achievements',

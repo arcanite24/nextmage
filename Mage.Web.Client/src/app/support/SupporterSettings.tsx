@@ -1,35 +1,23 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../connection';
-import { formatDate, registerMessages, useT, type MessageKey } from '../i18n';
+import { formatDate, registerMessages, useT } from '../i18n';
 import messages from '../i18n/en/support';
 import { useServerInfo } from '../queries';
-import { useSession } from '../stores/session';
 import styles from '../screens/SettingsDialog.module.css';
-import { refreshSupport, useSupportPerks, useWear, wearOf } from './supportData';
-import { owns, THANK_YOU, type Wear } from './supportModel';
+import { refreshSupport, useSupportPerks } from './supportData';
 
 registerMessages(messages);
 
-const PIECES: { key: keyof Wear; kind: string; label: MessageKey; detail?: MessageKey }[] = [
-  { key: 'frame', kind: 'frame', label: 'support.settings.frame' },
-  { key: 'flair', kind: 'flair', label: 'support.settings.flair' },
-  { key: 'title', kind: 'title', label: 'support.settings.title', detail: 'support.settings.title.detail' },
-  { key: 'pet', kind: 'pet', label: 'support.settings.pet', detail: 'support.settings.pet.detail' },
-];
-
 /**
  * Settings, Account: supporting the server. Whether the account's name goes on the supporters wall (off until chosen),
- * and which pieces of the thank-you set it wears; a player without them sees what support would give, once.
+ * and where to choose what of the thank-you set it wears (Settings, Cosmetics); a player without them sees what support
+ * would give, once.
  */
 export function SupporterSettings() {
   const t = useT();
   const support = useServerInfo().data?.support === true;
   const perks = useSupportPerks();
-  const user = useSession((state) => state.userName);
-  const worn = useWear((state) => state.wear[user.toLowerCase()]);
-  const wear = wearOf({ [user.toLowerCase()]: worn }, user);
-  const choose = useWear((state) => state.choose);
   const [saving, setSaving] = useState(false);
   const you = perks.data;
   if (!you) return null;
@@ -57,11 +45,7 @@ export function SupporterSettings() {
       <Row label={t('support.settings.wall')} detail={t('support.settings.wall.detail')}>
         <Switch label={t('support.settings.wall')} checked={!!you.wall} disabled={saving} onChange={(value) => void setWall(value)} />
       </Row>
-      {PIECES.filter((piece) => owns(you.perks, piece.kind, THANK_YOU[piece.kind as keyof typeof THANK_YOU])).map((piece) => (
-        <Row key={piece.key} label={t(piece.label)} detail={piece.detail ? t(piece.detail) : undefined}>
-          <Switch label={t(piece.label)} checked={wear[piece.key]} onChange={(value) => choose(user, { [piece.key]: value })} />
-        </Row>
-      ))}
+      {thanked && <p className={styles.rowDetail}>{t('support.settings.wear')}</p>}
     </section>
   );
 }

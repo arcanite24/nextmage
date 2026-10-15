@@ -11,11 +11,13 @@ import type { MessageKey } from '../i18n';
 export interface PetKind {
   /** the glTF binary, served from public/pets */
   model: string;
+  /** a still portrait, served from public: the profile's pet shelf shows it (three.js loads only at the table) */
+  still: string;
   name: MessageKey;
 }
 
 export const PETS: Record<string, PetKind> = {
-  'party-corgi': { model: '/pets/party-corgi.glb', name: 'pet.party-corgi' },
+  'party-corgi': { model: '/pets/party-corgi.glb', still: '/support/party-corgi-still.png', name: 'pet.party-corgi' },
 };
 
 export function petOf(id: string | undefined | null): PetKind | null {
