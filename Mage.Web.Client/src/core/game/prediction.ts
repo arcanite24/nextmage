@@ -23,7 +23,7 @@ const ACTIVATED = /^[^:]*\{[^}]+\}[^:]*:\s*(.*)$/;
  * land asks which color, and one with other abilities asks which ability.)
  */
 function tapsForManaOnly(permanent: PermanentView): boolean {
-  if (permanent.tapped || !(permanent.cardTypes ?? []).includes('LAND') || typeof manaOf(permanent) !== 'string') return false;
+  if (permanent.tapped || !(permanent.cardTypes ?? []).includes('LAND') || manaOf(permanent)?.length !== 1) return false;
   return (permanent.rules ?? []).every((rule) => {
     const activated = ACTIVATED.exec(rule.replace(/<[^>]*>/g, '').replace(/^\(|\)$/g, ''));
     return !activated || /^add\b/i.test(activated[1]);
