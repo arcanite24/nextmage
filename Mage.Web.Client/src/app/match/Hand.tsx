@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
+import type { PlayableZone } from '../../core/game/offZonePlayables';
 import type { CardView } from '../../protocol/generated/views';
 import { useT } from '../i18n';
 import './matchMessages';
@@ -27,13 +28,17 @@ export interface HandProps {
   faceDown?: boolean;
   /** the hand's accessible name (default: "Your hand") */
   label?: string;
+  /** cards shown with the hand that are played from another zone (an adventurer in exile, flashback), by id */
+  fromZone?: ReadonlyMap<string, PlayableZone>;
 }
+
+const ZONE_TAG: Record<PlayableZone, string> = { exile: 'From exile', graveyard: 'From graveyard' };
 
 const CARD_WIDTH = 168;
 const DRAG_THRESHOLD = 12;
 
 /** The player's hand, fanned along the bottom edge. Hover lifts a card; drag it up (or click it) to play it. */
-export function Hand({ cards, choosing = false, clickable, selected, pending = null, sleeve, onPlay, playLine, libraryOrigin, faceDown = false, label = 'Your hand' }: HandProps) {
+export function Hand({ cards, choosing = false, clickable, selected, pending = null, sleeve, onPlay, playLine, libraryOrigin, faceDown = false, label = 'Your hand', fromZone }: HandProps) {
   const t = useT();
   const count = cards.length;
   const spread = Math.min(CARD_WIDTH * 0.78, 1000 / Math.max(1, count));
@@ -62,6 +67,7 @@ export function Hand({ cards, choosing = false, clickable, selected, pending = n
             playLine={playLine}
             libraryOrigin={libraryOrigin}
             faceDown={faceDown}
+            fromZone={fromZone?.get(card.id!)}
           />
         );
       })}
@@ -84,9 +90,10 @@ interface HandCardProps {
   playLine: number;
   libraryOrigin: string;
   faceDown: boolean;
+  fromZone?: PlayableZone;
 }
 
-function HandCard({ card, choosing, index, left, rotate, drop, clickable, selected, pending, sleeve, onPlay, playLine, libraryOrigin, faceDown }: HandCardProps) {
+function HandCard({ card, choosing, index, left, rotate, drop, clickable, selected, pending, sleeve, onPlay, playLine, libraryOrigin, faceDown, fromZone }: HandCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const stage = useStage();
   const setZoom = useMatchUi((state) => state.setZoom);
@@ -139,7 +146,7 @@ function HandCard({ card, choosing, index, left, rotate, drop, clickable, select
       className={[styles.card, faceDown ? styles.faceDown : '', clickable ? (choosing ? styles.choosable : styles.playable) : choosing ? styles.unchoosable : '', selected ? styles.selected : '', pending && !selected ? styles.pending : '', drag?.moved ? styles.dragging : ''].join(' ')}
       style={style}
       tabIndex={clickable ? 0 : -1}
-      aria-label={`${faceDown ? 'Hidden card' : card.name ?? 'Card'}${clickable ? ', playable' : ''}${selected ? ', chosen' : ''}`}
+      aria-label={`${faceDown ? 'Hidden card' : card.name ?? 'Card'}${fromZone ? `, ${ZONE_TAG[fromZone].toLowerCase()}` : ''}${clickable ? ', playable' : ''}${selected ? ', chosen' : ''}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -159,6 +166,7 @@ function HandCard({ card, choosing, index, left, rotate, drop, clickable, select
       data-object-id={card.id}
     >
       <CardFace card={card} sleeve={sleeve} hidden={faceDown} />
+      {fromZone && <span className={styles.fromZone} aria-hidden="true">{ZONE_TAG[fromZone]}</span>}
     </div>
   );
 }

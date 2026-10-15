@@ -205,6 +205,7 @@ export interface CardView extends SimpleCardView {
     abilityType?: AbilityType;
     alternateName?: string;
     artRect?: ArtRect;
+    backFace?: boolean;
     bandedCards?: string[];
     canAttack?: boolean;
     canBlock?: boolean;

@@ -198,3 +198,25 @@ export function abilityFor(choices: { id: string; text: string }[], color: ManaC
   });
   return matching.length === 1 ? matching[0].id : null;
 }
+
+/** What can pay with a special payment: cards in the graveyard (delve), untapped creatures (convoke) and artifacts (improvise). */
+export interface SpecialPayers {
+  graveyard: number;
+  creatures: number;
+  artifacts: number;
+}
+
+/**
+ * The part of a cost lands should pay when a special payment is offered. Mana abilities come first (the server refuses
+ * them once delve, convoke or improvise has paid), so lands pay the colored symbols and whatever generic mana the
+ * special payment couldn't cover; the rest of the generic is left for the player to pay with it. Null when lands have
+ * nothing to pay.
+ */
+export function landsPartOf(cost: ManaCostParts, special: string, payers: SpecialPayers): ManaCostParts | null {
+  const reach = /delve/i.test(special) ? payers.graveyard
+    : /convoke/i.test(special) ? payers.creatures
+    : /improvise/i.test(special) ? payers.artifacts
+    : cost.generic; // a payment auto-pay doesn't know: leave all the generic mana to the player
+  const part = { ...cost, generic: Math.max(0, cost.generic - reach) };
+  return total(part) > 0 ? part : null;
+}
