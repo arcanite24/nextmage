@@ -14,6 +14,7 @@ export default {
   'settings.tab.import': 'Import',
   'settings.tab.language': 'Language',
   'settings.tab.account': 'Account',
+  'settings.tab.cosmetics': 'Cosmetics',
 
   'settings.account.email': 'Email address',
   // {email} is the masked address, like n***@example.com

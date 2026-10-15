@@ -580,6 +580,16 @@
   grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
 }
 
+/* the locker in Settings, Cosmetics: one shelf a row in the dialog's column */
+.settingsLocker {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.settingsLocker .locker {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .shelfPanel {
   display: grid;
   gap: var(--space-3);

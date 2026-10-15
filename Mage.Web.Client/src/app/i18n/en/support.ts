@@ -75,12 +75,7 @@ export default {
   'support.settings.none': 'Supporting the server gives you a thank-you set: a sleeve, a playmat, a ring, a title, a heart and a pet corgi.',
   'support.settings.wall': 'Show my name on the supporters wall',
   'support.settings.wall.detail': 'Off until you choose it. Your account name shows on the support page in the months you support.',
-  'support.settings.frame': 'Wear the supporter ring',
-  'support.settings.flair': 'Show the heart by my name',
-  'support.settings.title': 'Use the Patron title',
-  'support.settings.title.detail': 'Instead of a Career title, in games.',
-  'support.settings.pet': 'Bring the party corgi',
-  'support.settings.pet.detail': 'It sits by your side of the battlefield. Everyone at the table can click it.',
+  'support.settings.wear': 'Choose the ring, the title, the heart and the pet you wear in Settings, Cosmetics.',
 
   // pets on the battlefield; {name} is the player's name
   'pet.party-corgi': 'Party corgi',
