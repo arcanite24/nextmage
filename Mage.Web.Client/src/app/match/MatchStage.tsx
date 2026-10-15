@@ -50,6 +50,7 @@ import './matchMessages';
 import { useMatchUi } from './matchUi';
 import { useGameCues } from './useGameCues';
 import { useWarmImages } from './useWarmImages';
+import { useAutoCrew } from './useAutoCrew';
 import { useAutoPay } from './useAutoPay';
 import { useAutoPass } from './useAutoPass';
 import { useBlockDrag } from './useBlockDrag';
@@ -129,6 +130,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   const navigate = useNavigate();
   const animations = useSettings((settings) => settings.settings.animations);
   const autoPay = useSettings((settings) => settings.settings.autoPayMana);
+  const autoCrew = useSettings((settings) => settings.settings.autoCrew && !settings.fullControl);
   // watching and replays: the broadcast options
   const spectating = mode !== 'play';
   const broadcastDelay = useSettings((settings) => settings.settings.broadcastDelay);
@@ -240,6 +242,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   );
   useWarmImages(view);
   useAutoPay(session, state, board.me?.isMe ? board.me : null, autoPay && mode === 'play');
+  useAutoCrew(session, state, board.me?.isMe ? board.me : null, autoCrew && mode === 'play');
   // holding priority means the player wants every stop
   const autoPassing = useAutoPass(session, state, !holding);
   useGameCues(state, myId, !!autoPassing);
