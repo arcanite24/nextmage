@@ -111,11 +111,24 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <Row label={t('settings.autoPayRestricted')} detail={t('settings.autoPayRestricted.detail')}>{toggle('autoPayRestricted')}</Row>
           <Row label={t('settings.emptyPool')} detail={t('settings.emptyPool.detail')}>{toggle('confirmEmptyManaPool')}</Row>
           <Row label={t('settings.orderTriggers')} detail={t('settings.orderTriggers.detail')}>{toggle('autoOrderTriggers')}</Row>
-          <Row label={t('settings.autoCrew')} detail={t('settings.autoCrew.detail')}>{toggle('autoCrew')}</Row>
           <Row label={t('settings.autoTarget')} detail={t('settings.autoTarget.detail')}>
             <Switch checked={settings.autoTargetLevel > 0} onChange={(value) => update({ autoTargetLevel: value ? 1 : 0 })} />
           </Row>
           <Row label={t('settings.handRequests')} detail={t('settings.handRequests.detail')}>{toggle('allowHandRequests')}</Row>
+          <h3 className={styles.groupHeading}>{t('settings.automation')}</h3>
+          <p className={styles.intro}>{t('settings.automation.intro')}</p>
+          <Row label={t('settings.autoPayHybrid')} detail={t('settings.autoPayHybrid.detail')}>{toggle('autoPayHybrid')}</Row>
+          <Row label={t('settings.autoPayAnyColor')} detail={t('settings.autoPayAnyColor.detail')}>{toggle('autoPayAnyColor')}</Row>
+          <Row label={t('settings.autoPayPainful')} detail={t('settings.autoPayPainful.detail')}>{toggle('autoPayPainful')}</Row>
+          <Row label={t('settings.autoPayX')} detail={t('settings.autoPayX.detail')}>{toggle('autoPayX')}</Row>
+          <Row label={t('settings.xDefaultsToMax')} detail={t('settings.xDefaultsToMax.detail')}>{toggle('xDefaultsToMax')}</Row>
+          <Row label={t('settings.skipSingleChoice')} detail={t('settings.skipSingleChoice.detail')}>{toggle('skipSingleChoice')}</Row>
+          <Row label={t('settings.pickIdentical')} detail={t('settings.pickIdentical.detail')}>{toggle('pickIdentical')}</Row>
+          <Row label={t('settings.smartPreselect')} detail={t('settings.smartPreselect.detail')}>{toggle('smartPreselect')}</Row>
+          <Row label={t('settings.autoCrew')} detail={t('settings.autoCrew.detail')}>{toggle('autoCrew')}</Row>
+          <Row label={t('settings.attackPlayer')} detail={t('settings.attackPlayer.detail')}>{toggle('attackPlayerByDefault')}</Row>
+          <Row label={t('settings.autoAssignDamage')} detail={t('settings.autoAssignDamage.detail')}>{toggle('autoAssignDamage')}</Row>
+          <Row label={t('settings.autoAssignTrample')} detail={t('settings.autoAssignTrample.detail')}>{toggle('autoAssignTrample')}</Row>
         </Tabs.Content>
 
         <Tabs.Content value="stops" className={styles.panel}>
@@ -151,6 +164,8 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
 
         <Tabs.Content value="display" className={styles.panel}>
           <Row label={t('settings.motion')} detail={t('settings.motion.detail')}>{toggle('animations')}</Row>
+          <Row label={t('settings.sortHand')} detail={t('settings.sortHand.detail')}>{toggle('sortHand')}</Row>
+          <Row label={t('settings.autoDismissReveals')} detail={t('settings.autoDismissReveals.detail')}>{toggle('autoDismissReveals')}</Row>
           <Row label={t('settings.paintedArt')} detail={t('settings.paintedArt.detail')}>{toggle('paintedArt')}</Row>
           {DEVICE_PICTURES && <PictureStoreRow />}
         </Tabs.Content>

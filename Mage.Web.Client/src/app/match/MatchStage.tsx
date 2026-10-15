@@ -8,6 +8,7 @@ import { commanderDamageTo, commandersByPlayer, type CommanderStatus } from '../
 import { askedAttacker, defenderChoice, inRange } from '../../core/game/multiplayer';
 import { parsePayment } from '../../core/game/payment';
 import { xLimit } from '../../core/game/announceX';
+import { sortHand } from '../../core/game/handOrder';
 import { askedAboutCards } from '../../core/game/reveals';
 import { delayLabel, isBroadcastDelay } from '../../core/game/broadcastDelay';
 import { spectatorHand } from '../../core/game/spectatorHand';
@@ -22,7 +23,7 @@ import { useT } from '../i18n';
 import { useEvents } from '../stores/events';
 import { useGames } from '../stores/games';
 import { usePlay } from '../stores/play';
-import { useSettings } from '../stores/settings';
+import { useAutomation, useSettings } from '../stores/settings';
 import { notify } from '../stores/toasts';
 import { Button } from '../ui/Button';
 import { CardFace } from '../ui/CardFace';
@@ -51,6 +52,10 @@ import { useMatchUi } from './matchUi';
 import { useGameCues } from './useGameCues';
 import { useWarmImages } from './useWarmImages';
 import { useAutoCrew } from './useAutoCrew';
+import { useAutoDamage } from './useAutoDamage';
+import { usePickIdentical, useSkipSingleChoice, useSmartPreselect } from './useAutoChoices';
+import { useAttackTarget } from './useAttackTarget';
+import { defaultDefender } from '../../core/game/attackTarget';
 import { useAutoPay } from './useAutoPay';
 import { useAutoPass } from './useAutoPass';
 import { useBlockDrag } from './useBlockDrag';
@@ -129,8 +134,9 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   const t = useT();
   const navigate = useNavigate();
   const animations = useSettings((settings) => settings.settings.animations);
+  const autoDismissReveals = useSettings((settings) => settings.settings.autoDismissReveals);
   const autoPay = useSettings((settings) => settings.settings.autoPayMana);
-  const autoCrew = useSettings((settings) => settings.settings.autoCrew && !settings.fullControl);
+  const automation = useAutomation();
   // watching and replays: the broadcast options
   const spectating = mode !== 'play';
   const broadcastDelay = useSettings((settings) => settings.settings.broadcastDelay);
@@ -179,7 +185,11 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
     }
     return lands;
   }, [interaction.mode, board.me]);
-  const hand = useMemo(() => Object.values(view?.myHand ?? {}), [view?.myHand]);
+  const sortedHand = useSettings((settings) => settings.settings.sortHand);
+  const hand = useMemo(() => {
+    const cards = Object.values(view?.myHand ?? {});
+    return sortedHand ? sortHand(cards) : cards;
+  }, [view?.myHand, sortedHand]);
   // cards played from exile or a graveyard (an adventurer, flashback) join the hand while they can be played
   const offZone = useMemo(() => (interaction.mode === 'priority' ? offZonePlayables(view, clickable) : []), [interaction.mode, view, clickable]);
   const handAndPlayables = useMemo(() => (offZone.length > 0 ? [...hand, ...offZone.map((entry) => entry.card)] : hand), [hand, offZone]);
@@ -235,14 +245,24 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
   }, [blockDrop]);
 
   const myId = board.me?.player.playerId ?? null;
+  usePickIdentical(session, state, automation.pickIdentical && mode === 'play');
+  useSmartPreselect(session, state, myId, automation.smartPreselect && mode === 'play');
+  const attackDrop = useAttackTarget(session, state, myId, automation.attackPlayerByDefault && mode === 'play');
   const commanders = useMemo(() => commandersByPlayer(view), [view]);
   const damageTaken = useCallback(
     (player: PlayerView) => commanderDamageTo(player, commanders).map((hit) => ({ name: hit.commander.name, amount: hit.amount })),
     [commanders],
   );
   useWarmImages(view);
-  useAutoPay(session, state, board.me?.isMe ? board.me : null, autoPay && mode === 'play');
-  useAutoCrew(session, state, board.me?.isMe ? board.me : null, autoCrew && mode === 'play');
+  useAutoPay(session, state, board.me?.isMe ? board.me : null, autoPay && mode === 'play', {
+    hybrid: automation.autoPayHybrid,
+    anyColor: automation.autoPayAnyColor,
+    painful: automation.autoPayPainful,
+    afterX: automation.autoPayX,
+  });
+  useAutoCrew(session, state, board.me?.isMe ? board.me : null, automation.autoCrew && mode === 'play');
+  useSkipSingleChoice(session, state, automation.skipSingleChoice && mode === 'play');
+  useAutoDamage(session, state, mode === 'play' ? damageSplit : null, { plain: automation.autoAssignDamage, trample: automation.autoAssignTrample });
   // holding priority means the player wants every stop
   const autoPassing = useAutoPass(session, state, !holding);
   useGameCues(state, myId, !!autoPassing);
@@ -413,7 +433,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
 
             {board.me && (
               <>
-                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={chosen} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} pending={pending} onBlockDrop={interaction.mode === 'declareBlockers' && canAct ? onBlockDrop : undefined} place={layout.me} />
+                <Battlefield board={board.me} sleeve={sleeves.mine} clickable={clickable} selected={chosen} quiet={quiet} attacking={attacking} blocking={blocking} targeting={targeting} onClick={onClick} pending={pending} onBlockDrop={interaction.mode === 'declareBlockers' && canAct ? onBlockDrop : interaction.mode === 'declareAttackers' && canAct ? attackDrop.onDrop : undefined} dropTargets={interaction.mode === 'declareAttackers' ? attackDrop.targets : undefined} place={layout.me} />
                 <div className={styles.myPlate} style={layout.myPlate}>
                   <PlayerPlate
                     player={board.me.player}
@@ -448,7 +468,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
               </>
             )}
 
-            <Reveals view={view} myPlayerId={myId} opponentIds={opponentIds} />
+            <Reveals view={view} myPlayerId={myId} opponentIds={opponentIds} autoDismiss={autoDismissReveals} />
             <StackZone items={stack} clickable={clickable} selected={interaction.selected} sleeveOf={sleeveOf} onClick={onClick} originOf={originOf} />
             <PhaseLadder
               step={view?.step}
@@ -511,7 +531,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
             )}
 
             {damageSplit && canAct && !awaitingServer && <DamageAssigner split={damageSplit} />}
-            {defenders && <DefenderPicker attacker={attackerName} options={defenders} onPick={onClick} />}
+            {defenders && !(automation.attackPlayerByDefault && defaultDefender(defenders)) && <DefenderPicker attacker={attackerName} options={defenders} onPick={onClick} />}
             <Vfx view={view} myPlayerId={myId} />
             <Arrows sourceId={arrowSource} targetIds={arrowTargets} live={choosingTargets} links={links} attacks={attacks} />
             <EmoteBubbles view={view} />
@@ -555,7 +575,7 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                 onCommand={onCommand}
               />
             )}
-            {interaction.mode === 'panel' && prompt && !awaitingServer && <ChoicePanel prompt={prompt} onCommand={onCommand} xLimit={announceLimit} />}
+            {interaction.mode === 'panel' && prompt && !awaitingServer && <ChoicePanel prompt={prompt} onCommand={onCommand} xLimit={announceLimit} startAtLimit={automation.xDefaultsToMax} />}
             {viewer && <ZoneViewer title={viewer.title} cards={viewer.cards} onClose={() => openViewer(null)} />}
             {state.gameOver && betweenGames && (
               <BetweenGames
@@ -597,6 +617,7 @@ interface RowProps {
   onClick(id: string): void;
   pending: string | null;
   onBlockDrop?(blockerId: string, attackerId: string): boolean;
+  dropTargets?: ReadonlySet<string>;
 }
 
 /** One player's two rows of permanents. Rows shrink their cards to fit rather than wrapping. */
