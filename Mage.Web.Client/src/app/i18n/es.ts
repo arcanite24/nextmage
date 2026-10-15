@@ -290,6 +290,8 @@ const es: Catalog = {
   'settings.emptyPool.detail': 'Pregunta antes de pasar con maná en tu reserva.',
   'settings.orderTriggers': 'Ordenar las habilidades disparadas por mí',
   'settings.orderTriggers.detail': 'Ordena las habilidades disparadas simultáneas cuando el orden no importa.',
+  'settings.autoCrew': 'Tripular automáticamente',
+  'settings.autoCrew.detail': 'Gira las criaturas que tripulan un vehículo cuando solo una elección tiene sentido.',
   'settings.autoTarget': 'Elegir los objetivos obvios',
   'settings.autoTarget.detail': 'Elige el objetivo cuando solo hay uno legal.',
   'settings.handRequests': 'Los rivales pueden pedir ver mi mano',

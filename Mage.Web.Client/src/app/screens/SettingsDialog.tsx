@@ -98,6 +98,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <Row label={t('settings.autoPayRestricted')} detail={t('settings.autoPayRestricted.detail')}>{toggle('autoPayRestricted')}</Row>
           <Row label={t('settings.emptyPool')} detail={t('settings.emptyPool.detail')}>{toggle('confirmEmptyManaPool')}</Row>
           <Row label={t('settings.orderTriggers')} detail={t('settings.orderTriggers.detail')}>{toggle('autoOrderTriggers')}</Row>
+          <Row label={t('settings.autoCrew')} detail={t('settings.autoCrew.detail')}>{toggle('autoCrew')}</Row>
           <Row label={t('settings.autoTarget')} detail={t('settings.autoTarget.detail')}>
             <Switch checked={settings.autoTargetLevel > 0} onChange={(value) => update({ autoTargetLevel: value ? 1 : 0 })} />
           </Row>

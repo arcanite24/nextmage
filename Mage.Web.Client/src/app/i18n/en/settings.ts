@@ -57,6 +57,8 @@ export default {
   'settings.emptyPool.detail': 'Ask before passing with mana left in your pool.',
   'settings.orderTriggers': 'Order triggers for me',
   'settings.orderTriggers.detail': "Orders simultaneous triggers when the order doesn't matter.",
+  'settings.autoCrew': 'Crew automatically',
+  'settings.autoCrew.detail': 'Taps the creatures that crew a Vehicle when only one choice makes sense.',
   'settings.autoTarget': 'Pick obvious targets',
   'settings.autoTarget.detail': 'Chooses the target when only one is legal.',
   'settings.handRequests': 'Opponents may ask to see my hand',

@@ -19,6 +19,8 @@ export interface PlaySettings {
   confirmEmptyManaPool: boolean;
   /** order simultaneous triggers automatically when it doesn't matter */
   autoOrderTriggers: boolean;
+  /** tap the creatures that crew a Vehicle when only one group of them makes sense (local only) */
+  autoCrew: boolean;
   /** pick the only legal target automatically (0 off, 1 when obvious, 2 always) */
   autoTargetLevel: 0 | 1 | 2;
   /** where the game stops to give you priority */
@@ -81,12 +83,12 @@ const SETTINGS_KEY = 'playmat.settings';
 
 /** Arena-like: the game moves on by itself whenever the player has no real decision. */
 export const STREAMLINED: Partial<PlaySettings> = {
-  autoPass: true, autoSkipCombat: true, abilitiesOnTheirTurn: false, passAfterCasting: true, autoPayMana: true, autoTargetLevel: 1, autoOrderTriggers: true,
+  autoPass: true, autoSkipCombat: true, abilitiesOnTheirTurn: false, passAfterCasting: true, autoPayMana: true, autoTargetLevel: 1, autoOrderTriggers: true, autoCrew: true,
 };
 
 /** Classic XMage: every stop and every choice is the player's. */
 export const FULL_CONTROL: Partial<PlaySettings> = {
-  autoPass: false, autoSkipCombat: false, abilitiesOnTheirTurn: true, passAfterCasting: false, autoPayMana: false, autoTargetLevel: 0, autoOrderTriggers: false,
+  autoPass: false, autoSkipCombat: false, abilitiesOnTheirTurn: true, passAfterCasting: false, autoPayMana: false, autoTargetLevel: 0, autoOrderTriggers: false, autoCrew: false,
 };
 
 export const DEFAULT_SETTINGS: PlaySettings = {
@@ -94,6 +96,7 @@ export const DEFAULT_SETTINGS: PlaySettings = {
   autoPayRestricted: true,
   confirmEmptyManaPool: true,
   autoOrderTriggers: true,
+  autoCrew: true,
   autoTargetLevel: 1,
   animations: true,
   allowHandRequests: true,
