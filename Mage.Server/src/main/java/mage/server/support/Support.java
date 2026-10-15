@@ -584,6 +584,7 @@ public final class Support {
         look.frame = owned(owned, "frame", wanted.frame);
         look.title = owned(owned, "title", wanted.title);
         look.flair = owned(owned, "flair", wanted.flair);
+        look.pet = owned(owned, "pet", wanted.pet);
         return look;
     }
 

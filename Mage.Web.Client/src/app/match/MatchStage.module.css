@@ -86,6 +86,32 @@
   position: absolute;
 }
 
+/* a pet sits by its player's plate: mine on the cloth just above it, an opponent's beside theirs */
+.myPet {
+  position: absolute;
+  left: 8px;
+  bottom: -4px;
+  width: 128px;
+  height: 128px;
+}
+
+.withPet {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.withPet > :first-child {
+  position: relative;
+}
+
+.theirPet {
+  flex: none;
+  width: 104px;
+  height: 104px;
+  margin-top: -10px;
+}
+
 /* the piles stand two by two in the seat column */
 .myPiles > *,
 .theirPiles > * {

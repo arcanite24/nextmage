@@ -64,6 +64,7 @@ import { PhaseLadder } from './PhaseLadder';
 import { DefenderPicker } from './DefenderPicker';
 import { MiniPiles, Piles } from './Piles';
 import { PlayerPlate } from './PlayerPlate';
+import { PetSpot } from '../pets/PetSpot';
 import { SpectatorBar, WatcherCount } from './SpectatorBar';
 import { useWatchers } from './useWatchers';
 import { Reveals } from './Reveals';
@@ -420,6 +421,11 @@ export function MatchStage({ session, state, replayLog, onLeave }: MatchStagePro
                     onPay={onClick}
                     commanderDamage={damageTaken(board.me.player)}
                   />
+                  {lookOf(board.me.player)?.pet && (
+                    <div className={styles.myPet}>
+                      <PetSpot pet={lookOf(board.me.player)?.pet} owner={board.me.player.name ?? ''} isMe={board.me.isMe} />
+                    </div>
+                  )}
                 </div>
                 <div className={styles.myPiles} style={layout.myPiles}>
                   <Piles
@@ -645,7 +651,7 @@ function OpponentSide({ board, index, count, sleeve, handCount, deciding, layout
   return (
     <>
       <Battlefield board={board} sleeve={sleeve} place={place} {...row} />
-      <div className={[styles.theirPlate, count > 1 ? styles.seat : ''].join(' ')} style={layout.theirPlate(index, count)}>
+      <div className={[styles.theirPlate, count > 1 ? styles.seat : '', look?.pet && count === 1 ? styles.withPet : ''].join(' ')} style={layout.theirPlate(index, count)}>
         <PlayerPlate
           player={player}
           isMe={false}
@@ -658,6 +664,11 @@ function OpponentSide({ board, index, count, sleeve, handCount, deciding, layout
           outOfRange={outOfRange}
           look={look}
         />
+        {look?.pet && count === 1 && (
+          <div className={styles.theirPet}>
+            <PetSpot pet={look.pet} owner={player.name ?? ''} isMe={false} />
+          </div>
+        )}
         {count > 1 && (
           <div className={styles.theirMini}>
             <MiniPiles player={player} commanders={commanders} />

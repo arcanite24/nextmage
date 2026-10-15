@@ -220,7 +220,7 @@ public class SupportTest {
         support.recordKofi(donation("tx-k1", "3.00", "ana@example.test", "hi"), OCT_13);
         Support.SupportYou you = support.you("Ana", OCT_13);
         assertThat(you.perks).extracting(p -> p.kind + ":" + p.item)
-                .containsExactlyInAnyOrder("sleeve:supporter", "playmat:patron", "frame:supporter-ring", "title:patron", "flair:heart");
+                .containsExactlyInAnyOrder("sleeve:supporter", "playmat:patron", "frame:supporter-ring", "title:patron", "flair:heart", "pet:party-corgi");
         assertThat(you.supporter).isTrue();
         assertThat(you.since).isEqualTo(OCT_13);
         assertThat(you.notice).isTrue();
@@ -230,7 +230,7 @@ public class SupportTest {
         // status lapses after 30 days, perks stay
         Support.SupportYou later = support.you("Ana", OCT_13 + 31 * DAY);
         assertThat(later.supporter).isFalse();
-        assertThat(later.perks).hasSize(5);
+        assertThat(later.perks).hasSize(SupportPerks.THANK_YOU.size());
         // a second payment unlocks nothing new: no second thank-you
         support.recordKofi(donation("tx-k2", "3.00", "ana@example.test", "again"), OCT_13 + 40 * DAY);
         assertThat(support.you("Ana", OCT_13 + 40 * DAY).notice).isFalse();
@@ -238,7 +238,7 @@ public class SupportTest {
 
     @Test
     void thePerkCatalogIsCosmeticOnly() {
-        assertThat(SupportPerks.COSMETIC_KINDS).containsExactlyInAnyOrder("sleeve", "playmat", "avatar", "frame", "title", "flair");
+        assertThat(SupportPerks.COSMETIC_KINDS).containsExactlyInAnyOrder("sleeve", "playmat", "avatar", "frame", "title", "flair", "pet");
         for (SupportPerks.Perk perk : SupportPerks.THANK_YOU) {
             assertThat(SupportPerks.COSMETIC_KINDS).as(perk.kind + ":" + perk.item).contains(perk.kind);
         }
@@ -315,22 +315,22 @@ public class SupportTest {
         Payment linked = support.link(unmatched.id, "bo", OCT_13 + 1);
         assertThat(linked.account).isEqualTo("Bo");
         assertThat(linked.linkedBy).isEqualTo("staff");
-        assertThat(store.perks("Bo")).hasSize(5);
+        assertThat(store.perks("Bo")).hasSize(SupportPerks.THANK_YOU.size());
         assertThatThrownBy(() -> support.link(unmatched.id, "nobody", OCT_13)).hasMessageContaining("no account");
 
         // a refund without taking perks back
         support.revoke(linked.id, "refund", false, OCT_13 + 2);
-        assertThat(store.perks("Bo")).hasSize(5);
+        assertThat(store.perks("Bo")).hasSize(SupportPerks.THANK_YOU.size());
         assertThat(support.status(null, OCT_13 + 100_000).monthCents).isZero();
 
         // a chargeback that takes them back: only the perks this payment granted
         Payment other = support.recordKofi(donation("tx-s2", "3.00", "ana@example.test", null), OCT_13 + 3).payment;
         support.revoke(other.id, "chargeback", true, OCT_13 + 4);
         assertThat(store.perks("Ana")).isEmpty();
-        assertThat(store.perks("Bo")).as("Bo's perks came from another payment").hasSize(5);
+        assertThat(store.perks("Bo")).as("Bo's perks came from another payment").hasSize(SupportPerks.THANK_YOU.size());
 
         support.grant("cy", OCT_13 + 5);
-        assertThat(store.perks("Cy")).hasSize(5);
+        assertThat(store.perks("Cy")).hasSize(SupportPerks.THANK_YOU.size());
         assertThat(support.you("Cy", OCT_13 + 5).notice).isTrue();
     }
 
@@ -339,7 +339,7 @@ public class SupportTest {
         Payment first = support.recordKofi(donation("tx-v1", "3.00", "ana@example.test", null), OCT_13).payment;
         support.recordKofi(donation("tx-v2", "3.00", "ana@example.test", null), OCT_13 + 1);
         support.revoke(first.id, "chargeback", true, OCT_13 + 2);
-        assertThat(store.perks("Ana")).hasSize(5);
+        assertThat(store.perks("Ana")).hasSize(SupportPerks.THANK_YOU.size());
     }
 
     // ---- GitHub Sponsors
@@ -353,7 +353,7 @@ public class SupportTest {
         github.put(7L, "Cy");
         support.recordSponsorship(sponsorship("created", 7, 500, false, ""), OCT_13);
         assertThat(support.status(null, OCT_13).monthCents).isEqualTo(500);
-        assertThat(store.perks("Cy")).hasSize(5);
+        assertThat(store.perks("Cy")).hasSize(SupportPerks.THANK_YOU.size());
         assertThat(support.you("Cy", OCT_13).supporter).isTrue();
         // next month the daily job adds November's payment
         long nov = Instant.parse("2026-11-02T00:00:00Z").toEpochMilli();
@@ -367,7 +367,7 @@ public class SupportTest {
         support.daily(dec);
         assertThat(support.status(null, dec).monthCents).as("ended before December").isZero();
         assertThat(store.sponsorship(7).active).isFalse();
-        assertThat(store.perks("Cy")).as("perks stay").hasSize(5);
+        assertThat(store.perks("Cy")).as("perks stay").hasSize(SupportPerks.THANK_YOU.size());
     }
 
     @Test
@@ -380,7 +380,7 @@ public class SupportTest {
         support.githubLinked(9, "Bo", OCT_13 + 2);
         assertThat(store.unmatchedCount()).isEqualTo(1);
         assertThat(store.sponsorship(9).account).isEqualTo("Bo");
-        assertThat(store.perks("Bo")).hasSize(5);
+        assertThat(store.perks("Bo")).hasSize(SupportPerks.THANK_YOU.size());
         support.githubLinked(10, "Cy", OCT_13 + 3);
         assertThat(store.unmatchedCount()).isZero();
         assertThat(support.status(null, OCT_13 + 100_000).monthCents).isEqualTo(2800);
@@ -402,18 +402,22 @@ public class SupportTest {
         wanted.frame = "supporter-ring";
         wanted.title = "patron";
         wanted.flair = "heart";
+        wanted.pet = "party-corgi";
         PlayerLook kept = support.setLook("Cy", wanted, OCT_13);
         assertThat(kept.sleeve).as("no perks yet").isNull();
         assertThat(kept.cloth).isNull();
         assertThat(kept.frame).isNull();
         assertThat(kept.title).isNull();
         assertThat(kept.flair).isNull();
+        assertThat(kept.pet).isNull();
         assertThat(kept.avatar).as("a Career unlock").isEqualTo("owl");
 
         support.grant("Cy", OCT_13);
         kept = support.setLook("Cy", wanted, OCT_13);
         assertThat(Arrays.asList(kept.sleeve, kept.cloth, kept.avatar, kept.frame, kept.title, kept.flair))
                 .containsExactly("supporter", "patron", "owl", "supporter-ring", "patron", "heart");
+        assertThat(kept.pet).isEqualTo("party-corgi");
+        assertThat(support.looks(Collections.singletonList("cy")).get(0).pet).as("kept in the store").isEqualTo("party-corgi");
 
         PlayerLook free = new PlayerLook();
         free.sleeve = "#20302B";
@@ -429,6 +433,25 @@ public class SupportTest {
         made.title = "Admin<script>";
         kept = support.validLook("Cy", made);
         assertThat(Arrays.asList(kept.sleeve, kept.cloth, kept.title)).containsOnlyNulls();
+    }
+
+    @Test
+    void supportersFromBeforePetsGetTheCorgi() throws Exception {
+        String url = "jdbc:sqlite:" + dir.resolve("old.db");
+        try (SupportStore fresh = new SupportStore(url)) {
+            fresh.addPerk("Old", "sleeve", "supporter", OCT_13, 7);
+            fresh.addPerk("Old", "flair", "heart", OCT_13, 7);
+        }
+        // as a version 1 database left it: no pet column, no pet perk
+        try (java.sql.Connection raw = java.sql.DriverManager.getConnection(url); java.sql.Statement sql = raw.createStatement()) {
+            sql.execute("ALTER TABLE looks DROP COLUMN pet");
+            sql.execute("UPDATE schema_version SET version = 1");
+        }
+        try (SupportStore migrated = new SupportStore(url)) {
+            assertThat(migrated.schemaVersion()).isEqualTo(2);
+            assertThat(migrated.perks("old").stream().map(perk -> perk.kind + ":" + perk.item + ":" + perk.paymentId))
+                    .contains("pet:party-corgi:7");
+        }
     }
 
     @Test

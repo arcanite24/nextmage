@@ -12,6 +12,8 @@ import { IconButton } from '../ui/Button';
 import { Avatar, Flag } from './Avatar';
 import { ChatPanel } from './ChatPanel';
 import { Flair } from '../support/Flair';
+import { useLook } from '../support/supportData';
+import { THANK_YOU } from '../support/thankYou';
 import shell from '../AppShell.module.css';
 import styles from './LobbyDrawer.module.css';
 import { PUBLIC_ORIGIN } from '../brand';
@@ -150,6 +152,7 @@ function PlayerRow({ user, me, myTables }: { user: UsersView; me: string; myTabl
   const friend = useSocial((state) => isFriend(state, name));
   const ignoredUser = useSocial((state) => isIgnored(state, name));
   const isMe = name === me;
+  const look = useLook(name);
   const status = (user.infoGames ?? '').trim();
 
   const invite = (table: TableView) => {
@@ -163,7 +166,7 @@ function PlayerRow({ user, me, myTables }: { user: UsersView; me: string; myTabl
   return (
     <li className={[styles.player, ignoredUser ? styles.ignored : ''].join(' ')}>
       <button type="button" className={styles.identity} onClick={() => useLobby.getState().openProfile(name)} title={`${name}'s profile`}>
-        <Avatar name={name} avatarId={user.avatarId} size="sm" />
+        <Avatar name={name} avatarId={user.avatarId} size="sm" ring={look?.frame === THANK_YOU.frame} />
         <span className={styles.playerName}>
           {name}<Flair name={name} />{isMe ? ' (you)' : ''} <Flag flagName={user.flagName} />
         </span>

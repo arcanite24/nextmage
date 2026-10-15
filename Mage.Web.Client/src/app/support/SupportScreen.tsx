@@ -12,7 +12,7 @@ import styles from './SupportScreen.module.css';
 
 registerMessages(messages);
 
-const PERKS: MessageKey[] = ['support.perk.sleeve', 'support.perk.playmat', 'support.perk.frame', 'support.perk.title', 'support.perk.flair'];
+const PERKS: MessageKey[] = ['support.perk.sleeve', 'support.perk.playmat', 'support.perk.frame', 'support.perk.title', 'support.perk.flair', 'support.perk.pet'];
 const RULES: MessageKey[] = ['support.rule.free', 'support.rule.cosmetic', 'support.rule.voluntary', 'support.rule.kept', 'support.rule.refunds'];
 
 /**
@@ -50,6 +50,13 @@ export function SupportScreen() {
         <Section id="support-perks" title={t('support.perks')}>
           <p>{t('support.perks.text')}</p>
           <ul>{PERKS.map((key) => <li key={key}>{t(key)}</li>)}</ul>
+          <figure className={styles.corgi}>
+            <picture>
+              <source srcSet="/support/party-corgi-still.png" media="(prefers-reduced-motion: reduce)" />
+              <img src="/support/party-corgi.gif" width={160} height={176} loading="lazy" alt={t('support.corgi.alt')} />
+            </picture>
+            <figcaption>{t('support.corgi.caption')}</figcaption>
+          </figure>
           <p>{t('support.perks.status')}</p>
         </Section>
 

@@ -33,3 +33,25 @@
   color: var(--ink-dim);
   font-size: var(--text-sm);
 }
+
+/* the party corgi as a 1997 homepage would have shown it: a bevelled GIF, pixels kept square, and a credit line */
+.corgi {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-4);
+}
+
+.corgi img {
+  display: block;
+  image-rendering: pixelated;
+  border: 3px outset #c0c0c0;
+}
+
+.prose .corgi figcaption {
+  color: var(--ink-dim);
+  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  text-align: center;
+  font-size: var(--text-sm);
+}

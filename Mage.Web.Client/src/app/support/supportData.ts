@@ -6,7 +6,7 @@ import { api, rpc } from '../connection';
 import { queryClient, useServerInfo } from '../queries';
 import { readJson, writeJson } from '../stores/persist';
 import { useSession } from '../stores/session';
-import { DEFAULT_WEAR, type Wear } from './supportModel';
+import { DEFAULT_WEAR, type Wear } from './thankYou';
 
 /** Supporting the server, as the screens ask for it: the month's goal, the player's thank-you set, and others' looks. */
 
@@ -149,12 +149,17 @@ export function usePlayerLooks(names: readonly (string | undefined)[], fresh = f
   return useLooks((state) => state.looks);
 }
 
-/** One player's flair ("heart"), asked for if unknown. */
-export function useFlair(name: string | undefined): string | undefined {
+/** One player's look (ring, title, flair, pet), asked for if unknown. */
+export function useLook(name: string | undefined): PlayerLook | undefined {
   useEffect(() => {
     if (name) wantLooks([name]);
   }, [name]);
-  return useLooks((state) => (name ? state.looks[name.toLowerCase()]?.flair : undefined));
+  return useLooks((state) => (name ? state.looks[name.toLowerCase()] ?? undefined : undefined));
+}
+
+/** One player's flair ("heart"), asked for if unknown. */
+export function useFlair(name: string | undefined): string | undefined {
+  return useLook(name)?.flair;
 }
 
 // another account (or server) starts with no looks

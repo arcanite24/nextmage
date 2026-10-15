@@ -39,9 +39,9 @@ describe('the look', () => {
 
   test('a supporter wears the thank-you set unless they turn a piece off', () => {
     expect(lookOf({ sleeve: '#20302b', cloth: 'patron', careerAvatar: 'owl', careerTitle: 'questing-knight', perks: THANKS })).toEqual({
-      sleeve: '#20302b', cloth: 'patron', avatar: 'owl', frame: 'supporter-ring', flair: 'heart', title: 'patron',
+      sleeve: '#20302b', cloth: 'patron', avatar: 'owl', frame: 'supporter-ring', flair: 'heart', title: 'patron', pet: 'party-corgi',
     });
-    const quiet = lookOf({ careerTitle: 'questing-knight', perks: THANKS, wear: { frame: false, flair: false, title: false } });
+    const quiet = lookOf({ careerTitle: 'questing-knight', perks: THANKS, wear: { frame: false, flair: false, title: false, pet: false } });
     expect(quiet).toEqual({ title: 'questing-knight' });
     expect(lookOf({ perks: [] })).toEqual({});
     expect(owns(THANKS, 'sleeve', 'supporter')).toBe(true);

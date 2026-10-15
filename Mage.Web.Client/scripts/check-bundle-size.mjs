@@ -65,10 +65,12 @@ import { gzipSync } from 'node:zlib';
 // dialog, supporter pickers and settings, the look sync, opponents' looks in the match, the admin Support tab, and
 // their English and Spanish messages, all lazy. The entry gained the generated RPC methods, the supporter sleeve's drawn
 // back and the lazy hooks (+1.3 kB). Measured entry 73.9 kB, app 487.2 kB
+// app raised 2026-10-14 from 492 kB for pets: three.js and its glTF loader (154 kB) in one lazy chunk, PetScene,
+// downloaded only when a player with a pet sits at the table; the entry is unchanged. Measured app 646.3 kB
 const BUDGET_KB = {
   entry: 75,
   initial: 212,
-  app: 492,
+  app: 665,
 };
 
 const dist = new URL('../dist/', import.meta.url).pathname;

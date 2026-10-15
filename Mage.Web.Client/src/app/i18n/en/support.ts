@@ -36,6 +36,10 @@ export default {
   'support.perk.frame': 'A brass ring around your avatar',
   'support.perk.title': 'The Patron title under your name',
   'support.perk.flair': 'A small heart by your name in the lobby, chat and games',
+  'support.perk.pet': 'The party corgi, a pet that sits by your side of the battlefield and celebrates when clicked',
+  'support.corgi.alt': 'The party corgi, spinning in a starfield in party hat and sunglasses, beside a blinking NEW! and rainbow letters: THANK U 4 SUPPORTING!!',
+  // a joke: the GIF is drawn like a 1997 homepage
+  'support.corgi.caption': 'Best viewed in Netscape Navigator at 800×600',
   'support.perks.status': 'While a membership or sponsorship runs, and for 30 days after a donation, you also show as a supporter. The thank-you set stays either way.',
   'support.how': 'How it reaches your account',
   'support.how.text': 'Pay with your account’s email address (once it is confirmed), or put your support code in the Ko-fi message. GitHub Sponsors are matched through Sign in with GitHub. It takes about a minute; if it doesn’t, the staff link it by hand.',
@@ -56,8 +60,8 @@ export default {
 
   // the thank-you, once, on the next visit after a payment reaches the account
   'support.notice.title': 'Thank you!',
-  'support.notice.text': 'Your support reached your account. Your supporter sleeve, playmat, frame, title and flair are ready.',
-  'support.notice.where': 'Choose the sleeve for a deck in Decks and the cloth in Settings, Playmat. The ring, the title and the heart show by your name.',
+  'support.notice.text': 'Your support reached your account. Your supporter sleeve, playmat, frame, title, flair and party corgi are ready.',
+  'support.notice.where': 'Choose the sleeve for a deck in Decks and the cloth in Settings, Playmat. The ring, the title and the heart show by your name, and the corgi comes to every game.',
   'support.notice.close': 'Lovely',
 
   // a thank-you item the player doesn't have yet, shown quietly in the pickers
@@ -68,11 +72,18 @@ export default {
   'support.settings': 'Supporting the server',
   'support.settings.thanks': 'Thank you for supporting the server.',
   'support.settings.active': 'Thank you! You’re a supporter this month.',
-  'support.settings.none': 'Supporting the server gives you a thank-you set: a sleeve, a playmat, a ring, a title and a heart.',
+  'support.settings.none': 'Supporting the server gives you a thank-you set: a sleeve, a playmat, a ring, a title, a heart and a pet corgi.',
   'support.settings.wall': 'Show my name on the supporters wall',
   'support.settings.wall.detail': 'Off until you choose it. Your account name shows on the support page in the months you support.',
   'support.settings.frame': 'Wear the supporter ring',
   'support.settings.flair': 'Show the heart by my name',
   'support.settings.title': 'Use the Patron title',
   'support.settings.title.detail': 'Instead of a Career title, in games.',
+  'support.settings.pet': 'Bring the party corgi',
+  'support.settings.pet.detail': 'It sits by your side of the battlefield. Everyone at the table can click it.',
+
+  // pets on the battlefield; {name} is the player's name
+  'pet.party-corgi': 'Party corgi',
+  'pet.label': '{pet}, {name}’s pet. Click to celebrate.',
+  'pet.mine': '{pet}, your pet. Click to celebrate.',
 } as const;
