@@ -32,16 +32,18 @@ export interface PermanentStackProps {
   pending?: string | null;
   /** while blockers are declared: a creature dropped on an attacker blocks it (false when nothing was sent) */
   onBlockDrop?(blockerId: string, attackerId: string): boolean;
+  /** what a dragged creature can be dropped on (attackers by default; planeswalkers and battles while attacking) */
+  dropTargets?: ReadonlySet<string>;
 }
 
 const CARD_RATIO = 88 / 63;
 const DRAG_THRESHOLD = 12;
 
-/** The attacking creature under a screen point, if any. */
-function attackerAt(x: number, y: number, attacking: ReadonlySet<string>, self: string): string | null {
+/** The drop target (an attacking creature, a planeswalker or battle to attack) under a screen point, if any. */
+function attackerAt(x: number, y: number, targets: ReadonlySet<string>, self: string): string | null {
   for (const element of document.elementsFromPoint(x, y)) {
     const id = element.closest('[data-object-id]')?.getAttribute('data-object-id');
-    if (id && id !== self && attacking.has(id)) return id;
+    if (id && id !== self && targets.has(id)) return id;
   }
   return null;
 }
@@ -127,7 +129,7 @@ interface PlacedCardProps extends PermanentStackProps {
   count?: number;
 }
 
-function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, attacking, blocking, forward, targeting, onClick, onBlockDrop, pending, left, top, depth, count }: PlacedCardProps) {
+function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, attacking, blocking, forward, targeting, onClick, onBlockDrop, dropTargets, pending, left, top, depth, count }: PlacedCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = permanent.id!;
   const tapped = !!permanent.tapped;
@@ -162,7 +164,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
       current.moved = true;
       setZoom(null);
     }
-    if (current.moved) setBlockDrag({ blockerId: id, attackerId: attackerAt(event.clientX, event.clientY, attacking, id) });
+    if (current.moved) setBlockDrag({ blockerId: id, attackerId: attackerAt(event.clientX, event.clientY, dropTargets ?? attacking, id) });
   }
 
   function endDrag(event: ReactPointerEvent, drop: boolean) {
@@ -173,7 +175,7 @@ function PlacedCard({ permanent, width, sleeve, clickable, selected, quiet, atta
     setBlockDrag(null);
     // the click that ends a drag is not a click on the card
     suppressClick.current = true;
-    const attacker = drop ? attackerAt(event.clientX, event.clientY, attacking, id) : null;
+    const attacker = drop ? attackerAt(event.clientX, event.clientY, dropTargets ?? attacking, id) : null;
     if (attacker) onBlockDrop?.(id, attacker);
   }
 

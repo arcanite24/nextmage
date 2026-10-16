@@ -4,7 +4,8 @@ import type { PermanentView } from '../../protocol/generated/views';
  * Automatic mana payment, decided on the client: the server asks for mana one source at a time and has no
  * auto-tap for human players. Sources that make one color, or a few colors from plain "Add {W} or {U}" abilities
  * and basic land types (shocklands, guildgates, triomes), are tapped only while the whole remaining cost can still be
- * covered; anything that needs a real choice (any color, life or damage riders) is left to the player.
+ * covered. Sources that make any color, or that cost life or deal damage, are tapped only when the player allows them
+ * (see ManaReach), and then after every other source; anything else that needs a real choice is left to the player.
  */
 
 export type ManaColor = 'W' | 'U' | 'B' | 'R' | 'G' | 'C';
@@ -14,6 +15,16 @@ export interface ManaSource {
   /** the kinds of mana one activation can add, one of them per activation; null when auto-pay can't decide for it */
   colors: ManaColor[] | null;
   isLand: boolean;
+  /** 0 plain, 1 any color, 2 costs life or deals damage: higher tiers are tapped only when lower ones can't pay */
+  tier?: number;
+}
+
+/** Which sources beyond the plain ones auto-pay may tap (Settings: Use any-color mana, Use painful mana). */
+export interface ManaReach {
+  anyColor?: boolean;
+  painful?: boolean;
+  /** the player has a commander: sources limited to its color identity (Command Tower, Arcane Signet) make mana */
+  commander?: boolean;
 }
 
 export interface ManaCostParts {
@@ -33,44 +44,116 @@ const BASIC_TYPES: Record<string, ManaColor> = { PLAINS: 'W', ISLAND: 'U', SWAMP
 
 /** The unpaid cost in a payment prompt ("Pay {2}{G}{G}"), or null when it has symbols auto-pay won't decide (X, hybrid, Phyrexian, snow). */
 export function parseCost(text: string): ManaCostParts | null {
-  const symbols = [...text.matchAll(/\{([^}]+)\}/g)].map((match) => match[1].toUpperCase());
-  if (symbols.length === 0) return null;
-  const cost: ManaCostParts = { generic: 0, colored: {} };
-  for (const symbol of symbols) {
-    if (/^\d+$/.test(symbol)) cost.generic += Number(symbol);
-    else if ((COLORS as string[]).includes(symbol)) cost.colored[symbol as ManaColor] = (cost.colored[symbol as ManaColor] ?? 0) + 1;
-    else return null;
-  }
-  return cost;
+  const options = parseCostOptions(text, false);
+  return options ? options[0] : null;
 }
 
+const MAX_COST_OPTIONS = 64;
+
 /**
- * What a permanent's mana abilities can add, read from its rules text and basic land types: the kinds in a fixed
- * order; null when a choice is beyond auto-pay (any color, a cost or rider such as life or damage, colorless next to
- * colors); undefined when there's no mana ability to read.
+ * The ways to read a cost, most likely first: with `hybrid`, each hybrid symbol is either of its halves ({W/U}), a
+ * twobrid symbol is its color or two generic ({2/W}), and a Phyrexian symbol is paid with its mana, never with life
+ * ({W/P}); otherwise those make the cost unreadable, as X and snow always do. Null when the cost can't be read.
  */
-export function manaOf(permanent: Pick<PermanentView, 'rules' | 'subTypes' | 'cardTypes'>): ManaColor[] | null | undefined {
+export function parseCostOptions(text: string, hybrid = true): ManaCostParts[] | null {
+  const symbols = [...text.matchAll(/\{([^}]+)\}/g)].map((match) => match[1].toUpperCase());
+  if (symbols.length === 0) return null;
+  let options: ManaCostParts[] = [{ generic: 0, colored: {} }];
+  const add = (cost: ManaCostParts, part: ManaColor | number): ManaCostParts =>
+    typeof part === 'number' ? { ...cost, generic: cost.generic + part } : { ...cost, colored: { ...cost.colored, [part]: (cost.colored[part] ?? 0) + 1 } };
+  for (const symbol of symbols) {
+    let parts: (ManaColor | number)[];
+    if (/^\d+$/.test(symbol)) parts = [Number(symbol)];
+    else if ((COLORS as string[]).includes(symbol)) parts = [symbol as ManaColor];
+    else if (hybrid && /^([WUBRG]|2)(\/[WUBRG])?(\/P)?$/.test(symbol) && symbol.includes('/')) {
+      const halves = symbol.split('/').filter((half) => half !== 'P');
+      // colors before the two generic of a twobrid symbol
+      parts = halves.filter((half) => half !== '2').map((half) => half as ManaColor);
+      if (halves.includes('2')) parts.push(2);
+    } else return null;
+    options = options.flatMap((cost) => parts.map((part) => add(cost, part)));
+    if (options.length > MAX_COST_OPTIONS) return null;
+  }
+  // the readings that ask for the least mana first
+  return options.sort((a, b) => total(a) - total(b));
+}
+
+type ManaPermanent = Pick<PermanentView, 'rules' | 'subTypes' | 'cardTypes'>;
+
+const PAINFUL = /damage to you|you lose \d+ life/i;
+
+/** What a permanent's mana abilities add, and at what price; null when beyond auto-pay, undefined when there are none. */
+function readMana(permanent: ManaPermanent): { colors: ManaColor[]; anyColor: boolean; painful: boolean; identity: boolean } | null | undefined {
   const rules = (permanent.rules ?? []).map((rule) => rule.replace(/<[^>]*>/g, ''));
   const kinds = new Set<ManaColor>();
+  let anyColor = false;
+  let painful = false;
+  let identity = false;
   for (const rule of rules) {
+    // City of Brass: "Whenever City of Brass becomes tapped, it deals 1 damage to you."
+    if (/becomes tapped/i.test(rule) && PAINFUL.test(rule)) painful = true;
     for (const match of rule.matchAll(/Add ([^.]*)\.?(.*)/gi)) {
       const [, clause, rest] = match;
-      if (/any color|any type|of any/i.test(clause)) return null;
+      const rider = rest.replace(/\)$/, '');
+      if (/any type/i.test(clause)) return null;
+      if (/any color|of any/i.test(clause)) {
+        // "Spend this mana only to cast creature spells": a restriction auto-pay can't weigh
+        if (/\S/.test(rider) && !PAINFUL.test(rider)) return null;
+        anyColor = true;
+        if (/color identity/i.test(clause)) identity = true;
+        for (const color of COLORS.slice(0, 5)) kinds.add(color);
+      }
       const symbols = [...clause.matchAll(/\{([WUBRGC])\}/g)].map((symbol) => symbol[1] as ManaColor);
-      // a choice of colors with a rider ("deals 1 damage to you") costs more than mana
-      if (new Set(symbols).size > 1 && /\S/.test(rest.replace(/\)$/, ''))) return null;
+      if (PAINFUL.test(rider)) painful = true;
+      // a choice of colors with another rider costs more than mana
+      else if (new Set(symbols).size > 1 && /\S/.test(rider)) return null;
       for (const symbol of symbols) kinds.add(symbol);
     }
-    // a cost besides tapping ("{T}, Pay 1 life: Add {B}")
-    if (/^[^:]*(life|sacrifice|discard|counter)[^:]*:\s*Add/i.test(rule)) return null;
+    // a cost besides tapping: life ("{T}, Pay 1 life: Add {B}") is a price, the rest a choice
+    if (/^[^:]*(sacrifice|discard|counter)[^:]*:\s*Add/i.test(rule)) return null;
+    if (/^[^:]*life[^:]*:\s*Add/i.test(rule)) painful = true;
   }
   for (const type of permanent.subTypes ?? []) {
     const color = BASIC_TYPES[type];
     if (color) kinds.add(color);
   }
   if (kinds.size === 0) return undefined; // no mana ability we can read
-  if (kinds.size > 1 && kinds.has('C')) return null;
-  return COLORS.filter((color) => kinds.has(color));
+  // colorless next to colors: fine for a painland ({C} free, colors hurt) or an any-color source, not otherwise
+  if (kinds.size > 1 && kinds.has('C') && !painful && !anyColor) return null;
+  return { colors: COLORS.filter((color) => kinds.has(color)), anyColor, painful, identity };
+}
+
+/**
+ * What a permanent's mana abilities can add, read from its rules text and basic land types: the kinds in a fixed
+ * order; null when a choice is beyond auto-pay (a cost or rider, colorless next to colors, and any color or life and
+ * damage unless `reach` allows them); undefined when there's no mana ability to read.
+ */
+export function manaOf(permanent: ManaPermanent, reach: ManaReach = {}): ManaColor[] | null | undefined {
+  const mana = readMana(permanent);
+  if (!mana) return mana;
+  if ((mana.painful && !reach.painful) || (mana.anyColor && !reach.anyColor)) return null;
+  // without a commander, "any color in your commander's color identity" makes nothing
+  if (mana.identity && !reach.commander) return null;
+  return mana.colors;
+}
+
+/**
+ * A hybrid cost's readings (see parseCostOptions) in the order to try them: those the plain sources (tier 0) cover
+ * best first, so {G/W} is read as W when there's a Plains and only an any-color source makes G.
+ */
+export function orderReadings(readings: ManaCostParts[], sources: ManaSource[]): ManaCostParts[] {
+  const plain = sources.filter((source) => source.colors !== null && (source.tier ?? 0) === 0);
+  const covered = (cost: ManaCostParts) => COLORS.reduce(
+    (sum, color) => sum + Math.min(cost.colored[color] ?? 0, plain.filter((source) => source.colors!.includes(color)).length), 0);
+  return readings.map((cost, index) => ({ cost, index, score: covered(cost) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((entry) => entry.cost);
+}
+
+/** The ManaSource tier of a permanent (see ManaSource.tier). */
+export function manaTier(permanent: ManaPermanent): number {
+  const mana = readMana(permanent);
+  return mana?.painful ? 2 : mana?.anyColor ? 1 : 0;
 }
 
 /**
@@ -142,8 +225,19 @@ function afterPaying(cost: ManaCostParts, color: ManaColor | 'generic'): ManaCos
 export function nextTap(cost: ManaCostParts, sources: ManaSource[], keep: Partial<Record<ManaColor, number>> = {}): ManaTap | null {
   const usable = sources.filter((source) => source.colors !== null);
   if (!canPay(cost, usable)) return null;
-  const single = usable.filter((source) => source.colors!.length === 1);
-  const multi = usable.filter((source) => source.colors!.length > 1);
+  // any-color and painful sources only when the plainer ones can't make the next tap
+  const tiers = [...new Set(usable.map((source) => source.tier ?? 0))].sort((a, b) => a - b);
+  for (const tier of tiers) {
+    const tap = tapFrom(cost, usable, usable.filter((source) => (source.tier ?? 0) <= tier), keep);
+    if (tap) return tap;
+  }
+  return null;
+}
+
+/** nextTap's choice among `pool`, keeping the whole cost payable with all `usable` sources. */
+function tapFrom(cost: ManaCostParts, usable: ManaSource[], pool: ManaSource[], keep: Partial<Record<ManaColor, number>>): ManaTap | null {
+  const single = pool.filter((source) => source.colors!.length === 1);
+  const multi = pool.filter((source) => source.colors!.length > 1);
   const landsFirst = (a: ManaSource, b: ManaSource) => Number(b.isLand) - Number(a.isLand);
   const left = (color: ManaColor) => single.filter((source) => source.colors![0] === color).length;
   // colorless first; then colors with sources to spare, and of those the ones nothing in hand needs
@@ -156,7 +250,9 @@ export function nextTap(cost: ManaCostParts, sources: ManaSource[], keep: Partia
   const tries = (source: ManaSource, color: ManaColor | 'generic', ask: boolean): ManaTap | null => {
     const after = afterPaying(cost, color);
     if (!after || !canPay(after, usable.filter((other) => other !== source))) return null;
-    return { id: source.id, color: color === 'generic' ? source.colors![0] : color, ask };
+    // generic mana: colorless when the source makes it (a painland's free ability)
+    const made = color !== 'generic' ? color : source.colors!.includes('C') ? 'C' : source.colors![0];
+    return { id: source.id, color: made, ask };
   };
   const first = (candidates: ManaSource[], color: (source: ManaSource) => ManaColor | 'generic', ask = false) => {
     for (const source of candidates) {
@@ -190,13 +286,26 @@ export function nextTap(cost: ManaCostParts, sources: ManaSource[], keep: Partia
   return null;
 }
 
-/** The ability to answer the server's "which mana ability" question with, when it names exactly one that adds `color`. */
+/**
+ * The ability to answer the server's "which mana ability" question with, when it names exactly one that adds `color`,
+ * or else exactly one that adds any color.
+ */
 export function abilityFor(choices: { id: string; text: string }[], color: ManaColor): string | null {
+  const clause = (text: string) => text.match(/Add ([^.]*)/i)?.[1] ?? '';
   const matching = choices.filter((choice) => {
-    const added = [...(choice.text.match(/Add ([^.]*)/i)?.[1] ?? '').matchAll(/\{([WUBRGC])\}/g)].map((symbol) => symbol[1]);
+    const added = [...clause(choice.text).matchAll(/\{([WUBRGC])\}/g)].map((symbol) => symbol[1]);
     return added.length > 0 && added.every((symbol) => symbol === color);
   });
-  return matching.length === 1 ? matching[0].id : null;
+  if (matching.length === 1) return matching[0].id;
+  const any = color === 'C' ? [] : choices.filter((choice) => /any color|of any/i.test(clause(choice.text)));
+  return matching.length === 0 && any.length === 1 ? any[0].id : null;
+}
+
+const COLOR_NAMES: Record<ManaColor, string> = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', C: 'Colorless' };
+
+/** The answer to the server's "pick a mana color" question for `color`, when it is one of the offered choices. */
+export function colorChoiceFor(choices: string[], color: ManaColor): string | null {
+  return choices.find((choice) => choice.toLowerCase() === COLOR_NAMES[color].toLowerCase()) ?? null;
 }
 
 /** What can pay with a special payment: cards in the graveyard (delve), untapped creatures (convoke) and artifacts (improvise). */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { abilityFor, canPay, handNeeds, landsPartOf, manaOf, nextTap, parseCost, type ManaColor, type ManaCostParts, type ManaSource } from './autoPay';
+import { abilityFor, canPay, colorChoiceFor, handNeeds, landsPartOf, manaOf, manaTier, nextTap, orderReadings, parseCost, parseCostOptions, type ManaColor, type ManaCostParts, type ManaSource } from './autoPay';
 
 /** a source making the colors in `colors` ("G", "RW"), or one auto-pay can't decide for (null) */
 const land = (id: string, colors: string | null): ManaSource => ({ id, colors: colors === null ? null : ([...colors] as ManaColor[]), isLand: true });
@@ -180,5 +180,69 @@ describe('landsPartOf', () => {
   it('improvise counts artifacts; an unknown special leaves all generic mana to the player', () => {
     expect(landsPartOf({ generic: 2, colored: { R: 1 } }, 'Improvise', payers)).toEqual({ generic: 2, colored: { R: 1 } });
     expect(landsPartOf({ generic: 5, colored: { G: 1 } }, 'Special payment', payers)).toEqual({ generic: 0, colored: { G: 1 } });
+  });
+});
+
+describe('parseCostOptions', () => {
+  it('reads hybrid, twobrid and Phyrexian symbols, least mana first', () => {
+    expect(parseCostOptions('Pay {W/U}{1}')).toEqual([{ generic: 1, colored: { W: 1 } }, { generic: 1, colored: { U: 1 } }]);
+    expect(parseCostOptions('Pay {2/W}')).toEqual([{ generic: 0, colored: { W: 1 } }, { generic: 2, colored: {} }]);
+    expect(parseCostOptions('Pay {B/P}{B/P}')).toEqual([{ generic: 0, colored: { B: 2 } }]);
+    expect(parseCostOptions('Pay {G/U/P}')).toEqual([{ generic: 0, colored: { G: 1 } }, { generic: 0, colored: { U: 1 } }]);
+  });
+  it('still refuses X and snow, and hybrid when not asked to read it', () => {
+    expect(parseCostOptions('Pay {X}{R}')).toBeNull();
+    expect(parseCostOptions('Pay {S}')).toBeNull();
+    expect(parseCostOptions('Pay {W/U}', false)).toBeNull();
+  });
+});
+
+describe('any-color and painful sources', () => {
+  const tower = { rules: ['{T}: Add one mana of any color in your commander\'s color identity.'] };
+  const signet = { rules: ['{T}: Add one mana of any color.'] };
+  const painland = { rules: ['{T}: Add {C}.', '{T}: Add {W} or {U}. Adarkar Wastes deals 1 damage to you.'] };
+  const confluence = { rules: ['{T}, Pay 1 life: Add one mana of any color.'] };
+  const cityOfBrass = { rules: ['Whenever City of Brass becomes tapped, it deals 1 damage to you.', '{T}: Add one mana of any color.'] };
+
+  it('reads them only when allowed', () => {
+    expect(manaOf(signet, { anyColor: true })).toEqual(['W', 'U', 'B', 'R', 'G']);
+    expect(manaOf(tower, { anyColor: true })).toBeNull();
+    expect(manaOf(tower, { anyColor: true, commander: true })).toEqual(['W', 'U', 'B', 'R', 'G']);
+    expect(manaOf(painland, { anyColor: true })).toBeNull();
+    expect(manaOf(painland, { painful: true })).toEqual(['W', 'U', 'C']);
+    expect(manaOf(confluence, { anyColor: true, painful: true })).toEqual(['W', 'U', 'B', 'R', 'G']);
+    expect(manaOf(cityOfBrass, { anyColor: true })).toBeNull();
+    expect(manaOf({ rules: ['{T}: Add one mana of any color. Spend this mana only to cast creature spells.'] }, { anyColor: true })).toBeNull();
+    expect([manaTier({ subTypes: ['FOREST'] }), manaTier(signet), manaTier(painland), manaTier(cityOfBrass)]).toEqual([0, 1, 2, 2]);
+  });
+
+  it('taps them after every plainer source', () => {
+    const sources: ManaSource[] = [
+      { id: 'tower', colors: ['W', 'U', 'B', 'R', 'G'], isLand: true, tier: 1 },
+      { id: 'forest', colors: ['G'], isLand: true },
+    ];
+    expect(nextSource({ generic: 1, colored: {} }, sources)).toBe('forest');
+    expect(nextSource({ generic: 0, colored: { G: 1, B: 1 } }, sources)).toBe('forest');
+    expect(nextTap({ generic: 0, colored: { B: 1 } }, sources)).toMatchObject({ id: 'tower', color: 'B' });
+  });
+
+  it('pays generic with a painland\'s free colorless', () => {
+    expect(nextTap({ generic: 1, colored: {} }, [{ id: 'wastes', colors: ['W', 'U', 'C'], isLand: true, tier: 2 }])).toMatchObject({ color: 'C' });
+  });
+
+  it('answers the ability and color questions', () => {
+    const choices = [{ id: 'c', text: '{T}: Add {C}.' }, { id: 'any', text: '{T}: Add one mana of any color.' }];
+    expect(abilityFor(choices, 'B')).toBe('any');
+    expect(abilityFor(choices, 'C')).toBe('c');
+    expect(colorChoiceFor(['White', 'Blue', 'Black', 'Red', 'Green'], 'R')).toBe('Red');
+    expect(colorChoiceFor(['White'], 'R')).toBeNull();
+  });
+});
+
+describe('orderReadings', () => {
+  it('reads hybrid as the colors plain sources make', () => {
+    const sources: ManaSource[] = [land('plains', 'W'), { id: 'lith', colors: ['W', 'U', 'B', 'R', 'G'], isLand: false, tier: 1 }];
+    const readings = parseCostOptions('Pay {G/W}{G/W}')!;
+    expect(orderReadings(readings, sources)[0]).toEqual({ generic: 0, colored: { G: 1, W: 1 } });
   });
 });
