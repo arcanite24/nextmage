@@ -1585,6 +1585,31 @@ export interface TournamentView extends Serializable {
     watchingAllowed?: boolean;
 }
 
+export interface UpdateChange {
+    sha?: string;
+    title?: string;
+    url?: string;
+}
+
+export interface UpdateStatus {
+    changes?: UpdateChange[];
+    channel?: string;
+    checkedAt?: number;
+    commitsBehind?: number;
+    currentCommit?: string;
+    currentVersion?: string;
+    enabled?: boolean;
+    error?: string;
+    latestCommit?: string;
+    latestVersion?: string;
+    notesUrl?: string;
+    published?: boolean;
+    serverImage?: string;
+    sourceRepo?: string;
+    updateAvailable?: boolean;
+    webImage?: string;
+}
+
 export interface UserData extends Serializable {
     allowRequestShowHandCards?: boolean;
     askMoveToGraveOrder?: boolean;

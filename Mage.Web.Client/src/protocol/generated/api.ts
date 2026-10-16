@@ -213,6 +213,8 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('adminSendBroadcastMessage', SESSION, message),
     adminServerStats: () =>
       rpc.call('adminServerStats'),
+    adminUpdateStatus: (refresh?: boolean | null) =>
+      rpc.call('adminUpdateStatus', refresh),
     adminGetReports: (openOnly?: boolean | null) =>
       rpc.call('adminGetReports', openOnly),
     adminCloseReport: (reportId: number, resolution: string) =>

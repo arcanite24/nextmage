@@ -160,6 +160,14 @@ jobs:
               echo "VITE_APP_NAME=$APP_NAME"
               if [ "$RELEASE" = true ]; then echo "RELEASE_NOTES_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$VERSION"; fi
             fi
+            # Dockerfile.server: what this image is and what it follows, for the admin console's update check
+            if [ "$IMAGE" = server ]; then
+              echo "PLAYMAT_VERSION=$VERSION"
+              if [ "$RELEASE" = true ]; then echo "PLAYMAT_CHANNEL=release"
+              elif [ "$GITHUB_REF" = refs/heads/master ]; then echo "PLAYMAT_CHANNEL=master"; fi
+              echo "PLAYMAT_IMAGES=$REGISTRY/playmat"
+              echo "PLAYMAT_REPO=$GITHUB_REPOSITORY"
+            fi
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
       - id: labels

@@ -19,7 +19,7 @@ docker compose -f ops/web/docker-compose.yml up -d --build
 Before you start:
 
 - Point `DOMAIN` at the machine first; Caddy fetches the certificate on first start.
-- The first server image build compiles the whole card database (expect tens of minutes). Later builds reuse the Maven cache.
+- The first server image build compiles the whole card database (expect tens of minutes). Later builds reuse the Maven cache. To skip building, run the published images instead (see [Updating your server](#updating-your-server)).
 - The first server start builds the card database before the game port opens, which takes a few minutes. The web container waits until the server is healthy, so the site comes up after that.
 
 ## Private server on a LAN
@@ -116,6 +116,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_KOFI_TOKEN` | empty | Ko-fi's webhook verification token (`-Dxmage.kofi.token`). Set: Ko-fi payments are taken at `https://DOMAIN/hooks/kofi`. A secret. See [Support and the monthly goal](#support-and-the-monthly-goal). |
 | `XMAGE_GITHUB_SPONSORS_SECRET` | empty | The GitHub Sponsors webhook's secret (`-Dxmage.githubSponsors.secret`). Set: sponsorship events are taken at `https://DOMAIN/hooks/github-sponsors`. A secret. |
 | `XMAGE_HOOKS_PORT` | `17174` with a provider, else off | The server's webhook listener (`-Dxmage.hooksPort`), reached by Caddy only (`/hooks/*`, `/public/*`); `0` turns it off. Keep 17174: the Caddyfile forwards there. |
+| `XMAGE_UPDATE_CHECK` | `on` | The admin console's Updates section (admins and the owner) asks the registry which build the published `master` (or, for a release image, `latest`) tag holds, and GitHub which commits it brings. It looks only when staff open it, keeps the answer for an hour, and makes no calls on its own. `off`: none of those calls are made. See [Updating your server](#updating-your-server). |
 | `XMAGE_CONTACT_EMAIL` | empty | The address the privacy policy and terms (`/privacy`, `/terms`) give for questions about players' data. Empty: they point players to Feedback. |
 | `XMAGE_JAVA_OPTS` | empty | Extra JVM flags. |
 | `BACKUP_AT` | `03:30` | Time of the daily backup, as `HH:MM` in `TZ`. |
@@ -396,6 +397,27 @@ The repository's `Uptime` workflow checks the public server from outside every 1
 Also worth setting on a fresh host: Docker log rotation in `/etc/docker/daemon.json` (`"log-opts": {"max-size": "20m", "max-file": "5"}`, plus `"live-restore": true`), and a reboot window for unattended upgrades (`Unattended-Upgrade::Automatic-Reboot "true"` with a `Automatic-Reboot-Time` after the nightly backup).
 
 ## Upgrade
+
+### Updating your server
+
+The admin console's **Updates** section (Admin in the account menu, for admins and the owner) says whether a newer version is out, lists what changed, and shows the commands below with your image names filled in. With games running, announce maintenance in Settings first: the restart ends every game in progress.
+
+If you built the images yourself (the `--build` in [Run](#run)), switch to the published ones once, so updates never need a build again. Add these two lines to `ops/web/.env`:
+
+```bash
+XMAGE_SERVER_IMAGE=ghcr.io/arcanite24/playmat-server:master
+XMAGE_WEB_IMAGE=ghcr.io/arcanite24/playmat-web:master
+```
+
+Then, in the folder you cloned, and again for every update:
+
+```bash
+git pull
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env pull xmage web
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env up -d --no-build
+```
+
+The volumes (accounts, stats, backups, the image cache) and `.env` are kept. `master` is the newest build of master, rebuilt for every merged change; `:latest` follows releases instead, once a release has been published with images. To build from the checkout again, empty the two lines and run `up -d --build`.
 
 There are three ways to get a new version running. All of them keep the volumes, and settings stay in `.env`.
 
