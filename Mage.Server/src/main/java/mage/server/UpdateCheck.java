@@ -128,6 +128,31 @@ public final class UpdateCheck {
         public long checkedAt;
         /** why the check failed, for staff; null when it worked */
         public String error;
+        /** the Update button's updater, read fresh for every answer (the rest is kept for an hour) */
+        public UpdateRunner.UpdaterInfo updater;
+
+        /** this answer with the updater's state as it is now */
+        public UpdateStatus withUpdater(UpdateRunner.UpdaterInfo info) {
+            UpdateStatus copy = new UpdateStatus();
+            copy.enabled = enabled;
+            copy.published = published;
+            copy.channel = channel;
+            copy.currentVersion = currentVersion;
+            copy.currentCommit = currentCommit;
+            copy.latestVersion = latestVersion;
+            copy.latestCommit = latestCommit;
+            copy.updateAvailable = updateAvailable;
+            copy.commitsBehind = commitsBehind;
+            copy.changes = changes;
+            copy.notesUrl = notesUrl;
+            copy.serverImage = serverImage;
+            copy.webImage = webImage;
+            copy.sourceRepo = sourceRepo;
+            copy.checkedAt = checkedAt;
+            copy.error = error;
+            copy.updater = info;
+            return copy;
+        }
     }
 
     private static final UpdateCheck INSTANCE = new UpdateCheck(Build.fromEnvironment(),

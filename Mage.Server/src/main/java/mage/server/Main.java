@@ -348,6 +348,7 @@ public final class Main {
                 mage.server.support.SupportHooks.start();
                 Health.start(managerFactory);
                 BackupStatus.startChecks();
+                UpdateRunner.startWatching();
 
                 if (testMode) {
                     logger.info("MAGE server running in test mode");

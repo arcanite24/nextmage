@@ -110,6 +110,8 @@ export interface RpcMethods {
   adminSendBroadcastMessage: { params: [sessionId: string, message: string]; result: boolean };
   adminServerStats: { params: []; result: ServerStats };
   adminUpdateStatus: { params: [refresh?: boolean | null]; result: UpdateStatus };
+  adminUpdateApply: { params: [version: string]; result: UpdateStatus };
+  adminUpdateRollback: { params: []; result: UpdateStatus };
   adminGetReports: { params: [openOnly?: boolean | null]; result: PlayerReport[] };
   adminCloseReport: { params: [reportId: number, resolution: string]; result: boolean };
   adminClientErrors: { params: [includeResolved?: boolean | null]; result: ClientErrorGroup[] };
@@ -313,6 +315,8 @@ export const RPC_METHODS: { readonly [M in RpcMethodName]: { readonly access: Rp
   adminSendBroadcastMessage: { access: 'session', sessionParam: 0 },
   adminServerStats: { access: 'session', sessionParam: -1 },
   adminUpdateStatus: { access: 'session', sessionParam: -1 },
+  adminUpdateApply: { access: 'session', sessionParam: -1 },
+  adminUpdateRollback: { access: 'session', sessionParam: -1 },
   adminGetReports: { access: 'session', sessionParam: -1 },
   adminCloseReport: { access: 'session', sessionParam: -1 },
   adminClientErrors: { access: 'session', sessionParam: -1 },

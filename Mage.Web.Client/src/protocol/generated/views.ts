@@ -1591,6 +1591,19 @@ export interface UpdateChange {
     url?: string;
 }
 
+export interface UpdateJob {
+    action?: string;
+    by?: string;
+    finishedAt?: number;
+    from?: string;
+    id?: string;
+    message?: string;
+    startedAt?: number;
+    state?: string;
+    step?: string;
+    tag?: string;
+}
+
 export interface UpdateStatus {
     changes?: UpdateChange[];
     channel?: string;
@@ -1607,7 +1620,20 @@ export interface UpdateStatus {
     serverImage?: string;
     sourceRepo?: string;
     updateAvailable?: boolean;
+    updater?: UpdaterInfo;
     webImage?: string;
+}
+
+export interface UpdaterInfo {
+    busy?: boolean;
+    current?: string;
+    job?: UpdateJob;
+    log?: string[];
+    previous?: string;
+    problem?: string;
+    ready?: boolean;
+    running?: boolean;
+    version?: string;
 }
 
 export interface UserData extends Serializable {

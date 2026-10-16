@@ -77,6 +77,7 @@ services:
       - xmage-cards:/opt/xmage/cards-db # card database cache, rebuilt when the image changes
       - xmage-logs:/opt/xmage/logs
       - xmage-saved:/opt/xmage/saved
+      - xmage-updates:/opt/xmage/updates # requests to the updater and its answers (UpdateRunner.java)
     networks:
       - xmage
     # the bridge port opens only after the card database is loaded; the first start builds it (minutes)
@@ -183,6 +184,22 @@ services:
       - xmage
     restart: unless-stopped
 
+  # The admin console's Update button (ops/web/README.md "Update button"): off unless .env has COMPOSE_PROFILES=updater.
+  # The only container with the Docker socket, which is root on the host; it has no network and listens on nothing,
+  # and the server reaches it through files in xmage-updates. Linux hosts (Docker Engine) only.
+  updater:
+    image: ${XMAGE_UPDATER_IMAGE:-ghcr.io/arcanite24/playmat-updater:master}
+    profiles: [ "updater" ]
+    command: [ "daemon" ]
+    network_mode: none
+    environment:
+      UPDATER_DRAIN_MINUTES: ${UPDATER_DRAIN_MINUTES:-}
+      UPDATER_HEALTH_TIMEOUT: ${UPDATER_HEALTH_TIMEOUT:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - xmage-updates:/updates
+    restart: unless-stopped
+
 networks:
   xmage:
     ipam:
@@ -194,6 +211,7 @@ volumes:
   xmage-cards:
   xmage-logs:
   xmage-saved:
+  xmage-updates:
   xmage-backups:
   xmage-imgcache:
   caddy-data:

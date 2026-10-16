@@ -4,6 +4,7 @@ name: Images
 # GHCR as one multi-arch image each:
 #   ghcr.io/arcanite24/playmat-server   Dockerfile.server (the XMage server, also the backup service)
 #   ghcr.io/arcanite24/playmat-web      Dockerfile.web (the web client served by Caddy)
+#   ghcr.io/arcanite24/playmat-updater  Dockerfile.updater (the admin console's Update button, compose profile updater)
 # Tags: sha-<7> always; master for master's latest commit (Multivac follows it, ops/web/pull-images.ps1); for a
 # release, its tag (vX.Y.Z) and latest (not for a pre-release such as v1.2.0-rc.1).
 # deploy.yml calls this for a published release before it deploys. Each architecture is pushed by digest, then one
@@ -25,6 +26,7 @@ on:
       - "ops/web/server-entrypoint.sh"
       - "ops/web/backup.sh"
       - "ops/web/log4j-docker.properties"
+      - "ops/web/updater/**"
       # the server image carries the compose kit the deploy runs (ops/web/deploy)
       - "ops/web/docker-compose.yml"
       - "ops/web/imgcache.conf.template"
@@ -52,6 +54,9 @@ on:
       web-image:
         description: "ghcr.io/arcanite24/playmat-web:<version>@sha256:..."
         value: ${{ jobs.merge.outputs.web-image }}
+      updater-image:
+        description: "ghcr.io/arcanite24/playmat-updater:<version>@sha256:..."
+        value: ${{ jobs.merge.outputs.updater-image }}
 
 # a newer master push replaces a master build still running; release builds always finish
 concurrency:
@@ -112,7 +117,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        image: [ server, web ]
+        image: [ server, web, updater ]
         arch: [ amd64, arm64 ]
         include:
           - arch: amd64
@@ -124,6 +129,8 @@ jobs:
           - image: server
             cache-mode: min
           - image: web
+            cache-mode: max
+          - image: updater
             cache-mode: max
     steps:
       # with .git: the server image reads the commit it reports in /healthz and the admin console from it
@@ -167,6 +174,11 @@ jobs:
               elif [ "$GITHUB_REF" = refs/heads/master ]; then echo "PLAYMAT_CHANNEL=master"; fi
               echo "PLAYMAT_IMAGES=$REGISTRY/playmat"
               echo "PLAYMAT_REPO=$GITHUB_REPOSITORY"
+            fi
+            # Dockerfile.updater: its tag, and the only images it pulls
+            if [ "$IMAGE" = updater ]; then
+              echo "PLAYMAT_VERSION=$VERSION"
+              echo "PLAYMAT_IMAGES=$REGISTRY/playmat"
             fi
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
@@ -222,6 +234,7 @@ jobs:
       version: ${{ needs.meta.outputs.version }}
       server-image: ${{ steps.merge.outputs.server }}
       web-image: ${{ steps.merge.outputs.web }}
+      updater-image: ${{ steps.merge.outputs.updater }}
     steps:
       - uses: actions/download-artifact@v5
         with:
@@ -247,7 +260,7 @@ jobs:
             echo "| Image | Tags | Digest |"
             echo "|---|---|---|"
           } >> "$GITHUB_STEP_SUMMARY"
-          for image in server web; do
+          for image in server web updater; do
             repo=$REGISTRY/playmat-$image
             args=()
             for tag in $TAGS; do args+=(-t "$repo:$tag"); done
