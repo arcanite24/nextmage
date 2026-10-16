@@ -1,10 +1,10 @@
 # Web deployment: XMage server + web client behind Caddy (HTTPS) + nightly backups of the user databases.
 #   cp ops/web/.env.example ops/web/.env   # then edit
-#   docker compose -f ops/web/docker-compose.yml up -d --build
+#   docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env up -d
 # Every server setting is documented in ops/web/README.md. Empty values use the image defaults.
-# Images: built here (build:) under the local names, unless .env names published ones (XMAGE_SERVER_IMAGE and
-# XMAGE_WEB_IMAGE, e.g. ghcr.io/arcanite24/playmat-server:v1.2.3@sha256:...), which `up -d --no-build` runs as they
-# are; the image-based deploy (ops/web/deploy) pins them there. Building with them set fails: unset them to build.
+# Images: the published ones .env names (XMAGE_SERVER_IMAGE and XMAGE_WEB_IMAGE; .env.example has :master, and the
+# Update button and the image-based deploy pin them by digest), pulled and run as they are. With those two empty, they
+# are built here (build:) under the local names: up -d --build. Building with them set fails: empty them to build.
 x-server-image: &server-image ${XMAGE_SERVER_IMAGE:-xmage-web-server:local}
 
 services:

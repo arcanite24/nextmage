@@ -12,15 +12,17 @@ Under HTTPS, the client connects to `wss://<your domain>/ws` by default, so play
 ## Run
 
 ```bash
-cp ops/web/.env.example ops/web/.env      # set DOMAIN, XMAGE_ADMIN_PASSWORD, XMAGE_AUTH, mail
-docker compose -f ops/web/docker-compose.yml up -d --build
+cp ops/web/.env.example ops/web/.env      # set DOMAIN, XMAGE_AUTH, XMAGE_OWNER, XMAGE_ADMIN_PASSWORD, mail
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env up -d
 ```
+
+The short version, for people setting up their first server, is on the site: [Run a server](https://arcanite24.github.io/playmat/docs/server.html).
 
 Before you start:
 
 - Point `DOMAIN` at the machine first; Caddy fetches the certificate on first start.
-- The first server image build compiles the whole card database (expect tens of minutes). Later builds reuse the Maven cache. To skip building, run the published images instead (see [Updating your server](#updating-your-server)).
-- The first server start builds the card database before the game port opens, which takes a few minutes. The web container waits until the server is healthy, so the site comes up after that.
+- `.env.example` names the published images (`:master`), so `up -d` pulls them. To run your own changes, empty `XMAGE_SERVER_IMAGE` and `XMAGE_WEB_IMAGE` and use `up -d --build`: the first server image build compiles the whole card database (expect tens of minutes), and later builds reuse the Maven cache.
+- The web container waits until the server is healthy, so the site comes up a little after the server.
 
 ## Private server on a LAN
 

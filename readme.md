@@ -139,13 +139,16 @@ built.
 You need Docker and a machine your players can reach.
 
 ```bash
-cp ops/web/.env.example ops/web/.env      # set DOMAIN, XMAGE_ADMIN_PASSWORD, XMAGE_AUTH
-docker compose -f ops/web/docker-compose.yml up -d --build
+cp ops/web/.env.example ops/web/.env      # set DOMAIN, XMAGE_AUTH, XMAGE_OWNER
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env up -d
 ```
 
-To update it later without building, follow [Updating your server](ops/web/README.md#updating-your-server): it runs the published images. The admin console's Updates section says when a newer one is out, and with the [updater](ops/web/README.md#update-button) turned on, the owner updates from there with one button.
+This runs the published images, so nothing is built. The [docs on the site](https://arcanite24.github.io/playmat/docs/) walk through
+[running a server](https://arcanite24.github.io/playmat/docs/server.html) and
+[updating it](https://arcanite24.github.io/playmat/docs/updates.html): the admin console's Updates section says when a
+newer version is out, and with the updater turned on the owner installs it with one button.
 
-Players open `https://<your domain>` and sign in. The first build compiles the card database, which takes a while.
+Players open `https://<your domain>` and sign in.
 [ops/web/README.md](ops/web/README.md) covers private LAN servers, running behind another reverse proxy, every setting,
 accounts and moderation, Discord notifications, backups and capacity.
 
