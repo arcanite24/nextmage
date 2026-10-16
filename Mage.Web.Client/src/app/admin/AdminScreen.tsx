@@ -184,7 +184,7 @@ function Console({ staff }: { staff: StaffSession }) {
           <Tabs.Content value="access" className={styles.panel}><AccessPage api={api} /></Tabs.Content>
           <Tabs.Content value="settings" className={styles.panel}><SettingsPage api={api} role={role} /></Tabs.Content>
           <Tabs.Content value="support" className={styles.panel}><SupportPage api={api} /></Tabs.Content>
-          <Tabs.Content value="updates" className={styles.panel}><UpdatesPage api={api} /></Tabs.Content>
+          <Tabs.Content value="updates" className={styles.panel}><UpdatesPage api={api} role={role} /></Tabs.Content>
         </>
       )}
       {atLeast(role, 'owner') && <Tabs.Content value="staff" className={styles.panel}><StaffPage api={api} actor={staff.actor} /></Tabs.Content>}

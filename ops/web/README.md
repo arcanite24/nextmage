@@ -419,6 +419,31 @@ docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env up -d --no-
 
 The volumes (accounts, stats, backups, the image cache) and `.env` are kept. `master` is the newest build of master, rebuilt for every merged change; `:latest` follows releases instead, once a release has been published with images. To build from the checkout again, empty the two lines and run `up -d --build`.
 
+### Update button
+
+With the updater running, the owner updates from the Updates section instead: **Update to …** takes the newest version, and **Go back to …** returns to the one before the last update. Turn it on once, on a Linux host with Docker Engine (not Docker Desktop on Windows), from the folder you cloned:
+
+```bash
+git pull
+echo COMPOSE_PROFILES=updater >> ops/web/.env
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env up -d
+```
+
+An update does what a careful hand would, and the section shows each step:
+
+1. pulls the version's server and web images and pins them by digest in `.env`,
+2. backs up the databases (the backup service's online dump, kept with the nightly ones),
+3. warns players; with games running it announces maintenance and waits for them, up to `UPDATER_DRAIN_MINUTES` (15),
+4. restarts the stack with the compose file the new server image carries (kept in `ops/web/deploy-kit.<version>-<digest>/`),
+5. waits up to `UPDATER_HEALTH_TIMEOUT` seconds (600) for the server and web to be healthy, and otherwise goes back to what ran before by itself,
+6. replaces the updater with the same version's, and tells the staff Discord channel how it went.
+
+A self-built server switches to the published images on its first update; going back from that update returns to the local build. Running `up` by hand afterwards keeps working: `.env` names the pinned images.
+
+**What it can do.** The updater is the only container with the Docker socket, which amounts to root on the host. It has no network and listens on nothing. The server asks it through files in the `xmage-updates` volume, and a request names only a version (`vX.Y.Z`, `sha-<hex>`, `master` or `latest`): the image names come from the updater's own image. Only the owner can ask, and each request goes in the audit log. Leave the profile off if that's more access than you want to give; the commands above do the same by hand.
+
+The updater's log is under **Updater log** in the section, and `docker compose ... logs updater` shows what it saw at start. If a job is interrupted (the host rebooted), the section shows it as still running for as long as `status.json` says so: start the updater again and ask once more.
+
 There are three ways to get a new version running. All of them keep the volumes, and settings stay in `.env`.
 
 ### Published images (production)

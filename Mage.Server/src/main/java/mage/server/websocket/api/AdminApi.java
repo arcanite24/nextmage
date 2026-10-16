@@ -7,6 +7,8 @@ import mage.server.Main;
 import mage.server.Moderation;
 import mage.server.Session;
 import mage.server.UpdateCheck;
+import mage.server.UpdateRunner;
+import mage.server.notify.DiscordNotifier;
 import mage.server.admin.AccessPolicy;
 import mage.server.admin.AdminStore;
 import mage.server.admin.ClientErrorGroup;
@@ -186,7 +188,33 @@ final class AdminApi {
                                 + "(at most once a minute). XMAGE_UPDATE_CHECK=off turns the lookups off.")
                         .handler(call -> {
                             Staff.require(ctx, call, StaffRole.ADMIN);
-                            return UpdateCheck.get().status(call.optBool(0, false));
+                            return UpdateCheck.get().status(call.optBool(0, false)).withUpdater(UpdateRunner.get().info());
+                        }),
+
+                RpcMethod.named("adminUpdateApply")
+                        .params(of("version", STRING))
+                        .returns("UpdateStatus")
+                        .doc("Staff (owner): ask the updater (the compose service behind the Update button) to update to this "
+                                + "published version (vX.Y.Z or sha-<hex>). It backs up, warns players and waits for games to end, "
+                                + "restarts on the new images and goes back if they aren't healthy; updater.job follows it.")
+                        .handler(call -> {
+                            String actor = Staff.require(ctx, call, StaffRole.OWNER);
+                            String version = call.string(0);
+                            update(UpdateRunner.UPDATE, version, actor);
+                            Staff.audit(actor, "server.update", version, null, null);
+                            DiscordNotifier.staff().staffNews("Update to " + version + " started by " + actor + ".");
+                            return UpdateCheck.get().status(false).withUpdater(UpdateRunner.get().info());
+                        }),
+
+                RpcMethod.named("adminUpdateRollback")
+                        .returns("UpdateStatus")
+                        .doc("Staff (owner): ask the updater to go back to the version that ran before its last update.")
+                        .handler(call -> {
+                            String actor = Staff.require(ctx, call, StaffRole.OWNER);
+                            update(UpdateRunner.ROLLBACK, null, actor);
+                            Staff.audit(actor, "server.rollback", null, null, null);
+                            DiscordNotifier.staff().staffNews("Rollback started by " + actor + ".");
+                            return UpdateCheck.get().status(false).withUpdater(UpdateRunner.get().info());
                         }),
 
                 RpcMethod.named("adminGetReports")
@@ -348,5 +376,14 @@ final class AdminApi {
                 .findFirst()
                 .map(Table::getId)
                 .orElse(tableId);
+    }
+
+    /** asks the updater; what it can't take now comes back to staff as the reason */
+    private static void update(String action, String version, String actor) throws RpcException {
+        try {
+            UpdateRunner.get().request(action, version, actor);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw RpcException.invalidParams(e.getMessage());
+        }
     }
 }
