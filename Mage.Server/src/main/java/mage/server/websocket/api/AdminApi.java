@@ -6,6 +6,7 @@ import mage.game.match.Match;
 import mage.server.Main;
 import mage.server.Moderation;
 import mage.server.Session;
+import mage.server.UpdateCheck;
 import mage.server.admin.AccessPolicy;
 import mage.server.admin.AdminStore;
 import mage.server.admin.ClientErrorGroup;
@@ -175,6 +176,17 @@ final class AdminApi {
                         .handler(call -> {
                             Staff.require(ctx, call, StaffRole.MODERATOR);
                             return ServerStats.collect(ctx.managers);
+                        }),
+
+                RpcMethod.named("adminUpdateStatus")
+                        .params(optional("refresh", BOOLEAN))
+                        .returns("UpdateStatus")
+                        .doc("Staff (admin): whether a newer published image is out than the one this server runs, the commits "
+                                + "it brings, and the image names to follow. The answer is kept for an hour; refresh looks again "
+                                + "(at most once a minute). XMAGE_UPDATE_CHECK=off turns the lookups off.")
+                        .handler(call -> {
+                            Staff.require(ctx, call, StaffRole.ADMIN);
+                            return UpdateCheck.get().status(call.optBool(0, false));
                         }),
 
                 RpcMethod.named("adminGetReports")

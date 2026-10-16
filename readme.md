@@ -143,6 +143,8 @@ cp ops/web/.env.example ops/web/.env      # set DOMAIN, XMAGE_ADMIN_PASSWORD, XM
 docker compose -f ops/web/docker-compose.yml up -d --build
 ```
 
+To update it later without building, follow [Updating your server](ops/web/README.md#updating-your-server): it runs the published images. The admin console's Updates section says when a newer one is out.
+
 Players open `https://<your domain>` and sign in. The first build compiles the card database, which takes a while.
 [ops/web/README.md](ops/web/README.md) covers private LAN servers, running behind another reverse proxy, every setting,
 accounts and moderation, Discord notifications, backups and capacity.
