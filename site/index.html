@@ -33,6 +33,7 @@
           <li><a href="#career">Career</a></li>
           <li><a href="#download">Download</a></li>
           <li><a href="#host">Run a server</a></li>
+          <li><a href="docs/">Docs</a></li>
           <li><a href="https://github.com/arcanite24/playmat">GitHub</a></li>
         </ul>
       </nav>
@@ -277,20 +278,22 @@
             <div><dt>imgcache</dt><dd>a caching proxy for Scryfall card pictures</dd></div>
             <div><dt>backup</dt><dd>nightly dumps of the player databases</dd></div>
           </dl>
-          <p class="small">Also covered: private LAN servers with no domain, running behind another reverse proxy, Discord
-            notifications for new tables, and capacity numbers.
-            See the <a href="https://github.com/arcanite24/playmat/blob/master/ops/web/README.md">deployment guide</a>.</p>
+          <p class="small">The images are published for x86 and ARM, so nothing needs building, and the owner updates
+            the server from its admin console. <a href="docs/server.html">Run a server</a> and
+            <a href="docs/updates.html">Updating</a> in the docs walk through it; the
+            <a href="https://github.com/arcanite24/playmat/blob/master/ops/web/README.md">deployment guide</a> has every
+            setting, LAN servers with no domain, and capacity numbers.</p>
         </div>
         <div class="terminal" role="region" aria-label="Commands to start a server">
 <pre><code><span class="c"># get the code</span>
 git clone https://github.com/arcanite24/playmat.git
 cd playmat
 
-<span class="c"># set DOMAIN, XMAGE_ADMIN_PASSWORD, XMAGE_AUTH</span>
+<span class="c"># set DOMAIN, XMAGE_AUTH, XMAGE_OWNER</span>
 cp ops/web/.env.example ops/web/.env
 
-<span class="c"># build and start the stack</span>
-docker compose -f ops/web/docker-compose.yml up -d --build</code></pre>
+<span class="c"># pull the published images and start</span>
+docker compose -f ops/web/docker-compose.yml --env-file ops/web/.env up -d</code></pre>
         </div>
       </div>
     </section>
