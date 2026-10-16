@@ -57,6 +57,7 @@ public class WebClientApiContractTest {
             "serverInfo", "deckSyncList", "deckSyncGet", "deckSyncPut", "deckSyncDelete", // config and deck store (decks/DeckStoreTest)
             "reportPlayer", "clientReportError", "adminGetReports", "adminCloseReport", "adminClientErrors", // moderation stores
             "adminServerStats", // bridge metrics
+            "adminUpdateStatus", // the registry and GitHub (UpdateCheck)
             "gamePractice", // game controller practice tools, with readable errors
             "careerState", "careerStarters", "careerStart", "careerCollection", "careerOpponents", "careerPlay", "careerShop",
             "careerBuyPack", "careerCraft", "careerExport", "careerImport", // career store and service (career/CareerServiceTest)
